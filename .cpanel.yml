@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/mufm/thetidysquirrel.alexscottbecker.com
+    - export DEPLOYPATH=/thetidysquirrel.alexscottbecker.com
     - /bin/cp -r * $DEPLOYPATH

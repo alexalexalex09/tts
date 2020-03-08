@@ -14,7 +14,7 @@ window.addEventListener('load', function () {
         <div class="joinButton button blueBtn">Join</div>
         <div class="createButton button greyBtn">Create</div>
     </div>
-    `); 
+    `);
 
 
 });

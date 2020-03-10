@@ -33,8 +33,12 @@ window.addEventListener('load', function () {
             window.setTimeout(function () {
                 console.log('wait 2')
                 $("#createButton").addClass("off");
-            }, 1100);
+            }, 600);
         }, 10);
+    });
+    $('.textClear').click(this, function(el) {
+        $(this).parent().children('input').first().val('');
+        console.log($(this).parent().children('input').first().val());
     });
 });
 

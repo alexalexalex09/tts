@@ -1,7 +1,7 @@
 window.addEventListener('load', function () {
 
     $('#mainView').after(`
-    <div id="codeView" class="main">
+    <div id="codeView" class="main off">
         <div class="menu">
         <svg viewBox="0 0 100 80" width="30" height="30">
             <rect width="100" height="15" rx="8"></rect>
@@ -12,9 +12,25 @@ window.addEventListener('load', function () {
         <div class="login">Login</div>
         <div class="siteTitle">The Tidy Squirrel 🐿️</div>
         <div class="joinButton button blueBtn">Join</div>
-        <div class="createButton button greyBtn">Create</div>
+        <div id="codeForm" class="form">
+            <div id="cfTitle" class="inputTitle">Enter Code</div>
+            <div id="codeInput" class="textInput"></div>
+            <div id="codeSubmit" class="submitButton button greyBtn">Submit</div>
+        </div>
     </div>
     `);
+});
 
-
+window.addEventListener('click', function(el) {
+    console.log("login");
+    $("#mainView").css("opacity", "0%");
+    $("#codeView").css("opacity", "0%");
+    this.setTimeout(function () {
+        $("#mainView").addClass("off");
+        $("#codeView").removeClass("off");
+        this.setTimeout(function() {
+            $("#codeView").css("opacity", "100%");
+        }, 10);
+    }, 600);
+    
 });

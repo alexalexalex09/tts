@@ -20,6 +20,7 @@
     grid-template-rows: repeat(20, 5vh);
     grid-column-gap: 0px;
     grid-row-gap: 0px;
+    transition: opacity .5s;
 }
 
 .main>div {
@@ -78,3 +79,17 @@
     background-color: var(--main-grey);
 }
 
+.off {
+    display:none;
+}
+
+
+#codeInput {
+    height: 2em;
+    border: 1px solid black;
+    margin-bottom: 5px;
+}
+
+#codeForm {
+    grid-area: 12/3/14/9;
+}

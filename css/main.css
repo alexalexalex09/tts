@@ -7,6 +7,7 @@
     --main-white:#fff;
     --main-black:#000;
     --main-grey: #333;
+    --main-red:#d00;
 }
 
 
@@ -63,7 +64,7 @@
 
 .button {
     width: 100%;
-    height: 80%;
+    height: 7vh;
     vertical-align: middle;
     display: flex;
     align-items: center;
@@ -86,10 +87,9 @@
 
 
 #codeInput {
-    height: 2em;
+    height: 100%;
     border: 1px solid black;
-    margin-bottom: 5px;
-    grid-area: 4/1/6/2;
+    grid-area: 3/1/5/2;
     text-align: center;
 }
 
@@ -98,21 +98,46 @@
 }
 
 #codeInputGroup {
-    grid-area: 12/3/16/9;
+    grid-area: 11/3/17/9;
     display:grid;
     align-self: start;
-    grid-template-rows: repeat(13, 1.5vh);
+    grid-template-rows: repeat(11, 2.5vh);
     transition: opacity 1s, transform 1s;
     opacity: 0%;
     transform: translateY(-10px)
 }
 
 #codeInputLabel {
-    grid-area: 1/1/4/2;
+    grid-area: 1/1/3/2;
     text-align: center;
+    align-self: end;
+}
+
+#codeError {
+    grid-area: 10/1/12/2;
+    color: var(--main-red);
+    align-self: start;
 }
 
 #codeSubmit {
-    grid-area: 9/1/14/2;
+    grid-area: 6/1/10/2;
     text-align: center;
+}
+
+/****************/
+/*  Animations  */
+/****************/
+
+@keyframes shake {
+    0% { transform: translate(0px, 0px) }
+    20% { transform: translate(-2px, 0px) }
+    40% { transform: translate(2px, 0px) }
+    60% { transform: translate(-2px, 0px) }
+    80% { transform: translate(2px, 0px) }
+    100% { transform: translate(0px, 0px) }
+  }
+
+.shake {
+    animation: shake .2s;
+    animation-iteration-count: 2;
 }

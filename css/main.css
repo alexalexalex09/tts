@@ -102,8 +102,9 @@
     display:grid;
     align-self: start;
     grid-template-rows: repeat(13, 1.5vh);
-    transition: opacity 1s;
+    transition: opacity 1s, transform 1s;
     opacity: 0%;
+    transform: translateY(-10px)
 }
 
 #codeInputLabel {

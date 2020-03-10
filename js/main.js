@@ -25,8 +25,11 @@ window.addEventListener('load', function () {
         $("#codeInputGroup").removeClass("off");
         window.setTimeout(function() {
             console.log('wait 1')
-            $('#createButton').css("opacity", "0%");
-            $("#codeInputGroup").css("opacity", "100%");
+            $('#createButton').css({"opacity" : "0%"});
+            $("#codeInputGroup").css({
+                "opacity"   : "100%",
+                "transform" : "translateY(0px)"
+        });
             window.setTimeout(function () {
                 console.log('wait 2')
                 $("#createButton").addClass("off");

@@ -52,12 +52,13 @@
     color: var(--main-grey);
 }
 
-.joinButton {
+#joinButton {
     grid-area: 9/3/11/9;
 }
 
-.createButton {
+#createButton {
     grid-area: 11/3/13/9;
+    transition: opacity 1s;
 }
 
 .button {
@@ -80,7 +81,7 @@
 }
 
 .off {
-    display:none;
+    display:none !important;
 }
 
 
@@ -88,8 +89,29 @@
     height: 2em;
     border: 1px solid black;
     margin-bottom: 5px;
+    grid-area: 4/1/6/2;
+    text-align: center;
 }
 
 #codeForm {
     grid-area: 12/3/14/9;
+}
+
+#codeInputGroup {
+    grid-area: 12/3/16/9;
+    display:grid;
+    align-self: start;
+    grid-template-rows: repeat(13, 1.5vh);
+    transition: opacity 1s;
+    opacity: 0%;
+}
+
+#codeInputLabel {
+    grid-area: 1/1/4/2;
+    text-align: center;
+}
+
+#codeSubmit {
+    grid-area: 9/1/14/2;
+    text-align: center;
 }

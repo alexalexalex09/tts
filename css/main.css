@@ -46,7 +46,7 @@
     padding-right:3vw;
 }
 
-.siteTitle {
+.pageTitle {
     grid-area: 4/1/6/11;
     justify-self: center;
     font-size: 10vw;
@@ -152,6 +152,7 @@
 #menu {
     width: 60vw;
     height: 100vh;
+    z-index: 100;
     position: absolute;
     top: 0;
     left: 0;

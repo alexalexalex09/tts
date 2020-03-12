@@ -1,13 +1,17 @@
 extends layout
 
 block variables
-  - var title = "Home"
+  - var title = "The Tidy Squirrel"
+  - var pageTitle = "The Tidy Squirrel 🐿️"
+
 
 block content
-  h2.text-center Express App
-
-  .row
-    .offset-sm-2.col-sm-8
-      .jumbotron.text-center.
-        Welcome to your new Express app! Please visit the
-        #[a(href="https://github.com/rdegges/okta-express-login-portal", title="okkta-express-login-portal on GitHub") GitHub page] to learn more.
+  #joinButton.button.blueBtn Join
+  #createButton.button.greyBtn Create
+  #codeInputGroup.inputGroup.off
+    #codeInputLabel.inputLabel Enter Code:
+    #codeInput.textInputCont
+      input.textInput(type='text')
+      .textClear
+    #codeSubmit.submitButton.button.greyBtn Submit
+    #codeError.errorText.off Wrong code. Please try again.

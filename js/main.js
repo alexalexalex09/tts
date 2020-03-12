@@ -19,6 +19,24 @@ window.addEventListener('load', function () {
         }, 10);
     });
 
+    //Menu toggle
+    function closeMenu () {
+        $('#menu').css('transform','translateX(-60vh)');
+        $('#menuCatch').addClass('off');
+        window.setTimeout(function () {
+            $('#menu').addClass('off');
+        }, 550);
+    }
+    $('#menuClose').on( "click", closeMenu);
+    $('#menuCatch').on( "click", closeMenu);
+    $('#menuIcon').click(this, function(el) {
+        $('#menu').removeClass('off');
+        $('#menuCatch').removeClass('off');
+        window.setTimeout(function () {
+            $('#menu').css('transform','translateX(0vh)');
+        }, 10);
+    });
+
     //Text input clear button handler
     $('.textClear').click(this, function(el) {
         $(this).parent().children('input').first().val('');

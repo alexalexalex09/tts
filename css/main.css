@@ -157,6 +157,24 @@
     left: 0;
     background-color: var(--main-blue);
     color: var(--main-white);
+    transform: translateX(-60vw);
+    transition: transform .5s;
+}
+
+#menuClose {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+
+#menuClose ion-icon {
+    height: 30px;
+    width: 30px;
+    --ionicon-stroke-width: 48px;
+}
+
+#menuItems {
+    margin-top: 10vh;
 }
 
 #menuItems ul {
@@ -177,15 +195,23 @@
     transform: translateY(4px);
 }
 
-#menuItems ul li .i-faq {
-    height: 20px;
+#menuItems ul li ion-icon {
     width: 20px;
-    display: inline-block
+    height: 20px;
+    margin-right: 10px;
     transform: translateY(4px);
 }
 
 .i-faq svg * {
     stroke:white !important;
+}
+
+#menuCatch {
+    top: 0px;
+    width: 40vw;
+    height: 100vh;
+    position: absolute;
+    left: 60vw;
 }
 
 /****************/

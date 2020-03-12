@@ -24,6 +24,9 @@
   <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
   <script>window.jQuery || document.write('<script src="js/vendor/jquery-3.4.1.min.js"><\/script>')</script>
   <script src="js/main.js"></script>
+
+  <script type="module" src="https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule="" src="https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.js"></script>
 </head>
 
 
@@ -39,19 +42,20 @@
       <rect y="30" width="100" height="15" rx="8"></rect>
       <rect y="60" width="100" height="15" rx="8"></rect>
     </svg>
-    <div id="menu" class="">
-      <div class="closeButton" id="menuClose"></div>
-      <div id="menuItems">
-        <ul>
-          <li><object type="image/svg+xml" class="i-faq" data="img/close-circle-outline.svg"></object>FAQ</li>
-          <li><div class="i-manage"></div>Manage Games</li>
-          <li><div class="i-account"></div>My Account</li>
-          <li><div class="i-about"></div>About</li>
-          <li><div class="i-premium"></div>Get Premium</li>
-        </ul>
-      </div>
+  </div>
+  <div id="menu" class="off">
+    <div class="closeButton" id="menuClose"><ion-icon name="close-outline"></ion-icon></div>
+    <div id="menuItems">
+      <ul>
+        <li><object type="image/svg+xml" class="i-faq" data="img/close-circle-outline.svg"></object>FAQ</li>
+        <li><ion-icon name="library-outline"></ion-icon>Manage Games</li>
+        <li><ion-icon name="person-circle-outline"></ion-icon>My Account</li>
+        <li><ion-icon name="information-circle-outline"></ion-icon>About</li>
+        <li><ion-icon name="star-outline"></ion-icon>Get Premium</li>
+      </ul>
     </div>
   </div>
+  <div id="menuCatch" class="clickCatcher off"></div>
   <div class="login">Login</div>
   <div class="siteTitle">The Tidy Squirrel 🐿️</div>
   <div class="button blueBtn" id="joinButton">Join</div>
@@ -85,22 +89,7 @@
 
 
 
-
-
-
-
-
-  <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
-  <!--<script>
-    window.ga = function () { ga.q.push(arguments) }; ga.q = []; ga.l = +new Date;
-    ga('create', 'UA-XXXXX-Y', 'auto'); ga('set','transport','beacon'); ga('send', 'pageview')
-  </script>
-  <script src="https://www.google-analytics.com/analytics.js" async></script>-->
-
-
-
-
-
+<!-- Footer Scripts -->
 </body>
 
 </html>

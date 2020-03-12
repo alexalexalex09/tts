@@ -1,0 +1,235 @@
+/******************/
+/*   Color Vars   */
+/******************/
+:root {
+    --main-blue:#07f;
+    --main-grey:#aaa;
+    --main-white:#fff;
+    --main-black:#000;
+    --main-grey: #333;
+    --main-red:#d00;
+}
+
+
+/*****************/
+/*   Main Grid   */
+/*****************/
+
+.main {
+    display: grid;
+    grid-template-columns: repeat(10, 10vw);
+    grid-template-rows: repeat(20, 5vh);
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+    transition: opacity .5s;
+}
+
+.main>div {
+    align-self:center;
+}
+
+#menuIcon {
+    grid-area: 1/1/3/3;
+    margin: 10px auto;
+    justify-self: start;
+    padding-left: 3vw;
+}
+
+#menuIcon svg {
+    fill: var(--main-blue);
+}
+
+.login {
+    grid-area: 1/9/3/11;
+    justify-self: end;
+    color: var(--main-blue);
+    padding-right:3vw;
+}
+
+.pageTitle {
+    grid-area: 4/1/6/11;
+    justify-self: center;
+    font-size: 10vw;
+    color: var(--main-grey);
+}
+
+#joinButton {
+    grid-area: 9/3/11/9;
+}
+
+#createButton {
+    grid-area: 11/3/13/9;
+    transition: opacity .5s;
+}
+
+.button {
+    width: 100%;
+    height: 7vh;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: var(--main-white);
+}
+
+.blueBtn {
+    background-color: var(--main-blue);
+}
+
+.greyBtn {
+    background-color: var(--main-grey);
+}
+
+.off {
+    display:none !important;
+}
+
+#codeForm {
+    grid-area: 12/3/14/9;
+}
+
+#codeInputGroup {
+    grid-area: 11/3/17/9;
+    display:grid;
+    align-self: start;
+    grid-template-rows: repeat(11, 2.5vh);
+    transition: opacity .5s, transform .5s;
+    opacity: 0%;
+    transform: translateY(-10px)
+}
+
+#codeInput {
+    height: 100%;
+    border: 1px solid black;
+    grid-area: 3/1/5/2;
+    text-align: center;
+    position: relative;
+}
+
+#codeInputLabel {
+    grid-area: 1/1/3/2;
+    text-align: center;
+    align-self: end;
+}
+
+.textInput {
+    left: 0vw;
+    top: 0vh;
+    position: absolute;
+    border: 0px;
+    height: 100%;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0px 7vw 0px 5px;
+}
+
+.textClear {
+    background-image: url(../img/close-circle-outline.svg);
+    height: 4vh;
+    width: 4vh;
+    background-size: contain;
+    right: 3px;
+    position: absolute;
+    margin-top: 0.5vh;
+}
+
+#codeError {
+    grid-area: 10/1/12/2;
+    color: var(--main-red);
+    align-self: start;
+}
+
+#codeSubmit {
+    grid-area: 6/1/10/2;
+    text-align: center;
+}
+
+/*****************/
+/*  Mobile Menu  */
+/*****************/
+
+#menu {
+    width: 60vw;
+    height: 100vh;
+    z-index: 100;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--main-blue);
+    color: var(--main-white);
+    transform: translateX(-60vw);
+    transition: transform .5s;
+}
+
+#menuClose {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+}
+
+#menuClose ion-icon {
+    height: 30px;
+    width: 30px;
+    --ionicon-stroke-width: 48px;
+}
+
+#menuItems {
+    margin-top: 10vh;
+}
+
+#menuItems ul {
+    list-style-type: none;
+    padding-left: 5vw;
+}
+
+#menuItems ul li {
+    margin-top: 2vh;
+}
+
+#menuItems ul li .i-manage, #menuItems ul li .i-account, #menuItems ul li .i-about, #menuItems ul li .i-premium {
+    background-image: url('../img/close-circle-outline.svg');
+    height: 20px;
+    width: 20px;
+    background-size: contain;
+    display: inline-block;
+    transform: translateY(4px);
+}
+
+#menuItems ul li ion-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    transform: translateY(4px);
+}
+
+.i-faq svg * {
+    stroke:white !important;
+}
+
+#menuCatch {
+    top: 0px;
+    width: 40vw;
+    height: 100vh;
+    position: absolute;
+    left: 60vw;
+}
+
+/****************/
+/*  Animations  */
+/****************/
+
+@keyframes shake {
+    0% { transform: translate(0px, 0px) }
+    20% { transform: translate(-2px, 0px) }
+    40% { transform: translate(2px, 0px) }
+    60% { transform: translate(-2px, 0px) }
+    80% { transform: translate(2px, 0px) }
+    100% { transform: translate(0px, 0px) }
+  }
+
+.shake {
+    animation: shake .2s;
+    animation-iteration-count: 2;
+}
+

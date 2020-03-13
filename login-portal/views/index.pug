@@ -1,17 +1,73 @@
 extends layout
 
 block variables
+  
   - var title = "The Tidy Squirrel"
-  - var pageTitle = "The Tidy Squirrel 🐿️"
+  - var games = [['Pandemic',1], ['Betrayal at the House on the Hill',2], ['Machi Koro',3], ['Codenames',4]]
 
 
 block content
-  #joinButton.button.blueBtn Join
-  #createButton.button.greyBtn Create
-  #codeInputGroup.inputGroup.off
-    #codeInputLabel.inputLabel Enter Code:
-    #codeInput.textInputCont
-      input.textInput(type='text')
-      .textClear
-    #codeSubmit.submitButton.button.greyBtn Submit
-    #codeError.errorText.off Wrong code. Please try again.
+  #mainView.main
+    #menuIcon
+      svg(viewbox='0 0 100 80' width='30' height='30')
+        rect(width='100' height='15' rx='8')
+        rect(y='30' width='100' height='15' rx='8')
+        rect(y='60' width='100' height='15' rx='8')
+    #menu.off
+      #menuClose.closeButton
+        ion-icon(name='close-outline')
+      #menuItems
+        ul
+          li
+            ion-icon(name='help-circle-outline')
+            | FAQ
+          li
+            ion-icon(name='library-outline')
+            | Manage Games
+          li
+            ion-icon(name='person-circle-outline')
+            | My Account
+          li
+            ion-icon(name='information-circle-outline')
+            | About
+          li
+            ion-icon(name='star-outline')
+            | Get Premium
+          if user
+            li
+              ion-icon(name='log-out-outline')
+              a(href="/users/logout") Logout
+    #menuCatch.clickCatcher.off
+    .login
+      
+      if user
+        | Hello, #{user.profile.firstName} 
+      else 
+        a(href="/users/login") Login
+    #homeView.view.off   
+      .pageTitle The Tidy Squirrel 🐿️
+      #joinButton.button.blueBtn Join
+      #createButton.button.greyBtn Create
+      #codeInputGroup.inputGroup.off
+        #codeInputLabel.inputLabel Enter Code:
+        #codeInput.textInputCont
+          input.textInput(type='text')
+          .textClear
+        #codeSubmit.submitButton.button.blueBtn Submit
+        #codeError.errorText.off Wrong code. Please try again.
+
+    #selectView.view
+      #selectTitle.pageTitle Select Games 🐿️
+      #addGamesContainer
+        #addGamesTitle Add Games
+        #addGamesInput.textInputCont
+          input.textInput(type='text')
+          .textClear
+      #gamesList
+        each game in games
+          li= game[0] 
+            div.toggle(id=game[1])
+            label.switch
+              input(type="checkbox")
+              span.slider.round
+

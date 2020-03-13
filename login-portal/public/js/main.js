@@ -7,14 +7,20 @@ window.addEventListener('load', function () {
         $("#codeInputGroup").removeClass("off");
         window.setTimeout(function() {
             console.log('wait 1')
-            $('#createButton').css({"opacity" : "0%"});
+            $('#joinButton').css({
+                "opacity" : "0%",
+                "transform" : "translateX(100vw)"
+            });
             $("#codeInputGroup").css({
                 "opacity"   : "100%",
-                "transform" : "translateY(0px)"
-        });
+                "transform" : "translateX(0px)"
+            });
+            $("#createButton").css({
+                "transform" : "translateY(12vh)"
+            });
             window.setTimeout(function () {
                 console.log('wait 2')
-                $("#createButton").addClass("off");
+                $("#joinButton").addClass("off");
             }, 600);
         }, 10);
     });
@@ -39,7 +45,45 @@ window.addEventListener('load', function () {
 
     //Text input clear button handler
     $('.textClear').click(this, function(el) {
-        $(this).parent().children('input').first().val('');
-        console.log($(this).parent().children('input').first().val());
+        if ($(this).parent().children('input').first().val() == '') {
+            $("#joinButton").removeClass("off");
+            window.setTimeout(function() {
+                console.log('wait 1')
+                $('#joinButton').css({
+                    "opacity" : "100%",
+                    "transform" : "translateX(0vw)"
+                });
+                $("#codeInputGroup").css({
+                    "opacity"   : "0%",
+                    "transform" : "translateX(-100vw)"
+                });
+                $("#createButton").css({
+                    "transform" : "translateY(0vh)"
+                });
+                window.setTimeout(function () {
+                    console.log('wait 2')
+                    $("#codeInputGroup").addClass("off");
+                    $('.errorText').addClass("off");
+                }, 600);
+            }, 10);
+        } else {
+            $(this).parent().children('input').first().val('');
+            console.log($(this).parent().children('input').first().val());
+        }
     });
+
+    //Submit button handler
+    $('#codeSubmit').click(this, function(el) {
+        $('.errorText').removeClass('shake')
+        window.setTimeout(function () {
+            $('.errorText').removeClass('off').addClass('shake');
+        }, 5);
+        $('#createButton').css({
+            "transform" : "translateY(14vh)"
+        });
+
+    });
+
+
 });
+//End all DOM manipulation

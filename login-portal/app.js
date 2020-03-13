@@ -15,6 +15,7 @@ const usersRouter = require("./routes/users");
 
 var app = express();
 
+//TODO: Make this asynchronous so the user doesn't have to navigate to a different page
 var oktaClient = new okta.Client({
   orgUrl: 'https://dev-222844.okta.com',
   token: '00T-POzgNn1N2HdBngzKuLiA0a8VynCvD8gQGsFCkr'
@@ -31,7 +32,7 @@ const oidc = new ExpressOIDC({
     },
     callback: {
       path: "/users/callback",
-      defaultRedirect: "/dashboard"
+      defaultRedirect: "/"
     }
   }
 });

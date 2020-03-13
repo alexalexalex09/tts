@@ -65,9 +65,11 @@ block content
           .textClear
       #gamesList
         each game in games
-          li= game[0] 
-            div.toggle(id=game[1])
-            label.switch
-              input(type="checkbox")
-              span.slider.round
+          li 
+            div.gameName
+              | #{game[0]}
+            div.toggle
+              label.switch
+                input(type="checkbox" id=game[1])
+                span.slider.round
 

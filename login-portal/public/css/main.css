@@ -8,6 +8,7 @@
     --main-black:#000;
     --main-grey: #333;
     --main-red:#d00;
+    --main-green:#5a5;
 }
 
 /*****************/
@@ -28,12 +29,15 @@ a, a:visited, a:hover, a:active {
 /* Toggle Switch */
 /*****************/
 
+
 /* The switch - the box around the slider */
 .switch {
     position: relative;
     display: inline-block;
-    width: 60px;
-    height: 34px;
+    width: 10vw;
+    height: 3vh;
+    grid-area: 1/2/2/3;
+    justify-self: end;
 }
 
 /* Hide default HTML checkbox */
@@ -59,27 +63,27 @@ a, a:visited, a:hover, a:active {
 .slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
+    height: 4vw;
+    width: 4vw;
+    left: 0.8vw;
+    bottom: 0.6vw;
     background-color: white;
     -webkit-transition: .4s;
     transition: .4s;
 }
 
 input:checked + .slider {
-    background-color: #2196F3;
+    background-color: var(--main-green);
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px var(--main-green);
 }
 
 input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
+    -webkit-transform: translateX(4vw);
+    -ms-transform: translateX(4vw);
+    transform: translateX(4vw);
 }
 
 /* Rounded sliders */
@@ -269,7 +273,21 @@ input:checked + .slider:before {
 #gamesList li {
     height: 5vh;
     list-style: none;
-    
+    display: grid;
+    grid-template-columns: 1fr 11vw;
+    grid-template-rows: 1fr;
+}
+
+.gameName {
+    width: 100%;
+    grid-area: 1/1/2/2;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.toggle {
+    grid-area: 1/2/2/3;
+    justify-self: end;
 }
 
 

@@ -84,6 +84,31 @@ window.addEventListener('load', function () {
 
     });
 
+    //Set font sizes
+    function cFont (e) {
+        var iH = window.innerHeight;
+        var iW = window.innerWidth;
+        var fS = ( (iW / (100/e.data.fWidth) ) > (iH / (100/e.data.fHeight) ) ) ? e.data.fHeight+'vh' : e.data.fWidth+'vw';
+        $(e.data.el).css('font-size', fS);
+        console.log('width: '+iW / (100/e.data.fWidth)+', height: '+iH / (100/e.data.fHeight)+', result: '+fS);
+    }
+    $(window).on("resize", {el: ".pageTitle", mHeight: "10", mWidth: "10", fHeight: '8', fWidth: '10'}, cFont);
+    cFont({data: {el: '.pageTitle', mHeight: '10', mWidth: '10', fHeight: '8', fWidth: '10'}});
+    $(window).on("resize", {el: ".login", mHeight: '10', mWidth: '10', fHeight: "4", fWidth: "6"}, cFont);
+    cFont({data: {el: '.login', mHeight: '10', mWidth: '10', fHeight: '4', fWidth: '6'}});
+    $(window).on("resize", {el: "#addGamesTitle", mHeight: '10', mWidth: '10', fHeight: "4", fWidth: "6"}, cFont);
+    cFont({data: {el: '#addGamesTitle', mHeight: '10', mWidth: '10', fHeight: '4', fWidth: '6'}});
+
+    //Change Font color of game names
+    $('input[type="checkbox"]').on("click", function() {
+        var el = $(this).parent().parent().parent().children('.gameName').first();
+        if ($(this).is(':checked')) {
+            el.css('color', "var('--main-green')");
+        } else {
+            el.css('color', "var('--main-black')");
+        }
+        console.log()
+    });
 
 });
 //End all DOM manipulation

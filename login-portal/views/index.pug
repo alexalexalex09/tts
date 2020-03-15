@@ -3,13 +3,13 @@ extends layout
 block variables
   
   - var title = "The Tidy Squirrel"
-  - var games = [['Pandemic',1], ['Betrayal at the House on the Hill',2], ['Machi Koro',3], ['Codenames',4]]
+  - var games = [['Pandemic',1], ['Betrayal at the House on the Hill',2], ['Machi Koro',3], ['Codenames',4],['Game5',5],['Game6',6],['Game7',7],['Game8',8],['Game9',9],['Game10',10],['Game11',11],['Game12',12],['Game13',13]]
 
 
 block content
   #mainView.main
     #menuIcon
-      svg(viewbox='0 0 100 80' width='30' height='30')
+      svg(viewbox='0 0 100 80' width='5vh' height='5vh')
         rect(width='100' height='15' rx='8')
         rect(y='30' width='100' height='15' rx='8')
         rect(y='60' width='100' height='15' rx='8')
@@ -72,4 +72,6 @@ block content
               label.switch
                 input(type="checkbox" id=game[1])
                 span.slider.round
+      #gameSubmit.button.greenBtn
+        Submit These Games
 

@@ -25,6 +25,33 @@ a, a:visited, a:hover, a:active {
     position: relative;
 }
 
+.button {
+    width: 100%;
+    height: 7vh;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: var(--main-white);
+}
+
+.blueBtn {
+    background-color: var(--main-blue);
+}
+
+.greyBtn {
+    background-color: var(--main-grey);
+}
+
+.greenBtn {
+    background-color: var(--main-green);
+}
+
+.off {
+    display:none !important;
+}
+
 /*****************/
 /* Toggle Switch */
 /*****************/
@@ -34,7 +61,7 @@ a, a:visited, a:hover, a:active {
 .switch {
     position: relative;
     display: inline-block;
-    width: 10vw;
+    width: 5.6vh;
     height: 3vh;
     grid-area: 1/2/2/3;
     justify-self: end;
@@ -63,10 +90,10 @@ a, a:visited, a:hover, a:active {
 .slider:before {
     position: absolute;
     content: "";
-    height: 4vw;
-    width: 4vw;
-    left: 0.8vw;
-    bottom: 0.6vw;
+    height: 2.3vh;
+    width: 2.3vh;
+    left: 0.6vh;
+    bottom: 0.4vh;
     background-color: white;
     -webkit-transition: .4s;
     transition: .4s;
@@ -81,9 +108,9 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
-    -webkit-transform: translateX(4vw);
-    -ms-transform: translateX(4vw);
-    transform: translateX(4vw);
+    -webkit-transform: translateX(2vh);
+    -ms-transform: translateX(2vh);
+    transform: translateX(2vh);
 }
 
 /* Rounded sliders */
@@ -141,6 +168,7 @@ input:checked + .slider:before {
     color: var(--main-grey);
 }
 
+
 .view {
     grid-area: 3/1/21/11;
     height: 90vh;
@@ -150,6 +178,7 @@ input:checked + .slider:before {
     grid-column-gap: 0px;
     grid-row-gap: 0px;
 }
+
 
 /*****************/
 /*   Home View   */
@@ -163,29 +192,6 @@ input:checked + .slider:before {
 #createButton {
     grid-area: 8/3/10/9;
     transition: opacity .5s, transform .5s;
-}
-
-.button {
-    width: 100%;
-    height: 7vh;
-    vertical-align: middle;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    color: var(--main-white);
-}
-
-.blueBtn {
-    background-color: var(--main-blue);
-}
-
-.greyBtn {
-    background-color: var(--main-grey);
-}
-
-.off {
-    display:none !important;
 }
 
 #codeForm {
@@ -266,12 +272,15 @@ input:checked + .slider:before {
 }
 
 #gamesList {
-    grid-area: 5/2/15/10;
+    grid-area: 5/2/16/10;
+    margin-top: 2.5vh;
+    overflow-y: scroll;
     margin-top: 2.5vh;
 }
 
 #gamesList li {
     height: 5vh;
+    font-size: 3vh;
     list-style: none;
     display: grid;
     grid-template-columns: 1fr 11vw;
@@ -288,6 +297,10 @@ input:checked + .slider:before {
 .toggle {
     grid-area: 1/2/2/3;
     justify-self: end;
+}
+
+#gameSubmit {
+    grid-area: 17/2/19/10;
 }
 
 

@@ -1,5 +1,5 @@
 const express = require("express");
-//const mysql = require('mysql');
+const mysql = require('mysql');
 
 const router = express.Router();
 
@@ -12,21 +12,24 @@ function getMySQLConnection() {
 	});
 }
 
+var theQuery = "SELECT * from H48f_gamesets where user_id = '"+user.id+"'";
 var connection = getMySQLConnection();
-connection.connect(function(err) {
-  if (err) throw err;
-  // this isn't ready yet:
-  // connection.query('SELECT * from "users" where "id" = '+user.id)
-  // if there's nothing in the result, add a new row, populating it with data from Okta's user object
-  //
-});
-
-
-
-
+var getGamesets = function() {
+  connection.connect(function(err) {
+    if (err) throw err;
+    // this isn't ready yet: return doesn't work here, use callback() instead
+    //https://nodejs.org/en/knowledge/getting-started/control-flow/what-are-callbacks/
+    
+    connection.query(theQuery , function (err, result) {
+      if (err) throw err;
+      return result;
+    });
+  }); 
+} 
+var games = getGamesets();
 // Home page
 router.get("/", (req, res) => {
-  res.render("index");
+  res.render("index", {games: games, theQuery: theQuery});
 });
 
 

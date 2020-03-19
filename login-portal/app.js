@@ -81,6 +81,7 @@ function loginRequired(req, res, next) {
 app.use('/', publicRouter);
 app.use('/dashboard', loginRequired, dashboardRouter);
 app.use('/users', usersRouter);
+app.use('/pull', pullRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

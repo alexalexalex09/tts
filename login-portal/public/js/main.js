@@ -110,5 +110,7 @@ window.addEventListener('load', function () {
         console.log()
     });
 
+    
+
 });
 //End all DOM manipulation

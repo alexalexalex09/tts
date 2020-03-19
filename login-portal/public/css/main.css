@@ -243,6 +243,7 @@ input:checked + .slider:before {
     grid-area: 9/1/11/2;
     color: var(--main-red);
     align-self: start;
+    text-align:center;
 }
 
 #codeSubmit {

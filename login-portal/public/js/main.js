@@ -110,7 +110,11 @@ window.addEventListener('load', function () {
         console.log()
     });
 
-    
+    //Game submit button handler
+    $('.button').click(this, function() {
+        console.log('hi');
+        fetch('/').then($('#results').html(res));
+    });
 
 });
 //End all DOM manipulation

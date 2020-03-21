@@ -73,9 +73,6 @@ block content
                 label.switch
                   input(type="checkbox" id=theId)
                   span.slider.round
-      #gameSubmit.button.greenBtn
+      #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games
-    div
-      | #{games}
-    div 
-      | #{theQuery}
+      #results

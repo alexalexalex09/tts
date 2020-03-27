@@ -8,8 +8,119 @@
     --main-black:#000;
     --main-grey: #333;
     --main-red:#d00;
+    --main-green:#5a5;
 }
 
+/*****************/
+/*    General    */
+/*****************/
+a, a:visited, a:hover, a:active {
+    text-decoration: none;
+}
+
+.textInputCont {
+    height: 100%;
+    border: 1px solid black;
+    text-align: center;
+    position: relative;
+}
+
+.button {
+    width: 100%;
+    height: 7vh;
+    vertical-align: middle;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: var(--main-white);
+}
+
+.blueBtn {
+    background-color: var(--main-blue);
+}
+
+.greyBtn {
+    background-color: var(--main-grey);
+}
+
+.greenBtn {
+    background-color: var(--main-green);
+}
+
+.off {
+    display:none !important;
+}
+
+/*****************/
+/* Toggle Switch */
+/*****************/
+
+
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 5.6vh;
+    height: 3vh;
+    grid-area: 1/2/2/3;
+    justify-self: end;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 2.3vh;
+    width: 2.3vh;
+    left: 0.6vh;
+    bottom: 0.4vh;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--main-green);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--main-green);
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(2vh);
+    -ms-transform: translateX(2vh);
+    transform: translateX(2vh);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
 
 /*****************/
 /*   Main Grid   */
@@ -40,71 +151,65 @@
 }
 
 .login {
-    grid-area: 1/9/3/11;
+    grid-area: 1/6/3/11;
     justify-self: end;
     color: var(--main-blue);
     padding-right:3vw;
 }
 
+.login a, .login a:visited, .login a:active {
+    color: var(--main-blue);
+}
+
 .pageTitle {
-    grid-area: 4/1/6/11;
+    grid-area: 1/1/3/11;
     justify-self: center;
     font-size: 10vw;
     color: var(--main-grey);
 }
 
+
+.view {
+    grid-area: 3/1/21/11;
+    height: 90vh;
+    display: grid;
+    grid-template-columns: repeat(10, 10vw);
+    grid-template-rows: repeat(17, 5vh);
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+
+/*****************/
+/*   Home View   */
+/*****************/
+
 #joinButton {
-    grid-area: 9/3/11/9;
+    grid-area: 6/3/8/9;
+    transition: opacity .5s, transform .5s;
 }
 
 #createButton {
-    grid-area: 11/3/13/9;
-    transition: opacity .5s;
-}
-
-.button {
-    width: 100%;
-    height: 7vh;
-    vertical-align: middle;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    color: var(--main-white);
-}
-
-.blueBtn {
-    background-color: var(--main-blue);
-}
-
-.greyBtn {
-    background-color: var(--main-grey);
-}
-
-.off {
-    display:none !important;
+    grid-area: 8/3/10/9;
+    transition: opacity .5s, transform .5s;
 }
 
 #codeForm {
-    grid-area: 12/3/14/9;
+    grid-area: 10/3/12/9;
 }
 
 #codeInputGroup {
-    grid-area: 11/3/17/9;
+    grid-area: 6/3/12/9;
     display:grid;
     align-self: start;
     grid-template-rows: repeat(11, 2.5vh);
     transition: opacity .5s, transform .5s;
     opacity: 0%;
-    transform: translateY(-10px)
+    transform: translateX(-100vw)
 }
 
 #codeInput {
-    height: 100%;
-    border: 1px solid black;
     grid-area: 3/1/5/2;
-    text-align: center;
-    position: relative;
 }
 
 #codeInputLabel {
@@ -135,15 +240,71 @@
 }
 
 #codeError {
-    grid-area: 10/1/12/2;
+    grid-area: 9/1/11/2;
     color: var(--main-red);
     align-self: start;
+    text-align:center;
 }
 
 #codeSubmit {
     grid-area: 6/1/10/2;
     text-align: center;
 }
+
+/*****************/
+/*  Select View  */
+/*****************/
+
+#addGamesContainer {
+    grid-area: 3/2/5/10;
+    display: grid;
+    grid-template-rows: repeat(4, 2.5vh);
+    grid-template-columns: repeat(6, 10vw);
+}
+
+#addGamesTitle {
+    text-align: center;
+    grid-area: 1/1/3/11;
+    align-self: end;
+}
+
+#addGamesInput {
+    grid-area: 3/1/5/11;
+}
+
+#gamesList {
+    grid-area: 5/2/16/10;
+    margin-top: 2.5vh;
+    overflow-y: scroll;
+    margin-top: 2.5vh;
+}
+
+#gamesList li {
+    height: 5vh;
+    font-size: 3vh;
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 11vw;
+    grid-template-rows: 1fr;
+}
+
+.gameName {
+    width: 100%;
+    grid-area: 1/1/2/2;
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.toggle {
+    grid-area: 1/2/2/3;
+    justify-self: end;
+}
+
+#gameSubmit {
+    grid-area: 17/2/19/10;
+}
+
+
 
 /*****************/
 /*  Mobile Menu  */
@@ -160,6 +321,10 @@
     color: var(--main-white);
     transform: translateX(-60vw);
     transition: transform .5s;
+}
+
+#menu a {
+    color: var(--main-white) !important;
 }
 
 #menuClose {

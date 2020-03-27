@@ -7,14 +7,20 @@ window.addEventListener('load', function () {
         $("#codeInputGroup").removeClass("off");
         window.setTimeout(function() {
             console.log('wait 1')
-            $('#createButton').css({"opacity" : "0%"});
+            $('#joinButton').css({
+                "opacity" : "0%",
+                "transform" : "translateX(100vw)"
+            });
             $("#codeInputGroup").css({
                 "opacity"   : "100%",
-                "transform" : "translateY(0px)"
-        });
+                "transform" : "translateX(0px)"
+            });
+            $("#createButton").css({
+                "transform" : "translateY(12vh)"
+            });
             window.setTimeout(function () {
                 console.log('wait 2')
-                $("#createButton").addClass("off");
+                $("#joinButton").addClass("off");
             }, 600);
         }, 10);
     });
@@ -39,7 +45,76 @@ window.addEventListener('load', function () {
 
     //Text input clear button handler
     $('.textClear').click(this, function(el) {
-        $(this).parent().children('input').first().val('');
-        console.log($(this).parent().children('input').first().val());
+        if ($(this).parent().children('input').first().val() == '') {
+            $("#joinButton").removeClass("off");
+            window.setTimeout(function() {
+                console.log('wait 1')
+                $('#joinButton').css({
+                    "opacity" : "100%",
+                    "transform" : "translateX(0vw)"
+                });
+                $("#codeInputGroup").css({
+                    "opacity"   : "0%",
+                    "transform" : "translateX(-100vw)"
+                });
+                $("#createButton").css({
+                    "transform" : "translateY(0vh)"
+                });
+                window.setTimeout(function () {
+                    console.log('wait 2')
+                    $("#codeInputGroup").addClass("off");
+                    $('.errorText').addClass("off");
+                }, 600);
+            }, 10);
+        } else {
+            $(this).parent().children('input').first().val('');
+            console.log($(this).parent().children('input').first().val());
+        }
     });
+
+    //Submit button handler
+    $('#codeSubmit').click(this, function(el) {
+        $('.errorText').removeClass('shake')
+        window.setTimeout(function () {
+            $('.errorText').removeClass('off').addClass('shake');
+        }, 5);
+        $('#createButton').css({
+            "transform" : "translateY(14vh)"
+        });
+
+    });
+
+    //Set font sizes
+    function cFont (e) {
+        var iH = window.innerHeight;
+        var iW = window.innerWidth;
+        var fS = ( (iW / (100/e.data.fWidth) ) > (iH / (100/e.data.fHeight) ) ) ? e.data.fHeight+'vh' : e.data.fWidth+'vw';
+        $(e.data.el).css('font-size', fS);
+        console.log('width: '+iW / (100/e.data.fWidth)+', height: '+iH / (100/e.data.fHeight)+', result: '+fS);
+    }
+    $(window).on("resize", {el: ".pageTitle", mHeight: "10", mWidth: "10", fHeight: '8', fWidth: '10'}, cFont);
+    cFont({data: {el: '.pageTitle', mHeight: '10', mWidth: '10', fHeight: '8', fWidth: '10'}});
+    $(window).on("resize", {el: ".login", mHeight: '10', mWidth: '10', fHeight: "4", fWidth: "6"}, cFont);
+    cFont({data: {el: '.login', mHeight: '10', mWidth: '10', fHeight: '4', fWidth: '6'}});
+    $(window).on("resize", {el: "#addGamesTitle", mHeight: '10', mWidth: '10', fHeight: "4", fWidth: "6"}, cFont);
+    cFont({data: {el: '#addGamesTitle', mHeight: '10', mWidth: '10', fHeight: '4', fWidth: '6'}});
+
+    //Change Font color of game names
+    $('input[type="checkbox"]').on("click", function() {
+        var el = $(this).parent().parent().parent().children('.gameName').first();
+        if ($(this).is(':checked')) {
+            el.css('color', "var('--main-green')");
+        } else {
+            el.css('color', "var('--main-black')");
+        }
+        console.log()
+    });
+
+    //Game submit button handler
+    $('.button').click(this, function() {
+        console.log('hi');
+        fetch('/').then($('#results').html(res));
+    });
+
 });
+//End all DOM manipulation

@@ -29,35 +29,7 @@ head
     |  browser. Please 
     a(href='https://browsehappy.com/') upgrade your browser
     |  to improve your experience and security.
-#mainView.main
-  #menuIcon
-    svg(viewbox='0 0 100 80' width='30' height='30')
-      rect(width='100' height='15' rx='8')
-      rect(y='30' width='100' height='15' rx='8')
-      rect(y='60' width='100' height='15' rx='8')
-  #menu.off
-    #menuClose.closeButton
-      ion-icon(name='close-outline')
-    #menuItems
-      ul
-        li
-          ion-icon(name='help-circle-outline')
-          | FAQ
-        li
-          ion-icon(name='library-outline')
-          | Manage Games
-        li
-          ion-icon(name='person-circle-outline')
-          | My Account
-        li
-          ion-icon(name='information-circle-outline')
-          | About
-        li
-          ion-icon(name='star-outline')
-          | Get Premium
-  #menuCatch.clickCatcher.off
-  .login
-    a(href="/users/login") Login
-  .pageTitle #{pageTitle}
-  block content
+
+block content
+
 // Footer Scripts

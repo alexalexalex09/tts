@@ -15,6 +15,7 @@ const usersRouter = require("./routes/users");
 
 var app = express();
 
+//TODO: Make this asynchronous so the user doesn't have to navigate to a different page
 var oktaClient = new okta.Client({
   orgUrl: 'https://dev-222844.okta.com',
   token: '00T-POzgNn1N2HdBngzKuLiA0a8VynCvD8gQGsFCkr'
@@ -31,7 +32,7 @@ const oidc = new ExpressOIDC({
     },
     callback: {
       path: "/users/callback",
-      defaultRedirect: "/dashboard"
+      defaultRedirect: "/"
     }
   }
 });
@@ -80,6 +81,11 @@ function loginRequired(req, res, next) {
 app.use('/', publicRouter);
 app.use('/dashboard', loginRequired, dashboardRouter);
 app.use('/users', usersRouter);
+
+//post requests, this doesn't work
+app.POST('/', (req, res) => {
+  res.send(req.body);
+}
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

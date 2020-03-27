@@ -12,6 +12,7 @@ var ExpressOIDC = require("@okta/oidc-middleware").ExpressOIDC;
 const dashboardRouter = require("./routes/dashboard");
 const publicRouter = require("./routes/public");
 const usersRouter = require("./routes/users");
+const pullRouter = require("./routes/pull");
 
 var app = express();
 
@@ -81,11 +82,13 @@ function loginRequired(req, res, next) {
 app.use('/', publicRouter);
 app.use('/dashboard', loginRequired, dashboardRouter);
 app.use('/users', usersRouter);
+app.use('/pull', pullRouter);
 
 //post requests, this doesn't work
-app.POST('/', (req, res) => {
-  res.send(req.body);
-}
+//app.get('/pull', (req, res) => {
+  //res.send(req.body);
+//  res.send("hello!");
+//});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

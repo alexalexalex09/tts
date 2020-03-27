@@ -113,7 +113,7 @@ window.addEventListener('load', function () {
     //Game submit button handler
     $('.button').click(this, function() {
         console.log('hi');
-        fetch('/').then($('#results').html(res));
+        fetch('/pull').then(function(res) {$('#results').html(res)});
     });
 
 });

@@ -5,7 +5,7 @@ const router = express.Router();
 
 
 // Home page
-router.post("/pull", (req, res) => {
+router.get("/", (req, res) => {
     /*
     function getMySQLConnection() {
         return mysql.createConnection({
@@ -28,7 +28,7 @@ router.post("/pull", (req, res) => {
     } 
     var games = getGamesets();
     */
-    res.send(req.body);
+   res.send('respond with a resource');
 });
 //now just send a javascript fetch request here and I can make a whole sql query
 

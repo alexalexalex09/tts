@@ -35,7 +35,7 @@ router.get("/logindata", (req, res) => {
   //connection.end();
 });
 
-router.post("/logindata", (req, res) => {
+router.post("/getgames", (req, res) => {
   var gameid = req.body.id;
   connection.query('SELECT * from lists WHERE list_user_id = ?', ["1"], function(err, qres, fields) {
     if (err) {res.send(err)};

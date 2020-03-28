@@ -155,7 +155,28 @@ window.addEventListener('load', function () {
                     //console.log("error: "+err)
                 });
         }
+
     });
+
+    const game = {
+        id: 1
+    };
+
+    const options = {
+        method: 'POST',
+        body: JSON.stringify(game),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+
+    fetch('/getgames', options)
+        .then(function(response) {
+            console.log(response);
+        })
+        .catch(function(err) {
+            console.log(err);
+        })
 
 });
 //End all DOM manipulation

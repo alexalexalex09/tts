@@ -1,0 +1,52 @@
+extends layout
+
+block variables
+  
+  - var title = "The Tidy Squirrel"
+  - var games = [["My Games", [['Pandemic',1], ['Betrayal at the House on the Hill',2], ['Machi Koro',3]]]["All Games",[['Codenames',4],['Game5',5],['Game6',6],['Game7',7],['Game8',8],['Game9',9],['Game10',10],['Game11',11],['Game12',12],['Game13',13]]]]
+  - var gamesobj = {"My Games": {1 : "Pandemic",2: "Betrayal at the House on the Hill"},"All Games": {1: "Pandemic", 2: "Betrayal at the House on the Hill", 3: "Machi Koro"}}
+
+block content
+  #mainView.main
+    #menuIcon
+      svg(viewbox='0 0 100 80' width='5vh' height='5vh')
+        rect(width='100' height='15' rx='8')
+        rect(y='30' width='100' height='15' rx='8')
+        rect(y='60' width='100' height='15' rx='8')
+    #menu.off
+      #menuClose.closeButton
+        ion-icon(name='close-outline')
+      #menuItems
+        ul
+          li
+            ion-icon(name='help-circle-outline')
+            | FAQ
+          li
+            ion-icon(name='library-outline')
+            | Manage Games
+          li
+            ion-icon(name='person-circle-outline')
+            | My Account
+          li
+            ion-icon(name='information-circle-outline')
+            | About
+          li
+            ion-icon(name='star-outline')
+            | Get Premium
+          if user
+            li
+              ion-icon(name='log-out-outline')
+              a(href="/users/logout") Logout
+    #menuCatch.clickCatcher.off
+    .login
+      
+      if user
+        | Hello, #{user.profile.firstName} 
+      else 
+        a(href="/login") Login
+    #homeView.view
+      .pageTitle The Tidy Squirrel 🐿️
+      #centerbutton
+        | Login here
+      input#gamenum(type="text")
+      #results

@@ -304,7 +304,26 @@ input:checked + .slider:before {
     grid-area: 17/2/19/10;
 }
 
+/*****************/
+/*    Testing    */
+/*****************/
+#centerbutton {
+    grid-area: 6/1/8/11;
+    justify-self: center;
+    font-size: 1.5em;
+    background: var(--main-blue);
+    padding: 10px 25px;
+    color: var(--main-white);
+    border-radius: 10px;
+    align-self: center;
+    cursor:pointer;
+}
 
+#gamenum {
+    grid-area: 8/1/9/11;
+    justify-self: center;
+    font-size: 1.5em;
+}
 
 /*****************/
 /*  Mobile Menu  */

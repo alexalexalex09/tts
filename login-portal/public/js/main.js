@@ -2,7 +2,7 @@
 window.addEventListener('load', function () {
 
     //Join button click handler
-    document.getElementById('joinButton').addEventListener('click', function(el) {
+    $('#joinButton').click(this, function(el) {
         console.log('join click');
         $("#codeInputGroup").removeClass("off");
         window.setTimeout(function() {
@@ -114,6 +114,47 @@ window.addEventListener('load', function () {
     $('.button').click(this, function() {
         console.log('hi');
         fetch('/pull').then(function(res) {$('#results').html(res)});
+    });
+
+    //Testing for homework
+    $('#gamenum').on("input", function() {
+        //console.log('hi');
+        /*
+        fetch('/logindata')
+            .then(function(response) {
+                return response.text().then(function(text) {
+                    document.getElementById("results").innerHTML = text;
+                });
+            })
+            .catch( function(err) {
+                console.log("error: "+err)
+            });
+        */
+        var gameInput = document.getElementById("gamenum").value;
+
+        if(gameInput) {
+            const game = {
+                id: gameInput
+            };
+
+            const options = {
+                method: 'POST',
+                body: JSON.stringify(game),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            fetch('/logindata', options)
+                .then(function(response) {
+                    return response.text().then(function(text) {
+                        document.getElementById("results").innerHTML = text;
+                    });
+                })
+                .catch( function(err) {
+                    //console.log("error: "+err)
+                });
+        }
     });
 
 });

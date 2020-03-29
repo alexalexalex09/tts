@@ -172,7 +172,14 @@ window.addEventListener('load', function () {
 
     fetch('/getgames', options)
         .then(function(response) {
-            console.log(response);
+            return response.text().then( text => {
+                console.log(text);
+                console.log(typeof text);
+                text.foreach(el => {
+                    var htmlString = '<li><div class="gamename">'+el.list_name+'</div></li>';
+                    $('#gamesList').append(htmlString);
+                })
+            });
         })
         .catch(function(err) {
             console.log(err);

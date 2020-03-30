@@ -3,8 +3,6 @@ extends layout
 block variables
   
   - var title = "The Tidy Squirrel"
-  - var games = [["My Games", [['Pandemic',1], ['Betrayal at the House on the Hill',2], ['Machi Koro',3]]]["All Games",[['Codenames',4],['Game5',5],['Game6',6],['Game7',7],['Game8',8],['Game9',9],['Game10',10],['Game11',11],['Game12',12],['Game13',13]]]]
-  - var gamesobj = {"My Games": {1 : "Pandemic",2: "Betrayal at the House on the Hill"},"All Games": {1: "Pandemic", 2: "Betrayal at the House on the Hill", 3: "Machi Koro"}}
 
 block content
   #mainView.main
@@ -63,16 +61,14 @@ block content
         #addGamesInput.textInputCont
           input.textInput(type='text')
           .textClear
-      #gamesList
-        each collection in gamesobj
-          each game, theId in collection
-            li 
-              div.gameName
-                | #{game}
-              div.toggle
-                label.switch
-                  input(type="checkbox" id=theId)
-                  span.slider.round
+      #lists
+        li 
+          div.listName
+            | All Games
+          div.toggle
+            label.switch
+              input(type="checkbox" id=theId)
+              span.slider.round
       #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games
       #results

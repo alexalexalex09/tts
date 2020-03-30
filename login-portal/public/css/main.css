@@ -272,14 +272,14 @@ input:checked + .slider:before {
     grid-area: 3/1/5/11;
 }
 
-#gamesList {
+#lists {
     grid-area: 5/2/16/10;
     margin-top: 2.5vh;
     overflow-y: scroll;
     margin-top: 2.5vh;
 }
 
-#gamesList li {
+#lists li {
     height: 5vh;
     font-size: 3vh;
     list-style: none;
@@ -288,7 +288,7 @@ input:checked + .slider:before {
     grid-template-rows: 1fr;
 }
 
-.gameName {
+.listName {
     width: 100%;
     grid-area: 1/1/2/2;
     overflow-x: hidden;

@@ -158,32 +158,44 @@ window.addEventListener('load', function () {
 
     });
 
-    const game = {
-        id: 1
-    };
+        const game = {
+            id: 2
+        };
 
-    const options = {
-        method: 'POST',
-        body: JSON.stringify(game),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    };
+        const options = {
+            method: 'POST',
+            body: JSON.stringify(game),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        };
 
-    fetch('/getgames', options)
-        .then(function(response) {
-            return response.text().then( text => {
-                console.log(text);
-                console.log(typeof text);
-                text.foreach(el => {
-                    var htmlString = '<li><div class="gamename">'+el.list_name+'</div></li>';
-                    $('#gamesList').append(htmlString);
-                })
-            });
-        })
-        .catch(function(err) {
-            console.log(err);
-        })
+        fetch('/getgames', options)
+            .then(function(response) {
+                return response.json().then( text => {
+                    console.log(text);
+                    console.log(typeof text);
+                    for (var i=0; i<text.length; i++) {
+                        var htmlString = `
+                            <li>
+                                <div class="gamename">`
+                                    +text[i].list_name+`
+                                </div>
+                                <div class='toggle'>
+                                    <label class="switch">
+                                        <input type="checkbox" id=`+text[i].list_id+`>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </li>`;
+                        $('#lists').append(htmlString);
+                        console.log(text[i]);
+                    }
+                });
+            })
+            .catch(function(err) {
+                console.log(err);
+            })
 
 });
 //End all DOM manipulation

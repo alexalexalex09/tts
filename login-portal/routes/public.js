@@ -35,9 +35,16 @@ router.get("/logindata", (req, res) => {
   //connection.end();
 });
 
+router.post("/getuser", (req, res) => {
+  connection.query('SELECT * from lists WHERE list_user_id = ?', user.id, function(err, qres, fields) {
+    if (err) {res.send(err)};
+    res.send(qres);
+  })
+});
+
 router.post("/getgames", (req, res) => {
-  var gameid = req.body.id;
-  connection.query('SELECT * from lists WHERE list_user_id = ?', [gameid], function(err, qres, fields) {
+  var userid = req.body.id;
+  connection.query('SELECT * from lists WHERE list_user_id = ?', userid, function(err, qres, fields) {
     if (err) {res.send(err)};
     res.send(qres);
   })

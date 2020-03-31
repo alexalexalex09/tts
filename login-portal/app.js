@@ -8,7 +8,6 @@ const usersRouter = require("./routes/users");
 const session = require("express-session");
 const okta = require("@okta/okta-sdk-nodejs");
 const ExpressOIDC = require("@okta/oidc-middleware").ExpressOIDC;
-const http = require('http');
 
 
 var app = express();
@@ -47,8 +46,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// App routes
+// Okta setup
 app.use(session({
   secret: '9=*)45qbn0vdASFVF(N&)Y434btADSS9n874yfb09SVNDF(N4gv3',
   resave: true,
@@ -59,7 +57,7 @@ app.use((req, res, next) => {
   if (!req.userinfo) {
     return next();
   }
-
+  //Make user variable available
   oktaClient.getUser(req.userinfo.sub)
     .then(user => {
       req.user = user;
@@ -70,13 +68,14 @@ app.use((req, res, next) => {
     });
 });
 
-//Router
+//Routers
 app.use('/', publicRouter);
 app.use('/users', usersRouter);
 app.get('/test', (req, res) => {
   res.json({ profile: req.user ? req.user.profile : null });
 });
 
+//Authenticated page logic - just call loginRequired to protect!
 function loginRequired(req, res, next) {
   if (!req.user) {
     return res.status(401).render("unauthenticated");
@@ -100,8 +99,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
-
 
 module.exports = app;
 

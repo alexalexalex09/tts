@@ -17,14 +17,14 @@ connection.connect(function(err) {
 });
 
 
+
+
+
 // Home page
 router.get("/", (req, res) => {
   res.render("index");
 });
 
-router.get("/login", (req, res) => {
-  res.render("login");
-});
 
 router.get("/logindata", (req, res) => {
   var data;

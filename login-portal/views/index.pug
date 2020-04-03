@@ -65,9 +65,12 @@ block content
         li 
           div.listName
             | All Games
+          div.listExpand(onclick="listToggle(this)")
+            ion-icon(name="chevron-down-outline")
           div.toggle
             label.switch
               input(type="checkbox" id=theId)
               span.slider.round
+          div.listGames
       #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games

@@ -185,25 +185,33 @@ window.addEventListener('load', function () {
             'Content-Type': 'application/json'
         }
     };
-    fetch('/getuser', options)
+    fetch('/get_user_lists', options)
         .then(function(response) {
             return response.json().then( obj => {
                 console.log(obj);
                 console.log(typeof obj);
-                for (var i=0; i<obj.length; i++) {
-                    var htmlString = `
-                        <li>
-                            <div class="gamename">`
-                                +obj[i].list_name+`
-                            </div>
-                            <div class='toggle'>
-                                <label class="switch">
-                                    <input type="checkbox" id=`+obj[i].list_id+`>
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </li>`;
-                    $('#lists').append(htmlString);
+                if (!obj.err) {
+                    for (var i=0; i<obj.length; i++) {
+                        var htmlString = `
+                            <li>
+                                <div class="listName">`
+                                    +obj[i].list_name+`
+                                </div>
+                                <div class="listExpand" onclick="listToggle(this)">
+                                    <ion-icon name="chevron-down-outline"></ion-icon>
+                                </div>
+                                <div class='toggle'>
+                                    <label class="switch">
+                                        <input type="checkbox" id=`+obj[i].list_id+`>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div class="listGames"></div>
+                            </li>`;
+                        $('#lists').append(htmlString);
+                    }
+                } else {
+                    console.log("Error: no user");
                 }
             });
         })
@@ -212,21 +220,47 @@ window.addEventListener('load', function () {
         //});
 
 
-
 });
 //End all DOM manipulation
-/*[
-    {
-        "list_id":1,
-        "list_name":"Strategy",
-        "list_user_id":"<00u3agmkuCgKnKBbz4x6>"
-    },
-    {
-        "list_id":3,
-        "list_name":"More than 4 players",
-        "list_user_id":"<00u3agmkuCgKnKBbz4x6>"
-    }
-]*/
+
+function listToggle(el) {
+       
+    $(el).toggleClass('expanded');
+    
+    const options = {
+        method: 'POST',
+        body: JSON.stringify({ list: '1' }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+    fetch('/get_user_list_games', options)
+    .then(function(response) {
+        return response.json().then( obj => {
+            console.log(obj);
+            console.log(typeof obj);
+            for (var i=0; i<obj.length; i++) {
+
+                var htmlString = `
+                    <li>
+                        <div class="gameName" id=`+obj[i].ug_game_id+`>`
+                            +obj[i].ug_game_id+`
+                        </div>
+                        <div class='toggle'>
+                            <label class="switch">
+                                <input type="checkbox" id=`+obj[i].ug_game_id+`>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </li>`;
+                $(el).parent().children('.listGames').first().prepend(htmlString);
+                //TODO: Change the display of listGames so this works. I don't think grid is the 
+                //best choice anymore, because the height is preset. Or maybe I can add some 
+                //javascript in to customize the heigh based on the number of added elements.
+            }
+        });
+    });
+}
 
 
 

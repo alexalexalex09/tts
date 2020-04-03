@@ -74,13 +74,8 @@ app.use('/users', usersRouter);
 app.get('/test', (req, res) => {
   res.json({ profile: req.user ? req.user.profile : null });
 });
-app.post("/getuser", (req, res) => {
-  var querystr = 'SELECT * from lists WHERE list_user_id = ' + req.user.id;
-  connection.query(querystr, function(err, qres, fields) {
-    if (err) {res.send(err)};
-    res.send(qres);
-  })
-});
+
+
 
 //Authenticated page logic - just call loginRequired to protect!
 function loginRequired(req, res, next) {

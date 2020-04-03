@@ -187,36 +187,46 @@ window.addEventListener('load', function () {
     };
     fetch('/getuser', options)
         .then(function(response) {
-            return response.json().then( text => {
-                console.log(text);
-                console.log(typeof text);
-                for (var i=0; i<text.length; i++) {
+            return response.json().then( obj => {
+                console.log(obj);
+                console.log(typeof obj);
+                for (var i=0; i<obj.length; i++) {
                     var htmlString = `
                         <li>
                             <div class="gamename">`
-                                +text[i].list_name+`
+                                +obj[i].list_name+`
                             </div>
                             <div class='toggle'>
                                 <label class="switch">
-                                    <input type="checkbox" id=`+text[i].list_id+`>
+                                    <input type="checkbox" id=`+obj[i].list_id+`>
                                     <span class="slider round"></span>
                                 </label>
                             </div>
                         </li>`;
                     $('#lists').append(htmlString);
-                    console.log(text[i]);
                 }
             });
         })
-        .catch(function(err) {
-            console.log(err);
-        })
+        //.catch(function(err) {
+          //  console.log(err);
+        //});
 
 
 
 });
 //End all DOM manipulation
-
+/*[
+    {
+        "list_id":1,
+        "list_name":"Strategy",
+        "list_user_id":"<00u3agmkuCgKnKBbz4x6>"
+    },
+    {
+        "list_id":3,
+        "list_name":"More than 4 players",
+        "list_user_id":"<00u3agmkuCgKnKBbz4x6>"
+    }
+]*/
 
 
 

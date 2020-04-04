@@ -177,7 +177,7 @@ window.addEventListener('load', function () {
     /*   Real Game list puller   */
     /*****************************/
     
-
+    
     const options = {
         method: 'POST',
         body: '',
@@ -193,73 +193,118 @@ window.addEventListener('load', function () {
                 if (!obj.err) {
                     for (var i=0; i<obj.length; i++) {
                         var htmlString = `
-                            <li>
+                            <li id=`+obj[i].list_id+`>
                                 <div class="listName">`
                                     +obj[i].list_name+`
                                 </div>
                                 <div class="listExpand" onclick="listToggle(this)">
                                     <ion-icon name="chevron-down-outline"></ion-icon>
                                 </div>
-                                <div class='toggle'>
+                                <div class='toggle' >
                                     <label class="switch">
-                                        <input type="checkbox" id=`+obj[i].list_id+`>
+                                        <input type="checkbox">
                                         <span class="slider round"></span>
                                     </label>
                                 </div>
                                 <div class="listGames"></div>
                             </li>`;
-                        $('#lists').append(htmlString);
+                        $('#selectLists').append(htmlString);
                     }
                 } else {
                     console.log("Error: no user");
                 }
             });
         })
-        //.catch(function(err) {
-          //  console.log(err);
-        //});
-
-
+        
+    /*****************************/
+    /*   All Game list puller   */
+    /*****************************/
+    
+    $('#selectLists li .listExpand').first().click(this, function() {
+        el = $('#selectLists li .listExpand').first();
+        $(el).toggleClass('expanded');
+        if ($(el).hasClass('expanded')) {
+            var theid = $(el).parent().attr('id');
+            console.log("the id: "+theid)
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({ list: theid }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            fetch('/get_user_all_games', options)
+            .then(function(response) {
+                return response.json().then( obj => {
+                    console.log('list_games'+obj);
+                    if (!obj.err) {
+                        for (var i=0; i<obj.length; i++) {
+                            var htmlString = `
+                                <li>
+                                    <div class="gameName" id=`+obj[i].game_id+`>`
+                                        +obj[i].game_name+`
+                                    </div>
+                                    <div class='toggle'>
+                                        <label class="switch">
+                                            <input type="checkbox" id=`+obj[i].game_id+`>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </div>
+                                </li>`;
+                            $(el).parent().children('.listGames').first().prepend(htmlString);
+                        }
+                    } else {
+                        console.log('list_games err: ' + obj.err );
+                    }
+                });
+            });
+        } else {
+            $(el).parent().children('.listGames').first().empty();
+        }
+    });
 });
 //End all DOM manipulation
 
 function listToggle(el) {
-       
     $(el).toggleClass('expanded');
-    
-    const options = {
-        method: 'POST',
-        body: JSON.stringify({ list: '1' }),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    };
-    fetch('/get_user_list_games', options)
-    .then(function(response) {
-        return response.json().then( obj => {
-            console.log(obj);
-            console.log(typeof obj);
-            for (var i=0; i<obj.length; i++) {
-
-                var htmlString = `
-                    <li>
-                        <div class="gameName" id=`+obj[i].ug_game_id+`>`
-                            +obj[i].ug_game_id+`
-                        </div>
-                        <div class='toggle'>
-                            <label class="switch">
-                                <input type="checkbox" id=`+obj[i].ug_game_id+`>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                    </li>`;
-                $(el).parent().children('.listGames').first().prepend(htmlString);
-                //TODO: Change the display of listGames so this works. I don't think grid is the 
-                //best choice anymore, because the height is preset. Or maybe I can add some 
-                //javascript in to customize the heigh based on the number of added elements.
+    if ($(el).hasClass('expanded')) {
+        var theid = $(el).parent().attr('id');
+        console.log("the id: "+theid)
+        const options = {
+            method: 'POST',
+            body: JSON.stringify({ list: theid }),
+            headers: {
+                'Content-Type': 'application/json'
             }
+        };
+        fetch('/get_user_list_games', options)
+        .then(function(response) {
+            return response.json().then( obj => {
+                console.log('list_games'+obj);
+                if (!obj.err) {
+                    for (var i=0; i<obj.length; i++) {
+                        var htmlString = `
+                            <li>
+                                <div class="gameName" id=`+obj[i].game_id+`>`
+                                    +obj[i].game_name+`
+                                </div>
+                                <div class='toggle'>
+                                    <label class="switch">
+                                        <input type="checkbox" id=`+obj[i].game_id+`>
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                            </li>`;
+                        $(el).parent().children('.listGames').first().prepend(htmlString);
+                    }
+                } else {
+                    console.log('list_games err: ' + obj.err );
+                }
+            });
         });
-    });
+    } else {
+        $(el).parent().children('.listGames').first().empty();
+    }
 }
 
 

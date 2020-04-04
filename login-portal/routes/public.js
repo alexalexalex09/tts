@@ -46,22 +46,44 @@ router.post("/get_user_lists", (req, res) => {
   }
 });
 
+//get all current user games
+router.post("/get_user_all_games", (req, res) => {
+  if (req.user) {
+    var userid = req.user.id;
+    var sqlquery = `SELECT games.game_name, games.game_id
+                    FROM games 
+                    INNER JOIN users_x_games 
+                    ON games.game_id=users_x_games.ug_game_id 
+                    AND users_x_games.ug_user_id='<` + userid + `>'`
+    //TODO: Right now this query shows every game on every list, even if the
+    //game is on multiple lists. It should only list each game once.
+    connection.query(sqlquery, function(err, qres, fields) {
+      if (err) {res.send(err)};
+      res.send(qres);
+    })
+  } else {
+    res.send({err: 'sql error'});
+  }
+});
+
 //get current user games for specified list
-//parameter: list_id
+//parameter: list: the list id to retrieve from the database
 router.post("/get_user_list_games", (req, res) => {
   if (req.user) {
     var userid = req.user.id;
     var listid = req.body.list;
-    var sqlquery = `SELECT ug_game_id FROM users_x_games WHERE ug_user_id = '<` + userid + `>' AND ug_list_id = ` + listid + ``;
-    //TODO: Change this query to take the selected ug_game_id and look up the game name
+    var sqlquery = `SELECT games.game_name, games.game_id
+                    FROM games 
+                    INNER JOIN users_x_games 
+                    ON games.game_id=users_x_games.ug_game_id 
+                    AND users_x_games.ug_user_id='<` + userid + `>' 
+                    AND users_x_games.ug_list_id=` + listid
     connection.query(sqlquery, function(err, qres, fields) {
       if (err) {res.send(err)};
-      console.log(qres);
       res.send(qres);
-      
     })
   } else {
-    res.send('no user');
+    res.send({err: 'sql error'});
   }
 });
 

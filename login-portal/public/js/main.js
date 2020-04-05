@@ -262,9 +262,36 @@ window.addEventListener('load', function () {
             $(el).parent().children('.listGames').first().empty();
         }
     });
+
+    //Add a game to the unsorted list
+    //Used in the select view
+    var addGamesInput = document.getElementById("addGamesInput");
+
+    addGamesInput.addEventListener("keyup", function(event) {
+        // Number 13 is the "Enter" key on the keyboard
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            var game = addGamesInput.value;
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({ game: game }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            fetch('/add_user_game_unsorted', options)
+            .then(function(response) {
+                return response.json().then( obj => {
+                    console.log(obj);
+                    if (obj.err) {console.log('add_games err: ' + obj.err ); }
+                });
+            });
+        }
+    });
 });
 //End all DOM manipulation
 
+//Display or remove a particular list of games in the select view
 function listToggle(el) {
     $(el).toggleClass('expanded');
     if ($(el).hasClass('expanded')) {
@@ -306,7 +333,6 @@ function listToggle(el) {
         $(el).parent().children('.listGames').first().empty();
     }
 }
-
 
 
 

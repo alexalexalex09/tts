@@ -96,24 +96,28 @@ router.post("/add_user_game_unsorted", (req, res) => {
     var sqlA = `INSERT IGNORE INTO games (game_name) VALUES ('`+game+`')`;
     var gameid = 0;
     connection.query(sqlA, function(err, qres, fields) {
+      //this is breaking because it returns immediately. 
+      //Look at https://codeburst.io/node-js-mysql-and-promises-4c3be599909b
+      //and figure out how to incorporate Q
       if (err) {res.send(err)};
       gameid = results.insertId;
-    });
-    var sqlB = `
-              INSERT IGNORE INTO users_x_games(ug_list_id, ug_user_id, ug_game_id) 
-              SELECT list_id, '`+userid+`', `+gameid+`
-              FROM lists  
-              WHERE list_user_id='`+userid+`' 
-              AND list_name='Unsorted'`;
-    //This query should start a trigger on users_x_games that creates a duplicate entry
-    //in the users's "All Games" list and then double check the All Games list for
-    //duplicates in that list and remove any.
-    connection.query(sqlB, function(err, qres, fields) {
+      console.log("intermediate gameid "+gameid);
+      var sqlB = `
+            INSERT IGNORE INTO users_x_games(ug_list_id, ug_user_id, ug_game_id) 
+            SELECT list_id, '`+userid+`', `+gameid+` 
+            FROM lists 
+            WHERE list_user_id='`+userid+`' 
+            AND list_name='Unsorted'`;
+      //This query should start a trigger on users_x_games that creates a duplicate entry
+      //in the users's "All Games" list and then double check the All Games list for
+      //duplicates in that list and remove any.
+      connection.query(sqlB, function(err, qres, fields) {
       if (err) {res.send(err)};
       res.send(qres);
+      });
     });
   } else {
-    res.send({err: 'sql error: no user'});
+    res.send({err: 'add games sql error: no user'});
   }
 });
 

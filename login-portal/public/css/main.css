@@ -268,7 +268,7 @@ input:checked + .slider:before {
     align-self: end;
 }
 
-#addGamesInput {
+#addGamesInputCont {
     grid-area: 3/1/5/11;
 }
 
@@ -290,10 +290,12 @@ input:checked + .slider:before {
 
 #selectLists .listGames {
     grid-area: 2/1/3/4;
+    white-space: nowrap;
 }
 
 #selectLists .listGames .gameName {
     padding-left: 5vw;
+    overflow-x: hidden;
 }
 
 .listName {

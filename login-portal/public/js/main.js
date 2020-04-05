@@ -263,6 +263,9 @@ window.addEventListener('load', function () {
         }
     });
 
+    /*****************************/
+    /*    Unsorted Game Adder    */
+    /*****************************/
     //Add a game to the unsorted list
     //Used in the select view
     var addGamesInput = document.getElementById("addGamesInput");
@@ -270,6 +273,7 @@ window.addEventListener('load', function () {
     addGamesInput.addEventListener("keyup", function(event) {
         // Number 13 is the "Enter" key on the keyboard
         if (event.keyCode === 13) {
+            console.log('submitting new game');
             event.preventDefault();
             var game = addGamesInput.value;
             const options = {
@@ -281,9 +285,10 @@ window.addEventListener('load', function () {
             };
             fetch('/add_user_game_unsorted', options)
             .then(function(response) {
-                return response.json().then( obj => {
+                return response.text().then( obj => {
                     console.log(obj);
-                    if (obj.err) {console.log('add_games err: ' + obj.err ); }
+                    console.log(obj.insertId);
+                    //if (obj.err) {console.log('add_games err: ' + obj.err ); }
                 });
             });
         }
@@ -291,6 +296,14 @@ window.addEventListener('load', function () {
 });
 //End all DOM manipulation
 
+/***************************************************/
+/*               Universal Functions               */
+/***************************************************/
+
+
+/*****************************/
+/*        listToggle()       */
+/*****************************/
 //Display or remove a particular list of games in the select view
 function listToggle(el) {
     $(el).toggleClass('expanded');

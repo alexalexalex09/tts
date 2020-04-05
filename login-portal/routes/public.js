@@ -2,6 +2,40 @@ const express = require("express");
 const mysql = require('mysql');
 const router = express.Router();
 
+//Promisify mysql using the Database class
+class Database {
+    constructor( config ) {
+        this.connection = mysql.createConnection( config );
+    }
+    query( sql, args ) {
+        return new Promise( ( resolve, reject ) => {
+            this.connection.query( sql, args, ( err, rows ) => {
+                if ( err )
+                    return reject( err );
+                resolve( rows );
+            } );
+        } );
+    }
+    close() {
+        return new Promise( ( resolve, reject ) => {
+            this.connection.end( err => {
+                if ( err )
+                    return reject( err );
+                resolve();
+            } );
+        } );
+    }
+}
+
+//config for database variable
+var dbConfig = {
+  host: 'localhost',
+  user: 'root',
+  password: 'admin',
+  database: 'tts_test'
+}
+//create new Database object called database, this returns a promise
+var database = new Database(dbConfig);
 
 //create mysql connection
 var connection = mysql.createConnection({
@@ -89,35 +123,46 @@ router.post("/get_user_list_games", (req, res) => {
 
 //add games
 //parameter: game: the game name to add
+
+//This query should start a trigger on users_x_games that creates a duplicate entry
+//in the users's "All Games" list and then double check the All Games list for
+//duplicates in that list and remove any.
+
 router.post("/add_user_game_unsorted", (req, res) => {
+  //database.query(`INSERT INTO games (game_name) VALUES ('`+req.body.game+` being inserted')`);
   if (req.user) {
     var userid = req.user.id;
     var game = req.body.game;
+    console.log(req.user.id + " " + game);
     var sqlA = `INSERT IGNORE INTO games (game_name) VALUES ('`+game+`')`;
     var gameid = 0;
-    connection.query(sqlA, function(err, qres, fields) {
-      //this is breaking because it returns immediately. 
-      //Look at https://codeburst.io/node-js-mysql-and-promises-4c3be599909b
-      //and figure out how to incorporate Q
-      if (err) {res.send(err)};
-      gameid = results.insertId;
-      console.log("intermediate gameid "+gameid);
-      var sqlB = `
-            INSERT IGNORE INTO users_x_games(ug_list_id, ug_user_id, ug_game_id) 
-            SELECT list_id, '`+userid+`', `+gameid+` 
-            FROM lists 
-            WHERE list_user_id='`+userid+`' 
-            AND list_name='Unsorted'`;
-      //This query should start a trigger on users_x_games that creates a duplicate entry
-      //in the users's "All Games" list and then double check the All Games list for
-      //duplicates in that list and remove any.
-      connection.query(sqlB, function(err, qres, fields) {
-      if (err) {res.send(err)};
-      res.send(qres);
+    database.query(sqlA)
+      .then(rows => {
+        gameid = rows.insertId;
+        var sqlB = `
+          INSERT IGNORE INTO users_x_games(ug_list_id, ug_user_id, ug_game_id) 
+          SELECT list_id, '<`+userid+`>', `+gameid+` 
+          FROM lists 
+          WHERE list_user_id='<`+userid+`>' 
+          AND list_name='Unsorted'`;
+        //database.query(`INSERT INTO games (game_name) VALUES ('`+userid+` and `+gameid+` being added to users_x_games')`);
+        return database.query(sqlB);
+      }, err => {
+        res.send({err: "Error in sqlA: " + err});
+      })
+      .then(rows => {
+        gameid = rows.insertId;
+        var resobj = {insertId: gameid};
+        res.send(resobj);
+      }, err => {
+        res.send({err: "Error in sqlB: " + err});
+      })
+      .catch( err => {
+        res.send({err: "Error in promise chain: "+err});
       });
-    });
+
   } else {
-    res.send({err: 'add games sql error: no user'});
+    res.send({user: req.user.id});
   }
 });
 

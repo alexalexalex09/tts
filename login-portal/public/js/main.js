@@ -217,7 +217,7 @@ window.addEventListener('load', function () {
         })
         
     /*****************************/
-    /*   All Game list puller   */
+    /*   All Game list puller    */
     /*****************************/
     
     $('#selectLists li .listExpand').first().click(this, function() {

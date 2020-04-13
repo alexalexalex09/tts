@@ -1,5 +1,0 @@
----
-deployment:
-  tasks:
-    - export DEPLOYPATH=/thetidysquirrel.alexscottbecker.com
-    - /bin/cp index.html $DEPLOYPATH

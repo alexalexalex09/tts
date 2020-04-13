@@ -12,5 +12,7 @@
 
 
 module.exports = {
-  Client: require('./client')
+  Client: require('./client'),
+  RequestExecutor: require('./request-executor'),
+  DefaultRequestExecutor: require('./default-request-executor')
 };

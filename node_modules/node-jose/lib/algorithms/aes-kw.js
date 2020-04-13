@@ -9,12 +9,12 @@ var helpers = require("./helpers.js"),
     forge = require("../deps/forge.js"),
     DataBuffer = require("../util/databuffer.js");
 
-var A0 = new Buffer("a6a6a6a6a6a6a6a6", "hex");
+var A0 = Buffer.from("a6a6a6a6a6a6a6a6", "hex");
 
 // ### helpers
 function xor(a, b) {
   var len = Math.max(a.length, b.length);
-  var result = new Buffer(len);
+  var result = Buffer.alloc(len);
   for (var idx = 0; len > idx; idx++) {
     result[idx] = (a[idx] || 0) ^ (b[idx] || 0);
   }
@@ -32,7 +32,7 @@ function split(input, size) {
 function longToBigEndian(input) {
   var hi = Math.floor(input / 4294967296),
       lo = input % 4294967296;
-  var output = new Buffer(8);
+  var output = Buffer.alloc(8);
   output[0] = 0xff & (hi >>> 24);
   output[1] = 0xff & (hi >>> 16);
   output[2] = 0xff & (hi >>> 8);
@@ -114,7 +114,7 @@ function kwEncryptFN(size) {
                                           alg);
     });
     promise = promise.then(function(result) {
-      result = new Buffer(result);
+      result = Buffer.from(result);
 
       return {
         data: result
@@ -122,8 +122,40 @@ function kwEncryptFN(size) {
     });
     return promise;
   };
+  var node = function(key, pdata) {
+    try {
+      commonChecks(key, pdata);
+    } catch (err) {
+      return Promise.reject(err);
+    }
 
-  return helpers.setupFallback(null, webcrypto, fallback);
+    // split input into chunks
+    var R = split(pdata, 8),
+        iv = Buffer.alloc(16);
+    var A,
+        B,
+        count;
+    A = A0;
+    for (var jdx = 0; 6 > jdx; jdx++) {
+      for (var idx = 0; R.length > idx; idx++) {
+        count = (R.length * jdx) + idx + 1;
+        B = Buffer.concat([A, R[idx]]);
+        var cipher = helpers.nodeCrypto.createCipheriv("AES" + size, key, iv);
+        B = cipher.update(B);
+
+        A = xor(B.slice(0, 8),
+                longToBigEndian(count));
+        R[idx] = B.slice(8, 16);
+      }
+    }
+    R = [A].concat(R);
+    var cdata = Buffer.concat(R);
+    return Promise.resolve({
+      data: cdata
+    });
+  };
+
+  return helpers.setupFallback(node, webcrypto, fallback);
 }
 function kwDecryptFN(size) {
   function commonChecks(key, data) {
@@ -194,13 +226,47 @@ function kwDecryptFN(size) {
       return helpers.subtleCrypto.exportKey("raw", result);
     });
     promise = promise.then(function(result) {
-      result = new Buffer(result);
+      result = Buffer.from(result);
       return result;
     });
     return promise;
   };
+  var node = function(key, cdata) {
+    try {
+      commonChecks(key, cdata);
+    } catch (err) {
+      return Promise.reject(err);
+    }
 
-  return helpers.setupFallback(null, webcrypto, fallback);
+    // prepare inputs
+    var R = split(cdata, 8),
+        iv = Buffer.alloc(16),
+        A,
+        B,
+        count;
+    A = R[0];
+    R = R.slice(1);
+    for (var jdx = 5; 0 <= jdx; --jdx) {
+      for (var idx = R.length - 1; 0 <= idx; --idx) {
+        count = (R.length * jdx) + idx + 1;
+        B = xor(A,
+                longToBigEndian(count));
+        B = Buffer.concat([B, R[idx], iv]);
+        var cipher = helpers.nodeCrypto.createDecipheriv("AES" + size, key, iv);
+        B = cipher.update(B);
+
+        A = B.slice(0, 8);
+        R[idx] = B.slice(8, 16);
+      }
+    }
+    if (A.toString() !== A0.toString()) {
+      return Promise.reject(new Error("decryption failed"));
+    }
+    var pdata = Buffer.concat(R);
+    return Promise.resolve(pdata);
+  };
+
+  return helpers.setupFallback(node, webcrypto, fallback);
 }
 
 // ### Public API

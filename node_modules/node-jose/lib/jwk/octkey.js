@@ -50,7 +50,7 @@ function adjustDecryptProps(alg, props) {
   if ("adata" in props) {
     props.adata = Buffer.isBuffer(props.adata) ?
                   props.adata :
-                  new Buffer(props.adata || "", "utf8");
+                  Buffer.from(props.adata || "", "utf8");
   }
   if ("mac" in props) {
     props.mac = Buffer.isBuffer(props.mac) ?
@@ -74,7 +74,7 @@ function adjustEncryptProps(alg, props) {
   if ("adata" in props) {
     props.adata = Buffer.isBuffer(props.adata) ?
                   props.adata :
-                  new Buffer(props.adata || "", "utf8");
+                  Buffer.from(props.adata || "", "utf8");
   }
 
   return props;

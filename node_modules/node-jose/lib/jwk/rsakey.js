@@ -124,7 +124,7 @@ function convertBNtoBuffer(bn) {
   if (bn.length % 2) {
     bn = "0" + bn;
   }
-  return new Buffer(bn, "hex");
+  return Buffer.from(bn, "hex");
 }
 
 // Adapted from digitalbaazar/node-forge/js/rsa.js
@@ -276,7 +276,7 @@ var JWKRsaFactory = {
         e: 0x010001
       });
       promise = Promise.resolve(key.privateKey);
-    };
+    }
 
     return promise.then(function (key) {
 
@@ -342,7 +342,7 @@ var JWKRsaFactory = {
       if (!(f in input)) {
         return;
       }
-      var b = new Buffer(input[f], "binary");
+      var b = Buffer.from(input[f], "binary");
       // remove leading zero padding if any
       if (0 === b[0]) {
         b = b.slice(1);

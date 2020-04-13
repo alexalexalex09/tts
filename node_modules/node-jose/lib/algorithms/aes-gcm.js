@@ -6,23 +6,44 @@
 "use strict";
 
 var helpers = require("./helpers.js"),
+    util = require("../util"),
     CONSTANTS = require("./constants.js"),
     GCM = require("../deps/ciphermodes/gcm");
 
-function gcmEncryptFN(size) {
+function gcmEncryptFN(size, wrap) {
   function commonChecks(key, iv) {
     if (size !== (key.length << 3)) {
        throw new Error("invalid key size");
     }
-    if (12 !== iv.length) {
+    if (!iv && !wrap) {
+      throw new Error("invalid iv");
+    }
+    if (iv && 12 !== iv.length) {
       throw new Error("invalid iv");
     }
   }
 
+  function prepareResults(results) {
+    if (wrap) {
+      var iv = util.base64url.encode(results.iv);
+      var tag = util.base64url.encode(results.tag);
+
+      results = {
+        data: results.data,
+        header: {
+          iv: iv,
+          tag: tag
+        }
+      };
+    }
+
+    return results;
+  }
+
   // ### 'fallback' implementation -- uses forge
   var fallback = function(key, pdata, props) {
-    var iv = props.iv || new Buffer(0),
-        adata = props.aad || props.adata || new Buffer(0),
+    var iv = props.iv,
+        adata = props.aad || props.adata || Buffer.alloc(0),
         cipher,
         cdata;
 
@@ -33,6 +54,8 @@ function gcmEncryptFN(size) {
       return Promise.reject(err);
     }
 
+    iv = iv || util.randomBytes(12);
+
     // setup cipher
     cipher = GCM.createCipher({
       key: key,
@@ -40,7 +63,7 @@ function gcmEncryptFN(size) {
       additionalData: adata
     });
     // ciphertext is the same length as plaintext
-    cdata = new Buffer(pdata.length);
+    cdata = Buffer.alloc(pdata.length);
 
     var promise = new Promise(function(resolve, reject) {
       var amt = CONSTANTS.CHUNK_SIZE,
@@ -69,10 +92,11 @@ function gcmEncryptFN(size) {
 
         // resolve with output
         var tag = cipher.tag;
-        resolve({
+        resolve(prepareResults({
           data: cdata,
+          iv: iv,
           tag: tag
-        });
+        }));
       })();
     });
 
@@ -82,14 +106,16 @@ function gcmEncryptFN(size) {
   // ### WebCryptoAPI implementation
   // TODO: cache CryptoKey sooner
   var webcrypto = function(key, pdata, props) {
-    var iv = props.iv || new Buffer(0),
-        adata = props.aad || props.adata || new Buffer(0);
+    var iv = props.iv,
+        adata = props.aad || props.adata || Buffer.alloc(0);
 
     try {
       commonChecks(key, iv, adata);
     } catch (err) {
       return Promise.reject(err);
     }
+
+    iv = iv || util.randomBytes(12);
 
     var alg = {
       name: "AES-GCM"
@@ -109,15 +135,16 @@ function gcmEncryptFN(size) {
       var tagStart = result.byteLength - 16;
 
       var tag = result.slice(tagStart);
-      tag = new Buffer(tag);
+      tag = Buffer.from(tag);
 
       var cdata = result.slice(0, tagStart);
-      cdata = new Buffer(cdata);
+      cdata = Buffer.from(cdata);
 
-      return {
+      return prepareResults({
         data: cdata,
+        iv: iv,
         tag: tag
-      };
+      });
     });
 
     return promise;
@@ -125,14 +152,16 @@ function gcmEncryptFN(size) {
 
   // ### NodeJS implementation
   var nodejs = function(key, pdata, props) {
-    var iv = props.iv || new Buffer(0),
-        adata = props.aad || props.adata || new Buffer(0);
+    var iv = props.iv,
+        adata = props.aad || props.adata || Buffer.alloc(0);
 
     try {
       commonChecks(key, iv, adata);
     } catch (err) {
       return Promise.reject(err);
     }
+
+    iv = iv || util.randomBytes(12);
 
     var alg = "aes-" + (key.length * 8) + "-gcm";
     var cipher;
@@ -154,14 +183,16 @@ function gcmEncryptFN(size) {
     ]);
     var tag = cipher.getAuthTag();
 
-    return {
+    return prepareResults({
       data: cdata,
+      iv: iv,
       tag: tag
-    };
+    });
   };
 
   return helpers.setupFallback(nodejs, webcrypto, fallback);
 }
+
 function gcmDecryptFN(size) {
   function commonChecks(key, iv, tag) {
     if (size !== (key.length << 3)) {
@@ -177,9 +208,9 @@ function gcmDecryptFN(size) {
 
   // ### fallback implementation -- uses forge
   var fallback = function(key, cdata, props) {
-    var adata = props.aad || props.adata || new Buffer(0),
-        iv = props.iv || new Buffer(0),
-        tag = props.tag || props.mac || new Buffer(0),
+    var adata = props.aad || props.adata || Buffer.alloc(0),
+        iv = props.iv || Buffer.alloc(0),
+        tag = props.tag || props.mac || Buffer.alloc(0),
         cipher,
         pdata;
 
@@ -198,7 +229,7 @@ function gcmDecryptFN(size) {
       tag: tag
     });
     // plaintext is the same length as ciphertext
-    pdata = new Buffer(cdata.length);
+    pdata = Buffer.alloc(cdata.length);
 
     var promise = new Promise(function(resolve, reject) {
       var amt = CONSTANTS.CHUNK_SIZE,
@@ -241,9 +272,9 @@ function gcmDecryptFN(size) {
   // ### WebCryptoAPI implementation
   // TODO: cache CryptoKey sooner
   var webcrypto = function(key, cdata, props) {
-    var adata = props.aad || props.adata || new Buffer(0),
-        iv = props.iv || new Buffer(0),
-        tag = props.tag || props.mac || new Buffer(0);
+    var adata = props.aad || props.adata || Buffer.alloc(0),
+        iv = props.iv || Buffer.alloc(0),
+        tag = props.tag || props.mac || Buffer.alloc(0);
 
     // validate inputs
     try {
@@ -270,7 +301,7 @@ function gcmDecryptFN(size) {
       return helpers.subtleCrypto.decrypt(alg, key, cdata);
     });
     promise = promise.then(function(pdata) {
-      pdata = new Buffer(pdata);
+      pdata = Buffer.from(pdata);
       return pdata;
     });
 
@@ -278,9 +309,9 @@ function gcmDecryptFN(size) {
   };
 
   var nodejs = function(key, cdata, props) {
-    var adata = props.aad || props.adata || new Buffer(0),
-        iv = props.iv || new Buffer(0),
-        tag = props.tag || props.mac || new Buffer(0);
+    var adata = props.aad || props.adata || Buffer.alloc(0),
+        iv = props.iv || Buffer.alloc(0),
+        tag = props.tag || props.mac || Buffer.alloc(0);
 
     // validate inputs
     try {
@@ -331,10 +362,12 @@ var aesGcm = {};
   "A192GCMKW",
   "A256GCMKW"
 ].forEach(function(alg) {
-  var size = parseInt(/A(\d+)GCM(?:KW)?/g.exec(alg)[1]);
+  var parts = /A(\d+)GCM(KW)?/g.exec(alg);
+  var size = parseInt(parts[1]);
+  var wrap = (parts[2] === "KW");
   aesGcm[alg] = {
-    encrypt: gcmEncryptFN(size),
-    decrypt: gcmDecryptFN(size)
+    encrypt: gcmEncryptFN(size, wrap),
+    decrypt: gcmDecryptFN(size, wrap)
   };
 });
 

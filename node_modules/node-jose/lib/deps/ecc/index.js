@@ -29,11 +29,11 @@ function bn2bin(bn, len) {
     hex = "0" + hex;
   }
 
-  return new Buffer(hex, "hex");
+  return Buffer.from(hex, "hex");
 }
 function bin2bn(s) {
   if ("string" === typeof s) {
-    s = new Buffer(s, "binary");
+    s = Buffer.from(s, "binary");
   }
   return hex2bn(s.toString("hex"));
 }
@@ -184,7 +184,7 @@ ECPrivateKey.prototype.sign = function(md) {
 // basics
 ECPrivateKey.prototype.isValid = function() {
   var d = bin2bn(this.d),
-      n1 = params.getN().subtract(BigIneger.ONE);
+      n1 = this.params.getN().subtract(BigInteger.ONE);
 
   return (d.compareTo(BigInteger.ONE) >= 0) &&
          (d.compareTo(n1) < 0);

@@ -1,7 +1,16 @@
 const express = require("express");
 const mysql = require("mysql");
 const router = express.Router();
+var cfenv = require("cfenv");
 
+//CF variables
+var appEnv = cfenv.getAppEnv();
+var sURL = appEnv.getServiceURL("ad_16459ca7380ad71");
+
+console.log(appEnv);
+
+console.log("sURL: " + sURL);
+/*
 //Promisify mysql using the Database class
 class Database {
   constructor(config) {
@@ -47,7 +56,7 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
 });
-
+*/
 // Home page
 router.get("/", (req, res) => {
   res.render("index");

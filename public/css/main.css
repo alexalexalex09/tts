@@ -2,124 +2,130 @@
 /*   Color Vars   */
 /******************/
 :root {
-    --main-blue:#07f;
-    --main-grey:#aaa;
-    --main-white:#fff;
-    --main-black:#000;
-    --main-grey: #333;
-    --main-red:#d00;
-    --main-green:#5a5;
+  --main-blue: #07f;
+  --main-grey: #aaa;
+  --main-white: #fff;
+  --main-black: #000;
+  --main-grey: #333;
+  --main-red: #d00;
+  --main-green: #5a5;
 }
 
 /*****************/
 /*    General    */
 /*****************/
-a, a:visited, a:hover, a:active {
-    text-decoration: none;
+body {
+  box-sizing: border-box;
+}
+
+a,
+a:visited,
+a:hover,
+a:active {
+  text-decoration: none;
 }
 
 .textInputCont {
-    height: 100%;
-    border: 1px solid black;
-    text-align: center;
-    position: relative;
+  height: var(--vh5);
+  border: 1px solid black;
+  text-align: center;
+  position: relative;
 }
 
 .button {
-    width: 100%;
-    height: 7vh;
-    vertical-align: middle;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 7px;
-    color: var(--main-white);
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 7);
+  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: var(--main-white);
 }
 
 .blueBtn {
-    background-color: var(--main-blue);
+  background-color: var(--main-blue);
 }
 
 .greyBtn {
-    background-color: var(--main-grey);
+  background-color: var(--main-grey);
 }
 
 .greenBtn {
-    background-color: var(--main-green);
+  background-color: var(--main-green);
 }
 
 .off {
-    display:none !important;
+  display: none !important;
 }
 
 /*****************/
 /* Toggle Switch */
 /*****************/
 
-
 /* The switch - the box around the slider */
 .switch {
-    position: relative;
-    display: inline-block;
-    width: 5.6vh;
-    height: 3vh;
-    grid-area: 1/2/2/3;
-    justify-self: end;
+  position: relative;
+  display: inline-block;
+  width: calc(var(--vh, 1vh) * 5.6);
+  height: calc(var(--vh, 1vh) * 3);
+  grid-area: 1/2/2/3;
+  justify-self: end;
 }
 
 /* Hide default HTML checkbox */
 .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
 /* The slider */
 .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
 }
 
 .slider:before {
-    position: absolute;
-    content: "";
-    height: 2.3vh;
-    width: 2.3vh;
-    left: 0.6vh;
-    bottom: 0.4vh;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
+  position: absolute;
+  content: "";
+  height: calc(var(--vh, 1vh) * 2.3);
+  width: calc(var(--vh, 1vh) * 2.3);
+  left: calc(var(--vh, 1vh) * 0.6);
+  bottom: calc(var(--vh, 1vh) * 0.4);
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
 }
 
 input:checked + .slider {
-    background-color: var(--main-green);
+  background-color: var(--main-green);
 }
 
 input:focus + .slider {
-    box-shadow: 0 0 1px var(--main-green);
+  box-shadow: 0 0 1px var(--main-green);
 }
 
 input:checked + .slider:before {
-    -webkit-transform: translateX(2vh);
-    -ms-transform: translateX(2vh);
-    transform: translateX(2vh);
+  -webkit-transform: translateX(calc(var(--vh, 1vh) * 2) ;);
+  -ms-transform: translateX(calc(var(--vh, 1vh) * 2) ;);
+  transform: translateX(calc(var(--vh, 1vh) * 2) ;);
 }
 
 /* Rounded sliders */
 .slider.round {
-    border-radius: 34px;
+  border-radius: 34px;
 }
 
 .slider.round:before {
-    border-radius: 50%;
+  border-radius: 50%;
 }
 
 /*****************/
@@ -127,128 +133,142 @@ input:checked + .slider:before {
 /*****************/
 
 .main {
-    display: grid;
-    grid-template-columns: repeat(10, 10vw);
-    grid-template-rows: repeat(20, 5vh);
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
-    transition: opacity .5s;
+  display: block;
+  transition: opacity 0.5s;
+  width: 100%;
+  height: var(--vh90);
+  position: absolute;
+  border: 0px;
 }
 
-.main>div {
-    align-self:center;
+#hContainer {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(10vw, 10vw));
+  grid-template-rows: repeat(2, minmax(var(--vh5), var(--vh5)));
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+  height: var(--vh10);
 }
 
 #menuIcon {
-    grid-area: 1/1/3/3;
-    margin: 10px auto;
-    justify-self: start;
-    padding-left: 3vw;
+  grid-area: 1/1/3/3;
+  justify-self: center;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  display: flex;
 }
 
 #menuIcon svg {
-    fill: var(--main-blue);
+  fill: var(--main-blue);
 }
 
 .login {
-    grid-area: 1/6/3/11;
-    justify-self: end;
-    color: var(--main-blue);
-    padding-right:3vw;
+  grid-area: 1/6/3/11;
+  justify-self: end;
+  align-self: center;
+  color: var(--main-blue);
+  padding-right: 3vw;
 }
 
-.login a, .login a:visited, .login a:active {
-    color: var(--main-blue);
+.login a,
+.login a:visited,
+.login a:active {
+  color: var(--main-blue);
+}
+
+.view {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(10vw, 10vw));
+  grid-template-rows: repeat(18, minmax(var(--vh5), var(--vh5)));
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+  position: absolute;
+  top: var(--vh10);
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
 }
 
 .pageTitle {
-    grid-area: 1/1/3/11;
-    justify-self: center;
-    font-size: 10vw;
-    color: var(--main-grey);
+  grid-area: 1/1/3/11;
+  font-size: 10vw;
+  color: var(--main-grey);
+  text-align: center;
+  /*justify-content: center;*/
 }
-
-
-.view {
-    grid-area: 3/1/21/11;
-    height: 90vh;
-    display: grid;
-    grid-template-columns: repeat(10, 10vw);
-    grid-template-rows: repeat(17, 5vh);
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
-}
-
 
 /*****************/
 /*   Home View   */
 /*****************/
 
 #joinButton {
-    grid-area: 6/3/8/9;
-    transition: opacity .5s, transform .5s;
+  grid-area: 6/3/8/9;
+  transition: opacity 0.5s, transform 0.5s;
 }
 
 #createButton {
-    grid-area: 8/3/10/9;
-    transition: opacity .5s, transform .5s;
+  grid-area: 8/3/10/9;
+  transition: opacity 0.5s, transform 0.5s;
 }
 
 #codeForm {
-    grid-area: 10/3/12/9;
+  grid-area: 10/3/12/9;
 }
 
 #codeInputGroup {
-    grid-area: 6/3/12/9;
-    display:grid;
-    align-self: start;
-    grid-template-rows: repeat(11, 2.5vh);
-    transition: opacity .5s, transform .5s;
-    opacity: 0%;
-    transform: translateX(-100vw)
+  grid-area: 6/3/12/9;
+  display: grid;
+  align-self: start;
+  grid-template-rows: repeat(11, calc(var(--vh, 1vh) * 2.5) ;);
+  transition: opacity 0.5s, transform 0.5s;
+  opacity: 0%;
+  transform: translateX(-100vw);
 }
 
 #codeInput {
-    grid-area: 3/1/5/2;
+  grid-area: 3/1/5/2;
 }
 
 #codeInputLabel {
-    grid-area: 1/1/3/2;
-    text-align: center;
-    align-self: end;
+  grid-area: 1/1/3/2;
+  text-align: center;
+  align-self: end;
 }
 
 .textInput {
-    left: 0vw;
-    top: 0vh;
-    position: absolute;
-    border: 0px;
-    height: 100%;
-    box-sizing: border-box;
-    width: 100%;
-    padding: 0px 7vw 0px 5px;
+  left: 0vw;
+  top: calc(var(--vh, 1vh) * 0);
+  position: absolute;
+  border: 0px;
+  height: 100%;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0px 7vw 0px 5px;
 }
 
 .textClear {
-    background-image: url(../img/close-circle-outline.svg);
-    height: 4vh;
-    width: 4vh;
-    background-size: contain;
-    right: 3px;
-    position: absolute;
-    margin-top: 0.5vh;
+  background-image: url(../img/close-circle-outline.svg);
+  height: calc(var(--vh, 1vh) * 4);
+  width: calc(var(--vh, 1vh) * 4);
+  background-size: contain;
+  right: 3px;
+  position: absolute;
+  margin-top: calc(var(--vh, 1vh) * 0.5);
 }
 
 #codeError {
-    grid-area: 9/1/11/2;
-    color: var(--main-red);
-    align-self: start;
-    text-align:center;
+  grid-area: 9/1/11/2;
+  color: var(--main-red);
+  align-self: start;
+  text-align: center;
 }
 
 #codeSubmit {
-    grid-area: 6/1/10/2;
-    text-align: center;
+  grid-area: 6/1/10/2;
+  text-align: center;
 }
 
 /*****************/
@@ -256,98 +276,93 @@ input:checked + .slider:before {
 /*****************/
 
 #addGamesContainer {
-    grid-area: 3/2/5/10;
-    display: grid;
-    grid-template-rows: repeat(4, 2.5vh);
-    grid-template-columns: repeat(6, 10vw);
+  grid-area: 4/2/6/10;
+  text-align: center;
+  width: 100%;
 }
 
 #addGamesTitle {
-    text-align: center;
-    grid-area: 1/1/3/11;
-    align-self: end;
-}
-
-#addGamesInputCont {
-    grid-area: 3/1/5/11;
+  text-align: center;
+  align-self: end;
+  height: var(--vh5);
 }
 
 #selectLists {
-    grid-area: 5/2/16/10;
-    margin-top: 2.5vh;
-    overflow-y: scroll;
-    margin-top: 2.5vh;
+  overflow-y: scroll;
+  grid-area: 7/2/17/10;
+  height: 100%;
 }
 
 #selectLists li {
-    min-height: 5vh;
-    font-size: 3vh;
-    list-style: none;
-    display: grid;
-    grid-template-columns: 1fr 11vw 11vw;
-    grid-template-rows: 1fr;
+  min-height: var(--vh5);
+  font-size: calc(var(--vh, 1vh) * 3);
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 11vw 11vw;
+  grid-template-rows: 1fr;
+  align-items: end;
 }
 
 #selectLists .listGames {
-    grid-area: 2/1/3/4;
-    white-space: nowrap;
+  grid-area: 2/1/3/4;
+  white-space: nowrap;
 }
 
 #selectLists .listGames .gameName {
-    padding-left: 5vw;
-    overflow-x: hidden;
+  padding-left: 5vw;
+  overflow-x: hidden;
 }
 
 .listName {
-    width: 100%;
-    grid-area: 1/1/2/2;
-    overflow-x: hidden;
-    white-space: nowrap;
-    min-height: 5vh;
+  width: 100%;
+  grid-area: 1/1/2/2;
+  overflow-x: hidden;
+  white-space: nowrap;
+  min-height: 0px;
 }
 
 .listExpand {
-    justify-self: end;
-    cursor: pointer;
+  justify-self: end;
+  cursor: pointer;
 }
 
 .listExpand ion-icon {
-    transform: rotateX(0deg);
-    transition: transform .5s;
+  transform: rotateX(0deg);
+  transition: transform 0.5s;
 }
 
-.listExpand.expanded ion-icon{
-    transform: rotateX(180deg);
+.listExpand.expanded ion-icon {
+  transform: rotateX(180deg);
 }
 
 .toggle {
-    grid-area: 1/3/2/4;
-    justify-self: end;
+  grid-area: 1/3/2/4;
+  justify-self: end;
 }
 
 #gameSubmit {
-    grid-area: 17/2/19/10;
+  grid-area: 17/2/19/10;
 }
 
 /*****************/
 /*    Testing    */
 /*****************/
 #centerbutton {
-    grid-area: 6/1/8/11;
-    justify-self: center;
-    font-size: 1.5em;
-    background: var(--main-blue);
-    padding: 10px 25px;
-    color: var(--main-white);
-    border-radius: 10px;
-    align-self: center;
-    cursor:pointer;
+  grid-area: 6/1/8/11;
+  justify-self: center;
+  font-size: 1.5em;
+  background: var(--main-blue);
+  padding: 10px 25px;
+  color: var(--main-white);
+  border-radius: 10px;
+  align-self: center;
+  cursor: pointer;
 }
 
 #gamenum {
-    grid-area: 8/1/9/11;
-    justify-self: center;
-    font-size: 1.5em;
+  grid-area: 8/1/9/11;
+  justify-self: center;
+  font-size: 1.5em;
 }
 
 /*****************/
@@ -355,73 +370,76 @@ input:checked + .slider:before {
 /*****************/
 
 #menu {
-    width: 60vw;
-    height: 100vh;
-    z-index: 100;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: var(--main-blue);
-    color: var(--main-white);
-    transform: translateX(-60vw);
-    transition: transform .5s;
+  width: 60vw;
+  height: calc(var(--vh, 1vh) * 100);
+  z-index: 100;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--main-blue);
+  color: var(--main-white);
+  transform: translateX(-60vw);
+  transition: transform 0.5s;
 }
 
 #menu a {
-    color: var(--main-white) !important;
+  color: var(--main-white) !important;
 }
 
 #menuClose {
-    position: absolute;
-    right: 5px;
-    top: 5px;
+  position: absolute;
+  right: 5px;
+  top: 5px;
 }
 
 #menuClose ion-icon {
-    height: 30px;
-    width: 30px;
-    --ionicon-stroke-width: 48px;
+  height: 30px;
+  width: 30px;
+  --ionicon-stroke-width: 48px;
 }
 
 #menuItems {
-    margin-top: 10vh;
+  margin-top: calc(var(--vh, 1vh) * 10);
 }
 
 #menuItems ul {
-    list-style-type: none;
-    padding-left: 5vw;
+  list-style-type: none;
+  padding-left: 5vw;
 }
 
 #menuItems ul li {
-    margin-top: 2vh;
+  margin-top: calc(var(--vh, 1vh) * 2);
 }
 
-#menuItems ul li .i-manage, #menuItems ul li .i-account, #menuItems ul li .i-about, #menuItems ul li .i-premium {
-    background-image: url('../img/close-circle-outline.svg');
-    height: 20px;
-    width: 20px;
-    background-size: contain;
-    display: inline-block;
-    transform: translateY(4px);
+#menuItems ul li .i-manage,
+#menuItems ul li .i-account,
+#menuItems ul li .i-about,
+#menuItems ul li .i-premium {
+  background-image: url("../img/close-circle-outline.svg");
+  height: 20px;
+  width: 20px;
+  background-size: contain;
+  display: inline-block;
+  transform: translateY(4px);
 }
 
 #menuItems ul li ion-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    transform: translateY(4px);
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  transform: translateY(4px);
 }
 
 .i-faq svg * {
-    stroke:white !important;
+  stroke: white !important;
 }
 
 #menuCatch {
-    top: 0px;
-    width: 40vw;
-    height: 100vh;
-    position: absolute;
-    left: 60vw;
+  top: 0px;
+  width: 40vw;
+  height: calc(var(--vh, 1vh) * 100);
+  position: absolute;
+  left: 60vw;
 }
 
 /****************/
@@ -429,16 +447,27 @@ input:checked + .slider:before {
 /****************/
 
 @keyframes shake {
-    0% { transform: translate(0px, 0px) }
-    20% { transform: translate(-2px, 0px) }
-    40% { transform: translate(2px, 0px) }
-    60% { transform: translate(-2px, 0px) }
-    80% { transform: translate(2px, 0px) }
-    100% { transform: translate(0px, 0px) }
+  0% {
+    transform: translate(0px, 0px);
   }
-
-.shake {
-    animation: shake .2s;
-    animation-iteration-count: 2;
+  20% {
+    transform: translate(-2px, 0px);
+  }
+  40% {
+    transform: translate(2px, 0px);
+  }
+  60% {
+    transform: translate(-2px, 0px);
+  }
+  80% {
+    transform: translate(2px, 0px);
+  }
+  100% {
+    transform: translate(0px, 0px);
+  }
 }
 
+.shake {
+  animation: shake 0.2s;
+  animation-iteration-count: 2;
+}

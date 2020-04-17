@@ -94,7 +94,7 @@ window.addEventListener("load", function () {
   /*      Set Window Height    */
   /*****************************/
 
-  window.addEventListener("resize", getvh());
+  window.addEventListener("resize", getvh);
 
   /*****************************/
   /*      Set font sizes       */
@@ -446,6 +446,7 @@ function getvh() {
   document.documentElement.style.setProperty("--vh15", `${vh * 15}px`);
   document.documentElement.style.setProperty("--vh25", `${vh * 25}px`);
   document.documentElement.style.setProperty("--vh75", `${vh * 75}px`);
+  console.log(window.innerHeight);
 }
 getvh();
 

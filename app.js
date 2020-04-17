@@ -8,8 +8,17 @@ const usersRouter = require("./routes/users");
 const session = require("express-session");
 const okta = require("@okta/okta-sdk-nodejs");
 const ExpressOIDC = require("@okta/oidc-middleware").ExpressOIDC;
+const cfenv = require("cfenv");
 
 var app = express();
+
+//CF variables
+var appEnv = cfenv.getAppEnv();
+if (appEnv.port == 6002) {
+  var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
+} else {
+  var baseURL = appEnv.url;
+}
 
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({
@@ -20,7 +29,7 @@ const oidc = new ExpressOIDC({
   issuer: "https://dev-222844.okta.com/oauth2/default",
   client_id: "0oa3ate5jDukoR2LH4x6",
   client_secret: "SaLJUuCshNXVz2CE3k7hcd5O-WpilWVSsoeGnD8-",
-  redirect_uri: "http://localhost:3000/users/callback",
+  redirect_uri: baseURL + "/users/callback",
   scope: "openid profile",
   routes: {
     login: {

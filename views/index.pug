@@ -78,3 +78,11 @@ block content
             div.listGames
       #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games
+  #report
+    p name: #{appEnv.name}
+    p port: #{appEnv.port}
+    p bind: #{appEnv.bind}
+    p urls: #{appEnv.urls}  
+    p url: #{appEnv.url}
+    p isLocal: #{appEnv.isLocal}
+    p redirect_uri: #{redirect_uri}

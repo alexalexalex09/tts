@@ -6,6 +6,11 @@ var cfenv = require("cfenv");
 //CF variables
 var appEnv = cfenv.getAppEnv();
 var sURL = appEnv.getServiceURL("ad_16459ca7380ad71");
+if (appEnv.port == 6002) {
+  var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
+} else {
+  var baseURL = appEnv.url;
+}
 
 console.log(appEnv);
 
@@ -59,7 +64,10 @@ connection.connect(function (err) {
 */
 // Home page
 router.get("/", (req, res) => {
-  res.render("index");
+  res.render("index", {
+    appEnv: appEnv,
+    redirect_uri: baseURL + "/users/callback",
+  });
 });
 
 router.get("/logindata", (req, res) => {

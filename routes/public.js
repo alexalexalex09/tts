@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 const router = express.Router();
 var cfenv = require("cfenv");
+var mongoose = require("mongoose");
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
@@ -12,9 +13,12 @@ if (appEnv.port == 6002) {
   var baseURL = appEnv.url;
 }
 
-console.log(appEnv);
+var mongoDB =
+  "mongodb+srv://alextts:iyJaon1sWAdMDA3c@alexcluster-c7uv8.mongodb.net/test?retryWrites=true&w=majority";
+mongoose.connect(mongoDB, { useNewUrlParser: true });
+var db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
-console.log("sURL: " + sURL);
 /*
 //Promisify mysql using the Database class
 class Database {

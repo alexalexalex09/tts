@@ -17,45 +17,8 @@ var UserSchema = new Schema({
 //Ok, I probably don't need the userCreate function as such. I'm never going to set the user in the database
 //unless I'm also setting a game. So this is what it looks like to set a user, but the next
 //step is to cannibalize this function to use in a request to add a game. That looks like this:
-/*
-  gameCreate(req, res) {
-    //check if user is logged in
-    if (req.user.id) {
 
-      //check if user is already in the database, add if not
-      if (!in_database(req.user.id)) {
-        userCreate(req.user.id, req.user.profile.firstName);
-      }
-
-      //now that we're certain the user's been added (Maybe error handling here?)
-      //check if the game has already been added by another user
-      gamedb = mongoose.getADifferentDatabase(gameSchema);
-      if (game_id = gamedb.collection.find({name: req.name.toLowerCase()});) {
-
-        //check if game has already been added by this user
-        if (!db.collection.find({games.game_id{game_id}})) {
-
-          //Update the field to push the (verified) new game to the (verified) user's game list
-          db.collection.update(
-            {profile_id: req.user.id},
-            {
-              $push : {
-                games: {
-                  game_id: game_id,
-                  lists: []
-                }
-              }
-            }
-          )
-        }
-      }
-    } else {
-      res.send("Log in first!");
-    }
-  }
-
-*/
- = function userCreate(profile_id, name) {
+function userCreate(profile_id, name) {
   var userdetail = {
     profile_id: profile_id,
     name: name,
@@ -69,7 +32,7 @@ var UserSchema = new Schema({
     }
     res.send("added user " + name);
   });
-};
+}
 
 module.exports = mongoose.model("User", UserSchema);
 /*

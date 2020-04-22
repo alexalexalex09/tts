@@ -3,8 +3,8 @@ const mysql = require("mysql");
 const router = express.Router();
 var cfenv = require("cfenv");
 var mongoose = require("mongoose");
-var User = require('../models/users.js')
-var Game = require('../models/games.js')
+var User = require("../models/users.js");
+var Game = require("../models/games.js");
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
@@ -23,11 +23,9 @@ var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 //New Mongo method to add a game to a user, whether the user already exists or not
-router.post("/game_add", gameAdd(req, res));
-function gameAdd(req, res) {
+router.post("/game_add", function (req, res) {
   //check if user is logged in
   if (req.user.id) {
-
     //check if user is already in the database, add if not
     if (!in_database(req.user.id)) {
       userCreate(req.user.id, req.user.profile.firstName); //TODO
@@ -35,29 +33,28 @@ function gameAdd(req, res) {
 
     //now that we're certain the user's been added (Maybe error handling here?)
     //check if the game has already been added by another user
-    if (Game.find({name: req.name.toLowerCase()});) {
-
+    if (Game.find({ name: req.name.toLowerCase() })) {
       //if it is, put it in game_id and continue to add
-      game_id = Game.find({name: req.name.toLowerCase()});
+      game_id = Game.find({ name: req.name.toLowerCase() });
 
       //check if game has already been added by this user
-      if (User.find({games.game_id{game_id}})) {
+      if (User.find({ "games.game_id": game_id })) {
         //if so, send an error
-        res.send('Already added game '+name+ ' with id '+game_id);
+        res.send("Already added game " + name + " with id " + game_id);
       } else {
         //Otherwise continue:
         //Update the field to push the (verified) new game to the (verified) user's game list
         User.update(
-          {profile_id: req.user.id},
+          { profile_id: req.user.id },
           {
-            $push : {
+            $push: {
               games: {
                 game_id: game_id,
-                lists: []
-              }
-            }
+                lists: [],
+              },
+            },
           }
-        )
+        );
       }
     } else {
       //if the game hasn't yet been added, add it
@@ -66,7 +63,7 @@ function gameAdd(req, res) {
   } else {
     res.send("Log in first!");
   }
-}
+});
 
 function gameCreate(name, game_id) {
   //TODO
@@ -75,12 +72,6 @@ function gameCreate(name, game_id) {
 function userCreate(id, name) {
   //TODO
 }
-
-
-
-
-
-
 
 /*
 //Promisify mysql using the Database class
@@ -220,9 +211,6 @@ router.post("/get_user_list_games", (req, res) => {
     res.send({ err: "sql error" });
   }
 });
-
-
-
 
 //add games
 //parameter: game: the game name to add

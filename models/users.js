@@ -3,16 +3,19 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 //Create schema
-var UserSchema = new Schema({
-  profile_id: String,
-  name: String,
-  games: [
-    {
-      game_id: Number,
-      lists: [Number],
-    },
-  ],
-});
+var UserSchema = new Schema(
+  {
+    profile_id: String,
+    name: String,
+    games: [
+      {
+        game_id: Number,
+        lists: [Number],
+      },
+    ],
+  },
+  { collection: "users" }
+);
 
 module.exports = mongoose.model("User", UserSchema);
 /*

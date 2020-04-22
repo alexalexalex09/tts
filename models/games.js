@@ -3,11 +3,16 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 //Create schema
-var GameSchema = new Schema({
-  name: String,
-  rating: Number,
-  owned: Number,
-});
+var GameSchema = new Schema(
+  {
+    name: String,
+    rating: Number,
+    owned: Number,
+  },
+  {
+    collection: "games",
+  }
+);
 
 module.exports = mongoose.model("Game", GameSchema);
 /*

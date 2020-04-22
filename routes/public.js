@@ -65,12 +65,30 @@ router.post("/game_add", function (req, res) {
   }
 });
 
-function gameCreate(name, game_id) {
+function gameCreate(name) {
   //TODO
+  var gamedetail = { name: name, rating: 0, owned: 0 };
+  var game = new Game(gamedetail);
+  game.save(function (err) {
+    if (err) {
+      return err;
+    }
+  });
 }
 
 function userCreate(id, name) {
   //TODO
+  var userdetail = {
+    profile_id: id,
+    name: name,
+    games: [],
+  };
+  var user = new User(userdetail);
+  user.save(function (err) {
+    if (err) {
+      return err;
+    }
+  });
 }
 
 /*

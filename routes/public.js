@@ -25,41 +25,52 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 //New Mongo method to add a game to a user, whether the user already exists or not
 router.post("/game_add", function (req, res) {
   //check if user is logged in
-  if (req.user.id) {
+  if (req.user) {
     //check if user is already in the database, add if not
-    if (!in_database(req.user.id)) {
-      userCreate(req.user.id, req.user.profile.firstName); //TODO
-    }
+    User.find({ profile_id: req.user.id })
+      .then(function (err, qres) {
+        if (typeof err.stack != "undefined") {
+          res.send("Error finding user");
+        }
+        res.send(qres);
+        //userCreate(req.user.id, req.user.profile.firstName); //TODO
+      })
+      .then(function (err, qres) {
+        //now that we're certain the user's been added (Maybe error handling here?)
+        //check if the game has already been added by another user
+        if (Game.find({ name: req.name })) {
+          //if it is, put it in game_id and continue to add
+          game_id = Game.find({ name: req.name });
 
-    //now that we're certain the user's been added (Maybe error handling here?)
-    //check if the game has already been added by another user
-    if (Game.find({ name: req.name.toLowerCase() })) {
-      //if it is, put it in game_id and continue to add
-      game_id = Game.find({ name: req.name.toLowerCase() });
-
-      //check if game has already been added by this user
-      if (User.find({ "games.game_id": game_id })) {
-        //if so, send an error
-        res.send("Already added game " + name + " with id " + game_id);
-      } else {
-        //Otherwise continue:
-        //Update the field to push the (verified) new game to the (verified) user's game list
-        User.update(
-          { profile_id: req.user.id },
-          {
-            $push: {
-              games: {
-                game_id: game_id,
-                lists: [],
-              },
-            },
+          //check if game has already been added by this user
+          if (User.find({ "games.game_id": game_id })) {
+            //if so, send an error
+            res.send("Already added game " + req.name + " with id " + game_id);
+          } else {
+            //Otherwise continue:
+            //Update the field to push the (verified) new game to the (verified) user's game list
+            User.updateOne(
+              { profile_id: req.user.id },
+              {
+                $push: {
+                  games: {
+                    game_id: game_id,
+                    lists: [],
+                  },
+                },
+              }
+            ).then(function (err, qres) {
+              if (err) {
+                res.send("error updating: " + err);
+              }
+              res.send(qres);
+            });
           }
-        );
-      }
-    } else {
-      //if the game hasn't yet been added, add it
-      gameCreate(name, game_id); //TODO
-    }
+        } else {
+          //if the game hasn't yet been added, add it
+          gameCreate(req.name, game_id); //TODO
+        }
+      });
   } else {
     res.send("Log in first!");
   }

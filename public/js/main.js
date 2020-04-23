@@ -360,7 +360,8 @@ window.addEventListener("load", function () {
           "Content-Type": "application/json",
         },
       };
-      fetch("/add_user_game_unsorted", options).then(function (response) {
+      //add_user_game_unsorted
+      fetch("/game_add", options).then(function (response) {
         return response.text().then((obj) => {
           console.log(obj);
           console.log(obj.insertId);

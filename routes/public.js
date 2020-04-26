@@ -28,48 +28,78 @@ router.post("/game_add", function (req, res) {
   if (req.user) {
     //check if user is already in the database, add if not
     User.find({ profile_id: req.user.id })
-      .then(function (err, qres) {
-        if (typeof err.stack != "undefined") {
-          res.send("Error finding user");
+      .then(function (data) {
+        if (data == "") {
+          user = userCreate(req.user.id, req.user.profile.firstName);
+          user.save().then(function (err, qres) {
+            if (err) {
+              res.send("error in creating user");
+            }
+            return qres;
+          });
         }
-        res.send(qres);
-        //userCreate(req.user.id, req.user.profile.firstName); //TODO
+        return data;
       })
-      .then(function (err, qres) {
+      .then(function (data) {
+        /* _id: 5ea57d3d8fbb115df42d54f8,
+          profile_id: '00u3agmkuCgKnKBbz4x6',
+          name: 'Alex',
+          games: [],
+          __v: 0*/
+
         //now that we're certain the user's been added (Maybe error handling here?)
         //check if the game has already been added by another user
-        if (Game.find({ name: req.name })) {
-          //if it is, put it in game_id and continue to add
-          game_id = Game.find({ name: req.name });
-
-          //check if game has already been added by this user
-          if (User.find({ "games.game_id": game_id })) {
-            //if so, send an error
-            res.send("Already added game " + req.name + " with id " + game_id);
-          } else {
-            //Otherwise continue:
-            //Update the field to push the (verified) new game to the (verified) user's game list
-            User.updateOne(
-              { profile_id: req.user.id },
-              {
-                $push: {
-                  games: {
-                    game_id: game_id,
-                    lists: [],
+        Game.find({ name: req.body.game }).then(function (game_id) {
+          if (game_id.length > 0) {
+            //check if game has already been added by this user
+            if (User.find({ "games.game_id": game_id }) !== null) {
+              //if so, send an error
+              JSON.safeStringify = (obj, indent = 2) => {
+                let cache = [];
+                const retVal = JSON.stringify(
+                  obj,
+                  (key, value) =>
+                    typeof value === "object" && value !== null
+                      ? cache.includes(value)
+                        ? undefined // Duplicate reference found, discard key
+                        : cache.push(value) && value // Store value in our collection
+                      : value,
+                  indent
+                );
+                cache = null;
+                return retVal;
+              };
+            } else {
+              //Otherwise continue:
+              //Update the field to push the (verified) new game to the (verified) user's game list
+              User.updateOne(
+                { profile_id: req.user.id },
+                {
+                  $push: {
+                    games: {
+                      game_id: game_id,
+                      lists: [],
+                    },
                   },
-                },
-              }
-            ).then(function (err, qres) {
+                }
+              ).then(function (err, qres) {
+                if (err) {
+                  res.send("error updating: " + err);
+                }
+                res.send("Existing game added: " + qres);
+              });
+            }
+          } else {
+            //if the game hasn't yet been added, add it
+            var game = gameCreate(req.body.game);
+            game.save().then(function (err, qres) {
               if (err) {
-                res.send("error updating: " + err);
+                res.send(err);
               }
-              res.send(qres);
+              res.send("Game added: " + qres);
             });
           }
-        } else {
-          //if the game hasn't yet been added, add it
-          gameCreate(req.name, game_id); //TODO
-        }
+        });
       });
   } else {
     res.send("Log in first!");
@@ -80,26 +110,17 @@ function gameCreate(name) {
   //TODO
   var gamedetail = { name: name, rating: 0, owned: 0 };
   var game = new Game(gamedetail);
-  game.save(function (err) {
-    if (err) {
-      return err;
-    }
-  });
+  return game;
 }
 
 function userCreate(id, name) {
-  //TODO
   var userdetail = {
     profile_id: id,
     name: name,
     games: [],
   };
   var user = new User(userdetail);
-  user.save(function (err) {
-    if (err) {
-      return err;
-    }
-  });
+  return user;
 }
 
 /*

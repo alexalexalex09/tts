@@ -7,10 +7,10 @@ var UserSchema = new Schema(
   {
     profile_id: String,
     name: String,
-    games: [
+    lists: [
       {
-        game_id: Number,
-        lists: [Number],
+        name: String,
+        games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
       },
     ],
   },

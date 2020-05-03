@@ -24,6 +24,7 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 //Get current user lists
 router.post("/get_user_lists", (req, res) => {
+  console.log("hi there");
   /*if (req.user) {
     var userid = req.user.id;
     var sqlquery =

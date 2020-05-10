@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 var GameSchema = new Schema(
   {
     name: String,
-    rating: Number,
+    rating: { type: Number, default: 0 },
     owned: Number,
   },
   {

@@ -7,12 +7,15 @@ var UserSchema = new Schema(
   {
     profile_id: String,
     name: String,
-    lists: [
-      {
-        name: String,
-        games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
-      },
-    ],
+    lists: {
+      allGames: [{ type: Schema.Types.ObjectId, ref: "Game" }],
+      custom: [
+        {
+          name: String,
+          games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
+        },
+      ],
+    },
   },
   { collection: "users" }
 );

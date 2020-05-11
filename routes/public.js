@@ -6,6 +6,7 @@ var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
+var Session = require("../models/sessions.js");
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
@@ -22,6 +23,14 @@ mongoose.connect(mongoDB, { useNewUrlParser: true });
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
+
+// Home page
+router.get("/", (req, res) => {
+  res.render("index", {
+    appEnv: appEnv,
+    redirect_uri: baseURL + "/users/callback",
+  });
+});
 
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
@@ -68,7 +77,6 @@ router.post("/get_user_list_games", (req, res) => {
 
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
-  console.log("User: " + req.user.profile.firstName);
   if (req.user) {
     //Look up the game. If it doesn't exist, add it and add to user. If it does exist, add to user
     //First, get the game object, for now assuming the game exists. It's an array, so take the first element.
@@ -151,12 +159,19 @@ function userCreate(id, name) {
   return user;
 }
 
-// Home page
-router.get("/", (req, res) => {
-  res.render("index", {
-    appEnv: appEnv,
-    redirect_uri: baseURL + "/users/callback",
-  });
+router.post("/create_session", function (req, res) {
+  if (req.user) {
+    Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
+      console.log(curSession);
+      if (!curSession) {
+        res.send({ status: "TODO: Create new session" });
+      } else {
+        res.send({ err: "Already created a session. Join instead" });
+      }
+    });
+  } else {
+    res.send({ err: "No user" });
+  }
 });
 
 module.exports = router;

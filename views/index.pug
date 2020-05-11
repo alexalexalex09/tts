@@ -43,7 +43,7 @@ block content
           | Hello, #{user.profile.firstName} 
         else 
           a(href="/users/login") Login
-    #homeView.view.off   
+    #homeView.view
       .pageTitle The Tidy Squirrel 🐿️
       #joinButton.button.blueBtn Join
       #createButton.button.greyBtn Create
@@ -55,7 +55,7 @@ block content
         #codeSubmit.submitButton.button.blueBtn Submit
         #codeError.errorText.off Wrong code. Please try again.
 
-    #selectView.view
+    #selectView.view.off
       #selectTitle.pageTitle Select Games 🐿️
       #addGamesContainer
         #addGamesTitle Add Games

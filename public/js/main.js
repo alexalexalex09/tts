@@ -187,7 +187,7 @@ window.addEventListener("load", function () {
   /*****************************/
   /*Game submit button handler */
   /*****************************/
-  $(".button").click(this, function () {
+  $("#gameSubmit").click(this, function () {
     console.log("hi");
     fetch("/pull").then(function (res) {
       $("#results").html(res);
@@ -195,48 +195,24 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
-  /*      Game list puller     */
+  /*   Create Button Handler   */
   /*****************************/
-  /*
-    //test variable
-    const game = {
-        id: 2
-    };
 
-    const options = {
-        method: 'POST',
-        body: JSON.stringify(game),
-        headers: {
-            'Content-Type': 'application/json'
-        }
+  $("#createButton").click(this, function () {
+    console.log("create");
+    const cs_options = {
+      method: "POST",
+      body: "",
+      headers: {
+        "Content-Type": "application/json",
+      },
     };
-    fetch('/getgames', options)
-        .then(function(response) {
-            return response.json().then( text => {
-                console.log(text);
-                console.log(typeof text);
-                for (var i=0; i<text.length; i++) {
-                    var htmlString = `
-                        <li>
-                            <div class="gamename">`
-                                +text[i].list_name+`
-                            </div>
-                            <div class='toggle'>
-                                <label class="switch">
-                                    <input type="checkbox" id=`+text[i].list_id+`>
-                                    <span class="slider round"></span>
-                                </label>
-                            </div>
-                        </li>`;
-                    $('#lists').append(htmlString);
-                    console.log(text[i]);
-                }
-            });
-        })
-        .catch(function(err) {
-            console.log(err);
-        })
-*/
+    fetch("/create_session", cs_options).then(function (response) {
+      return response.json().then((res) => {
+        console.log(res);
+      });
+    });
+  });
 
   /*****************************/
   /*   Real Game list puller   */
@@ -456,8 +432,6 @@ function listToggle(el) {
     $("[listid=" + theid + "]")
       .children()
       .each(function (i, e) {
-        //need to get nth child here or something.
-        //Just convert the whole thing to xml in the first place!
         var htmlString =
           `
         <li>

@@ -304,30 +304,30 @@ window.addEventListener("load", function () {
     return response.json().then((res) => {
       if (!res.err) {
         console.log(res);
-        var htmlString = `` + `<div id="0list" name="All Games">`;
+        var htmlString = `` + `<list listid="0" name="All Games">`;
         for (var i = 0; i < res.allGames.length; i++) {
           htmlString +=
-            `<div name="` +
+            `<game name="` +
             res.allGames[i].name +
             `" game_id="` +
-            res.custom[i].games[j]._id +
+            res.allGames[i]._id +
             `"rating="` +
             res.allGames[i].rating +
             `" owned="` +
             res.allGames[i].owned +
             `">` +
             res.allGames[i].name +
-            `</div>`;
+            `</game>`;
         }
-        htmlString += "</div>";
+        htmlString += "</list>";
         console.log("here's the object");
         console.log(res.custom);
         for (var i = 0; i < res.custom.length; i++) {
           htmlString +=
-            `<div id="` + (i + 1) + `list" name="` + res.custom[i].name + `">`;
+            `<list listid="` + (i + 1) + `" name="` + res.custom[i].name + `">`;
           for (var j = 0; j < res.custom[i].games.length; j++) {
             htmlString +=
-              `<div name="` +
+              `<game name="` +
               res.custom[i].games[j].name +
               `" game_id="` +
               res.custom[i].games[j]._id +
@@ -337,9 +337,9 @@ window.addEventListener("load", function () {
               res.custom[i].games[j].owned +
               `">` +
               res.custom[i].games[j].name +
-              `</div>`;
+              `</game>`;
           }
-          htmlString += `</div>`;
+          htmlString += `</list>`;
         }
         document.getElementById("listsContainer").innerHTML = htmlString;
       } else {
@@ -452,29 +452,32 @@ function listToggle(el) {
   if ($(el).hasClass("expanded")) {
     var theid = $(el).parent().attr("id");
     console.log("the id: " + theid);
-    theid = theid + "list";
-    for (var i = 0; i < obj.length; i++) {
-      //need to get nth child here or something
-      var htmlString =
-        `
+
+    $("[listid=" + theid + "]")
+      .children()
+      .each(function (i, e) {
+        //need to get nth child here or something.
+        //Just convert the whole thing to xml in the first place!
+        var htmlString =
+          `
         <li>
             <div class="gameName" id=` +
-        document.getElementById(i).getAttribute("game_id") +
-        `>` +
-        document.getElementById(i).getAttribute("name") +
-        `
+          e.getAttribute("game_id") +
+          `>` +
+          e.getAttribute("name") +
+          `
             </div>
             <div class='toggle'>
                 <label class="switch">
                     <input type="checkbox" id=` +
-        document.getElementById(i).getAttribute("game_id") +
-        `>
+          e.getAttribute("game_id") +
+          `>
                     <span class="slider round"></span>
                 </label>
             </div>
         </li>`;
-      $(el).parent().children(".listGames").first().prepend(htmlString);
-    }
+        $(el).parent().children(".listGames").first().prepend(htmlString);
+      });
   } else {
     $(el).parent().children(".listGames").first().empty();
   }

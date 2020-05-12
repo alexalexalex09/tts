@@ -41,6 +41,7 @@ a:active {
   justify-content: center;
   border-radius: 7px;
   color: var(--main-white);
+  cursor: pointer;
 }
 
 .blueBtn {
@@ -194,6 +195,7 @@ input:checked + .slider:before {
   width: 100vw;
   justify-content: center;
   align-items: center;
+  transition: transform 1s;
 }
 
 .pageTitle {
@@ -224,9 +226,7 @@ input:checked + .slider:before {
 
 #codeInputGroup {
   grid-area: 6/3/12/9;
-  display: grid;
   align-self: start;
-  grid-template-rows: repeat(11, calc(var(--vh, 1vh) * 2.5) ;);
   transition: opacity 0.5s, transform 0.5s;
   opacity: 0%;
   transform: translateX(-100vw);
@@ -273,6 +273,63 @@ input:checked + .slider:before {
 #codeSubmit {
   grid-area: 6/1/10/2;
   text-align: center;
+  margin-top: calc(var(--vh, 1vh) * 2.5);
+}
+
+/*****************/
+/*   Code View   */
+/*****************/
+
+#selectButton {
+  grid-area: 15/2/18/10;
+}
+
+#codeGroup {
+  grid-area: 5/2/8/10;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  align-self: start;
+}
+
+#code {
+  font-size: calc(var(--vh, 1vh) * 7);
+}
+
+#codeTitle {
+  font-size: calc(var(--vh, 1vh) * 3);
+}
+
+#codeButtons {
+  grid-area: 9/3/11/9;
+  height: 100%;
+  width: 100%;
+}
+
+#codeButtons ion-icon {
+  font-size: 96px;
+  color: var(--main-blue);
+}
+
+#codeButtons > div {
+  padding: 2vw;
+  box-shadow: rgb(189, 189, 189) 0px 0px 5px 0px;
+}
+
+#shareButton {
+  float: left;
+}
+
+#copyButton {
+  float: right;
+}
+
+#copiedAlert {
+  margin-top: calc(var(--vh15) + 2vw);
+  padding-top: 2vw;
+  text-align: center;
+  transition: opacity 0.5s;
+  opacity: 0;
 }
 
 /*****************/

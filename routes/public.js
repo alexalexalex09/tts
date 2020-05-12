@@ -163,8 +163,32 @@ router.post("/create_session", function (req, res) {
   if (req.user) {
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
       console.log(curSession);
+
+      function makeid(length) {
+        var result = "";
+        var characters =
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var charactersLength = characters.length;
+        for (var i = 0; i < length; i++) {
+          result += characters.charAt(
+            Math.floor(Math.random() * charactersLength)
+          );
+        }
+        return result;
+      }
+
+      var theCode = makeid(5);
+
       if (!curSession) {
-        res.send({ status: "TODO: Create new session" });
+        var sessiondetail = {
+          owner: req.user.id,
+          code: theCode,
+          games: [],
+        };
+        var session = new Session(sessiondetail);
+        session.save().then(function (theSession) {
+          res.send({ status: theSession });
+        });
       } else {
         res.send({ err: "Already created a session. Join instead" });
       }

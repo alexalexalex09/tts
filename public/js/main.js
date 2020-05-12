@@ -184,6 +184,51 @@ window.addEventListener("load", function () {
     console.log();
   });
 
+  /***********************************/
+  /*   Copy the code to clipboard    */
+  /***********************************/
+  $("#copyButton").on("click", function () {
+    var copyText = document.getElementById("code").innerHTML;
+    const el = document.createElement("textarea");
+    el.value = copyText;
+    document.body.appendChild(el);
+
+    /* Select the text field */
+    el.select();
+    el.setSelectionRange(0, 99999); /*For mobile devices*/
+
+    /* Copy the text inside the text field */
+    document.execCommand("copy");
+    document.body.removeChild(el);
+    $("#copiedAlert").css({ opacity: 1 });
+    window.setTimeout(function () {
+      $("#copiedAlert").css({ opacity: 0 });
+    }, 1000);
+  });
+
+  /***********************************/
+  /*         Share the code          */
+  /***********************************/
+
+  document.getElementById("shareButton").addEventListener("click", async () => {
+    var resultPara = "";
+    var shareData =
+      "Join my TidySquirrel session! Our code is " +
+      document.getElementById("code").innerHTML;
+    try {
+      await navigator.share(shareData);
+      resultPara.textContent = "MDN shared successfully";
+      console.log(resultPara.textContent);
+    } catch (err) {
+      if (resultPara) {
+        resultPara.textContent = "Error: " + err;
+        console.log(resultPara.textContent);
+      } else {
+        console.log("didn't work");
+      }
+    }
+  });
+
   /*****************************/
   /*Game submit button handler */
   /*****************************/
@@ -210,6 +255,20 @@ window.addEventListener("load", function () {
     fetch("/create_session", cs_options).then(function (response) {
       return response.json().then((res) => {
         console.log(res);
+        if (!res.err) {
+          document.getElementById(
+            "code"
+          ).innerHTML = res.status.code.toUpperCase();
+          $("#codeView").css({ transform: "translateX(200vw)" });
+          $("#codeView").removeClass("off");
+          window.setTimeout(function () {
+            $("#codeView").css({ transform: "translateX(0vw)" });
+            $("#homeView").css({ transform: "translateX(-200vw)" });
+          }, 100);
+          window.setTimeout(function () {
+            $("#homeView").addClass("off");
+          }, 1000);
+        }
       });
     });
   });

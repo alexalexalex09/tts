@@ -274,6 +274,22 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
+  /* Select button transition  */
+  /*****************************/
+
+  $("#selectButton").click(this, function () {
+    $("#selectView").css({ transform: "translateX(200vw)" });
+    $("#selectView").removeClass("off");
+    window.setTimeout(function () {
+      $("#selectView").css({ transform: "translateX(0vw)" });
+      $("#codeView").css({ transform: "translateX(-200vw)" });
+    }, 100);
+    window.setTimeout(function () {
+      $("#codeView").addClass("off");
+    }, 1000);
+  });
+
+  /*****************************/
   /*   Real Game list puller   */
   /*****************************/
 

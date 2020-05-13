@@ -190,7 +190,7 @@ router.post("/create_session", function (req, res) {
           res.send({ status: theSession });
         });
       } else {
-        res.send({ err: "Already created a session. Join instead" });
+        res.send({ status: curSession });
       }
     });
   } else {

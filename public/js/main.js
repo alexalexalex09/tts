@@ -1,93 +1,11 @@
 //All DOM manipulation
 window.addEventListener("load", function () {
-  /*****************************/
-  /* Join button click handler */
-  /*****************************/
-  $("#joinButton").click(this, function (el) {
-    console.log("join click");
-    $("#codeInputGroup").removeClass("off");
-    window.setTimeout(function () {
-      console.log("wait 1");
-      $("#joinButton").css({
-        opacity: "0%",
-        transform: "translateX(100vw)",
-      });
-      $("#codeInputGroup").css({
-        opacity: "100%",
-        transform: "translateX(0px)",
-      });
-      $("#createButton").css({
-        transform: "translateY(12vh)",
-      });
-      window.setTimeout(function () {
-        console.log("wait 2");
-        $("#joinButton").addClass("off");
-      }, 600);
-    }, 10);
-  });
-
-  /*****************************/
-  /*         Menu toggle       */
-  /*****************************/
-  function closeMenu() {
-    $("#menu").css("transform", "translateX(-60vh)");
-    $("#menuCatch").addClass("off");
-    window.setTimeout(function () {
-      $("#menu").addClass("off");
-    }, 550);
-  }
-  $("#menuClose").on("click", closeMenu);
-  $("#menuCatch").on("click", closeMenu);
-  $("#menuIcon").click(this, function (el) {
-    $("#menu").removeClass("off");
-    $("#menuCatch").removeClass("off");
-    window.setTimeout(function () {
-      $("#menu").css("transform", "translateX(0vh)");
-    }, 10);
-  });
-
-  /*****************************/
-  /*  Text input clear button  */
-  /*****************************/
-  $(".textClear").click(this, function (el) {
-    if ($(this).parent().children("input").first().val() == "") {
-      $("#joinButton").removeClass("off");
-      window.setTimeout(function () {
-        console.log("wait 1");
-        $("#joinButton").css({
-          opacity: "100%",
-          transform: "translateX(0vw)",
-        });
-        $("#codeInputGroup").css({
-          opacity: "0%",
-          transform: "translateX(-100vw)",
-        });
-        $("#createButton").css({
-          transform: "translateY(0vh)",
-        });
-        window.setTimeout(function () {
-          console.log("wait 2");
-          $("#codeInputGroup").addClass("off");
-          $(".errorText").addClass("off");
-        }, 600);
-      }, 10);
-    } else {
-      $(this).parent().children("input").first().val("");
-      console.log($(this).parent().children("input").first().val());
+  //Set an extra history state to prevent back button from closing the page
+  window.history.pushState({ page: "home", noBackExitsApp: true }, "");
+  window.addEventListener("popstate", function (event) {
+    if (event.state && event.state.noBackExitsApp) {
+      window.history.pushState({ noBackExitsApp: true }, "");
     }
-  });
-
-  /*****************************/
-  /*   Submit button handler   */
-  /*****************************/
-  $("#codeSubmit").click(this, function (el) {
-    $(".errorText").removeClass("shake");
-    window.setTimeout(function () {
-      $(".errorText").removeClass("off").addClass("shake");
-    }, 5);
-    $("#createButton").css({
-      transform: "translateY(14vh)",
-    });
   });
 
   /*****************************/
@@ -171,11 +89,131 @@ window.addEventListener("load", function () {
     },
   });
 
+  /*****************************/
+  /*     Back arrow handler    */
+  /*****************************/
+  $("#backArrow").click(this, function (el) {
+    if (!$("#codeView").hasClass("off")) {
+      $("#backArrow").addClass("off");
+      goBackFrom("#codeView", "#homeView");
+      return;
+    }
+    if (!$("#selectView").hasClass("off")) {
+      goBackFrom("#selectView", "#codeView");
+      return;
+    }
+  });
+
+  function goBackFrom(from, to) {
+    console.log("going back from " + from + " to " + to);
+    $(to).css({ transform: "translateX(-200vw)" });
+    $(to).removeClass("off");
+    window.setTimeout(function () {
+      $(to).css({ transform: "translateX(0vw)" });
+      $(from).css({ transform: "translateX(200vw)" });
+    }, 100);
+    window.setTimeout(function () {
+      $(from).addClass("off");
+    }, 1000);
+  }
+
+  /*****************************/
+  /* Join button click handler */
+  /*****************************/
+  $("#joinButton").click(this, function (el) {
+    console.log("join click");
+    $("#codeInputGroup").removeClass("off");
+    window.setTimeout(function () {
+      console.log("wait 1");
+      $("#joinButton").css({
+        opacity: "0%",
+        transform: "translateX(100vw)",
+      });
+      $("#codeInputGroup").css({
+        opacity: "100%",
+        transform: "translateX(0px)",
+      });
+      $("#createButton").css({
+        transform: "translateY(12vh)",
+      });
+      window.setTimeout(function () {
+        console.log("wait 2");
+        $("#joinButton").addClass("off");
+      }, 600);
+    }, 10);
+  });
+
+  /*****************************/
+  /*         Menu toggle       */
+  /*****************************/
+  function closeMenu() {
+    $("#menu").css("transform", "translateX(-60vh)");
+    $("#menuCatch").addClass("off");
+    window.setTimeout(function () {
+      $("#menu").addClass("off");
+    }, 550);
+  }
+  $("#menuClose").on("click", closeMenu);
+  $("#menuCatch").on("click", closeMenu);
+  $("#menuIcon").click(this, function (el) {
+    $("#menu").removeClass("off");
+    $("#menuCatch").removeClass("off");
+    window.setTimeout(function () {
+      $("#menu").css("transform", "translateX(0vh)");
+    }, 10);
+  });
+
+  /*****************************/
+  /*  Text input clear button  */
+  /*****************************/
+  $(".textClear").click(this, function (el) {
+    if ($(this).parent().children("input").first().val() == "") {
+      $("#joinButton").removeClass("off");
+      window.setTimeout(function () {
+        console.log("wait 1");
+        $("#joinButton").css({
+          opacity: "100%",
+          transform: "translateX(0vw)",
+        });
+        $("#codeInputGroup").css({
+          opacity: "0%",
+          transform: "translateX(-100vw)",
+        });
+        $("#createButton").css({
+          transform: "translateY(0vh)",
+        });
+        window.setTimeout(function () {
+          console.log("wait 2");
+          $("#codeInputGroup").addClass("off");
+          $(".errorText").addClass("off");
+        }, 600);
+      }, 10);
+    } else {
+      $(this).parent().children("input").first().val("");
+      console.log($(this).parent().children("input").first().val());
+    }
+  });
+
+  /*****************************/
+  /*   Submit button handler   */
+  /*****************************/
+  $("#codeSubmit").click(this, function (el) {
+    $(".errorText").removeClass("shake");
+    $("#backArrow").removeClass("off");
+    window.setTimeout(function () {
+      $(".errorText").removeClass("off").addClass("shake");
+    }, 5);
+    $("#createButton").css({
+      transform: "translateY(14vh)",
+    });
+  });
+
   /***********************************/
   /* Change Font color of game names */
   /***********************************/
   $('input[type="checkbox"]').on("click", function () {
     var el = $(this).parent().parent().parent().children(".gameName").first();
+    console.log(el);
     if ($(this).is(":checked")) {
       el.css("color", "var('--main-green')");
     } else {
@@ -256,9 +294,12 @@ window.addEventListener("load", function () {
       return response.json().then((res) => {
         console.log(res);
         if (!res.err) {
+          $("#backArrow").removeClass("off");
           document.getElementById(
             "code"
           ).innerHTML = res.status.code.toUpperCase();
+          document.getElementById("selectCodeDisplay").innerHTML +=
+            " " + res.status.code.toUpperCase();
           $("#codeView").css({ transform: "translateX(200vw)" });
           $("#codeView").removeClass("off");
           window.setTimeout(function () {
@@ -268,6 +309,11 @@ window.addEventListener("load", function () {
           window.setTimeout(function () {
             $("#homeView").addClass("off");
           }, 1000);
+          history.pushState(
+            { code: res.status.code, page: "code" },
+            "",
+            "#code"
+          );
         }
       });
     });

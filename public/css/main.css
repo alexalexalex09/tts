@@ -206,6 +206,37 @@ input:checked + .slider:before {
   /*justify-content: center;*/
 }
 
+#backAlert {
+  color: var(--main-white);
+  background-color: var(--main-blue);
+  text-align: center;
+  border-radius: 10px;
+  font-size: 1em;
+  vertical-align: middle;
+  padding: 0.5em;
+  position: absolute;
+  width: 80vw;
+  box-sizing: border-box;
+  margin: 0 auto;
+  top: 5px;
+  right: 10vw;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+#backArrow ion-icon {
+  color: var(--main-blue);
+  position: fixed;
+  font-size: 32px;
+  top: 40%;
+  transform: translateY(-50%);
+}
+
+.codeDisplay {
+  grid-area: 3/1/4/11;
+  text-align: center;
+}
+
 /*****************/
 /*   Home View   */
 /*****************/
@@ -307,7 +338,7 @@ input:checked + .slider:before {
 }
 
 #codeButtons ion-icon {
-  font-size: 96px;
+  font-size: var(--vh10);
   color: var(--main-blue);
 }
 

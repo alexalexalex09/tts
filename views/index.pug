@@ -55,8 +55,22 @@ block content
         #codeSubmit.submitButton.button.blueBtn Submit
         #codeError.errorText.off Wrong code. Please try again.
 
+    #codeView.view.off
+      .pageTitle The Tidy Squirrel 🐿️
+      #codeGroup
+        #codeTitle Your Code:
+        #code 7g4hf
+      #codeButtons
+        #shareButton
+          ion-icon(name="share-outline")
+        #copyButton
+          ion-icon(name="copy-outline")
+        #copiedAlert Code copied to clipboard!
+      #selectButton.submitButton.button.greenBtn Select Games
+
     #selectView.view.off
       #selectTitle.pageTitle Select Games 🐿️
+      #selectCodeDisplay.codeDisplay Your Code:
       #addGamesContainer
         #addGamesTitle Add Games
         #addGamesInputCont.textInputCont
@@ -79,20 +93,9 @@ block content
       #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games
 
-    #codeView.view.off
-      .pageTitle The Tidy Squirrel 🐿️
-      #codeGroup
-        #codeTitle Your Code:
-        #code 7g4hf
-      #codeButtons
-        #shareButton
-          ion-icon(name="share-outline")
-        #copyButton
-          ion-icon(name="copy-outline")
-        #copiedAlert Code copied to clipboard!
-      #selectButton.submitButton.button.greenBtn Select Games
-
-      
+  #backAlert.off Press back one more time to leave the app
+  #backArrow.off
+    ion-icon(name="caret-back-outline")
   #listsContainer
 //-
   #report

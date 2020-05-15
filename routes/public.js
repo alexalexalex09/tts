@@ -159,6 +159,19 @@ function userCreate(id, name) {
   return user;
 }
 
+router.post("/join_session", function (req, res) {
+  Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+    console.log(curSession);
+    if (!curSession) {
+      console.log("Error: ", err);
+      console.log("Session: ", curSession);
+      res.send({ err: "No such session" });
+    } else {
+      res.send({ code: curSession.code, lock: curSession.lock });
+    }
+  });
+});
+
 router.post("/create_session", function (req, res) {
   if (req.user) {
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
@@ -195,6 +208,87 @@ router.post("/create_session", function (req, res) {
     });
   } else {
     res.send({ err: "No user" });
+  }
+});
+
+router.post("/add_game_to_session", function (req, res) {
+  if (req.user) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      var results = [];
+      if (req.body.gamesToAdd.length > 0) {
+        for (var i = 0; i < req.body.gamesToAdd.length; i++) {
+          //1. Has the game already been added to the session?
+          //2. Is the user's id already in the list of owners?
+          var id = mongoose.Types.ObjectId(req.body.gamesToAdd[i]);
+          var gameAdded = false;
+          var ownedBy = false;
+          var index = -1;
+          for (var j = 0; j < curSession.games.length; j++) {
+            if (curSession.games[j].game.toString() == req.body.gamesToAdd[i]) {
+              gameAdded = true;
+              index = j;
+              if (curSession.games[j].addedBy.includes(req.user.id)) {
+                ownedBy = true;
+              }
+              break;
+            }
+          }
+          if (gameAdded) {
+            if (ownedBy) {
+              results.push({ err: "Already added by this user" });
+            } else {
+              curSession.games[index].addedBy.push(req.user.id);
+              results.push({
+                status:
+                  "Added " +
+                  req.user.id +
+                  " to the list of owners for " +
+                  req.body.gamesToAdd[i],
+              });
+            }
+          } else {
+            //console.log(curSession.games);
+            curSession.games.push({ game: id, addedBy: [req.user.id] });
+            //console.log(curSession.games);
+            results.push({
+              status:
+                "Added " +
+                req.body.gamesToAdd[i] +
+                "to the list with owner " +
+                req.user.id,
+            });
+          }
+        }
+        curSession.save();
+        res.send(results);
+      } else {
+        if (req.body.gamesToRemove.length > 0) {
+          //Find the game to remove, then remove the owner from the addedBy array
+          for (var i = 0; i < req.body.gamesToRemove.length; i++) {
+            var gameAdded = false;
+            var ownedBy = false;
+            var index = -1;
+            var game = curSession.games.findIndex(
+              (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+            );
+            console.log("game: ", game);
+            if (game > -1) {
+              console.log(curSession.games[game]);
+              var toRemove = curSession.games[game].addedBy.findIndex(
+                (obj) => obj == req.user.id
+              );
+              console.log("toRemove: ", toRemove);
+              if (toRemove > -1) {
+                curSession.games[game].addedBy.splice(toRemove, 1);
+              }
+            }
+          }
+          curSession.save();
+        }
+      }
+    });
+  } else {
+    res.send({ err: "Must log in to add games" });
   }
 });
 

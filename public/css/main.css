@@ -427,6 +427,10 @@ input:checked + .slider:before {
   transform: rotateX(180deg);
 }
 
+.greenText {
+  color: var(--main-green);
+}
+
 .toggle {
   grid-area: 1/3/2/4;
   justify-self: end;

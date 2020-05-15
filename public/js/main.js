@@ -93,29 +93,22 @@ window.addEventListener("load", function () {
   /*     Back arrow handler    */
   /*****************************/
   $("#backArrow").click(this, function (el) {
+    var dest = $("#backArrow").attr("data-gobackto");
     if (!$("#codeView").hasClass("off")) {
       $("#backArrow").addClass("off");
       goBackFrom("#codeView", "#homeView");
       return;
     }
     if (!$("#selectView").hasClass("off")) {
-      goBackFrom("#selectView", "#codeView");
+      if (dest == "code") {
+        goBackFrom("#selectView", "#codeView");
+      }
+      if (dest == "home") {
+        goBackFrom("#selectView", "#homeView");
+      }
       return;
     }
   });
-
-  function goBackFrom(from, to) {
-    console.log("going back from " + from + " to " + to);
-    $(to).css({ transform: "translateX(-200vw)" });
-    $(to).removeClass("off");
-    window.setTimeout(function () {
-      $(to).css({ transform: "translateX(0vw)" });
-      $(from).css({ transform: "translateX(200vw)" });
-    }, 100);
-    window.setTimeout(function () {
-      $(from).addClass("off");
-    }, 1000);
-  }
 
   /*****************************/
   /* Join button click handler */
@@ -200,32 +193,47 @@ window.addEventListener("load", function () {
   $("#codeSubmit").click(this, function (el) {
     $(".errorText").removeClass("shake");
     $("#backArrow").removeClass("off");
-    window.setTimeout(function () {
-      $(".errorText").removeClass("off").addClass("shake");
-    }, 5);
-    $("#createButton").css({
-      transform: "translateY(14vh)",
+    var theCode = $("#codeInput input").val();
+    const cs_options = {
+      method: "POST",
+      body: JSON.stringify({ code: theCode }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/join_session", cs_options).then(function (response) {
+      return response.json().then((res) => {
+        console.log(res);
+        if (res.err) {
+          window.setTimeout(function () {
+            $(".errorText").removeClass("off").addClass("shake");
+          }, 5);
+          $("#createButton").css({
+            transform: "translateY(14vh)",
+          });
+        } else {
+          $("#backArrow").removeClass("off");
+          $("#backArrow").attr("data-gobackto", "home");
+          document.getElementById("code").innerHTML = res.code;
+          document.getElementById("selectCodeDisplay").innerHTML =
+            "Your Code: " + res.code;
+          console.log("#" + res.lock);
+          goForwardFrom("#homeView", "#" + res.lock);
+          history.pushState(
+            { code: res.code, page: "select", last: "home" },
+            "",
+            "#select"
+          );
+        }
+      });
     });
-  });
-
-  /***********************************/
-  /* Change Font color of game names */
-  /***********************************/
-  $('input[type="checkbox"]').on("click", function () {
-    var el = $(this).parent().parent().parent().children(".gameName").first();
-    console.log(el);
-    if ($(this).is(":checked")) {
-      el.css("color", "var('--main-green')");
-    } else {
-      el.css("color", "var('--main-black')");
-    }
-    console.log();
   });
 
   /***********************************/
   /*   Copy the code to clipboard    */
   /***********************************/
   $("#copyButton").on("click", function () {
+    $("#copiedAlert").css({ opacity: 1 });
     var copyText = document.getElementById("code").innerHTML;
     const el = document.createElement("textarea");
     el.value = copyText;
@@ -238,7 +246,7 @@ window.addEventListener("load", function () {
     /* Copy the text inside the text field */
     document.execCommand("copy");
     document.body.removeChild(el);
-    $("#copiedAlert").css({ opacity: 1 });
+
     window.setTimeout(function () {
       $("#copiedAlert").css({ opacity: 0 });
     }, 1000);
@@ -295,20 +303,11 @@ window.addEventListener("load", function () {
         console.log(res);
         if (!res.err) {
           $("#backArrow").removeClass("off");
-          document.getElementById(
-            "code"
-          ).innerHTML = res.status.code.toUpperCase();
-          document.getElementById("selectCodeDisplay").innerHTML +=
-            " " + res.status.code.toUpperCase();
-          $("#codeView").css({ transform: "translateX(200vw)" });
-          $("#codeView").removeClass("off");
-          window.setTimeout(function () {
-            $("#codeView").css({ transform: "translateX(0vw)" });
-            $("#homeView").css({ transform: "translateX(-200vw)" });
-          }, 100);
-          window.setTimeout(function () {
-            $("#homeView").addClass("off");
-          }, 1000);
+          $("#backArrow").attr("data-gobackto", "home");
+          document.getElementById("code").innerHTML = res.status.code;
+          document.getElementById("selectCodeDisplay").innerHTML =
+            "Your Code: " + res.status.code;
+          goForwardFrom("#homeView", "#codeView");
           history.pushState(
             { code: res.status.code, page: "code" },
             "",
@@ -324,15 +323,8 @@ window.addEventListener("load", function () {
   /*****************************/
 
   $("#selectButton").click(this, function () {
-    $("#selectView").css({ transform: "translateX(200vw)" });
-    $("#selectView").removeClass("off");
-    window.setTimeout(function () {
-      $("#selectView").css({ transform: "translateX(0vw)" });
-      $("#codeView").css({ transform: "translateX(-200vw)" });
-    }, 100);
-    window.setTimeout(function () {
-      $("#codeView").addClass("off");
-    }, 1000);
+    $("#backArrow").attr("data-gobackto", "code");
+    goForwardFrom("#codeView", "#selectView");
   });
 
   /*****************************/
@@ -366,7 +358,7 @@ window.addEventListener("load", function () {
               </div>
               <div class='toggle' >
                   <label class="switch">
-                      <input type="checkbox">
+                      <input type="checkbox" onclick="toggleFont(this)">
                       <span class="slider round"></span>
                   </label>
               </div>
@@ -480,7 +472,7 @@ window.addEventListener("load", function () {
                                     </div>
                                     <div class='toggle'>
                                         <label class="switch">
-                                            <input type="checkbox" id=` +
+                                            <input type="checkbox" onclick = "toggleFont(this)" id=` +
                   obj[i].game_id +
                   `>
                                             <span class="slider round"></span>
@@ -541,9 +533,143 @@ window.addEventListener("load", function () {
 /***************************************************/
 
 /*****************************/
-/*        listToggle()       */
+/*  goForwardFrom(from, to)  */
 /*****************************/
-//Display or remove a particular list of games in the select view
+//
+/**
+ * {move forwards from one view to another arbitrary view}
+ *
+ * @param {String} from
+ * @param {String} to
+ */
+function goForwardFrom(from, to) {
+  //console.log("going forward from " + from + " to " + to);
+  $(to).css({ transform: "translateX(200vw)" });
+  $(to).removeClass("off");
+  window.setTimeout(function () {
+    $(to).css({ transform: "translateX(0vw)" });
+    $(from).css({ transform: "translateX(-200vw)" });
+  }, 100);
+  window.setTimeout(function () {
+    $(from).addClass("off");
+  }, 1000);
+}
+
+/*****************************/
+/*    goBackFrom(from, to)   */
+/*****************************/
+/**
+ * {move backwards from one view to another arbitrary view}
+ *
+ * @param {String} from
+ * @param {String} to
+ */
+function goBackFrom(from, to) {
+  //console.log("going back from " + from + " to " + to);
+  $(to).css({ transform: "translateX(-200vw)" });
+  $(to).removeClass("off");
+  window.setTimeout(function () {
+    $(to).css({ transform: "translateX(0vw)" });
+    $(from).css({ transform: "translateX(200vw)" });
+  }, 100);
+  window.setTimeout(function () {
+    $(from).addClass("off");
+  }, 1000);
+}
+
+/***********************************/
+/* Change Font color of game names */
+/* and handle category checking    */
+/***********************************/
+function toggleFont(check) {
+  var el = $(check).parent().parent().parent().children(".gameName").first();
+  var gamesToAdd = [];
+  var gamesToRemove = [];
+  if (el.length > 0) {
+    if ($(check).is(":checked")) {
+      el.addClass("greenText");
+      gamesToAdd.push($(check).attr("id"));
+    } else {
+      el.removeClass("greenText");
+      gamesToRemove.push($(check).attr("id"));
+    }
+  } else {
+    var el = $(check)
+      .parent()
+      .parent()
+      .parent()
+      .children(".listGames")
+      .children("li");
+    if ($(check).is(":checked")) {
+      el.each(function (i) {
+        if (
+          !$(this)
+            .children(".toggle")
+            .children()
+            .children("input")
+            .is(":checked")
+        ) {
+          gamesToAdd.push($(this).children(".gameName").attr("id"));
+        }
+        $(this)
+          .children(".toggle")
+          .children()
+          .children("input")
+          .prop("checked", true);
+        $(this).children(".gameName").addClass("greenText");
+      });
+    } else {
+      el.each(function (i) {
+        if (
+          $(this)
+            .children(".toggle")
+            .children()
+            .children("input")
+            .is(":checked")
+        ) {
+          gamesToRemove.push($(this).children(".gameName").attr("id"));
+        }
+        $(this)
+          .children(".toggle")
+          .children()
+          .children("input")
+          .prop("checked", false);
+        $(this).children(".gameName").removeClass("greenText");
+      });
+    }
+    console.log("Add: ", gamesToAdd);
+    console.log("Remove: ", gamesToRemove);
+  }
+  const adts_options = {
+    method: "POST",
+    body: JSON.stringify({
+      gamesToAdd: gamesToAdd,
+      gamesToRemove: gamesToRemove,
+      code: document.getElementById("code").innerHTML,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/add_game_to_session", adts_options).then(function (response) {
+    return response.json().then((res) => {
+      if (!res.err) {
+        console.log(res);
+      } else {
+        console.log(res.err);
+      }
+    });
+  });
+}
+
+/*****************************/
+/*        listToggle(el)       */
+/*****************************/
+/**
+ * {Display or remove a particular list of games in the select view}
+ *
+ * @param {*} el
+ */
 function listToggle(el) {
   $(el).toggleClass("expanded");
   if ($(el).hasClass("expanded")) {
@@ -564,7 +690,7 @@ function listToggle(el) {
             </div>
             <div class='toggle'>
                 <label class="switch">
-                    <input type="checkbox" id=` +
+                    <input type="checkbox" onclick="toggleFont(this)" id=` +
           e.getAttribute("game_id") +
           `>
                     <span class="slider round"></span>
@@ -578,6 +704,10 @@ function listToggle(el) {
   }
 }
 
+/**
+ * {Sets viewport height variables, --vh, --vh5, --vh10, etc}
+ *
+ */
 function getvh() {
   // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
   let vh = window.innerHeight * 0.01;

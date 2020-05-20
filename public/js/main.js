@@ -299,6 +299,7 @@ window.addEventListener("load", function () {
       },
     };
     fetch("/create_session", cs_options).then(function (response) {
+      console.log("got it back");
       return response.json().then((res) => {
         console.log(res);
         if (!res.err) {

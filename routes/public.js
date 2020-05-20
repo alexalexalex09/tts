@@ -1,5 +1,4 @@
 const express = require("express");
-const mysql = require("mysql");
 const router = express.Router();
 var cfenv = require("cfenv");
 var mongoose = require("mongoose");
@@ -10,6 +9,8 @@ var Session = require("../models/sessions.js");
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
+console.log(appEnv);
+
 var sURL = appEnv.getServiceURL("ad_16459ca7380ad71");
 if (appEnv.port == 6002) {
   var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
@@ -26,6 +27,7 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 // Home page
 router.get("/", (req, res) => {
+  console.log(baseURL);
   res.render("index", {
     appEnv: appEnv,
     redirect_uri: baseURL + "/users/callback",

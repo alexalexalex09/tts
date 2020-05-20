@@ -14,11 +14,11 @@ var app = express();
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
-//if (appEnv.port == 6002) {
-//  var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
-//} else {
-var baseURL = appEnv.url;
-//}
+if (appEnv.port == 6002) {
+  var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
+} else {
+  var baseURL = appEnv.url;
+}
 
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({

@@ -59,6 +59,7 @@ router.post("/get_user_lists", (req, res) => {
       }
       //var resLists = ["Test List"];
       Array.prototype.unshift.apply(resArray, ["All Games"]);
+
       console.log(resArray);
 
       res.send(resArray);
@@ -169,10 +170,29 @@ router.post("/join_session", function (req, res) {
       console.log("Session: ", curSession);
       res.send({ err: "No such session" });
     } else {
-      res.send({ code: curSession.code, lock: curSession.lock });
+      var sendGames = checkIfAddedByUser(curSession, req.user.id);
+      res.send({
+        code: curSession.code,
+        lock: curSession.lock,
+        games: sendGames,
+      });
     }
   });
 });
+
+function checkIfAddedByUser(theSession, userId) {
+  var ret = [];
+  console.log(theSession.games.length);
+  for (var i = 0; i < theSession.games.length; i++) {
+    function isAddedBy(toCheck) {
+      return toCheck.toString() == userId;
+    }
+    if (theSession.games[i].addedBy.findIndex(isAddedBy) > -1) {
+      ret.push(theSession.games[i]);
+    }
+  }
+  return ret;
+}
 
 router.post("/create_session", function (req, res) {
   if (req.user) {
@@ -205,7 +225,8 @@ router.post("/create_session", function (req, res) {
           res.send({ status: theSession });
         });
       } else {
-        res.send({ status: curSession });
+        var sendGames = checkIfAddedByUser(curSession, req.user.id);
+        res.send({ status: curSession, games: sendGames });
       }
     });
   } else {

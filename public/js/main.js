@@ -203,7 +203,7 @@ window.addEventListener("load", function () {
     };
     fetch("/join_session", cs_options).then(function (response) {
       return response.json().then((res) => {
-        console.log(res);
+        console.log("join session ", res);
         if (res.err) {
           window.setTimeout(function () {
             $(".errorText").removeClass("off").addClass("shake");
@@ -218,6 +218,13 @@ window.addEventListener("load", function () {
           document.getElementById("selectCodeDisplay").innerHTML =
             "Your Code: " + res.code;
           console.log("#" + res.lock);
+          var sessionGames = "<session>";
+          for (var i = 0; i < res.games.length; i++) {
+            sessionGames +=
+              '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+          }
+          document.getElementById("sessionContainer").innerHTML = sessionGames;
+          initGreenLists();
           goForwardFrom("#homeView", "#" + res.lock);
           history.pushState(
             { code: res.code, page: "select", last: "home" },
@@ -299,7 +306,6 @@ window.addEventListener("load", function () {
       },
     };
     fetch("/create_session", cs_options).then(function (response) {
-      console.log("got it back");
       return response.json().then((res) => {
         console.log(res);
         if (!res.err) {
@@ -314,6 +320,15 @@ window.addEventListener("load", function () {
             "",
             "#code"
           );
+          var sessionGames = "<session>";
+          if (res.games) {
+            for (var i = 0; i < res.games.length; i++) {
+              sessionGames +=
+                '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+            }
+          }
+          document.getElementById("sessionContainer").innerHTML = sessionGames;
+          initGreenLists();
         }
       });
     });
@@ -326,51 +341,6 @@ window.addEventListener("load", function () {
   $("#selectButton").click(this, function () {
     $("#backArrow").attr("data-gobackto", "code");
     goForwardFrom("#codeView", "#selectView");
-  });
-
-  /*****************************/
-  /*   Real Game list puller   */
-  /*****************************/
-
-  const gul_options = {
-    method: "POST",
-    body: "",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  fetch("/get_user_lists", gul_options).then(function (response) {
-    return response.json().then((res) => {
-      console.log(res);
-
-      //console.log(typeof res);
-      if (!res.err) {
-        for (var i = 0; i < res.length; i++) {
-          var htmlString =
-            `<li id="` +
-            i +
-            `">
-              <div class="listName">` +
-            res[i] +
-            `
-              </div>
-              <div class="listExpand" onclick="listToggle(this)">
-                  <ion-icon name="chevron-down-outline"></ion-icon>
-              </div>
-              <div class='toggle' >
-                  <label class="switch">
-                      <input type="checkbox" onclick="toggleFont(this)">
-                      <span class="slider round"></span>
-                  </label>
-              </div>
-              <div class="listGames"></div>
-            </li>`;
-          $("#selectLists").append(htmlString);
-        }
-      } else {
-        console.log("Error: no user");
-      }
-    });
   });
 
   /*****************************/
@@ -394,6 +364,7 @@ window.addEventListener("load", function () {
     return response.json().then((res) => {
       if (!res.err) {
         console.log(res);
+        addListDisplay(0, "All Games");
         var htmlString = `` + `<list listid="0" name="All Games">`;
         for (var i = 0; i < res.allGames.length; i++) {
           htmlString +=
@@ -413,6 +384,7 @@ window.addEventListener("load", function () {
         console.log("here's the object");
         console.log(res.custom);
         for (var i = 0; i < res.custom.length; i++) {
+          addListDisplay(i + 1, res.custom[i].name);
           htmlString +=
             `<list listid="` + (i + 1) + `" name="` + res.custom[i].name + `">`;
           for (var j = 0; j < res.custom[i].games.length; j++) {
@@ -578,10 +550,91 @@ function goBackFrom(from, to) {
   }, 1000);
 }
 
+/********************************/
+/*    Add initial list names    */
+/*    to #selectgames           */
+/********************************/
+/**
+ *
+ *
+ * @param {String} theId
+ * @param {String} name
+ */
+function addListDisplay(theId, name) {
+  var listString =
+    `<li id="` +
+    theId +
+    `">
+      <div class="listName">` +
+    name +
+    `
+      </div>
+      <div class="listExpand" onclick="listToggle(this)">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+      </div>
+      <div class='toggle' >
+          <label class="switch">
+              <input type="checkbox" onclick="toggleFont(this)">
+              <span class="slider round"></span>
+          </label>
+      </div>
+      <div class="listGames"></div>
+    </li>`;
+  $("#selectLists").append(listString);
+}
+
+//Check list boxes and change text to green on first display
+//by getting the list of games already added to the session
+//and checking to see if every game in a list has been added
+function initGreenLists() {
+  var sessionGames = [];
+  $("session")
+    .children()
+    .each(function (i, e) {
+      sessionGames.push($(e).attr("id"));
+    });
+  $("#listsContainer")
+    .children()
+    .each(function (ind, el) {
+      var count = 0;
+      $(el)
+        .children()
+        .each(function (i, e) {
+          if (
+            sessionGames.findIndex((item) => item == $(e).attr("game_id")) > -1
+          ) {
+            count++;
+          }
+        });
+      if (count == $(el).children().length) {
+        var theid = $(el).attr("listid");
+        var toChange = $("#selectLists #" + theid);
+        $(toChange).children(".listName").addClass("greenText");
+        $(toChange)
+          .children(".toggle")
+          .children()
+          .children("input")
+          .prop("checked", true);
+      }
+    });
+}
+
 /***********************************/
 /* Change Font color of game names */
 /* and handle category checking    */
 /***********************************/
+
+/* TODO
+ *
+ *
+ *
+ *
+ * Need to just populate the lists and hide/show. If you add a collapsed list, it doesn't add anything right now
+ *
+ *
+ *
+ */
+
 function toggleFont(check) {
   var el = $(check).parent().parent().parent().children(".gameName").first();
   var gamesToAdd = [];
@@ -661,6 +714,36 @@ function toggleFont(check) {
       }
     });
   });
+  var mainListParent = $(el).parent().parent().parent();
+
+  var mainListToggle = $(mainListParent)
+    .children(".toggle")
+    .children()
+    .children("input");
+  var numChecked = 0;
+  console.log($(mainListParent).children(".listGames")[0]);
+  $(mainListParent)
+    .children(".listGames")
+    .first()
+    .children()
+    .each(function (ind, el) {
+      if (
+        $(el).children(".toggle").children().children("input").is(":checked")
+      ) {
+        numChecked++;
+      }
+    });
+  if (numChecked == 0) {
+    mainListToggle.prop("checked", false);
+    $(mainListParent).children(".listName").removeClass("greenText");
+  }
+  if (
+    numChecked ==
+    $(mainListParent).children(".listGames").first().children().length
+  ) {
+    mainListToggle.prop("checked", true);
+    $(mainListParent).children(".listName").removeClass("greenText");
+  }
 }
 
 /*****************************/
@@ -680,10 +763,23 @@ function listToggle(el) {
     $("[listid=" + theid + "]")
       .children()
       .each(function (i, e) {
+        var curSession = document.getElementsByTagName("session")[0];
+        var checked = "";
+        var greenText = "";
+        $(curSession)
+          .children()
+          .each(function (ind, el) {
+            if ($(el).attr("id") == e.getAttribute("game_id")) {
+              checked = " checked";
+              greenText = " greenText";
+            }
+          });
         var htmlString =
           `
         <li>
-            <div class="gameName" id=` +
+            <div class="gameName` +
+          greenText +
+          `" id=` +
           e.getAttribute("game_id") +
           `>` +
           e.getAttribute("name") +
@@ -691,7 +787,9 @@ function listToggle(el) {
             </div>
             <div class='toggle'>
                 <label class="switch">
-                    <input type="checkbox" onclick="toggleFont(this)" id=` +
+                    <input type="checkbox"` +
+          checked +
+          ` onclick="toggleFont(this)" id=` +
           e.getAttribute("game_id") +
           `>
                     <span class="slider round"></span>

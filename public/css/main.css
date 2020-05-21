@@ -381,7 +381,7 @@ input:checked + .slider:before {
 
 #selectLists {
   overflow-y: scroll;
-  grid-area: 7/2/16/10;
+  grid-area: 7/2/15/10;
   height: 100%;
 }
 

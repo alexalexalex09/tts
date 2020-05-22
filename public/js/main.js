@@ -224,6 +224,7 @@ window.addEventListener("load", function () {
               '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
           }
           document.getElementById("sessionContainer").innerHTML = sessionGames;
+          console.log("initGreenLists");
           initGreenLists();
           goForwardFrom("#homeView", "#" + res.lock);
           history.pushState(
@@ -328,6 +329,7 @@ window.addEventListener("load", function () {
             }
           }
           document.getElementById("sessionContainer").innerHTML = sessionGames;
+          console.log("initGreenLists");
           initGreenLists();
         }
       });
@@ -363,45 +365,83 @@ window.addEventListener("load", function () {
     //"name", and "owned".
     return response.json().then((res) => {
       if (!res.err) {
-        console.log(res);
+        console.log("gulp", res);
         addListDisplay(0, "All Games");
-        var htmlString = `` + `<list listid="0" name="All Games">`;
         for (var i = 0; i < res.allGames.length; i++) {
-          htmlString +=
-            `<game name="` +
-            res.allGames[i].name +
-            `" game_id="` +
-            res.allGames[i]._id +
-            `"rating="` +
+          var curSession = document.getElementsByTagName("session")[0];
+          var checked = "";
+          var greenText = "";
+          $(curSession)
+            .children()
+            .each(function (ind, el) {
+              if ($(el).attr("id") == res.allGames[i]._id.toString()) {
+                checked = " checked";
+                greenText = " greenText";
+              }
+            });
+          var htmlString =
+            `
+          <li>
+              <div rating="` +
             res.allGames[i].rating +
             `" owned="` +
             res.allGames[i].owned +
+            `" class="gameName` +
+            greenText +
+            `" game_id="` +
+            res.allGames[i]._id +
             `">` +
             res.allGames[i].name +
-            `</game>`;
+            `
+              </div>
+              <div class='toggle'>
+                  <label class="switch">
+                      <input type="checkbox"` +
+            checked +
+            ` onclick="toggleFont(this)" game_id="` +
+            res.allGames[i]._id +
+            `">
+                      <span class="slider round"></span>
+                  </label>
+              </div>
+          </li>`;
+          $("li#0").children(".listGames").first().append(htmlString);
         }
-        htmlString += "</list>";
-        console.log("here's the object");
-        console.log(res.custom);
         for (var i = 0; i < res.custom.length; i++) {
-          addListDisplay(i + 1, res.custom[i].name);
-          htmlString +=
-            `<list listid="` + (i + 1) + `" name="` + res.custom[i].name + `">`;
+          var curId = i + 1;
+          addListDisplay(curId, res.custom[i].name);
           for (var j = 0; j < res.custom[i].games.length; j++) {
-            htmlString +=
-              `<game name="` +
-              res.custom[i].games[j].name +
-              `" game_id="` +
-              res.custom[i].games[j]._id +
-              `" rating="` +
+            var htmlString =
+              `
+          <li>
+            <div rating="` +
               res.custom[i].games[j].rating +
               `" owned="` +
               res.custom[i].games[j].owned +
+              `" class="gameName` +
+              greenText +
+              `" game_id="` +
+              res.custom[i].games[j]._id +
               `">` +
               res.custom[i].games[j].name +
-              `</game>`;
+              `
+            </div>
+            <div class='toggle'>
+                <label class="switch">
+                    <input type="checkbox"` +
+              checked +
+              ` onclick="toggleFont(this)" game_id="` +
+              res.custom[i].games[j]._id +
+              `">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+          </li>`;
+            $("li#" + curId)
+              .children(".listGames")
+              .first()
+              .append(htmlString);
           }
-          htmlString += `</list>`;
         }
         document.getElementById("listsContainer").innerHTML = htmlString;
       } else {
@@ -409,64 +449,6 @@ window.addEventListener("load", function () {
       }
     });
   });
-
-  /*****************************/
-  /*   All Game list puller (depr)   */
-  /*****************************/
-
-  $("#selectLists li .listExpand")
-    .first()
-    .click(this, function () {
-      el = $("#selectLists li .listExpand").first();
-      $(el).toggleClass("expanded");
-      if ($(el).hasClass("expanded")) {
-        var theid = $(el).parent().attr("id");
-        console.log("the id: " + theid);
-        const options = {
-          method: "POST",
-          body: JSON.stringify({ list: theid }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        };
-        fetch("/get_user_all_games", options).then(function (response) {
-          return response.json().then((obj) => {
-            console.log("list_games" + obj);
-            if (!obj.err) {
-              for (var i = 0; i < obj.length; i++) {
-                var htmlString =
-                  `
-                                <li>
-                                    <div class="gameName" id=` +
-                  obj[i].game_id +
-                  `>` +
-                  obj[i].game_name +
-                  `
-                                    </div>
-                                    <div class='toggle'>
-                                        <label class="switch">
-                                            <input type="checkbox" onclick = "toggleFont(this)" id=` +
-                  obj[i].game_id +
-                  `>
-                                            <span class="slider round"></span>
-                                        </label>
-                                    </div>
-                                </li>`;
-                $(el)
-                  .parent()
-                  .children(".listGames")
-                  .first()
-                  .prepend(htmlString);
-              }
-            } else {
-              console.log("list_games err: " + obj.err);
-            }
-          });
-        });
-      } else {
-        $(el).parent().children(".listGames").first().empty();
-      }
-    });
 
   /*****************************/
   /*    Unsorted Game Adder    */
@@ -578,7 +560,7 @@ function addListDisplay(theId, name) {
               <span class="slider round"></span>
           </label>
       </div>
-      <div class="listGames"></div>
+      <div class="listGames off"></div>
     </li>`;
   $("#selectLists").append(listString);
 }
@@ -593,30 +575,45 @@ function initGreenLists() {
     .each(function (i, e) {
       sessionGames.push($(e).attr("id"));
     });
-  $("#listsContainer")
-    .children()
-    .each(function (ind, el) {
-      var count = 0;
-      $(el)
-        .children()
-        .each(function (i, e) {
-          if (
-            sessionGames.findIndex((item) => item == $(e).attr("game_id")) > -1
-          ) {
-            count++;
-          }
-        });
-      if (count == $(el).children().length) {
-        var theid = $(el).attr("listid");
-        var toChange = $("#selectLists #" + theid);
-        $(toChange).children(".listName").addClass("greenText");
-        $(toChange)
-          .children(".toggle")
-          .children()
-          .children("input")
-          .prop("checked", true);
-      }
-    });
+  console.log(sessionGames);
+
+  $("#selectLists li").each(function (ind, ele) {
+    var count = 0;
+    $(ele)
+      .children(".listGames")
+      .first()
+      .children("li")
+      .each(function (i, e) {
+        var eID = $(e).children(".gameName").first().attr("game_id");
+        if (sessionGames.findIndex((item) => item == eID) > -1) {
+          count++;
+          console.log(count + " ," + $(e).parent().children().length);
+          $(e)
+            .children(".toggle")
+            .children(".switch")
+            .children("input")
+            .prop("checked", true);
+          $(e).children(".gameName").first().addClass("greenText");
+        }
+        if (count == $(e).parent().children().length) {
+          $(e)
+            .parent()
+            .parent()
+            .children(".listName")
+            .first()
+            .addClass("greenText");
+          $(e)
+            .parent()
+            .parent()
+            .children(".toggle")
+            .first()
+            .children(".switch")
+            .children("input")
+            .first()
+            .prop("checked", true);
+        }
+      });
+  });
 }
 
 /***********************************/
@@ -635,6 +632,10 @@ function initGreenLists() {
  *
  */
 
+function makeGreen(id) {
+  $(id).each(function (i, e) {});
+}
+
 function toggleFont(check) {
   var el = $(check).parent().parent().parent().children(".gameName").first();
   var gamesToAdd = [];
@@ -642,12 +643,41 @@ function toggleFont(check) {
   if (el.length > 0) {
     if ($(check).is(":checked")) {
       el.addClass("greenText");
-      gamesToAdd.push($(check).attr("id"));
+      gamesToAdd.push($(check).attr("game_id"));
+      //makeGreen($(check).attr("id"));W
+
+      /* TODO 
+* Go through the lists and find duplicate games - mark those green also, because they've been added to the session!
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+
+
+
+
+*/
     } else {
       el.removeClass("greenText");
-      gamesToRemove.push($(check).attr("id"));
+      gamesToRemove.push($(check).attr("game_id"));
+      //unMakeGreen($(check).attr("id"));
     }
   } else {
+    $(check)
+      .parent()
+      .parent()
+      .parent()
+      .children(".listName")
+      .first()
+      .toggleClass("greenText");
     var el = $(check)
       .parent()
       .parent()
@@ -663,7 +693,7 @@ function toggleFont(check) {
             .children("input")
             .is(":checked")
         ) {
-          gamesToAdd.push($(this).children(".gameName").attr("id"));
+          gamesToAdd.push($(this).children(".gameName").attr("game_id"));
         }
         $(this)
           .children(".toggle")
@@ -681,7 +711,7 @@ function toggleFont(check) {
             .children("input")
             .is(":checked")
         ) {
-          gamesToRemove.push($(this).children(".gameName").attr("id"));
+          gamesToRemove.push($(this).children(".gameName").attr("game_id"));
         }
         $(this)
           .children(".toggle")
@@ -721,7 +751,6 @@ function toggleFont(check) {
     .children()
     .children("input");
   var numChecked = 0;
-  console.log($(mainListParent).children(".listGames")[0]);
   $(mainListParent)
     .children(".listGames")
     .first()
@@ -733,7 +762,10 @@ function toggleFont(check) {
         numChecked++;
       }
     });
-  if (numChecked == 0) {
+  if (
+    numChecked <
+    $(mainListParent).children(".listGames").first().children().length
+  ) {
     mainListToggle.prop("checked", false);
     $(mainListParent).children(".listName").removeClass("greenText");
   }
@@ -742,12 +774,12 @@ function toggleFont(check) {
     $(mainListParent).children(".listGames").first().children().length
   ) {
     mainListToggle.prop("checked", true);
-    $(mainListParent).children(".listName").removeClass("greenText");
+    $(mainListParent).children(".listName").addClass("greenText");
   }
 }
 
 /*****************************/
-/*        listToggle(el)       */
+/*        listToggle(el)     */
 /*****************************/
 /**
  * {Display or remove a particular list of games in the select view}
@@ -756,51 +788,7 @@ function toggleFont(check) {
  */
 function listToggle(el) {
   $(el).toggleClass("expanded");
-  if ($(el).hasClass("expanded")) {
-    var theid = $(el).parent().attr("id");
-    console.log("the id: " + theid);
-
-    $("[listid=" + theid + "]")
-      .children()
-      .each(function (i, e) {
-        var curSession = document.getElementsByTagName("session")[0];
-        var checked = "";
-        var greenText = "";
-        $(curSession)
-          .children()
-          .each(function (ind, el) {
-            if ($(el).attr("id") == e.getAttribute("game_id")) {
-              checked = " checked";
-              greenText = " greenText";
-            }
-          });
-        var htmlString =
-          `
-        <li>
-            <div class="gameName` +
-          greenText +
-          `" id=` +
-          e.getAttribute("game_id") +
-          `>` +
-          e.getAttribute("name") +
-          `
-            </div>
-            <div class='toggle'>
-                <label class="switch">
-                    <input type="checkbox"` +
-          checked +
-          ` onclick="toggleFont(this)" id=` +
-          e.getAttribute("game_id") +
-          `>
-                    <span class="slider round"></span>
-                </label>
-            </div>
-        </li>`;
-        $(el).parent().children(".listGames").first().prepend(htmlString);
-      });
-  } else {
-    $(el).parent().children(".listGames").first().empty();
-  }
+  $(el).parent().children(".listGames").first().toggleClass("off");
 }
 
 /**

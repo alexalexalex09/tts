@@ -565,6 +565,44 @@ function addListDisplay(theId, name) {
   $("#selectLists").append(listString);
 }
 
+function recheckGreenLists() {
+  console.log("recheck");
+  $("#selectLists>li").each(function (ind, ele) {
+    var count = 0;
+    $(ele)
+      .children(".listGames")
+      .first()
+      .children("li")
+      .each(function (i, e) {
+        if ($(e).children(".gameName").first().hasClass("greenText")) {
+          count++;
+          console.log(
+            count,
+            $(ele).children(".listGames").first().children("li").length
+          );
+        }
+      });
+    if (count == $(ele).children(".listGames").first().children("li").length) {
+      $(ele).children(".listName").first().addClass("greenText");
+      $(ele)
+        .children(".toggle")
+        .children(".switch")
+        .children("input")
+        .prop("checked", true);
+      console.log("checked one box");
+    } else {
+      $(ele).children(".listName").first().removeClass("greenText");
+      $(ele)
+        .children(".toggle")
+        .first()
+        .children(".switch")
+        .children("input")
+        .prop("checked", false);
+      console.log("unchecked!");
+    }
+  });
+}
+
 //Check list boxes and change text to green on first display
 //by getting the list of games already added to the session
 //and checking to see if every game in a list has been added
@@ -621,19 +659,32 @@ function initGreenLists() {
 /* and handle category checking    */
 /***********************************/
 
-/* TODO
- *
- *
- *
- *
- * Need to just populate the lists and hide/show. If you add a collapsed list, it doesn't add anything right now
- *
- *
- *
- */
-
 function makeGreen(id) {
-  $(id).each(function (i, e) {});
+  $('.gameName[game_id="' + id + '"]').each(function (i, e) {
+    $(e).addClass("greenText");
+    $(e)
+      .parent()
+      .children(".toggle")
+      .children(".switch")
+      .children("input")
+      .first()
+      .prop("checked", true);
+  });
+  //recheckGreenLists();
+}
+function unMakeGreen(id) {
+  console.log("unmake " + id);
+  $('.gameName[game_id="' + id + '"]').each(function (i, e) {
+    $(e).removeClass("greenText");
+    $(e)
+      .parent()
+      .children(".toggle")
+      .children(".switch")
+      .children("input")
+      .first()
+      .prop("checked", false);
+  });
+  //recheckGreenLists();
 }
 
 function toggleFont(check) {
@@ -644,31 +695,11 @@ function toggleFont(check) {
     if ($(check).is(":checked")) {
       el.addClass("greenText");
       gamesToAdd.push($(check).attr("game_id"));
-      //makeGreen($(check).attr("id"));W
-
-      /* TODO 
-* Go through the lists and find duplicate games - mark those green also, because they've been added to the session!
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-*
-
-
-
-
-*/
+      makeGreen($(check).attr("game_id"));
     } else {
       el.removeClass("greenText");
       gamesToRemove.push($(check).attr("game_id"));
-      //unMakeGreen($(check).attr("id"));
+      unMakeGreen($(check).attr("game_id"));
     }
   } else {
     $(check)
@@ -694,6 +725,7 @@ function toggleFont(check) {
             .is(":checked")
         ) {
           gamesToAdd.push($(this).children(".gameName").attr("game_id"));
+          makeGreen($(this).children(".gameName").attr("game_id"));
         }
         $(this)
           .children(".toggle")
@@ -712,6 +744,7 @@ function toggleFont(check) {
             .is(":checked")
         ) {
           gamesToRemove.push($(this).children(".gameName").attr("game_id"));
+          unMakeGreen($(this).children(".gameName").attr("game_id"));
         }
         $(this)
           .children(".toggle")
@@ -744,38 +777,7 @@ function toggleFont(check) {
       }
     });
   });
-  var mainListParent = $(el).parent().parent().parent();
-
-  var mainListToggle = $(mainListParent)
-    .children(".toggle")
-    .children()
-    .children("input");
-  var numChecked = 0;
-  $(mainListParent)
-    .children(".listGames")
-    .first()
-    .children()
-    .each(function (ind, el) {
-      if (
-        $(el).children(".toggle").children().children("input").is(":checked")
-      ) {
-        numChecked++;
-      }
-    });
-  if (
-    numChecked <
-    $(mainListParent).children(".listGames").first().children().length
-  ) {
-    mainListToggle.prop("checked", false);
-    $(mainListParent).children(".listName").removeClass("greenText");
-  }
-  if (
-    numChecked ==
-    $(mainListParent).children(".listGames").first().children().length
-  ) {
-    mainListToggle.prop("checked", true);
-    $(mainListParent).children(".listName").addClass("greenText");
-  }
+  recheckGreenLists();
 }
 
 /*****************************/
@@ -816,36 +818,3 @@ function getvh() {
   document.documentElement.style.setProperty("--vh75", `${vh * 75}px`);
 }
 getvh();
-
-/*****************************/
-/*    Testing for homework   */
-/*****************************/
-/*$('#gamenum').on("input", function() {
-        var gameInput = document.getElementById("gamenum").value;
-
-        if(gameInput) {
-            const game = {
-                id: gameInput
-            };
-
-            const options = {
-                method: 'POST',
-                body: JSON.stringify(game),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            };
-            
-            fetch('/logindata', options)
-                .then(function(response) {
-                    return response.text().then(function(text) {
-                        document.getElementById("results").innerHTML = text;
-                    });
-                })
-                .catch( function(err) {
-                    //console.log("error: "+err)
-                });
-        }
-
-    });
-    */

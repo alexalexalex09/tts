@@ -27,7 +27,6 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 // Home page
 router.get("/", (req, res) => {
-  console.log(baseURL);
   res.render("index", {
     appEnv: appEnv,
     redirect_uri: baseURL + "/users/callback",
@@ -45,10 +44,24 @@ router.post("/get_user_lists_populated", (req, res) => {
           if (curUser.lists) {
             res.send(curUser.lists);
           } else {
-            res.send([]);
+            newUser = {
+              profile_id: req.user.id,
+              name: req.user.profile.firstName,
+              lists: { allGames: [], custom: [] },
+            };
+            curUser = new User(newUser);
+            curUser.save();
+            res.send(curUser.lists);
           }
         } else {
-          res.send({ err: "Error finding user" });
+          newUser = {
+            profile_id: req.user.id,
+            name: req.user.profile.firstName,
+            lists: { allGames: [], custom: [] },
+          };
+          curUser = new User(newUser);
+          curUser.save();
+          res.send(curUser.lists);
         }
       });
   } else {
@@ -132,13 +145,20 @@ router.post("/game_add", function (req, res) {
                 res.send({ err: theGame + " has already been added" });
               } else {
                 //if it's not, push it to the array and save the user
-                res.send({ status: "adding game to user" });
                 curUser.lists.allGames.push(game._id);
+                console.log("theGame: ", theGame);
                 curUser.save().then(function (theUser) {
                   //Here's how to get the game's name
-                  Game.findById(theGame, "name", function (err, gameToReport) {
+                  console.log(theUser);
+                  Game.findById(game._id, "name", function (err, gameToReport) {
                     if (gameToReport) {
                       console.log("Game name: " + gameToReport.name);
+                      res.send({ status: gameToReport });
+                    } else {
+                      res.send({
+                        err:
+                          "Error: game not added, maybe you checked too early.",
+                      });
                     }
                   });
                 });
@@ -323,4 +343,17 @@ router.post("/add_game_to_session", function (req, res) {
   }
 });
 
+router.post("/submit_games", function (req, res) {
+  if (req.user) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      if (curSession.owner == req.user.id.toString()) {
+        res.send({ status: "Info for owner here" });
+      } else {
+        res.send({ status: "Info for client user here" });
+      }
+    });
+  } else {
+    res.send({ err: "Not logged in." });
+  }
+});
 module.exports = router;

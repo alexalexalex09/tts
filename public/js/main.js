@@ -108,6 +108,11 @@ window.addEventListener("load", function () {
       }
       return;
     }
+    if (!$("#postSelectView").hasClass("off")) {
+      if (dest == "select") {
+        goBackFrom("#postSelectView", "#selectView");
+      }
+    }
   });
 
   /*****************************/
@@ -287,9 +292,22 @@ window.addEventListener("load", function () {
   /*Game submit button handler */
   /*****************************/
   $("#gameSubmit").click(this, function () {
-    console.log("hi");
-    fetch("/pull").then(function (res) {
-      $("#results").html(res);
+    const gs_options = {
+      method: "POST",
+      body: JSON.stringify({
+        code: document.getElementById("code").innerHTML,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/submit_games", gs_options).then(function (response) {
+      return response.json().then((res) => {
+        $("#postSelectContainer").html(res.status);
+        console.log("submit res: ", res);
+        $("#backArrow").attr("data-gobackto", "select");
+        goForwardFrom("#selectView", "#postSelectView");
+      });
     });
   });
 
@@ -346,109 +364,112 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
-  /*  Get populated user lists */
+  /*  Get a User's Populated Lists */
   /*****************************/
-  const gulp_options = {
-    method: "POST",
-    body: "",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  fetch("/get_user_lists_populated", gulp_options).then(function (response) {
-    //Gets the populated list, which is an object with two arrays,
-    //"allGames", which is supposed to have every game, and "custom",
-    //which has the user's custom lists. Array elements in allGames
-    //are objects which have the properties "rating", "name", and "owned".
-    //Array elements in custom are objects which have the properties "games"
-    //and "name". "Games" is an array of objects that each have the properties "rating",
-    //"name", and "owned".
-    return response.json().then((res) => {
-      if (!res.err) {
-        console.log("gulp", res);
-        addListDisplay(0, "All Games");
-        for (var i = 0; i < res.allGames.length; i++) {
-          var curSession = document.getElementsByTagName("session")[0];
-          var checked = "";
-          var greenText = "";
-          $(curSession)
-            .children()
-            .each(function (ind, el) {
-              if ($(el).attr("id") == res.allGames[i]._id.toString()) {
-                checked = " checked";
-                greenText = " greenText";
-              }
-            });
-          var htmlString =
-            `
-          <li>
+  function gulp() {
+    const gulp_options = {
+      method: "POST",
+      body: "",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/get_user_lists_populated", gulp_options).then(function (response) {
+      //Gets the populated list, which is an object with two arrays,
+      //"allGames", which is supposed to have every game, and "custom",
+      //which has the user's custom lists. Array elements in allGames
+      //are objects which have the properties "rating", "name", and "owned".
+      //Array elements in custom are objects which have the properties "games"
+      //and "name". "Games" is an array of objects that each have the properties "rating",
+      //"name", and "owned".
+      return response.json().then((res) => {
+        if (!res.err) {
+          console.log("gulp", res);
+          addListDisplay(0, "All Games");
+          for (var i = 0; i < res.allGames.length; i++) {
+            var curSession = document.getElementsByTagName("session")[0];
+            var checked = "";
+            var greenText = "";
+            $(curSession)
+              .children()
+              .each(function (ind, el) {
+                if ($(el).attr("id") == res.allGames[i]._id.toString()) {
+                  checked = " checked";
+                  greenText = " greenText";
+                }
+              });
+            var htmlString =
+              `
+            <li>
+                <div rating="` +
+              res.allGames[i].rating +
+              `" owned="` +
+              res.allGames[i].owned +
+              `" class="gameName` +
+              greenText +
+              `" game_id="` +
+              res.allGames[i]._id +
+              `">` +
+              res.allGames[i].name +
+              `
+                </div>
+                <div class='toggle'>
+                    <label class="switch">
+                        <input type="checkbox"` +
+              checked +
+              ` onclick="toggleFont(this)" game_id="` +
+              res.allGames[i]._id +
+              `">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </li>`;
+            $("li#0").children(".listGames").first().append(htmlString);
+          }
+          for (var i = 0; i < res.custom.length; i++) {
+            var curId = i + 1;
+            addListDisplay(curId, res.custom[i].name);
+            for (var j = 0; j < res.custom[i].games.length; j++) {
+              var htmlString =
+                `
+            <li>
               <div rating="` +
-            res.allGames[i].rating +
-            `" owned="` +
-            res.allGames[i].owned +
-            `" class="gameName` +
-            greenText +
-            `" game_id="` +
-            res.allGames[i]._id +
-            `">` +
-            res.allGames[i].name +
-            `
+                res.custom[i].games[j].rating +
+                `" owned="` +
+                res.custom[i].games[j].owned +
+                `" class="gameName` +
+                greenText +
+                `" game_id="` +
+                res.custom[i].games[j]._id +
+                `">` +
+                res.custom[i].games[j].name +
+                `
               </div>
               <div class='toggle'>
                   <label class="switch">
                       <input type="checkbox"` +
-            checked +
-            ` onclick="toggleFont(this)" game_id="` +
-            res.allGames[i]._id +
-            `">
+                checked +
+                ` onclick="toggleFont(this)" game_id="` +
+                res.custom[i].games[j]._id +
+                `">
                       <span class="slider round"></span>
                   </label>
               </div>
-          </li>`;
-          $("li#0").children(".listGames").first().append(htmlString);
-        }
-        for (var i = 0; i < res.custom.length; i++) {
-          var curId = i + 1;
-          addListDisplay(curId, res.custom[i].name);
-          for (var j = 0; j < res.custom[i].games.length; j++) {
-            var htmlString =
-              `
-          <li>
-            <div rating="` +
-              res.custom[i].games[j].rating +
-              `" owned="` +
-              res.custom[i].games[j].owned +
-              `" class="gameName` +
-              greenText +
-              `" game_id="` +
-              res.custom[i].games[j]._id +
-              `">` +
-              res.custom[i].games[j].name +
-              `
-            </div>
-            <div class='toggle'>
-                <label class="switch">
-                    <input type="checkbox"` +
-              checked +
-              ` onclick="toggleFont(this)" game_id="` +
-              res.custom[i].games[j]._id +
-              `">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-          </li>`;
-            $("li#" + curId)
-              .children(".listGames")
-              .first()
-              .append(htmlString);
+            </li>`;
+              $("li#" + curId)
+                .children(".listGames")
+                .first()
+                .append(htmlString);
+            }
           }
+          document.getElementById("listsContainer").innerHTML = htmlString;
+        } else {
+          console.log(res.err);
         }
-        document.getElementById("listsContainer").innerHTML = htmlString;
-      } else {
-        console.log(res.err);
-      }
+      });
     });
-  });
+  }
+  gulp();
 
   /*****************************/
   /*    Unsorted Game Adder    */
@@ -472,10 +493,37 @@ window.addEventListener("load", function () {
       };
       //add_user_game_unsorted
       fetch("/game_add", options).then(function (response) {
-        return response.text().then((obj) => {
-          console.log(obj);
-          console.log(obj.insertId);
-          //if (obj.err) {console.log('add_games err: ' + obj.err ); }
+        return response.json().then((res) => {
+          if (!res.err) {
+            console.log(res);
+            //if (obj.err) {console.log('add_games err: ' + obj.err ); }
+
+            var htmlString =
+              `
+              <li>
+                  <div rating="` +
+              res.status.rating +
+              `" owned="` +
+              res.status.owned +
+              `" class="gameName" game_id="` +
+              res.status._id +
+              `">` +
+              res.status.name +
+              `
+                  </div>
+                  <div class='toggle'>
+                      <label class="switch">
+                          <input type="checkbox" onclick="toggleFont(this)" game_id="` +
+              res.status._id +
+              `">
+                          <span class="slider round"></span>
+                      </label>
+                  </div>
+              </li>`;
+            $("li#0").children(".listGames").first().append(htmlString);
+          } else {
+            console.log(res.err);
+          }
         });
       });
     }
@@ -523,6 +571,9 @@ function goBackFrom(from, to) {
   //console.log("going back from " + from + " to " + to);
   $(to).css({ transform: "translateX(-200vw)" });
   $(to).removeClass("off");
+  if (to == "#homeView") {
+    $("#backArrow").addClass("off");
+  }
   window.setTimeout(function () {
     $(to).css({ transform: "translateX(0vw)" });
     $(from).css({ transform: "translateX(200vw)" });

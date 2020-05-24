@@ -59,7 +59,7 @@ block content
       .pageTitle The Tidy Squirrel 🐿️
       #codeGroup
         #codeTitle Your Code:
-        #code 7g4hf
+        #code 
       #codeButtons
         #shareButton
           ion-icon(name="share-outline")
@@ -77,21 +77,12 @@ block content
           input.textInput(type='text')#addGamesInput
           .textClear
       #selectLists
-        if user
-        
-        else 
-          li 
-            div.listName
-              | All Games
-            div.listExpand
-              ion-icon(name="chevron-down-outline")
-            div.toggle
-              label.switch
-                input(type="checkbox" id=theId)
-                span.slider.round
-            div.listGames
       #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games
+    
+    #postSelectView.off
+      #postSelectTitle.pageTitle Waiting for Others... 🐿️
+      #postSelectContainer
 
   #backAlert.off Press back one more time to leave the app
   #backArrow.off

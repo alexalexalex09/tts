@@ -41,7 +41,15 @@ router.post("/get_user_lists_populated", (req, res) => {
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        res.send(curUser.lists);
+        if (curUser) {
+          if (curUser.lists) {
+            res.send(curUser.lists);
+          } else {
+            res.send([]);
+          }
+        } else {
+          res.send({ err: "Error finding user" });
+        }
       });
   } else {
     res.send({ err: "Log in before populating user object" });

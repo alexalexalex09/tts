@@ -13,12 +13,18 @@ const cfenv = require("cfenv");
 var app = express();
 
 //CF variables
+
 var appEnv = cfenv.getAppEnv();
-if (appEnv.port == 6002) {
+if (appEnv.isLocal) {
   var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
 } else {
   var baseURL = appEnv.url;
 }
+
+console.log("port:");
+console.log(appEnv);
+console.log(appEnv.port);
+console.log(process.env.PORT);
 
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({

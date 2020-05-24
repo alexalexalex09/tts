@@ -15,13 +15,14 @@ var SessionSchema = new Schema(
     },
     code: String,
     lock: { type: String, default: "selectView" },
-    //selectView, postSelectView, voteView, postVoteView, resultView
+    //selectView, postSelectView, postSelectEditView, voteView, postVoteView, resultView
     games: [
       {
         game: { type: Schema.Types.ObjectId, ref: "Game" },
         addedBy: [String],
       },
     ],
+    users: [String],
   },
   {
     collection: "sessions",

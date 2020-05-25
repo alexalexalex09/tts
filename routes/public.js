@@ -199,6 +199,16 @@ router.post("/join_session", function (req, res) {
       res.send({ err: "No such session" });
     } else {
       var sendGames = checkIfAddedByUser(curSession, req.user.id);
+      var newUser = true;
+      for (var i = 0; i < curSession.users.length; i++) {
+        if (curSession.users[i] == req.user.id) {
+          newUser = false;
+        }
+      }
+      if (newUser) {
+        curSession.users.push(req.user.id);
+        curSession.save();
+      }
       res.send({
         code: curSession.code,
         lock: curSession.lock,
@@ -247,6 +257,7 @@ router.post("/create_session", function (req, res) {
           owner: req.user.id,
           code: theCode,
           games: [],
+          users: [req.user.id],
         };
         var session = new Session(sessiondetail);
         session.save().then(function (theSession) {
@@ -347,9 +358,20 @@ router.post("/submit_games", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       if (curSession.owner == req.user.id.toString()) {
-        res.send({ status: "Info for owner here" });
+        var htmlString =
+          '<div id="postSelectLoadingMessage"><p>There are ' +
+          curSession.users.length +
+          " users connected:</p>";
+        for (var i = 0; i < curSession.users.length; i++) {
+          htmlString += "<p>" + curSession.users[i] + "</p>";
+        }
+        res.send({ status: htmlString });
       } else {
-        res.send({ status: "Info for client user here" });
+        var htmlString = `
+        <img class="loader" src="/img/loading.gif">
+        <div class="loadingMessage" id="postSelectLoadingMessage">Please wait...</div>
+        `;
+        res.send({ status: htmlString });
       }
     });
   } else {

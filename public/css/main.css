@@ -441,6 +441,26 @@ input:checked + .slider:before {
   grid-area: 15/2/18/10;
 }
 
+/********************/
+/* Post Select View */
+/********************/
+
+.loader {
+  height: var(--vh30);
+  top: var(--vh10);
+  position: absolute;
+  left: 50vw;
+  transform: translateX(-50%);
+}
+
+#postSelectLoadingMessage {
+  top: var(--vh50);
+  position: absolute;
+  left: 50vw;
+  transform: translateX(-50%);
+  font-size: 2em;
+}
+
 /*****************/
 /*    Testing    */
 /*****************/

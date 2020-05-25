@@ -289,29 +289,6 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
-  /*Game submit button handler */
-  /*****************************/
-  $("#gameSubmit").click(this, function () {
-    const gs_options = {
-      method: "POST",
-      body: JSON.stringify({
-        code: document.getElementById("code").innerHTML,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    fetch("/submit_games", gs_options).then(function (response) {
-      return response.json().then((res) => {
-        $("#postSelectContainer").html(res.status);
-        console.log("submit res: ", res);
-        $("#backArrow").attr("data-gobackto", "select");
-        goForwardFrom("#selectView", "#postSelectView");
-      });
-    });
-  });
-
-  /*****************************/
   /*   Create Button Handler   */
   /*****************************/
 
@@ -363,9 +340,9 @@ window.addEventListener("load", function () {
     goForwardFrom("#codeView", "#selectView");
   });
 
-  /*****************************/
-  /*  Get a User's Populated Lists */
-  /*****************************/
+  /**********************************/
+  /*  Get a User's Populated Lists  */
+  /**********************************/
   function gulp() {
     const gulp_options = {
       method: "POST",
@@ -528,11 +505,37 @@ window.addEventListener("load", function () {
       });
     }
   });
+
+  /*****************************/
+  /*Game submit button handler */
+  /*****************************/
+  $("#gameSubmit").click(this, function () {
+    const gs_options = {
+      method: "POST",
+      body: JSON.stringify({
+        code: document.getElementById("code").innerHTML,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/submit_games", gs_options).then(function (response) {
+      return response.json().then((res) => {
+        $("#postSelectContainer").html(res.status);
+        console.log("submit res: ", res);
+        $("#backArrow").attr("data-gobackto", "select");
+        goForwardFrom("#selectView", "#postSelectView");
+      });
+    });
+  });
 });
+
 //End all DOM manipulation
 
 /***************************************************/
+/*                                                 */
 /*               Universal Functions               */
+/*                                                 */
 /***************************************************/
 
 /*****************************/
@@ -584,8 +587,9 @@ function goBackFrom(from, to) {
 }
 
 /********************************/
+/*       addListDisplay()       */
 /*    Add initial list names    */
-/*    to #selectgames           */
+/*       to #selectgames        */
 /********************************/
 /**
  *

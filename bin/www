@@ -12,16 +12,15 @@ var http = require("http");
  * Get port from environment and store in Express.
  */
 
-//? Really?
-
 var port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
 
 /**
- * Create HTTP server.
+ * Create HTTP server and initialize socket.
  */
 
 var server = http.createServer(app);
+app.io.attach(server);
 
 /**
  * Listen on provided port, on all network interfaces.

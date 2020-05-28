@@ -148,8 +148,6 @@ router.post("/game_add", function (req, res) {
                 curUser.lists.allGames.push(game._id);
                 console.log("theGame: ", theGame);
                 curUser.save().then(function (theUser) {
-                  //Here's how to get the game's name
-                  console.log(theUser);
                   Game.findById(game._id, "name", function (err, gameToReport) {
                     if (gameToReport) {
                       console.log("Game name: " + gameToReport.name);

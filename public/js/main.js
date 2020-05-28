@@ -1,5 +1,13 @@
 //All DOM manipulation
 window.addEventListener("load", function () {
+  /*****************************/
+  /*         Open Socket       */
+  /*****************************/
+  var socket = io();
+
+  /*****************************/
+  /*     Set History State     */
+  /*****************************/
   //Set an extra history state to prevent back button from closing the page
   window.history.pushState({ page: "home", noBackExitsApp: true }, "");
   window.addEventListener("popstate", function (event) {

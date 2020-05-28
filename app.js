@@ -9,8 +9,27 @@ const session = require("express-session");
 const okta = require("@okta/okta-sdk-nodejs");
 const ExpressOIDC = require("@okta/oidc-middleware").ExpressOIDC;
 const cfenv = require("cfenv");
+var socket_io = require("socket.io");
 
 var app = express();
+var io = socket_io();
+app.io = io; //This is bad, I need to understand destructuring variables
+//see stackoverflow.com/questions/24609991
+
+/**
+ * Start socket listening
+ */
+io.on("connection", (socket) => {
+  console.log("user connected");
+  /* 
+  This needs to:
+    1) Hear from the client which session the user is currently owning (if any)
+    2) If a session is owned, notice when the Session document for that user's owned session is changed
+    3) Emit an event to the client with
+      1) Each connected user
+      2) Each user's number of added games
+  */
+});
 
 //CF variables
 
@@ -20,11 +39,6 @@ if (appEnv.isLocal) {
 } else {
   var baseURL = appEnv.url;
 }
-
-console.log("port:");
-console.log(appEnv);
-console.log(appEnv.port);
-console.log(process.env.PORT);
 
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({
@@ -89,9 +103,6 @@ app.use((req, res, next) => {
 //Routers
 app.use("/", publicRouter);
 app.use("/users", usersRouter);
-app.get("/test", (req, res) => {
-  res.json({ profile: req.user ? req.user.profile : null });
-});
 
 //Authenticated page logic - just call loginRequired to protect!
 function loginRequired(req, res, next) {

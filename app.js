@@ -1,3 +1,4 @@
+require("dotenv").config();
 var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
@@ -12,24 +13,6 @@ const cfenv = require("cfenv");
 var socket_io = require("socket.io");
 
 var app = express();
-var io = socket_io();
-app.io = io; //This is bad, I need to understand destructuring variables
-//see stackoverflow.com/questions/24609991
-
-/**
- * Start socket listening
- */
-io.on("connection", (socket) => {
-  console.log("user connected");
-  /* 
-  This needs to:
-    1) Hear from the client which session the user is currently owning (if any)
-    2) If a session is owned, notice when the Session document for that user's owned session is changed
-    3) Emit an event to the client with
-      1) Each connected user
-      2) Each user's number of added games
-  */
-});
 
 //CF variables
 
@@ -42,13 +25,13 @@ if (appEnv.isLocal) {
 
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({
-  orgUrl: "https://dev-222844.okta.com",
-  token: "00T-POzgNn1N2HdBngzKuLiA0a8VynCvD8gQGsFCkr",
+  orgUrl: process.env.oUrl,
+  token: process.env.oToken,
 });
 const oidc = new ExpressOIDC({
-  issuer: "https://dev-222844.okta.com/oauth2/default",
-  client_id: "0oa3ate5jDukoR2LH4x6",
-  client_secret: "SaLJUuCshNXVz2CE3k7hcd5O-WpilWVSsoeGnD8-",
+  issuer: process.env.oIssuer,
+  client_id: process.env.oClient_id,
+  client_secret: process.env.oSecret,
   redirect_uri: baseURL + "/users/callback",
   scope: "openid profile",
   routes: {
@@ -77,7 +60,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Okta setup
 app.use(
   session({
-    secret: "9=*)45qbn0vdASFVF(N&)Y434btADSS9n874yfb09SVNDF(N4gv3",
+    secret: process.env.sSecret,
     resave: true,
     saveUninitialized: false,
   })

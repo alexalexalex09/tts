@@ -119,6 +119,11 @@ window.addEventListener("load", function () {
     };
     fetch("/going_back", gb_options);
 
+    goBackFrom(
+      window.hist[window.hist.length - 1],
+      window.hist[window.hist.length - 2]
+    );
+    /*
     if (!$("#codeView").hasClass("off")) {
       $("#backArrow").addClass("off");
       goBackFrom("#codeView", "#homeView");
@@ -137,7 +142,7 @@ window.addEventListener("load", function () {
       if (dest == "select") {
         goBackFrom("#postSelectView", "#selectView");
       }
-    }
+    }*/
   });
 
   /*****************************/
@@ -244,7 +249,7 @@ window.addEventListener("load", function () {
           });
         } else {
           $("#backArrow").removeClass("off");
-          $("#backArrow").attr("data-gobackto", "home");
+          //$("#backArrow").attr("data-gobackto", "home");
           document.getElementById("code").innerHTML = res.code;
           document.getElementById("selectCodeDisplay").innerHTML =
             "Your Code: " + res.code;
@@ -330,26 +335,38 @@ window.addEventListener("load", function () {
     };
     fetch("/create_session", cs_options).then(function (response) {
       return response.json().then((res) => {
-        console.log(res);
+        console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
           socket.on(res.status.code, (data) => {
-            console.log(data);
+            console.log("received special event ", data);
             htmlString = "";
+            var connecting = "";
+            var plural = "s";
+            //TODO: This doesn't work if it's only been initialized, because
+            //if another user adds a game, it erases all other users who haven't
+            //added a game since it initialized. Their games haven't been added
+            //to that numGames object. Maybe this should send the current list of
+            //users+games as a guarantee, or only update what it receives
             $.each(data, function (key, value) {
+              value > 0
+                ? (connecting = "selecting")
+                : (connecting = "connecting");
+              value == 1 ? (plural = "") : (plural = "s");
               htmlString +=
-                `<div class="conUser">` +
-                `<div class="conUserName">` +
+                `<div class="conUser ` +
+                connecting +
+                `">User ` +
                 key +
-                `</div>` +
-                `<div class="conUserNum">` +
+                ` has selected ` +
                 value +
-                `</div>` +
-                `</div>`;
+                ` game` +
+                plural +
+                `...</div>`;
             });
             $("#postSelectContainer").html(htmlString);
           });
           $("#backArrow").removeClass("off");
-          $("#backArrow").attr("data-gobackto", "home");
+          //$("#backArrow").attr("data-gobackto", "home");
           document.getElementById("code").innerHTML = res.status.code;
           document.getElementById("selectCodeDisplay").innerHTML =
             "Your Code: " + res.status.code;
@@ -379,7 +396,7 @@ window.addEventListener("load", function () {
   /*****************************/
 
   $("#selectButton").click(this, function () {
-    $("#backArrow").attr("data-gobackto", "code");
+    //$("#backArrow").attr("data-gobackto", "code");
     goForwardFrom("#codeView", "#selectView");
   });
 
@@ -565,7 +582,7 @@ window.addEventListener("load", function () {
     fetch("/submit_games", gs_options).then(function (response) {
       return response.json().then((res) => {
         console.log("submit res: ", res);
-        $("#backArrow").attr("data-gobackto", "select");
+        //$("#backArrow").attr("data-gobackto", "select");
         goForwardFrom("#selectView", "#postSelectView");
       });
     });
@@ -592,6 +609,11 @@ window.addEventListener("load", function () {
  */
 function goForwardFrom(from, to) {
   //console.log("going forward from " + from + " to " + to);
+  if (typeof window.hist == "undefined") {
+    window.hist = [from];
+  }
+  window.hist.push(to);
+  $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
   $(to).css({ transform: "translateX(200vw)" });
   $(to).removeClass("off");
   window.setTimeout(function () {
@@ -614,6 +636,8 @@ function goForwardFrom(from, to) {
  */
 function goBackFrom(from, to) {
   //console.log("going back from " + from + " to " + to);
+  window.hist.pop();
+  $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
   $(to).css({ transform: "translateX(-200vw)" });
   $(to).removeClass("off");
   if (to == "#homeView") {

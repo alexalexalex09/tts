@@ -61,9 +61,9 @@ block content
         #codeTitle Your Code:
         #code 
       #codeButtons
-        #shareButton
+        #shareButton.clickable
           ion-icon(name="share-outline")
-        #copyButton
+        #copyButton.clickable
           ion-icon(name="copy-outline")
         #copiedAlert Code copied to clipboard!
       #selectButton.submitButton.button.greenBtn Select Games
@@ -80,8 +80,8 @@ block content
       #gameSubmit.button.greenBtn(type='submit')
         | Submit These Games
     
-    #postSelectView.off
-      #postSelectTitle.pageTitle Waiting for Others... 🐿️
+    #postSelectView.view.off
+      #postSelectTitle.pageTitle Waiting... 🐿️
       #postSelectContainer
 
   #backAlert.off Press back one more time to leave the app

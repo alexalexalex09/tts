@@ -9,6 +9,7 @@
   --main-grey: #333;
   --main-red: #d00;
   --main-green: #5a5;
+  --main-gold: #f90;
 }
 
 /*****************/
@@ -23,6 +24,10 @@ a:visited,
 a:hover,
 a:active {
   text-decoration: none;
+}
+
+.clickable {
+  cursor: pointer;
 }
 
 .textInputCont {
@@ -203,6 +208,7 @@ input:checked + .slider:before {
   font-size: 10vw;
   color: var(--main-grey);
   text-align: center;
+  height: 100%;
   /*justify-content: center;*/
 }
 
@@ -453,12 +459,50 @@ input:checked + .slider:before {
   transform: translateX(-50%);
 }
 
+#postSelectContainer {
+  height: 100%;
+  grid-area: 6/2/15/10;
+  text-align: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 1.4em;
+}
+
 #postSelectLoadingMessage {
   top: var(--vh50);
   position: absolute;
   left: 50vw;
   transform: translateX(-50%);
   font-size: 2em;
+}
+
+.connecting {
+  color: var(--main-red);
+}
+
+.connecting:before,
+.selecting:before,
+.selected:before {
+  font-family: "Font Awesome\ 5 Free";
+  font-weight: 900;
+  margin-right: 10px;
+}
+
+.connecting:before,
+.selecting:before {
+  content: "\f09c";
+}
+
+.selected:before {
+  content: "\f023";
+}
+
+.selecting {
+  color: var(--main-gold);
+}
+
+.done {
+  color: var(--main-green);
 }
 
 /*****************/

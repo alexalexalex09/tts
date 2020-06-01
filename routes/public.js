@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 var cfenv = require("cfenv");
@@ -19,8 +20,7 @@ if (appEnv.port == 6002) {
   var baseURL = appEnv.url;
 }
 
-var mongoDB =
-  "mongodb+srv://alextts:iyJaon1sWAdMDA3c@alexcluster-c7uv8.mongodb.net/test?retryWrites=true&w=majority";
+var mongoDB = process.env.mongo;
 mongoose.connect(mongoDB, { useNewUrlParser: true });
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
@@ -37,9 +37,8 @@ router.get("/", (req, res) => {
 
 // Get notified when the user is navigating back
 router.post("/going_back", function (req, res) {
-  if (req.user) {
-    console.log(req.body.dest);
-  }
+  console.log(req.body.dest);
+  res.send({ status: "Thank you for traveling with TTS Airlines" });
 });
 
 //Get current user's complete list object
@@ -269,11 +268,17 @@ router.post("/create_session", function (req, res) {
         var session = new Session(sessiondetail);
         session.save().then(function (theSession) {
           socketAPI.sendNotification("Session created...");
+          socketAPI.addGame({
+            code: theCode,
+          });
           res.send({ status: theSession });
         });
       } else {
         var sendGames = checkIfAddedByUser(curSession, req.user.id);
         socketAPI.sendNotification("Session already created...");
+        socketAPI.initGames({
+          code: curSession.code,
+        });
         res.send({ status: curSession, games: sendGames });
       }
     });

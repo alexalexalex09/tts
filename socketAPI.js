@@ -37,15 +37,17 @@ socketAPI.addGame = function (data) {
 socketAPI.initGames = function (data) {
   //console.log("initGames", data);
   var userMap = {};
-  User.find({}, function (err, users) {
-    Session.findOne({ code: data.code }).exec(function (err, curSession) {
-      if (curSession) {
-        //console.log(curSession);
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    if (curSession) {
+      var users = curSession.users;
+      console.log("users: ", users);
+      User.find({ profile_id: { $in: users } }).exec(function (err, usernames) {
+        console.log("usernames: ", usernames);
         for (var i = 0; i < users.length; i++) {
           //console.log("user: ", users[i]);
-          userMap[users[i].profile_id] = users[i].name;
+          userMap[users[i]] = usernames[i].name;
         }
-        //console.log("usermap: ", userMap);
+        console.log("usermap: ", userMap);
         for (var i = 0; i < curSession.users.length; i++) {
           numGames[userMap[curSession.users[i]]] = 0;
         }
@@ -61,10 +63,10 @@ socketAPI.initGames = function (data) {
             }
           }
         }
-      }
-      //console.log("numGames, ", numGames);
-      socketAPI.addGame({ code: data.code });
-    });
+        console.log("numGames, ", numGames);
+        socketAPI.addGame({ code: data.code });
+      });
+    }
   });
 };
 

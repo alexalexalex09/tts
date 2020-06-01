@@ -1,9 +1,13 @@
 //All DOM manipulation
 window.addEventListener("load", function () {
   /*****************************/
-  /*         Open Socket       */
+  /*      Socket.io logic      */
   /*****************************/
   var socket = io();
+
+  socket.on("hello", (data) => {
+    console.log(data.msg);
+  });
 
   /*****************************/
   /*     Set History State     */
@@ -101,7 +105,20 @@ window.addEventListener("load", function () {
   /*     Back arrow handler    */
   /*****************************/
   $("#backArrow").click(this, function (el) {
+    //Going to have to notify the server so that the owner of a session
+    //can know that someone went back to a previous step
+
     var dest = $("#backArrow").attr("data-gobackto");
+
+    const gb_options = {
+      method: "POST",
+      body: JSON.stringify({ dest: dest }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/going_back", gb_options);
+
     if (!$("#codeView").hasClass("off")) {
       $("#backArrow").addClass("off");
       goBackFrom("#codeView", "#homeView");
@@ -204,6 +221,7 @@ window.addEventListener("load", function () {
   /*   Submit button handler   */
   /*****************************/
   $("#codeSubmit").click(this, function (el) {
+    //TODO: Erase all previously added games
     $(".errorText").removeClass("shake");
     $("#backArrow").removeClass("off");
     var theCode = $("#codeInput input").val();
@@ -301,6 +319,7 @@ window.addEventListener("load", function () {
   /*****************************/
 
   $("#createButton").click(this, function () {
+    //TODO: Erase all previously added games
     console.log("create");
     const cs_options = {
       method: "POST",
@@ -313,6 +332,22 @@ window.addEventListener("load", function () {
       return response.json().then((res) => {
         console.log(res);
         if (!res.err) {
+          socket.on(res.status.code, (data) => {
+            console.log(data);
+            htmlString = "";
+            $.each(data, function (key, value) {
+              htmlString +=
+                `<div class="conUser">` +
+                `<div class="conUserName">` +
+                key +
+                `</div>` +
+                `<div class="conUserNum">` +
+                value +
+                `</div>` +
+                `</div>`;
+            });
+            $("#postSelectContainer").append(htmlString);
+          });
           $("#backArrow").removeClass("off");
           $("#backArrow").attr("data-gobackto", "home");
           document.getElementById("code").innerHTML = res.status.code;
@@ -820,7 +855,7 @@ function toggleFont(check) {
     console.log("Add: ", gamesToAdd);
     console.log("Remove: ", gamesToRemove);
   }
-  const adts_options = {
+  const agts_options = {
     method: "POST",
     body: JSON.stringify({
       gamesToAdd: gamesToAdd,
@@ -831,7 +866,7 @@ function toggleFont(check) {
       "Content-Type": "application/json",
     },
   };
-  fetch("/add_game_to_session", adts_options).then(function (response) {
+  fetch("/add_game_to_session", agts_options).then(function (response) {
     return response.json().then((res) => {
       if (!res.err) {
         console.log(res);

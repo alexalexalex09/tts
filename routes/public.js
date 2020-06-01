@@ -388,6 +388,14 @@ router.post("/submit_games", function (req, res) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       socketAPI.sendNotification("A user finished adding games...");
       if (curSession.owner == req.user.id.toString()) {
+        var htmlString =
+          '<div id="postSelectLoadingMessage"><p>There are ' +
+          curSession.users.length +
+          " users connected:</p>";
+        for (var i = 0; i < curSession.users.length; i++) {
+          htmlString += "<p>" + curSession.users[i] + "</p>";
+        }
+        res.send({ status: htmlString });
       } else {
         var htmlString = `
         <img class="loader" src="/img/loading.gif">

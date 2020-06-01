@@ -346,7 +346,7 @@ window.addEventListener("load", function () {
                 `</div>` +
                 `</div>`;
             });
-            $("#postSelectContainer").append(htmlString);
+            $("#postSelectContainer").html(htmlString);
           });
           $("#backArrow").removeClass("off");
           $("#backArrow").attr("data-gobackto", "home");
@@ -564,7 +564,6 @@ window.addEventListener("load", function () {
     };
     fetch("/submit_games", gs_options).then(function (response) {
       return response.json().then((res) => {
-        $("#postSelectContainer").html(res.status);
         console.log("submit res: ", res);
         $("#backArrow").attr("data-gobackto", "select");
         goForwardFrom("#selectView", "#postSelectView");

@@ -26,21 +26,43 @@ socketAPI.sendNotification = function (data) {
 
 socketAPI.addGame = function (data) {
   console.log("addGame", data, numGames);
-  if (typeof data.user != "undefined" && typeof data.numGames != "undefined") {
-    //TODO: Change this so data.user is the userID, not name, because name isn't guaranteed unique!
-    numGames[data.user] = data.numGames;
-    io.sockets.emit(data.code, numGames);
-  } else {
-    io.sockets.emit(data.code, numGames);
-  }
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    if (curSession) {
+      var users = curSession.users;
+      User.find({ profile_id: { $in: users } }).exec(function (err, usernames) {
+        userMap = createUserMap(users, usernames);
+        if (
+          typeof data.user != "undefined" &&
+          typeof data.numGames != "undefined"
+        ) {
+          //TODO: Change this so data.user is the userID, not name, because name isn't guaranteed unique!
+          numGames[data.user] = data.numGames;
+        }
+        console.log("usermap: ", userMap, "numGames, ", numGames);
+        io.sockets.emit(data.code, replaceUserIds(userMap, numGames));
+      });
+    }
+  });
 };
+
+//@param userMap: object created by userMap()
+//@param idObj: object containing userId *keys* to be replaced with names from userMap
+function replaceUserIds(userMap, idObj) {
+  var ret = {};
+  console.log(idObj);
+  Object.keys(idObj).map(function (k, i) {
+    console.log(k, "|userMap:", userMap);
+    ret[userMap[k]] = idObj[k];
+  });
+  return ret;
+}
 
 // @param users
 //    Array of user profile ids for current session from mongoose
 // @param usernames
 //    Object containing all user objects in current session
 //    From command User.find({profile_id: {$in: users}}, function(err, usernames){...});
-function userMap(users, usernames) {
+function createUserMap(users, usernames) {
   var userMap = {};
   for (var i = 0; i < users.length; i++) {
     //console.log("user: ", users[i]);
@@ -58,20 +80,20 @@ socketAPI.initGames = function (data) {
       console.log("users: ", users);
       User.find({ profile_id: { $in: users } }).exec(function (err, usernames) {
         console.log("usernames: ", usernames);
-        userMap = userMap(users, usernames);
+        userMap = createUserMap(users, usernames);
         console.log("usermap: ", userMap);
         for (var i = 0; i < curSession.users.length; i++) {
-          numGames[userMap[curSession.users[i]]] = 0;
+          numGames[curSession.users[i]] = 0;
         }
         for (var i = 0; i < curSession.games.length; i++) {
           for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
             var owner = curSession.games[i].addedBy[j];
             //console.log("owner: ", owner);
-            if (numGames[userMap[owner]]) {
-              numGames[userMap[owner]]++;
-              console.log(owner, ", ", numGames[userMap[owner]]);
+            if (numGames[owner]) {
+              numGames[owner]++;
+              console.log(owner, ", ", numGames[owner]);
             } else {
-              numGames[userMap[owner]] = 1;
+              numGames[owner] = 1;
             }
           }
         }

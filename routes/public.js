@@ -110,8 +110,6 @@ router.post("/get_user_list_games", (req, res) => {
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
   if (req.user) {
-    //Look up the game. If it doesn't exist, add it and add to user. If it does exist, add to user
-    //First, get the game object, for now assuming the game exists. It's an array, so take the first element.
     console.log("User2: " + req.user.profile.firstName);
     var upsertOptions = { new: true, upsert: true };
     Game.findOneAndUpdate(
@@ -197,6 +195,7 @@ function userCreate(id, name) {
 }
 
 router.post("/join_session", function (req, res) {
+  //TODO: send an event so that the host knows you've joined with 0 games added
   Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
     console.log(curSession);
     if (!curSession) {
@@ -331,16 +330,10 @@ router.post("/add_game_to_session", function (req, res) {
                 "A user added a game that someone else already added..." +
                   numGames
               );
-              socketAPI.addGame({
-                code: req.body.code,
-                user: req.user.profile.firstName,
-                numGames: numGames + 1,
-              });
+              //TODO: Move this to outside the for loop
             }
           } else {
-            //console.log(curSession.games);
             curSession.games.push({ game: id, addedBy: [req.user.id] });
-            //console.log(curSession.games);
             results.push({
               status:
                 "Added " +
@@ -349,13 +342,14 @@ router.post("/add_game_to_session", function (req, res) {
                 req.user.id,
             });
             socketAPI.sendNotification("A user added a new game..." + numGames);
-            socketAPI.addGame({
-              code: req.body.code,
-              user: req.user.profile.firstName,
-              numGames: numGames + 1,
-            });
+            //TODO: Move this to outside the for loop
           }
         }
+        socketAPI.addGame({
+          code: req.body.code,
+          user: req.user.id,
+          numGames: numGames + 1,
+        });
         curSession.save();
         res.send(results);
       } else {
@@ -399,7 +393,7 @@ router.post("/add_game_to_session", function (req, res) {
           console.log("numGamestoRemove: ", numGames);
           socketAPI.addGame({
             code: req.body.code,
-            user: req.user.profile.firstName,
+            user: req.user.id,
             numGames: numGames,
           });
           curSession.save();

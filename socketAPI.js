@@ -35,6 +35,20 @@ socketAPI.addGame = function (data) {
   }
 };
 
+// @param users
+//    Array of user profile ids for current session from mongoose
+// @param usernames
+//    Object containing all user objects in current session
+//    From command User.find({profile_id: {$in: users}}, function(err, usernames){...});
+function userMap(users, usernames) {
+  var userMap = {};
+  for (var i = 0; i < users.length; i++) {
+    //console.log("user: ", users[i]);
+    userMap[users[i]] = usernames[i].name;
+  }
+  return userMap;
+}
+
 socketAPI.initGames = function (data) {
   //console.log("initGames", data);
   var userMap = {};
@@ -44,10 +58,7 @@ socketAPI.initGames = function (data) {
       console.log("users: ", users);
       User.find({ profile_id: { $in: users } }).exec(function (err, usernames) {
         console.log("usernames: ", usernames);
-        for (var i = 0; i < users.length; i++) {
-          //console.log("user: ", users[i]);
-          userMap[users[i]] = usernames[i].name;
-        }
+        userMap = userMap(users, usernames);
         console.log("usermap: ", userMap);
         for (var i = 0; i < curSession.users.length; i++) {
           numGames[userMap[curSession.users[i]]] = 0;
@@ -65,6 +76,7 @@ socketAPI.initGames = function (data) {
           }
         }
         console.log("numGames, ", numGames);
+        //eventually switch numGames to track ids, and return a different array, userGames, with names replaced
         socketAPI.addGame({ code: data.code });
       });
     }

@@ -291,9 +291,10 @@ router.post("/add_game_to_session", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       var results = [];
-      var numGames = 0;
+
       if (req.body.gamesToAdd.length > 0) {
         for (var i = 0; i < req.body.gamesToAdd.length; i++) {
+          var numGames = 0;
           //1. Has the game already been added to the session?
           //2. Is the user's id already in the list of owners?
           var id = mongoose.Types.ObjectId(req.body.gamesToAdd[i]);
@@ -327,7 +328,8 @@ router.post("/add_game_to_session", function (req, res) {
                   req.body.gamesToAdd[i],
               });
               socketAPI.sendNotification(
-                "A user added a game that someone else already added..."
+                "A user added a game that someone else already added..." +
+                  numGames
               );
               socketAPI.addGame({
                 code: req.body.code,
@@ -346,7 +348,7 @@ router.post("/add_game_to_session", function (req, res) {
                 "to the list with owner " +
                 req.user.id,
             });
-            socketAPI.sendNotification("A user added a new game...");
+            socketAPI.sendNotification("A user added a new game..." + numGames);
             socketAPI.addGame({
               code: req.body.code,
               user: req.user.profile.firstName,
@@ -360,6 +362,7 @@ router.post("/add_game_to_session", function (req, res) {
         if (req.body.gamesToRemove.length > 0) {
           //Find the game to remove, then remove the owner from the addedBy array
           for (var i = 0; i < req.body.gamesToRemove.length; i++) {
+            var numGames = 0;
             var gameAdded = false;
             var ownedBy = false;
             var index = -1;
@@ -379,6 +382,26 @@ router.post("/add_game_to_session", function (req, res) {
               }
             }
           }
+          for (var i = 0; i < curSession.games.length; i++) {
+            console.log(
+              curSession.games[i].addedBy[0],
+              "|",
+              req.user.id.toString()
+            );
+            if (
+              curSession.games[i].addedBy.findIndex(
+                (obj) => obj == req.user.id.toString()
+              ) > -1
+            ) {
+              numGames++;
+            }
+          }
+          console.log("numGamestoRemove: ", numGames);
+          socketAPI.addGame({
+            code: req.body.code,
+            user: req.user.profile.firstName,
+            numGames: numGames,
+          });
           curSession.save();
         }
       }

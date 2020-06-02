@@ -26,7 +26,8 @@ socketAPI.sendNotification = function (data) {
 
 socketAPI.addGame = function (data) {
   console.log("addGame", data, numGames);
-  if (data.user && data.numGames) {
+  if (typeof data.user != "undefined" && typeof data.numGames != "undefined") {
+    //TODO: Change this so data.user is the userID, not name, because name isn't guaranteed unique!
     numGames[data.user] = data.numGames;
     io.sockets.emit(data.code, numGames);
   } else {
@@ -68,10 +69,6 @@ socketAPI.initGames = function (data) {
       });
     }
   });
-};
-
-socketAPI.removeGame = function (data) {
-  data.user;
 };
 
 io.on("connection", function (socket) {

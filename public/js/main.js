@@ -342,11 +342,6 @@ window.addEventListener("load", function () {
             htmlString = "";
             var connecting = "";
             var plural = "s";
-            //TODO: This doesn't work if it's only been initialized, because
-            //if another user adds a game, it erases all other users who haven't
-            //added a game since it initialized. Their games haven't been added
-            //to that numGames object. Maybe this should send the current list of
-            //users+games as a guarantee, or only update what it receives
             $.each(data, function (key, value) {
               value > 0
                 ? (connecting = "selecting")

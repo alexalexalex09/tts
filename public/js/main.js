@@ -150,6 +150,12 @@ window.addEventListener("load", function () {
   /*****************************/
   $("#joinButton").click(this, function (el) {
     console.log("join click");
+    var oldCode = $("#code").html();
+    if (oldCode != false) {
+      socket.off(oldCode + "select");
+    }
+    $("#code").html("");
+    $("#postSelectContainer").html("");
     $("#codeInputGroup").removeClass("off");
     window.setTimeout(function () {
       console.log("wait 1");
@@ -226,7 +232,7 @@ window.addEventListener("load", function () {
   /*   Submit button handler   */
   /*****************************/
   $("#codeSubmit").click(this, function (el) {
-    //TODO: Erase all previously added games
+    clearLists();
     $(".errorText").removeClass("shake");
     $("#backArrow").removeClass("off");
     var theCode = $("#codeInput input").val();
@@ -326,6 +332,7 @@ window.addEventListener("load", function () {
   $("#createButton").click(this, function () {
     //TODO: Erase all previously added games
     console.log("create");
+    clearLists();
     const cs_options = {
       method: "POST",
       body: "",
@@ -337,23 +344,28 @@ window.addEventListener("load", function () {
       return response.json().then((res) => {
         console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
-          socket.on(res.status.code, (data) => {
-            console.log("received special event ", data);
+          socket.on(res.status.code + "select", (data) => {
+            console.log("received select event ", data);
             htmlString = "";
             var connecting = "";
             var plural = "s";
             $.each(data, function (key, value) {
-              value > 0
-                ? (connecting = "selecting")
-                : (connecting = "connecting");
-              value == 1 ? (plural = "") : (plural = "s");
+              console.log("User object: ", key, value);
+              if (value.done) {
+                connecting = "done";
+              } else {
+                value.num > 0
+                  ? (connecting = "selecting")
+                  : (connecting = "connecting");
+              }
+              value.num == 1 ? (plural = "") : (plural = "s");
               htmlString +=
                 `<div class="conUser ` +
                 connecting +
                 `">User ` +
                 key +
                 ` has selected ` +
-                value +
+                value.num +
                 ` game` +
                 plural +
                 `...</div>`;
@@ -723,6 +735,7 @@ function recheckGreenLists() {
 //by getting the list of games already added to the session
 //and checking to see if every game in a list has been added
 function initGreenLists() {
+  console.log("initGreenLists");
   var sessionGames = [];
   $("session")
     .children()
@@ -742,12 +755,23 @@ function initGreenLists() {
         if (sessionGames.findIndex((item) => item == eID) > -1) {
           count++;
           console.log(count + " ," + $(e).parent().children().length);
-          $(e)
+          var toggle = $(e)
             .children(".toggle")
             .children(".switch")
-            .children("input")
-            .prop("checked", true);
+            .children("input");
+          $(toggle).attr("onclick", "");
+          $(toggle).prop("checked", true);
           $(e).children(".gameName").first().addClass("greenText");
+          $(toggle).attr("onclick", "toggleFont(this)");
+        } else {
+          var toggle = $(e)
+            .children(".toggle")
+            .children(".switch")
+            .children("input");
+          $(toggle).attr("onclick", "");
+          $(toggle).prop("checked", false);
+          $(e).children(".gameName").first().removeClass("greenText");
+          $(toggle).attr("onclick", "toggleFont(this)");
         }
         if (count == $(e).parent().children().length) {
           $(e)
@@ -801,6 +825,34 @@ function unMakeGreen(id) {
       .prop("checked", false);
   });
   //recheckGreenLists();
+}
+
+/***********************************/
+/*       Clear all checkboxes      */
+/***********************************/
+function clearLists() {
+  console.log("clearing...");
+  $("selectLists")
+    .children()
+    .each(function (i) {
+      $(this)
+        .children(".listGames")
+        .first()
+        .children("li")
+        .each(function (j) {
+          var el = $(this)
+            .children(".toggle")
+            .first()
+            .children(".switch")
+            .first()
+            .children("input")
+            .first();
+          el.attr("onclick", "");
+          el.prop("checked", false);
+          el.attr("onclick", "toggleFont(this)");
+          console.log("cleared: ", el);
+        });
+    });
 }
 
 function toggleFont(check) {

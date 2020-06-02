@@ -482,7 +482,7 @@ input:checked + .slider:before {
 
 .connecting:before,
 .selecting:before,
-.selected:before {
+.done:before {
   font-family: "Font Awesome\ 5 Free";
   font-weight: 900;
   margin-right: 10px;
@@ -493,7 +493,7 @@ input:checked + .slider:before {
   content: "\f09c";
 }
 
-.selected:before {
+.done:before {
   content: "\f023";
 }
 

@@ -9,6 +9,7 @@ var Session = require("./models/sessions.js");
 
 var socketAPI = {};
 var numGames = {};
+var code = "";
 socketAPI.io = io;
 
 socketAPI.sendNotification = function (data) {
@@ -33,13 +34,28 @@ socketAPI.addGame = function (data) {
         userMap = createUserMap(users, usernames);
         if (
           typeof data.user != "undefined" &&
-          typeof data.numGames != "undefined"
+          typeof data.done != "undefined"
         ) {
-          //TODO: Change this so data.user is the userID, not name, because name isn't guaranteed unique!
-          numGames[data.user] = data.numGames;
+          numGames[data.user].done = data.done;
+          console.log("Is done? ", numGames[data.user]);
+        } else {
+          if (
+            typeof data.user != "undefined" &&
+            typeof data.numGames != "undefined"
+          ) {
+            //TODO: Change this so data.user is the userID, not name, because name isn't guaranteed unique!
+            if (typeof numGames[data.user] == "undefined") {
+              numGames[data.user] = { num: 0, done: false };
+            }
+            numGames[data.user].num = data.numGames;
+            numGames[data.user].done = false;
+          }
         }
         console.log("usermap: ", userMap, "numGames, ", numGames);
-        io.sockets.emit(data.code, replaceUserIds(userMap, numGames));
+        io.sockets.emit(
+          data.code + "select",
+          replaceUserIds(userMap, numGames)
+        );
       });
     }
   });
@@ -54,6 +70,7 @@ function replaceUserIds(userMap, idObj) {
     console.log(k, "|userMap:", userMap);
     ret[userMap[k]] = idObj[k];
   });
+  console.log("ret: ", ret);
   return ret;
 }
 
@@ -74,6 +91,7 @@ function createUserMap(users, usernames) {
 socketAPI.initGames = function (data) {
   //console.log("initGames", data);
   var userMap = {};
+  numGames = {};
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     if (curSession) {
       var users = curSession.users;
@@ -83,17 +101,20 @@ socketAPI.initGames = function (data) {
         userMap = createUserMap(users, usernames);
         console.log("usermap: ", userMap);
         for (var i = 0; i < curSession.users.length; i++) {
-          numGames[curSession.users[i]] = 0;
+          if (typeof numGames[curSession.users[i]] == "undefined") {
+            numGames[curSession.users[i]] = { num: 0, done: false };
+          }
         }
         for (var i = 0; i < curSession.games.length; i++) {
           for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
             var owner = curSession.games[i].addedBy[j];
             //console.log("owner: ", owner);
+            numGames[owner].done = false;
             if (numGames[owner]) {
-              numGames[owner]++;
+              numGames[owner].num++;
               console.log(owner, ", ", numGames[owner]);
             } else {
-              numGames[owner] = 1;
+              numGames[owner].num = 1;
             }
           }
         }
@@ -103,6 +124,11 @@ socketAPI.initGames = function (data) {
       });
     }
   });
+};
+
+socketAPI.gamesSubmitted = function (data) {
+  numGames[data.user].done = true;
+  io.sockets.emit(data.code + "gamesSubmit", data);
 };
 
 io.on("connection", function (socket) {

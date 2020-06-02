@@ -213,6 +213,11 @@ router.post("/join_session", function (req, res) {
       if (newUser) {
         curSession.users.push(req.user.id);
         curSession.save();
+        socketAPI.addGame({
+          user: req.user.id,
+          numGames: 0,
+          code: req.body.code,
+        });
       }
       res.send({
         code: curSession.code,
@@ -268,6 +273,8 @@ router.post("/create_session", function (req, res) {
         session.save().then(function (theSession) {
           socketAPI.sendNotification("Session created...");
           socketAPI.addGame({
+            user: req.user.id,
+            numGames: 0,
             code: theCode,
           });
           res.send({ status: theSession });
@@ -330,7 +337,6 @@ router.post("/add_game_to_session", function (req, res) {
                 "A user added a game that someone else already added..." +
                   numGames
               );
-              //TODO: Move this to outside the for loop
             }
           } else {
             curSession.games.push({ game: id, addedBy: [req.user.id] });
@@ -342,7 +348,6 @@ router.post("/add_game_to_session", function (req, res) {
                 req.user.id,
             });
             socketAPI.sendNotification("A user added a new game..." + numGames);
-            //TODO: Move this to outside the for loop
           }
         }
         socketAPI.addGame({
@@ -409,6 +414,7 @@ router.post("/submit_games", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       socketAPI.sendNotification("A user finished adding games...");
+      socketAPI.addGame({ user: req.user.id, done: true, code: req.body.code });
       if (curSession.owner == req.user.id.toString()) {
         var htmlString =
           '<div id="postSelectLoadingMessage"><p>There are ' +

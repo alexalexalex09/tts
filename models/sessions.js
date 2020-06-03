@@ -22,12 +22,17 @@ var SessionSchema = new Schema(
         addedBy: [String],
       },
     ],
-    users: [String],
+    users: [{ user: String, done: Boolean }],
   },
   {
     collection: "sessions",
   }
 );
+SessionSchema.statics.findUser = function (user) {
+  return this.find({ name: new RegExp(user, "i") }).project({
+    "users.user": 1,
+  });
+};
 
 module.exports = mongoose.model("Session", SessionSchema);
 /*

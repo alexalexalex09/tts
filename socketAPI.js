@@ -8,7 +8,7 @@ var Game = require("./models/games.js");
 var Session = require("./models/sessions.js");
 
 var socketAPI = {};
-var numGames = {};
+var numGames = [];
 var code = "";
 socketAPI.io = io;
 
@@ -25,16 +25,113 @@ socketAPI.sendNotification = function (data) {
 //      data.user (opt) - user that is currently adding a game
 //      data.numGames (opt) - number of Games current user currently has added
 
+function getSessionGames(curSession) {
+  var curUsers = {};
+  console.log(curSession);
+  for (var i = 0; i < curSession.games.length; i++) {
+    for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
+      if (typeof curUsers[curSession.games.addedBy[j]] == "undefined") {
+        curUsers[curSession.games.addedBy[j]].num = 0;
+        var index = curSession.users.findIndex((obj) => {
+          obj.user == curSession.games.addedBy[j];
+        });
+        curUsers[curSession.games.addedBy[j]].done =
+          curSession.users[index].done;
+      } else {
+        curUsers[curSession.games.addedBy[j]]++;
+      }
+    }
+  }
+  console.log("curUsers: ", curUsers);
+  return curUsers;
+}
+
 socketAPI.addGame = function (data) {
+  //This function really just needs to output:
+  //  1) Each connected user's name
+  //  2) The associated number of added games
+  //  3) The associated done status
+
+  //data.code(required);
+  //data.user(optional);
+
+  //1. Get Session using data.code
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    //2. Get list of curSession.users.user(s) and make a numGames array
+    if (curSession) {
+      for (var i = 0; i < curSession.users.length; i++) {
+        numGames[i] = {
+          id: curSession.users[i].user,
+          name: "",
+          num: 0,
+          done: curSession.users[i].done,
+        };
+      }
+      console.log("numGames: ", numGames);
+      //a. Note that this requires "done" to be set by public.js when user clicks through
+      //3. Look up names for numGames.user.name
+      var profiles = curSession.users.map(function (val, i) {
+        return val.user;
+      });
+      User.find({ profile_id: { $in: profiles } }).exec(function (
+        err,
+        usernames
+      ) {
+        console.log("usernames: ", usernames);
+        for (var j = 0; j < numGames.length; j++) {
+          var index = usernames.findIndex(
+            (obj) => obj.profile_id == numGames[j].id
+          );
+          console.log("name: ", usernames[index].name);
+          numGames[j].name = usernames[index].name;
+        }
+
+        //4. Look through curSession.games
+        //a. if empty, do nothing since num=0 by default
+        if (curSession.games.length > 0) {
+          for (var k = 0; k < curSession.games.length; k++) {
+            for (var l = 0; l < curSession.games[k].addedBy.length; l++) {
+              var index = numGames.findIndex(
+                (obj) => obj.id == curSession.games[k].addedBy[l]
+              );
+
+              //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
+              numGames[index].num++;
+            }
+          }
+        }
+        //Now we have numGames with id, name, done, and num filled for each user
+        //5. Remove id from each user
+        for (var i = 0; i < numGames.length; i++) {
+          numGames[i].id = "";
+        }
+        //6. Emit to owner
+        io.sockets.emit(data.code + "select", numGames);
+      });
+    }
+  });
+
+  /*
   console.log("addGame", data, numGames);
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    numGames = getSessionGames(curSession);
+    console.log("numGames init: ", numGames);
     if (curSession) {
       var users = curSession.users;
-      User.find({ profile_id: { $in: users } }).exec(function (err, usernames) {
+      var profiles = users.map(function (val, i) {
+        return val.user;
+      });
+      User.find({ profile_id: { $in: profiles } }).exec(function (
+        err,
+        usernames
+      ) {
+        console.log("usernames: ", usernames);
+
         userMap = createUserMap(users, usernames);
         if (
           typeof data.user != "undefined" &&
-          typeof data.done != "undefined"
+          typeof data.done != "undefined" &&
+          typeof numgames[data.user] != "undefined"
         ) {
           numGames[data.user].done = data.done;
           console.log("Is done? ", numGames[data.user]);
@@ -52,13 +149,20 @@ socketAPI.addGame = function (data) {
           }
         }
         console.log("usermap: ", userMap, "numGames, ", numGames);
-        io.sockets.emit(
-          data.code + "select",
-          replaceUserIds(userMap, numGames)
-        );
+        var index = curSession.users.findIndex((obj) => {
+          obj.user = data.user;
+          console.log("cmp: ", obj, data);
+        });
+        curSession.users[index].done = data.done;
+        curSession.save().then(function () {
+          io.sockets.emit(
+            data.code + "select",
+            replaceUserIds(userMap, numGames)
+          );
+        });
       });
     }
-  });
+  });*/
 };
 
 //@param userMap: object created by userMap()
@@ -83,7 +187,7 @@ function createUserMap(users, usernames) {
   var userMap = {};
   for (var i = 0; i < users.length; i++) {
     //console.log("user: ", users[i]);
-    userMap[users[i]] = usernames[i].name;
+    userMap[users[i].user] = usernames[i].name;
   }
   return userMap;
 }
@@ -96,13 +200,20 @@ socketAPI.initGames = function (data) {
     if (curSession) {
       var users = curSession.users;
       console.log("users: ", users);
-      User.find({ profile_id: { $in: users } }).exec(function (err, usernames) {
+      var profiles = users.map(function (val, i) {
+        return val.user;
+      });
+      console.log("profiles: ", profiles);
+      User.find({ profile_id: { $in: profiles } }).exec(function (
+        err,
+        usernames
+      ) {
         console.log("usernames: ", usernames);
         userMap = createUserMap(users, usernames);
         console.log("usermap: ", userMap);
         for (var i = 0; i < curSession.users.length; i++) {
-          if (typeof numGames[curSession.users[i]] == "undefined") {
-            numGames[curSession.users[i]] = { num: 0, done: false };
+          if (typeof numGames[curSession.users[i].user] == "undefined") {
+            numGames[curSession.users[i].user] = { num: 0, done: false };
           }
         }
         for (var i = 0; i < curSession.games.length; i++) {

@@ -363,7 +363,7 @@ window.addEventListener("load", function () {
                 `<div class="conUser ` +
                 connecting +
                 `">User ` +
-                key +
+                value.name +
                 ` has selected ` +
                 value.num +
                 ` game` +

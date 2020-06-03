@@ -206,17 +206,17 @@ router.post("/join_session", function (req, res) {
       var sendGames = checkIfAddedByUser(curSession, req.user.id);
       var newUser = true;
       for (var i = 0; i < curSession.users.length; i++) {
-        if (curSession.users[i] == req.user.id) {
+        if (curSession.users[i].name == req.user.id) {
           newUser = false;
         }
       }
       if (newUser) {
-        curSession.users.push(req.user.id);
-        curSession.save();
-        socketAPI.addGame({
-          user: req.user.id,
-          numGames: 0,
-          code: req.body.code,
+        curSession.users.push({ user: req.user.id, done: false });
+        curSession.save().then(function () {
+          socketAPI.addGame({
+            user: req.user.id,
+            code: req.body.code,
+          });
         });
       }
       res.send({
@@ -267,14 +267,12 @@ router.post("/create_session", function (req, res) {
           owner: req.user.id,
           code: theCode,
           games: [],
-          users: [req.user.id],
+          users: [{ user: req.user.id, done: false }],
         };
         var session = new Session(sessiondetail);
         session.save().then(function (theSession) {
           socketAPI.sendNotification("Session created...");
           socketAPI.addGame({
-            user: req.user.id,
-            numGames: 0,
             code: theCode,
           });
           res.send({ status: theSession });
@@ -282,7 +280,7 @@ router.post("/create_session", function (req, res) {
       } else {
         var sendGames = checkIfAddedByUser(curSession, req.user.id);
         socketAPI.sendNotification("Session already created...");
-        socketAPI.initGames({
+        socketAPI.addGame({
           code: curSession.code,
         });
         res.send({ status: curSession, games: sendGames });
@@ -350,12 +348,13 @@ router.post("/add_game_to_session", function (req, res) {
             socketAPI.sendNotification("A user added a new game..." + numGames);
           }
         }
-        socketAPI.addGame({
-          code: req.body.code,
-          user: req.user.id,
-          numGames: numGames + 1,
+
+        curSession.save().then(function () {
+          socketAPI.addGame({
+            code: req.body.code,
+            user: req.user.id,
+          });
         });
-        curSession.save();
         res.send(results);
       } else {
         if (req.body.gamesToRemove.length > 0) {
@@ -396,12 +395,13 @@ router.post("/add_game_to_session", function (req, res) {
             }
           }
           console.log("numGamestoRemove: ", numGames);
-          socketAPI.addGame({
-            code: req.body.code,
-            user: req.user.id,
-            numGames: numGames,
+
+          curSession.save().then(function () {
+            socketAPI.addGame({
+              code: req.body.code,
+              user: req.user.id,
+            });
           });
-          curSession.save();
         }
       }
     });
@@ -414,7 +414,11 @@ router.post("/submit_games", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       socketAPI.sendNotification("A user finished adding games...");
-      socketAPI.addGame({ user: req.user.id, done: true, code: req.body.code });
+      var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
+      curSession.users[index].done = true;
+      curSession.save().then(function () {
+        socketAPI.addGame({ user: req.user.id, code: req.body.code });
+      });
       if (curSession.owner == req.user.id.toString()) {
         var htmlString =
           '<div id="postSelectLoadingMessage"><p>There are ' +

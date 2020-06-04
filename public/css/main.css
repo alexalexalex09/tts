@@ -505,6 +505,12 @@ input:checked + .slider:before {
   color: var(--main-green);
 }
 
+#gameLock {
+  position: absolute;
+  width: 80vw;
+  bottom: var(--vh5);
+}
+
 /*****************/
 /*    Testing    */
 /*****************/

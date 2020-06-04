@@ -269,6 +269,11 @@ window.addEventListener("load", function () {
           console.log("initGreenLists");
           initGreenLists();
           goForwardFrom("#homeView", "#" + res.lock);
+          if ((res.lock = "postSelectView")) {
+            var t = window.hist.pop();
+            window.hist.push("#selectView");
+            window.hist.push(t);
+          }
           history.pushState(
             { code: res.code, page: "select", last: "home" },
             "",
@@ -328,9 +333,7 @@ window.addEventListener("load", function () {
   /*****************************/
   /*   Create Button Handler   */
   /*****************************/
-
   $("#createButton").click(this, function () {
-    //TODO: Erase all previously added games
     console.log("create");
     clearLists();
     const cs_options = {
@@ -370,6 +373,7 @@ window.addEventListener("load", function () {
                 plural +
                 `...</div>`;
             });
+            htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
             $("#postSelectContainer").html(htmlString);
           });
           $("#backArrow").removeClass("off");
@@ -616,6 +620,7 @@ window.addEventListener("load", function () {
  */
 function goForwardFrom(from, to) {
   //console.log("going forward from " + from + " to " + to);
+
   if (typeof window.hist == "undefined") {
     window.hist = [from];
   }
@@ -623,6 +628,7 @@ function goForwardFrom(from, to) {
   $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
   $(to).css({ transform: "translateX(200vw)" });
   $(to).removeClass("off");
+
   window.setTimeout(function () {
     $(to).css({ transform: "translateX(0vw)" });
     $(from).css({ transform: "translateX(-200vw)" });
@@ -643,6 +649,24 @@ function goForwardFrom(from, to) {
  */
 function goBackFrom(from, to) {
   //console.log("going back from " + from + " to " + to);
+  // TODO unlock when going back
+  const gb_options = {
+    method: "POST",
+    body: JSON.stringify({
+      code: document.getElementById("code").innerHTML,
+      from: from,
+      to: to,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/going_back", gb_options).then(function (response) {
+    return response.json().then((res) => {
+      console.log(res);
+    });
+  });
+
   window.hist.pop();
   $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
   $(to).css({ transform: "translateX(-200vw)" });

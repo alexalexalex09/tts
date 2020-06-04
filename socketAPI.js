@@ -47,13 +47,16 @@ function getSessionGames(curSession) {
 }
 
 socketAPI.addGame = function (data) {
+  //TODO: Fix a disconnecting user. Currently when they rejoin, another empty user
+  //gets added, but their session connects to the previous user anyway. And, in
+  //any case, they should be forwarded to the waiting screen if that's where they were.
+
   //This function really just needs to output:
   //  1) Each connected user's name
   //  2) The associated number of added games
   //  3) The associated done status
 
   //data.code(required);
-  //data.user(optional);
 
   //1. Get Session using data.code
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
@@ -82,6 +85,7 @@ socketAPI.addGame = function (data) {
           var index = usernames.findIndex(
             (obj) => obj.profile_id == numGames[j].id
           );
+          console.log("u[i]: ", usernames[index], index);
           console.log("name: ", usernames[index].name);
           numGames[j].name = usernames[index].name;
         }
@@ -140,7 +144,6 @@ socketAPI.addGame = function (data) {
             typeof data.user != "undefined" &&
             typeof data.numGames != "undefined"
           ) {
-            //TODO: Change this so data.user is the userID, not name, because name isn't guaranteed unique!
             if (typeof numGames[data.user] == "undefined") {
               numGames[data.user] = { num: 0, done: false };
             }

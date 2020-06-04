@@ -38,7 +38,18 @@ router.get("/", (req, res) => {
 // Get notified when the user is navigating back
 router.post("/going_back", function (req, res) {
   console.log(req.body.dest);
-  res.send({ status: "Thank you for traveling with TTS Airlines" });
+  if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
+      curSession.users[index].done = false;
+      curSession.save().then(function (err, status) {
+        socketAPI.addGame({ code: req.body.code });
+        res.send({ status: "User editing again" });
+      });
+    });
+  } else {
+    res.send({ status: "Thank you for traveling with TTS Airlines" });
+  }
 });
 
 //Get current user's complete list object
@@ -195,7 +206,6 @@ function userCreate(id, name) {
 }
 
 router.post("/join_session", function (req, res) {
-  //TODO: send an event so that the host knows you've joined with 0 games added
   Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
     console.log(curSession);
     if (!curSession) {
@@ -205,23 +215,27 @@ router.post("/join_session", function (req, res) {
     } else {
       var sendGames = checkIfAddedByUser(curSession, req.user.id);
       var newUser = true;
+      var lock = curSession.lock;
       for (var i = 0; i < curSession.users.length; i++) {
-        if (curSession.users[i].name == req.user.id) {
+        if (curSession.users[i].user == req.user.id) {
           newUser = false;
+          if (curSession.users[i].done) {
+            lock = "postSelectView";
+          }
         }
       }
+      console.log("newUser ", newUser);
       if (newUser) {
         curSession.users.push({ user: req.user.id, done: false });
         curSession.save().then(function () {
           socketAPI.addGame({
-            user: req.user.id,
             code: req.body.code,
           });
         });
       }
       res.send({
         code: curSession.code,
-        lock: curSession.lock,
+        lock: lock,
         games: sendGames,
       });
     }
@@ -352,7 +366,6 @@ router.post("/add_game_to_session", function (req, res) {
         curSession.save().then(function () {
           socketAPI.addGame({
             code: req.body.code,
-            user: req.user.id,
           });
         });
         res.send(results);
@@ -399,7 +412,6 @@ router.post("/add_game_to_session", function (req, res) {
           curSession.save().then(function () {
             socketAPI.addGame({
               code: req.body.code,
-              user: req.user.id,
             });
           });
         }
@@ -417,7 +429,7 @@ router.post("/submit_games", function (req, res) {
       var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
       curSession.users[index].done = true;
       curSession.save().then(function () {
-        socketAPI.addGame({ user: req.user.id, code: req.body.code });
+        socketAPI.addGame({ code: req.body.code });
       });
       if (curSession.owner == req.user.id.toString()) {
         var htmlString =

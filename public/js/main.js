@@ -268,17 +268,68 @@ window.addEventListener("load", function () {
           document.getElementById("sessionContainer").innerHTML = sessionGames;
           console.log("initGreenLists");
           initGreenLists();
+          var isLockBack = false;
+          if (res.lock == "postPostSelectView") {
+            var isLockBack = true;
+            res.lock = "postSelectView";
+          }
+          console.log(
+            "going forward to ",
+            res.lock,
+            "and lockback is " + isLockBack
+          );
           goForwardFrom("#homeView", "#" + res.lock);
+          if (isLockBack) {
+            console.log("running lockback()");
+
+            lockBack();
+            console.log("ran lockBack()");
+          }
+
           if ((res.lock = "postSelectView")) {
+            console.log("changing history");
             var t = window.hist.pop();
             window.hist.push("#selectView");
             window.hist.push(t);
           }
+          console.log("pushing history");
           history.pushState(
             { code: res.code, page: "select", last: "home" },
             "",
             "#select"
           );
+          console.log("pushed history");
+          /*******************************************/
+          /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
+          /* it will lock the back arrow to home and move the client ahead to the session lock.*/
+          /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
+          /* a string or an array of history states which the client will have access to.*/
+          /*******************************************/
+          console.log(res.code + "client");
+          console.log("client?");
+          console.log(res.code);
+          socket.on(res.code + "client", (data) => {
+            console.log("Got client event");
+            if (data.lockBack && data.lock) {
+              goForwardFrom(window.hist[window.hist.length - 1], data.lock);
+              lockBack();
+            }
+            if (data.unlockBack && data.unlock) {
+              var t = window.hist.pop();
+              if (typeof data.unlock == "object") {
+                for (var i = 0; i < data.unlock.length; i++) {
+                  window.hist.push(data.unlock[i]);
+                }
+              } else {
+                window.hist.push(data.unlock);
+              }
+              window.hist.push(t);
+              goBackFrom(
+                window.hist[window.hist.length - 1],
+                window.hist[window.hist.length - 2]
+              );
+            }
+          });
         }
       });
     });
@@ -375,6 +426,54 @@ window.addEventListener("load", function () {
             });
             htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
             $("#postSelectContainer").html(htmlString);
+            $("#gameLock").click(this, function () {
+              const lg_options = {
+                method: "POST",
+                body: JSON.stringify({ code: res.status.code }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              };
+              fetch("/lock_games", lg_options).then(function (response) {
+                return response.json().then((res) => {
+                  console.log(res);
+                  $("#postSelectView").css({
+                    transform: "translateX(-200vw)",
+                  });
+                  window.setTimeout(function () {
+                    $("#postSelectTitle").html("Edit Games List 🐿️");
+                    $("#postSelectContainer").html(res.htmlString);
+                    $("#postSelectView").css({ transition: "transform 0s" });
+                    $("#postSelectView").css({
+                      transform: "translateX(200vw)",
+                    });
+                    window.setTimeout(function () {
+                      $("#postSelectView").css({ transition: "transform 1s" });
+                      $("#postSelectView").css({
+                        transform: "translateX(-0vw)",
+                      });
+                    }, 100);
+                  }, 100);
+                });
+              });
+            });
+            $("#gameUnlock").click(this, function () {
+              const ug_options = {
+                method: "POST",
+                body: JSON.stringify({
+                  code: res.status.code,
+                  unlock: "selectView",
+                }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              };
+              fetch("/unlock_games", lg_options).then(function (response) {
+                return response.json().then((res) => {
+                  console.log(res);
+                });
+              });
+            });
           });
           $("#backArrow").removeClass("off");
           //$("#backArrow").attr("data-gobackto", "home");
@@ -599,7 +698,6 @@ window.addEventListener("load", function () {
     });
   });
 });
-
 //End all DOM manipulation
 
 /***************************************************/
@@ -607,6 +705,14 @@ window.addEventListener("load", function () {
 /*               Universal Functions               */
 /*                                                 */
 /***************************************************/
+
+/*****************************/
+/*         lockBack()        */
+/*****************************/
+function lockBack() {
+  window.hist = [window.hist[0], window.hist[window.hist.length - 1]];
+  $("#backArrow").attr("data-gobackto", window.hist[0]);
+}
 
 /*****************************/
 /*  goForwardFrom(from, to)  */

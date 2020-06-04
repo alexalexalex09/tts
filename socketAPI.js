@@ -47,10 +47,6 @@ function getSessionGames(curSession) {
 }
 
 socketAPI.addGame = function (data) {
-  //TODO: Fix a disconnecting user. Currently when they rejoin, another empty user
-  //gets added, but their session connects to the previous user anyway. And, in
-  //any case, they should be forwarded to the waiting screen if that's where they were.
-
   //This function really just needs to output:
   //  1) Each connected user's name
   //  2) The associated number of added games
@@ -70,7 +66,6 @@ socketAPI.addGame = function (data) {
           done: curSession.users[i].done,
         };
       }
-      console.log("numGames: ", numGames);
       //a. Note that this requires "done" to be set by public.js when user clicks through
       //3. Look up names for numGames.user.name
       var profiles = curSession.users.map(function (val, i) {
@@ -80,13 +75,10 @@ socketAPI.addGame = function (data) {
         err,
         usernames
       ) {
-        console.log("usernames: ", usernames);
         for (var j = 0; j < numGames.length; j++) {
           var index = usernames.findIndex(
             (obj) => obj.profile_id == numGames[j].id
           );
-          console.log("u[i]: ", usernames[index], index);
-          console.log("name: ", usernames[index].name);
           numGames[j].name = usernames[index].name;
         }
 
@@ -114,72 +106,7 @@ socketAPI.addGame = function (data) {
       });
     }
   });
-
-  /*
-  console.log("addGame", data, numGames);
-  Session.findOne({ code: data.code }).exec(function (err, curSession) {
-    numGames = getSessionGames(curSession);
-    console.log("numGames init: ", numGames);
-    if (curSession) {
-      var users = curSession.users;
-      var profiles = users.map(function (val, i) {
-        return val.user;
-      });
-      User.find({ profile_id: { $in: profiles } }).exec(function (
-        err,
-        usernames
-      ) {
-        console.log("usernames: ", usernames);
-
-        userMap = createUserMap(users, usernames);
-        if (
-          typeof data.user != "undefined" &&
-          typeof data.done != "undefined" &&
-          typeof numgames[data.user] != "undefined"
-        ) {
-          numGames[data.user].done = data.done;
-          console.log("Is done? ", numGames[data.user]);
-        } else {
-          if (
-            typeof data.user != "undefined" &&
-            typeof data.numGames != "undefined"
-          ) {
-            if (typeof numGames[data.user] == "undefined") {
-              numGames[data.user] = { num: 0, done: false };
-            }
-            numGames[data.user].num = data.numGames;
-            numGames[data.user].done = false;
-          }
-        }
-        console.log("usermap: ", userMap, "numGames, ", numGames);
-        var index = curSession.users.findIndex((obj) => {
-          obj.user = data.user;
-          console.log("cmp: ", obj, data);
-        });
-        curSession.users[index].done = data.done;
-        curSession.save().then(function () {
-          io.sockets.emit(
-            data.code + "select",
-            replaceUserIds(userMap, numGames)
-          );
-        });
-      });
-    }
-  });*/
 };
-
-//@param userMap: object created by userMap()
-//@param idObj: object containing userId *keys* to be replaced with names from userMap
-function replaceUserIds(userMap, idObj) {
-  var ret = {};
-  console.log(idObj);
-  Object.keys(idObj).map(function (k, i) {
-    console.log(k, "|userMap:", userMap);
-    ret[userMap[k]] = idObj[k];
-  });
-  console.log("ret: ", ret);
-  return ret;
-}
 
 // @param users
 //    Array of user profile ids for current session from mongoose
@@ -243,6 +170,29 @@ socketAPI.initGames = function (data) {
 socketAPI.gamesSubmitted = function (data) {
   numGames[data.user].done = true;
   io.sockets.emit(data.code + "gamesSubmit", data);
+};
+
+socketAPI.lockGames = function (data) {
+  var ret = {};
+  console.log("locking, ", data.code);
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    curSession.lock = "postPostSelectView";
+    ret.lockBack = true;
+    ret.lock = "#postSelectView";
+    console.log("seinding " + data.code + "client with data", ret);
+    io.sockets.emit(data.code + "client", ret);
+    curSession.save();
+  });
+};
+
+socketAPI.unlockGames = function (data) {
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    curSession.lock = "postSelectView";
+    ret.unlockBack = true;
+    ret.unlock = "selectView";
+    io.sockets.emit(data.code + "client", ret);
+    curSession.save();
+  });
 };
 
 io.on("connection", function (socket) {

@@ -452,4 +452,21 @@ router.post("/submit_games", function (req, res) {
     res.send({ err: "Not logged in." });
   }
 });
+
+router.post("/lock_games", function (req, res) {
+  socketAPI.lockGames({ code: req.body.code });
+  var htmlString =
+    `<div class="button greyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
+    `<div id="addGroupGamesContainer">` +
+    `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
+    `<div class="textInputCont" id="addGamesInputCont">` +
+    `<input class="textInput" type="text" id="addGamesInput">` +
+    `<div class="textClear"></div>` +
+    `</div>` +
+    `</div>` +
+    `<div id="editGameList"></div>` +
+    `<div class="button greenBtn" id="editGameSubmit">Begin Voting</div>`;
+  res.send({ status: "locked games", htmlString: htmlString });
+});
+
 module.exports = router;

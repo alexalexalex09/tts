@@ -456,7 +456,7 @@ router.post("/submit_games", function (req, res) {
 router.post("/lock_games", function (req, res) {
   socketAPI.lockGames({ code: req.body.code });
   var htmlString =
-    `<div class="button greyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
+    `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
     `<div id="addGroupGamesContainer">` +
     `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
     `<div class="textInputCont" id="addGamesInputCont">` +

@@ -452,8 +452,8 @@ window.addEventListener("load", function () {
                       $("#postSelectView").css({
                         transform: "translateX(-0vw)",
                       });
-                    }, 100);
-                  }, 100);
+                    }, 10);
+                  }, 300);
                 });
               });
             });

@@ -3,7 +3,7 @@
 /******************/
 :root {
   --main-blue: #07f;
-  --main-grey: #aaa;
+  --main-light-grey: #aaa;
   --main-white: #fff;
   --main-black: #000;
   --main-grey: #333;
@@ -55,6 +55,10 @@ a:active {
 
 .greyBtn {
   background-color: var(--main-grey);
+}
+
+.lightGreyBtn {
+  background-color: var(--main-light-grey);
 }
 
 .greenBtn {
@@ -461,7 +465,7 @@ input:checked + .slider:before {
 
 #postSelectContainer {
   height: 100%;
-  grid-area: 6/2/15/10;
+  grid-area: 4/2/15/10;
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
@@ -506,6 +510,29 @@ input:checked + .slider:before {
 }
 
 #gameLock {
+  position: absolute;
+  width: 80vw;
+  bottom: var(--vh5);
+}
+
+/**********************/
+/* postPostSelectView */
+/**********************/
+
+#gameUnlock {
+  width: 25vw;
+  margin: 0 auto;
+  height: var(--vh5);
+}
+
+#addGroupGamesContainer {
+  position: absolute;
+  top: calc(var(--vh) * 22);
+  width: 40vw;
+  left: 30vw;
+}
+
+#editGameSubmit {
   position: absolute;
   width: 80vw;
   bottom: var(--vh5);

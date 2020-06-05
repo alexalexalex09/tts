@@ -187,11 +187,18 @@ socketAPI.lockGames = function (data) {
 
 socketAPI.unlockGames = function (data) {
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    var ret = {};
     curSession.lock = "postSelectView";
     ret.unlockBack = true;
     ret.unlock = "selectView";
-    io.sockets.emit(data.code + "client", ret);
-    curSession.save();
+    for (var i = 0; i < curSession.games.length; i++) {
+      if ((curSession.games[i].addedBy = [])) {
+        curSession.games[i].addedBy = [data.user];
+      }
+    }
+    curSession.save(function () {
+      io.sockets.emit(data.code + "client", ret);
+    });
   });
 };
 

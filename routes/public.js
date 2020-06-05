@@ -293,6 +293,17 @@ router.post("/create_session", function (req, res) {
         });
       } else {
         var sendGames = checkIfAddedByUser(curSession, req.user.id);
+        var tosave = false;
+        for (var i = 0; i < curSession.games.length; i++) {
+          if (curSession.games[i].addedBy.length == 0) {
+            curSession.games[i].addedBy = curSession.owner;
+            tosave = true;
+          }
+          console.log(curSession.games[i], tosave);
+          if (tosave) {
+            curSession.save();
+          }
+        }
         socketAPI.sendNotification("Session already created...");
         socketAPI.addGame({
           code: curSession.code,
@@ -454,19 +465,124 @@ router.post("/submit_games", function (req, res) {
 });
 
 router.post("/lock_games", function (req, res) {
-  socketAPI.lockGames({ code: req.body.code });
-  var htmlString =
-    `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
-    `<div id="addGroupGamesContainer">` +
-    `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
-    `<div class="textInputCont" id="addGamesInputCont">` +
-    `<input class="textInput" type="text" id="addGamesInput">` +
-    `<div class="textClear"></div>` +
-    `</div>` +
-    `</div>` +
-    `<div id="editGameList"></div>` +
-    `<div class="button greenBtn" id="editGameSubmit">Begin Voting</div>`;
-  res.send({ status: "locked games", htmlString: htmlString });
+  if (req.user) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      socketAPI.lockGames({ code: req.body.code });
+      var gameList = [];
+      for (var i = 0; i < curSession.games.length; i++) {
+        gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
+        console.log(curSession.games[i].game);
+      }
+      Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
+        console.log(games);
+        var gameArray = [];
+        for (var i = 0; i < games.length; i++) {
+          gameArray.push(games[i].name);
+        }
+        var htmlString =
+          `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
+          `<div id="addGroupGamesContainer">` +
+          `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
+          `<div class="textInputCont" id="addGamesInputCont">` +
+          `<input class="textInput" type="text" id="addGamesInput">` +
+          `<div class="textClear"></div>` +
+          `</div>` +
+          `</div>` +
+          `<div id="editGameList">`;
+        for (var i = 0; i < gameArray.length; i++) {
+          htmlString +=
+            `<li><div class="editGame">` +
+            gameArray[i] +
+            `</div>` +
+            `<div class='toggle'>
+          <label class="switch">
+              <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
+            gameList[i]._id +
+            `">
+              <span class="slider round"></span>
+          </label>
+      </div></li>`;
+        }
+
+        htmlString +=
+          `</div>` +
+          `<div class="button greenBtn" id="editGameSubmit">Begin Voting</div>`;
+        res.send({ status: "locked games", htmlString: htmlString });
+      });
+    });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/modify_edit_list", function (req, res) {
+  if (req.user) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      if (req.body.gamesToAdd.length > 0) {
+        for (var i = 0; i < req.body.gamesToAdd.length; i++) {
+          var index = curSession.games.findIndex(
+            (obj) => obj.game.toString() == req.body.gamesToAdd[i]
+          );
+          if (index > -1) {
+            curSession.games[index].addedBy = req.user.id;
+          } else {
+            res.send({
+              err: "Couldn't find game to add: " + req.body.gamesToAdd[i],
+            });
+          }
+        }
+      } else {
+        if (req.body.gamesToRemove.length > 0) {
+          for (var i = 0; i < req.body.gamesToRemove.length; i++) {
+            var index = curSession.games.findIndex(
+              (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+            );
+            if (index > -1) {
+              curSession.games[index].addedBy = [];
+              console.log("Removed: ", curSession.games[index]);
+            } else {
+              res.send({
+                err:
+                  "Couldn't find game to remove: " + req.body.gamesToRemove[i],
+              });
+            }
+          }
+        } else {
+          res.send({ err: "No games to add or remove passed" });
+        }
+      }
+      curSession.save().then(function (error) {
+        console.log("Error: ", error);
+        var gameList = [];
+        var ret = [];
+        for (var i = 0; i < curSession.games.length; i++) {
+          gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
+        }
+        Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
+          for (var i = 0; i < games.length; i++) {
+            ret[i] = { name: games[i].name, id: games[i]._id };
+          }
+          res.send({ status: ret });
+        });
+      });
+    });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/unlock_games", function (req, res) {
+  if (req.user) {
+    var data = {
+      code: req.body.code,
+      unlock: req.body.unlock,
+      user: req.user.id,
+    };
+
+    socketAPI.unlockGames(data);
+  } else {
+    res.send({ err: "Not logged in" });
+  }
 });
 
 module.exports = router;

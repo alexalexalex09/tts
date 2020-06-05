@@ -434,15 +434,16 @@ window.addEventListener("load", function () {
                   "Content-Type": "application/json",
                 },
               };
-              fetch("/lock_games", lg_options).then(function (response) {
-                return response.json().then((res) => {
-                  console.log(res);
+              fetch("/lock_games", lg_options).then(function (lresponse) {
+                return lresponse.json().then((lres) => {
+                  console.log(lres);
+                  $("#backArrow").addClass("off");
                   $("#postSelectView").css({
                     transform: "translateX(-200vw)",
                   });
                   window.setTimeout(function () {
                     $("#postSelectTitle").html("Edit Games List 🐿️");
-                    $("#postSelectContainer").html(res.htmlString);
+                    $("#postSelectContainer").html(lres.htmlString);
                     $("#postSelectView").css({ transition: "transform 0s" });
                     $("#postSelectView").css({
                       transform: "translateX(200vw)",
@@ -452,25 +453,30 @@ window.addEventListener("load", function () {
                       $("#postSelectView").css({
                         transform: "translateX(-0vw)",
                       });
+                      $("#gameUnlock").click(this, function () {
+                        console.log("gameUnlock");
+                        const ug_options = {
+                          method: "POST",
+                          body: JSON.stringify({
+                            code: $("#code").text(),
+                            unlock: "selectView",
+                          }),
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        };
+                        fetch("/unlock_games", ug_options).then(function (
+                          uresponse
+                        ) {
+                          return uresponse.json().then((ures) => {
+                            $("#backArrow").removeClass("off");
+                            goBackFrom("#postSelectView", "#selectView");
+                            console.log(ures);
+                          });
+                        });
+                      });
                     }, 10);
                   }, 300);
-                });
-              });
-            });
-            $("#gameUnlock").click(this, function () {
-              const ug_options = {
-                method: "POST",
-                body: JSON.stringify({
-                  code: res.status.code,
-                  unlock: "selectView",
-                }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              };
-              fetch("/unlock_games", lg_options).then(function (response) {
-                return response.json().then((res) => {
-                  console.log(res);
                 });
               });
             });
@@ -929,7 +935,7 @@ function initGreenLists() {
 /* and handle category checking    */
 /***********************************/
 
-function makeGreen(id) {
+function makeGreenSelect(id) {
   $('.gameName[game_id="' + id + '"]').each(function (i, e) {
     $(e).addClass("greenText");
     $(e)
@@ -942,7 +948,7 @@ function makeGreen(id) {
   });
   //recheckGreenLists();
 }
-function unMakeGreen(id) {
+function unMakeGreenSelect(id) {
   console.log("unmake " + id);
   $('.gameName[game_id="' + id + '"]').each(function (i, e) {
     $(e).removeClass("greenText");
@@ -985,6 +991,54 @@ function clearLists() {
     });
 }
 
+function toggleEdit(check) {
+  var el = $(check).parent().parent().parent().children(".editGame").first();
+  var gamesToAdd = [];
+  var gamesToRemove = [];
+  if ($(check).is(":checked")) {
+    el.addClass("greenText");
+    gamesToAdd.push($(check).attr("game_id"));
+  } else {
+    el.removeClass("greenText");
+    gamesToRemove.push($(check).attr("game_id"));
+  }
+  const mel_options = {
+    method: "POST",
+    body: JSON.stringify({
+      gamesToAdd: gamesToAdd,
+      gamesToRemove: gamesToRemove,
+      code: document.getElementById("code").innerHTML,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/modify_edit_list", mel_options).then(function (response) {
+    return response.json().then((res) => {
+      if (!res.err) {
+        var htmlString = "";
+        for (var i = 0; i < res.status.length; i++) {
+          htmlString +=
+            `<li><div class="editGame">` +
+            res.status[i].name +
+            `</div>` +
+            `<div class='toggle'>
+          <label class="switch">
+              <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
+            res.status[i].id +
+            `">
+              <span class="slider round"></span>
+          </label>
+      </div></li>`;
+        }
+        $("#editGameList").html = htmlString;
+      } else {
+        console.log(res.err);
+      }
+    });
+  });
+}
+
 function toggleFont(check) {
   var el = $(check).parent().parent().parent().children(".gameName").first();
   var gamesToAdd = [];
@@ -993,11 +1047,11 @@ function toggleFont(check) {
     if ($(check).is(":checked")) {
       el.addClass("greenText");
       gamesToAdd.push($(check).attr("game_id"));
-      makeGreen($(check).attr("game_id"));
+      makeGreenSelect($(check).attr("game_id"));
     } else {
       el.removeClass("greenText");
       gamesToRemove.push($(check).attr("game_id"));
-      unMakeGreen($(check).attr("game_id"));
+      unMakeGreenSelect($(check).attr("game_id"));
     }
   } else {
     $(check)
@@ -1023,7 +1077,7 @@ function toggleFont(check) {
             .is(":checked")
         ) {
           gamesToAdd.push($(this).children(".gameName").attr("game_id"));
-          makeGreen($(this).children(".gameName").attr("game_id"));
+          makeGreenSelect($(this).children(".gameName").attr("game_id"));
         }
         $(this)
           .children(".toggle")
@@ -1042,7 +1096,7 @@ function toggleFont(check) {
             .is(":checked")
         ) {
           gamesToRemove.push($(this).children(".gameName").attr("game_id"));
-          unMakeGreen($(this).children(".gameName").attr("game_id"));
+          unMakeGreenSelect($(this).children(".gameName").attr("game_id"));
         }
         $(this)
           .children(".toggle")

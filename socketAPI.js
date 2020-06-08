@@ -75,10 +75,14 @@ socketAPI.addGame = function (data) {
         err,
         usernames
       ) {
+        console.log("profiles: ", profiles);
+        console.log("usernames: ", usernames);
         for (var j = 0; j < numGames.length; j++) {
           var index = usernames.findIndex(
             (obj) => obj.profile_id == numGames[j].id
           );
+          console.log("j:" + j);
+          console.log("index:" + index);
           numGames[j].name = usernames[index].name;
         }
 
@@ -186,6 +190,7 @@ socketAPI.lockGames = function (data) {
 };
 
 socketAPI.unlockGames = function (data) {
+  console.log("unlock: ", data);
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     var ret = {};
     curSession.lock = "postSelectView";
@@ -196,8 +201,11 @@ socketAPI.unlockGames = function (data) {
         curSession.games[i].addedBy = [data.user];
       }
     }
+    console.log("saving...", ret);
     curSession.save(function () {
+      console.log("saved! Emitting " + data.code + "client", ret);
       io.sockets.emit(data.code + "client", ret);
+      console.log("emitted");
     });
   });
 };

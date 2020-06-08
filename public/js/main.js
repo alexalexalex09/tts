@@ -278,6 +278,7 @@ window.addEventListener("load", function () {
             res.lock,
             "and lockback is " + isLockBack
           );
+
           goForwardFrom("#homeView", "#" + res.lock);
           if (isLockBack) {
             console.log("running lockback()");
@@ -298,16 +299,13 @@ window.addEventListener("load", function () {
             "",
             "#select"
           );
-          console.log("pushed history");
           /*******************************************/
           /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
           /* it will lock the back arrow to home and move the client ahead to the session lock.*/
           /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
           /* a string or an array of history states which the client will have access to.*/
           /*******************************************/
-          console.log(res.code + "client");
-          console.log("client?");
-          console.log(res.code);
+          console.log("Setting up client event with " + res.code);
           socket.on(res.code + "client", (data) => {
             console.log("Got client event");
             if (data.lockBack && data.lock) {
@@ -315,15 +313,10 @@ window.addEventListener("load", function () {
               lockBack();
             }
             if (data.unlockBack && data.unlock) {
-              var t = window.hist.pop();
-              if (typeof data.unlock == "object") {
-                for (var i = 0; i < data.unlock.length; i++) {
-                  window.hist.push(data.unlock[i]);
-                }
-              } else {
-                window.hist.push(data.unlock);
+              console.log(data);
+              if (data.unlock == "selectView") {
+                window.hist = ["#homeView", "#selectView", "#postSelectView"];
               }
-              window.hist.push(t);
               goBackFrom(
                 window.hist[window.hist.length - 1],
                 window.hist[window.hist.length - 2]
@@ -460,6 +453,7 @@ window.addEventListener("load", function () {
                           body: JSON.stringify({
                             code: $("#code").text(),
                             unlock: "selectView",
+                            unlockBack: true,
                           }),
                           headers: {
                             "Content-Type": "application/json",
@@ -486,12 +480,33 @@ window.addEventListener("load", function () {
           document.getElementById("code").innerHTML = res.status.code;
           document.getElementById("selectCodeDisplay").innerHTML =
             "Your Code: " + res.status.code;
-          goForwardFrom("#homeView", "#codeView");
-          history.pushState(
-            { code: res.status.code, page: "code" },
-            "",
-            "#code"
-          );
+          var index = res.status.users.findIndex((obj) => obj.user == res.user);
+          var dest = res.status.lock;
+          if (
+            res.status.users[index].done == false &&
+            dest == "postSelectView"
+          ) {
+            dest = "selectView";
+            console.log("changing");
+          }
+          if (dest == "postPostSelectView") {
+            dest = "postSelectView";
+
+            /*
+             *
+             *
+             * TODO: Still need to show postPostSelectView, because the other users
+             * are still locked out. postSelectView assumes they're not locked out yet.
+             *
+             */
+          }
+          console.log("dest: " + dest);
+          goForwardFrom("#homeView", "#" + dest);
+          //window.hist = ["#homeView", "#codeView", "#selectView"];
+          switch (dest) {
+            case "postSelectView":
+              window.hist.push("#postSelectView");
+          }
           var sessionGames = "<session>";
           if (res.games) {
             for (var i = 0; i < res.games.length; i++) {
@@ -731,23 +746,25 @@ function lockBack() {
  * @param {String} to
  */
 function goForwardFrom(from, to) {
-  //console.log("going forward from " + from + " to " + to);
+  if (from != to) {
+    console.log("going forward from " + from + " to " + to);
 
-  if (typeof window.hist == "undefined") {
-    window.hist = [from];
+    if (typeof window.hist == "undefined") {
+      window.hist = [from];
+    }
+    window.hist.push(to);
+    $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
+    $(to).css({ transform: "translateX(200vw)" });
+    $(to).removeClass("off");
+
+    window.setTimeout(function () {
+      $(to).css({ transform: "translateX(0vw)" });
+      $(from).css({ transform: "translateX(-200vw)" });
+    }, 100);
+    window.setTimeout(function () {
+      $(from).addClass("off");
+    }, 1000);
   }
-  window.hist.push(to);
-  $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
-  $(to).css({ transform: "translateX(200vw)" });
-  $(to).removeClass("off");
-
-  window.setTimeout(function () {
-    $(to).css({ transform: "translateX(0vw)" });
-    $(from).css({ transform: "translateX(-200vw)" });
-  }, 100);
-  window.setTimeout(function () {
-    $(from).addClass("off");
-  }, 1000);
 }
 
 /*****************************/
@@ -760,7 +777,7 @@ function goForwardFrom(from, to) {
  * @param {String} to
  */
 function goBackFrom(from, to) {
-  //console.log("going back from " + from + " to " + to);
+  console.log("going back from " + from + " to " + to);
   // TODO unlock when going back
   const gb_options = {
     method: "POST",

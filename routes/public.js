@@ -216,9 +216,13 @@ router.post("/join_session", function (req, res) {
       var sendGames = checkIfAddedByUser(curSession, req.user.id);
       var newUser = true;
       var lock = curSession.lock;
+      if (lock == "codeView") {
+        lock = "selectView";
+      }
       for (var i = 0; i < curSession.users.length; i++) {
         if (curSession.users[i].user == req.user.id) {
           newUser = false;
+          console.log(curSession.users[i]);
           if (curSession.users[i].done) {
             lock = "postSelectView";
           }
@@ -282,6 +286,7 @@ router.post("/create_session", function (req, res) {
           code: theCode,
           games: [],
           users: [{ user: req.user.id, done: false }],
+          lock: "codeView",
         };
         var session = new Session(sessiondetail);
         session.save().then(function (theSession) {
@@ -289,7 +294,7 @@ router.post("/create_session", function (req, res) {
           socketAPI.addGame({
             code: theCode,
           });
-          res.send({ status: theSession });
+          res.send({ status: theSession, user: req.user.id });
         });
       } else {
         var sendGames = checkIfAddedByUser(curSession, req.user.id);
@@ -308,7 +313,7 @@ router.post("/create_session", function (req, res) {
         socketAPI.addGame({
           code: curSession.code,
         });
-        res.send({ status: curSession, games: sendGames });
+        res.send({ status: curSession, games: sendGames, user: req.user.id });
       }
     });
   } else {
@@ -580,6 +585,7 @@ router.post("/unlock_games", function (req, res) {
     };
 
     socketAPI.unlockGames(data);
+    res.send({ status: "Unlocking..." });
   } else {
     res.send({ err: "Not logged in" });
   }

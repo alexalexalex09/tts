@@ -199,6 +199,58 @@ router.post("/game_add", function (req, res) {
   }
 });
 
+router.post("/group_game_add", function (req, res) {
+  if (req.user) {
+    console.log("User2: " + req.user.profile.firstName);
+    var upsertOptions = { new: true, upsert: true };
+    Game.findOneAndUpdate(
+      {
+        name: req.body.game,
+      },
+      { name: req.body.game },
+      upsertOptions,
+      function (err, game) {
+        if (!game.rating) {
+          game.rating = 0;
+        }
+        if (!game.owned) {
+          game.owned = 0;
+        }
+        console.log(game);
+        game.save().then(function (game) {
+          Session.findOne({ code: req.body.code }).exec(function (
+            err,
+            curSession
+          ) {
+            var index = curSession.votes.findIndex(
+              (obj) => obj.game == game._id.toString()
+            );
+            if (index > -1) {
+              res.send({ err: "added", game: game._id.toString() });
+            } else {
+              curSession.votes.push({ game: game._id, voters: [] });
+              htmlString =
+                `<li> <div class="editGame">` +
+                game.name +
+                `</div>` +
+                `<div class='toggle'>
+                      <label class="switch">
+                        <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
+                game._id +
+                `">
+                        <span class="slider round"></span>
+                      </label>
+              </div></li>`;
+              curSession.save();
+              res.send({ status: htmlString });
+            }
+          });
+        });
+      }
+    );
+  }
+});
+
 function gameCreate(name) {
   var gamedetail = { name: name, rating: 0, owned: 0 };
   var game = new Game(gamedetail);
@@ -491,34 +543,30 @@ router.post("/lock_games", function (req, res) {
       }
       curSession.votes = [];
       Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
-        console.log(games);
-        var gameArray = [];
-        for (var i = 0; i < games.length; i++) {
-          gameArray.push(games[i].name);
-        }
+        console.log("Games Results: ", games);
         var htmlString =
           `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
           `<div id="addGroupGamesContainer">` +
           `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
-          `<div class="textInputCont" id="addGamesInputCont">` +
-          `<input class="textInput" type="text" id="addGamesInput">` +
+          `<div class="textInputCont" id="addGroupGamesInputCont">` +
+          `<input class="textInput" type="text" id="addGroupGamesInput">` +
           `<div class="textClear"></div>` +
           `</div>` +
           `</div>` +
           `<div id="editGameList">`;
-        for (var i = 0; i < gameArray.length; i++) {
+        for (var i = 0; i < games.length; i++) {
           curSession.votes.push({
-            game: mongoose.Types.ObjectId(gameList[i]._id),
+            game: games[i]._id,
             voters: [],
           });
           htmlString +=
             `<li><div class="editGame">` +
-            gameArray[i] +
+            games[i].name +
             `</div>` +
             `<div class='toggle'>
           <label class="switch">
               <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
-            gameList[i]._id +
+            games[i]._id +
             `">
               <span class="slider round"></span>
           </label>

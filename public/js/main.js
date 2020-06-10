@@ -444,11 +444,7 @@ window.addEventListener("load", function () {
           }
           console.log("dest: " + dest);
           goForwardFrom("#homeView", "#" + dest);
-          /*
-           *
-           * Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
-           *
-           */
+          // Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
           window.hist = ["#homeView", "#codeView", "#selectView"];
           switch (dest) {
             case "postSelectView":
@@ -499,6 +495,65 @@ window.addEventListener("load", function () {
             $("#postSelectView").css({
               transform: "translateX(-0vw)",
             });
+            var addGamesInput = document.getElementById("addGroupGamesInput");
+            addGamesInput.addEventListener("keyup", function (event) {
+              // Number 13 is the "Enter" key on the keyboard
+              if (event.keyCode === 13) {
+                console.log("submitting new group game");
+                event.preventDefault();
+                var game = addGroupGamesInput.value;
+                const options = {
+                  method: "POST",
+                  body: JSON.stringify({ game: game, code: $("#code").text() }),
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                };
+                //add_user_game_unsorted
+                fetch("/group_game_add", options).then(function (response) {
+                  return response.json().then((res) => {
+                    if (res.err) {
+                      console.log(res);
+                      if ((res.err = "added")) {
+                        $("#addGroupGamesInput").css(
+                          "color",
+                          "var(--main-red)"
+                        );
+                        $('input[game_id="' + res.game + '"]').each(
+                          function () {
+                            $(this)
+                              .parent()
+                              .parent()
+                              .parent()
+                              .css("color", "var(--main-red)");
+                          }
+                        );
+                        $("#addGroupGamesInput").addClass("shake");
+                        window.setTimeout(function () {
+                          $("#addGroupGamesInput").css(
+                            "color",
+                            "var(--main-black)"
+                          );
+                          $("#addGroupGamesInput").removeClass("shake");
+                          $('input[game_id="' + res.game + '"]').each(
+                            function () {
+                              $(this)
+                                .parent()
+                                .parent()
+                                .parent()
+                                .css("color", "var(--main-black)");
+                            }
+                          );
+                        }, 600);
+                      }
+                    } else {
+                      $("#editGameList").append(res.status);
+                    }
+                  });
+                });
+              }
+            });
+
             $("#gameUnlock").click(this, function () {
               console.log("gameUnlock");
               const ug_options = {
@@ -782,7 +837,6 @@ function goForwardFrom(from, to) {
  */
 function goBackFrom(from, to) {
   console.log("going back from " + from + " to " + to);
-  // TODO unlock when going back
   const gb_options = {
     method: "POST",
     body: JSON.stringify({

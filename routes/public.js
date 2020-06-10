@@ -42,6 +42,17 @@ router.post("/going_back", function (req, res) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
       curSession.users[index].done = false;
+      if (req.user.id == curSession.owner) {
+        switch (req.body.dest) {
+          case "#selectView":
+          case "#codeView":
+          case "#homeView":
+            curSession.lock = "#selectView";
+            break;
+          case "#postSelectView":
+            curSession.lock = "#postSelectView";
+        }
+      }
       curSession.save().then(function (err, status) {
         socketAPI.addGame({ code: req.body.code });
         res.send({ status: "User editing again" });
@@ -478,6 +489,7 @@ router.post("/lock_games", function (req, res) {
         gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
         console.log(curSession.games[i].game);
       }
+      curSession.votes = [];
       Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
         console.log(games);
         var gameArray = [];
@@ -495,6 +507,10 @@ router.post("/lock_games", function (req, res) {
           `</div>` +
           `<div id="editGameList">`;
         for (var i = 0; i < gameArray.length; i++) {
+          curSession.votes.push({
+            game: mongoose.Types.ObjectId(gameList[i]._id),
+            voters: [],
+          });
           htmlString +=
             `<li><div class="editGame">` +
             gameArray[i] +
@@ -512,6 +528,7 @@ router.post("/lock_games", function (req, res) {
         htmlString +=
           `</div>` +
           `<div class="button greenBtn" id="editGameSubmit">Begin Voting</div>`;
+        curSession.save();
         res.send({ status: "locked games", htmlString: htmlString });
       });
     });
@@ -523,13 +540,25 @@ router.post("/lock_games", function (req, res) {
 router.post("/modify_edit_list", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      if (typeof curSession.votes == "undefined") {
+        curSession.votes = [];
+      }
       if (req.body.gamesToAdd.length > 0) {
         for (var i = 0; i < req.body.gamesToAdd.length; i++) {
           var index = curSession.games.findIndex(
             (obj) => obj.game.toString() == req.body.gamesToAdd[i]
           );
           if (index > -1) {
-            curSession.games[index].addedBy = req.user.id;
+            var indexa = curSession.votes.findIndex(
+              (obj) => obj.game.toString() == req.body.gamesToAdd[i]
+            );
+            if (indexa == -1) {
+              //If the game has already been removed from voting array, add it back
+              curSession.votes.push({
+                game: mongoose.Types.ObjectId(req.body.gamesToAdd[i]),
+                voters: [],
+              });
+            }
           } else {
             res.send({
               err: "Couldn't find game to add: " + req.body.gamesToAdd[i],
@@ -543,8 +572,13 @@ router.post("/modify_edit_list", function (req, res) {
               (obj) => obj.game.toString() == req.body.gamesToRemove[i]
             );
             if (index > -1) {
-              curSession.games[index].addedBy = [];
-              console.log("Removed: ", curSession.games[index]);
+              var indexa = curSession.votes.findIndex(
+                (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+              );
+              if (indexa > -1) {
+                curSession.votes.splice(indexa, 1); //Remove the item from voting consideration
+              }
+              console.log(indexa, " Removed: ", curSession.games[index]);
             } else {
               res.send({
                 err:

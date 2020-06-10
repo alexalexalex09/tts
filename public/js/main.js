@@ -420,59 +420,7 @@ window.addEventListener("load", function () {
             htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
             $("#postSelectContainer").html(htmlString);
             $("#gameLock").click(this, function () {
-              const lg_options = {
-                method: "POST",
-                body: JSON.stringify({ code: res.status.code }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              };
-              fetch("/lock_games", lg_options).then(function (lresponse) {
-                return lresponse.json().then((lres) => {
-                  console.log(lres);
-                  $("#backArrow").addClass("off");
-                  $("#postSelectView").css({
-                    transform: "translateX(-200vw)",
-                  });
-                  window.setTimeout(function () {
-                    $("#postSelectTitle").html("Edit Games List 🐿️");
-                    $("#postSelectContainer").html(lres.htmlString);
-                    $("#postSelectView").css({ transition: "transform 0s" });
-                    $("#postSelectView").css({
-                      transform: "translateX(200vw)",
-                    });
-                    window.setTimeout(function () {
-                      $("#postSelectView").css({ transition: "transform 1s" });
-                      $("#postSelectView").css({
-                        transform: "translateX(-0vw)",
-                      });
-                      $("#gameUnlock").click(this, function () {
-                        console.log("gameUnlock");
-                        const ug_options = {
-                          method: "POST",
-                          body: JSON.stringify({
-                            code: $("#code").text(),
-                            unlock: "selectView",
-                            unlockBack: true,
-                          }),
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                        };
-                        fetch("/unlock_games", ug_options).then(function (
-                          uresponse
-                        ) {
-                          return uresponse.json().then((ures) => {
-                            $("#backArrow").removeClass("off");
-                            goBackFrom("#postSelectView", "#selectView");
-                            console.log(ures);
-                          });
-                        });
-                      });
-                    }, 10);
-                  }, 300);
-                });
-              });
+              lockGames(res.status.code);
             });
           });
           $("#backArrow").removeClass("off");
@@ -489,23 +437,25 @@ window.addEventListener("load", function () {
             dest = "selectView";
             console.log("changing");
           }
+          var toLock = false;
           if (dest == "postPostSelectView") {
             dest = "postSelectView";
-
-            /*
-             *
-             *
-             * TODO: Still need to show postPostSelectView, because the other users
-             * are still locked out. postSelectView assumes they're not locked out yet.
-             *
-             */
+            toLock = true;
           }
           console.log("dest: " + dest);
           goForwardFrom("#homeView", "#" + dest);
-          //window.hist = ["#homeView", "#codeView", "#selectView"];
+          /*
+           *
+           * Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
+           *
+           */
+          window.hist = ["#homeView", "#codeView", "#selectView"];
           switch (dest) {
             case "postSelectView":
               window.hist.push("#postSelectView");
+          }
+          if (toLock) {
+            lockGames(res.status.code);
           }
           var sessionGames = "<session>";
           if (res.games) {
@@ -521,6 +471,60 @@ window.addEventListener("load", function () {
       });
     });
   });
+
+  function lockGames(code) {
+    const lg_options = {
+      method: "POST",
+      body: JSON.stringify({ code: code }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/lock_games", lg_options).then(function (lresponse) {
+      return lresponse.json().then((lres) => {
+        console.log(lres);
+        $("#backArrow").addClass("off");
+        $("#postSelectView").css({
+          transform: "translateX(-200vw)",
+        });
+        window.setTimeout(function () {
+          $("#postSelectTitle").html("Edit Games List 🐿️");
+          $("#postSelectContainer").html(lres.htmlString);
+          $("#postSelectView").css({ transition: "transform 0s" });
+          $("#postSelectView").css({
+            transform: "translateX(200vw)",
+          });
+          window.setTimeout(function () {
+            $("#postSelectView").css({ transition: "transform 1s" });
+            $("#postSelectView").css({
+              transform: "translateX(-0vw)",
+            });
+            $("#gameUnlock").click(this, function () {
+              console.log("gameUnlock");
+              const ug_options = {
+                method: "POST",
+                body: JSON.stringify({
+                  code: $("#code").text(),
+                  unlock: "selectView",
+                  unlockBack: true,
+                }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              };
+              fetch("/unlock_games", ug_options).then(function (uresponse) {
+                return uresponse.json().then((ures) => {
+                  $("#backArrow").removeClass("off");
+                  goBackFrom("#postSelectView", "#selectView");
+                  console.log(ures);
+                });
+              });
+            });
+          }, 10);
+        }, 300);
+      });
+    });
+  }
 
   /*****************************/
   /* Select button transition  */

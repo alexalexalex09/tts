@@ -23,6 +23,12 @@ var SessionSchema = new Schema(
       },
     ],
     users: [{ user: String, done: Boolean }],
+    votes: [
+      {
+        game: { type: Schema.Types.ObjectId, ref: "Game" },
+        voters: [{ user: String, vote: Number }],
+      },
+    ],
   },
   {
     collection: "sessions",

@@ -196,11 +196,11 @@ socketAPI.unlockGames = function (data) {
     curSession.lock = "postSelectView";
     ret.unlockBack = true;
     ret.unlock = "selectView";
-    for (var i = 0; i < curSession.games.length; i++) {
-      if ((curSession.games[i].addedBy = [])) {
+    /*for (var i = 0; i < curSession.games.length; i++) {
+      if ((curSession.games[i].addedBy == [])) {
         curSession.games[i].addedBy = [data.user];
       }
-    }
+    }*/
     console.log("saving...", ret);
     curSession.save(function () {
       console.log("saved! Emitting " + data.code + "client", ret);

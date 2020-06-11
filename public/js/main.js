@@ -112,7 +112,11 @@ window.addEventListener("load", function () {
 
     const gb_options = {
       method: "POST",
-      body: JSON.stringify({ dest: dest }),
+      body: JSON.stringify({
+        to: dest,
+        from: window.hist[window.hist.length - 1],
+        code: $("#code").text(),
+      }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -259,7 +263,7 @@ window.addEventListener("load", function () {
           document.getElementById("code").innerHTML = res.code;
           document.getElementById("selectCodeDisplay").innerHTML =
             "Your Code: " + res.code;
-          console.log("#" + res.lock);
+          console.log(res.lock);
           var sessionGames = "<session>";
           for (var i = 0; i < res.games.length; i++) {
             sessionGames +=
@@ -269,9 +273,9 @@ window.addEventListener("load", function () {
           console.log("initGreenLists");
           initGreenLists();
           var isLockBack = false;
-          if (res.lock == "postPostSelectView") {
+          if (res.lock == "#postPostSelectView") {
             var isLockBack = true;
-            res.lock = "postSelectView";
+            res.lock = "#postSelectView";
           }
           console.log(
             "going forward to ",
@@ -279,7 +283,7 @@ window.addEventListener("load", function () {
             "and lockback is " + isLockBack
           );
 
-          goForwardFrom("#homeView", "#" + res.lock);
+          goForwardFrom("#homeView", res.lock);
           if (isLockBack) {
             console.log("running lockback()");
 
@@ -287,11 +291,12 @@ window.addEventListener("load", function () {
             console.log("ran lockBack()");
           }
 
-          if ((res.lock = "postSelectView")) {
+          if ((res.lock = "#postSelectView")) {
             console.log("changing history");
             var t = window.hist.pop();
             window.hist.push("#selectView");
             window.hist.push(t);
+            console.log(window.hist);
           }
           console.log("pushing history");
           history.pushState(
@@ -432,24 +437,32 @@ window.addEventListener("load", function () {
           var dest = res.status.lock;
           if (
             res.status.users[index].done == false &&
-            dest == "postSelectView"
+            dest == "#postSelectView"
           ) {
-            dest = "selectView";
+            dest = "#selectView";
             console.log("changing");
           }
           var toLock = false;
-          if (dest == "postPostSelectView") {
-            dest = "postSelectView";
+          if (dest == "#postPostSelectView") {
+            dest = "#postSelectView";
             toLock = true;
           }
-          console.log("dest: " + dest);
-          goForwardFrom("#homeView", "#" + dest);
-          // Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
-          window.hist = ["#homeView", "#codeView", "#selectView"];
-          switch (dest) {
-            case "postSelectView":
-              window.hist.push("#postSelectView");
+          if (dest == "#selectView") {
+            dest = "#codeView";
           }
+          console.log("dest: " + dest);
+          goForwardFrom("#homeView", dest);
+          // Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
+          window.hist = ["#homeView", "#codeView"];
+          switch (dest) {
+            case "#postSelectView":
+              window.hist.push("#postSelectView");
+              break;
+            case "#selectView":
+              window.hist.push("#selectView");
+              break;
+          }
+          console.log("hist after creating: ", window.hist);
           if (toLock) {
             lockGames(res.status.code);
           }
@@ -822,6 +835,7 @@ function goForwardFrom(from, to) {
     }, 100);
     window.setTimeout(function () {
       $(from).addClass("off");
+      catchDisplay();
     }, 1000);
   }
 }
@@ -836,38 +850,56 @@ function goForwardFrom(from, to) {
  * @param {String} to
  */
 function goBackFrom(from, to) {
-  console.log("going back from " + from + " to " + to);
-  const gb_options = {
-    method: "POST",
-    body: JSON.stringify({
-      code: document.getElementById("code").innerHTML,
-      from: from,
-      to: to,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  fetch("/going_back", gb_options).then(function (response) {
-    return response.json().then((res) => {
-      console.log(res);
-    });
-  });
-
-  window.hist.pop();
-  $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
-  $(to).css({ transform: "translateX(-200vw)" });
-  $(to).removeClass("off");
-  if (to == "#homeView") {
-    $("#backArrow").addClass("off");
+  if (from == to) {
+    if ($("#backArrow").attr("data-gobackto") == from) {
+      if (
+        window.hist[window.hist.length - 1] ==
+        window.hist[window.hist.length - 2]
+      ) {
+        window.hist.pop();
+      }
+    }
+  } else {
+    if (typeof from != "undefined" && typeof to != "undefined") {
+      console.log("going back from " + from + " to " + to);
+      const gb_options = {
+        method: "POST",
+        body: JSON.stringify({
+          code: document.getElementById("code").innerHTML,
+          from: from,
+          to: to,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      fetch("/going_back", gb_options).then(function (response) {
+        return response.json().then((res) => {
+          console.log(res);
+          window.hist.pop();
+          $("#backArrow").attr(
+            "data-gobackto",
+            window.hist[window.hist.length - 2]
+          );
+          $(to).css({ transform: "translateX(-200vw)" });
+          $(to).removeClass("off");
+          if (to == "#homeView") {
+            $("#backArrow").addClass("off");
+          }
+          console.log("888:Going back to " + to + " from " + from);
+          window.setTimeout(function () {
+            $(to).css({ transform: "translateX(0vw)" });
+            $(from).css({ transform: "translateX(200vw)" });
+          }, 100);
+          window.setTimeout(function () {
+            $(from).addClass("off");
+            catchDisplay();
+          }, 1000);
+        });
+      });
+      catchDisplay();
+    }
   }
-  window.setTimeout(function () {
-    $(to).css({ transform: "translateX(0vw)" });
-    $(from).css({ transform: "translateX(200vw)" });
-  }, 100);
-  window.setTimeout(function () {
-    $(from).addClass("off");
-  }, 1000);
 }
 
 /********************************/
@@ -1205,6 +1237,27 @@ function toggleFont(check) {
     });
   });
   recheckGreenLists();
+}
+
+/*****************************/
+/*        listToggle(el)     */
+/*****************************/
+/**
+ * {refresh the displayed view after an interval}
+ *
+ */
+function catchDisplay() {
+  window.setTimeout(function () {
+    $("#mainView")
+      .children(".view")
+      .each(function () {
+        if ("#" + $(this).attr("id") == window.hist[window.hist.length - 1]) {
+          $(this).removeClass("off");
+        } else {
+          $(this).addClass("off");
+        }
+      });
+  }, 3000);
 }
 
 /*****************************/

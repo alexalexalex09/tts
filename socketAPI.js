@@ -66,26 +66,46 @@ socketAPI.addGame = function (data) {
           done: curSession.users[i].done,
         };
       }
+      console.log("numgames: ", numGames);
       //a. Note that this requires "done" to be set by public.js when user clicks through
       //3. Look up names for numGames.user.name
       var profiles = curSession.users.map(function (val, i) {
         return val.user;
       });
-      User.find({ profile_id: { $in: profiles } }).exec(function (
-        err,
-        usernames
-      ) {
-        console.log("profiles: ", profiles);
-        console.log("usernames: ", usernames);
-        for (var j = 0; j < numGames.length; j++) {
-          var index = usernames.findIndex(
-            (obj) => obj.profile_id == numGames[j].id
-          );
-          console.log("j:" + j);
-          console.log("index:" + index);
-          numGames[j].name = usernames[index].name;
-        }
+      getNames(profiles, numGames, curSession, data);
+    }
+  });
+};
 
+function getNames(profiles, numGames, curSession, data) {
+  var theError = "";
+  if (typeof numGames == "undefined") {
+    console.log("Err: numgames ", numGames);
+  } else {
+    User.find({ profile_id: { $in: profiles } }).exec(function (
+      err,
+      usernames
+    ) {
+      console.log("profiles: ", profiles);
+      console.log("usernames: ", usernames);
+      for (var j = 0; j < numGames.length; j++) {
+        var index = usernames.findIndex(
+          (obj) => obj.profile_id == numGames[j].id
+        );
+        console.log("numGames: ", numGames);
+        console.log(typeof numGames[j].id);
+        console.log(typeof usernames[0].name);
+        console.log(numGames[j].id + "==" + usernames[0].name);
+        console.log(numGames[j].id == usernames[0].name);
+        console.log("j:" + j);
+        console.log("index:" + index);
+        if (index == -1) {
+          theError = "id not found, aborting";
+          break;
+        }
+        numGames[j].name = usernames[index].name;
+      }
+      if (theError == "") {
         //4. Look through curSession.games
         //a. if empty, do nothing since num=0 by default
         if (curSession.games.length > 0) {
@@ -107,10 +127,12 @@ socketAPI.addGame = function (data) {
         }
         //6. Emit to owner
         io.sockets.emit(data.code + "select", numGames);
-      });
-    }
-  });
-};
+      } else {
+        console.log(theError);
+      }
+    });
+  }
+}
 
 // @param users
 //    Array of user profile ids for current session from mongoose
@@ -180,7 +202,7 @@ socketAPI.lockGames = function (data) {
   var ret = {};
   console.log("locking, ", data.code);
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
-    curSession.lock = "postPostSelectView";
+    curSession.lock = "#postPostSelectView";
     ret.lockBack = true;
     ret.lock = "#postSelectView";
     console.log("seinding " + data.code + "client with data", ret);

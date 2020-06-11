@@ -8,6 +8,7 @@ var User = require("../models/users.js");
 var Game = require("../models/games.js");
 var Session = require("../models/sessions.js");
 var socketAPI = require("../socketAPI");
+var Fuse = require("fuse.js");
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
@@ -37,29 +38,27 @@ router.get("/", (req, res) => {
 
 // Get notified when the user is navigating back
 router.post("/going_back", function (req, res) {
-  console.log(req.body.dest);
+  if (req.body.from == req.body.to) {
+    res.send({ err: "Wait a second! " + req.body.from });
+  }
+  console.log(req.body);
   if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
       curSession.users[index].done = false;
-      if (req.user.id == curSession.owner) {
-        switch (req.body.dest) {
-          case "#selectView":
-          case "#codeView":
-          case "#homeView":
-            curSession.lock = "#selectView";
-            break;
-          case "#postSelectView":
-            curSession.lock = "#postSelectView";
-        }
-      }
+      console.log(req.user.id, curSession.owner);
+      console.log("lock: ", curSession.lock);
+      curSession.lock = "#selectView";
       curSession.save().then(function (err, status) {
         socketAPI.addGame({ code: req.body.code });
         res.send({ status: "User editing again" });
       });
     });
   } else {
-    res.send({ status: "Thank you for traveling with TTS Airlines" });
+    res.send({
+      status: "Thank you for traveling with TTS Airlines",
+      req: req.body,
+    });
   }
 });
 
@@ -222,13 +221,14 @@ router.post("/group_game_add", function (req, res) {
             err,
             curSession
           ) {
-            var index = curSession.votes.findIndex(
+            var index = curSession.games.findIndex(
               (obj) => obj.game == game._id.toString()
             );
             if (index > -1) {
               res.send({ err: "added", game: game._id.toString() });
             } else {
               curSession.votes.push({ game: game._id, voters: [] });
+              curSession.games.push({ game: game._id, addedBy: [req.user.id] });
               htmlString =
                 `<li> <div class="editGame">` +
                 game.name +
@@ -279,15 +279,15 @@ router.post("/join_session", function (req, res) {
       var sendGames = checkIfAddedByUser(curSession, req.user.id);
       var newUser = true;
       var lock = curSession.lock;
-      if (lock == "codeView") {
-        lock = "selectView";
+      if (lock == "#codeView") {
+        lock = "#selectView";
       }
       for (var i = 0; i < curSession.users.length; i++) {
         if (curSession.users[i].user == req.user.id) {
           newUser = false;
           console.log(curSession.users[i]);
           if (curSession.users[i].done) {
-            lock = "postSelectView";
+            lock = "#postSelectView";
           }
         }
       }
@@ -349,7 +349,7 @@ router.post("/create_session", function (req, res) {
           code: theCode,
           games: [],
           users: [{ user: req.user.id, done: false }],
-          lock: "codeView",
+          lock: "#codeView",
         };
         var session = new Session(sessiondetail);
         session.save().then(function (theSession) {
@@ -544,6 +544,23 @@ router.post("/lock_games", function (req, res) {
       curSession.votes = [];
       Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
         console.log("Games Results: ", games);
+        const options = { keys: ["name"], includeScore: true };
+        const fuse = new Fuse(games, options);
+        for (var i = 0; i < games.length; i++) {
+          games[i].dup = "";
+          var searchres = fuse.search(games[i].name);
+          console.log(games[i].name, Object.keys(searchres).length, searchres);
+          for (let key in searchres) {
+            if (searchres[key].score > 0.4) {
+              delete searchres[key];
+            }
+          }
+          if (Object.keys(searchres).length > 1) {
+            console.log("Dupe!");
+            console.log(searchres);
+            games[i].dup = ' class="dup"';
+          }
+        }
         var htmlString =
           `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
           `<div id="addGroupGamesContainer">` +
@@ -553,6 +570,7 @@ router.post("/lock_games", function (req, res) {
           `<div class="textClear"></div>` +
           `</div>` +
           `</div>` +
+          `<div class="tip" id="dupTip">Potential duplicates are highlighted in gold</div>` +
           `<div id="editGameList">`;
         for (var i = 0; i < games.length; i++) {
           curSession.votes.push({
@@ -560,7 +578,9 @@ router.post("/lock_games", function (req, res) {
             voters: [],
           });
           htmlString +=
-            `<li><div class="editGame">` +
+            `<li` +
+            games[i].dup +
+            `><div class="editGame">` +
             games[i].name +
             `</div>` +
             `<div class='toggle'>

@@ -573,6 +573,21 @@ input:checked + .slider:before {
   min-height: 0px;
 }
 
+.tip {
+  font-style: italic;
+}
+
+#dupTip {
+  top: calc(var(--vh) * 2.5);
+  position: relative;
+  font-size: 3vw;
+  color: var(--main-gold);
+}
+
+.dup {
+  color: var(--main-gold);
+}
+
 /*****************/
 /*    Testing    */
 /*****************/

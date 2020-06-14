@@ -86,19 +86,10 @@ function getNames(profiles, numGames, curSession, data) {
       err,
       usernames
     ) {
-      console.log("profiles: ", profiles);
-      console.log("usernames: ", usernames);
       for (var j = 0; j < numGames.length; j++) {
         var index = usernames.findIndex(
           (obj) => obj.profile_id == numGames[j].id
         );
-        console.log("numGames: ", numGames);
-        console.log(typeof numGames[j].id);
-        console.log(typeof usernames[0].name);
-        console.log(numGames[j].id + "==" + usernames[0].name);
-        console.log(numGames[j].id == usernames[0].name);
-        console.log("j:" + j);
-        console.log("index:" + index);
         if (index == -1) {
           theError = "id not found, aborting";
           break;
@@ -229,6 +220,25 @@ socketAPI.unlockGames = function (data) {
       io.sockets.emit(data.code + "client", ret);
       console.log("emitted");
     });
+  });
+};
+
+socketAPI.startVoting = function (data) {
+  console.log("starting voting");
+  //Get the votes array from the session object
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    //Then send that list
+    var ret = [];
+    for (i = 0; i < curSession.votes.length; i++) {
+      if (curSession.votes[i].active) {
+        ret.push({
+          game: curSession.votes[i].game,
+          name: curSession.votes[i].game,
+        });
+      }
+    }
+    io.sockets.emit(data.code + "client", ret);
+    io.sockets.emit(data.code + "owner", ret);
   });
 };
 

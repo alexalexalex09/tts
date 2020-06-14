@@ -533,34 +533,58 @@ router.post("/submit_games", function (req, res) {
 });
 
 router.post("/lock_games", function (req, res) {
+  /* This whole function needs to be rethought. The idea is that it does the following:
+    1. Look through the list of games in the session and see if any need added to the voting array
+    2. Pass the name, id, and active status of each game in the voting array within the htmlString output
+      2a. To do that, we need to get the name of each game from the Games collection
+      2b. We also need to learn whether it's a dupe
+    Note: Once added, you can't remove a game from the voting array
+
+  */
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      socketAPI.lockGames({ code: req.body.code });
-      var gameList = [];
-      for (var i = 0; i < curSession.games.length; i++) {
-        gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
-        console.log(curSession.games[i].game);
-      }
+      var namesList = [];
+      var votes = curSession.votes;
       curSession.votes = [];
-      Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
-        console.log("Games Results: ", games);
-        const options = { keys: ["name"], includeScore: true };
-        const fuse = new Fuse(games, options);
-        for (var i = 0; i < games.length; i++) {
-          games[i].dup = "";
-          var searchres = fuse.search(games[i].name);
-          console.log(games[i].name, Object.keys(searchres).length, searchres);
-          for (let key in searchres) {
-            if (searchres[key].score > 0.4) {
-              delete searchres[key];
-            }
-          }
-          if (Object.keys(searchres).length > 1) {
-            console.log("Dupe!");
-            console.log(searchres);
-            games[i].dup = ' class="dup"';
+      socketAPI.lockGames({ code: req.body.code });
+      //To set up, set every vote to inactive
+      for (var i = 0; i < votes.length; i++) {
+        votes[i].active = false;
+      }
+      console.log("votes:", votes);
+      //First, look through the list of games and see if any haven't been added to the vote array, add them to namesList[]
+      for (var i = 0; i < curSession.games.length; i++) {
+        //If the game has actually been added
+        console.log("game" + i, curSession.games[i].game);
+        if (curSession.games[i].addedBy.length > 0) {
+          var index = votes.findIndex(
+            (obj) => obj.game.toString() == curSession.games[i].game.toString()
+          );
+          if (index == -1) {
+            //If it's not in the votes array, get ready to add it
+            namesList.push(mongoose.Types.ObjectId(curSession.games[i].game));
+          } else {
+            //If it's both been added by at least one person and it's already in the votes array
+            votes[index].active = true;
           }
         }
+      }
+      //Then, take all the namesList games and add their names and ids to the vote array
+      Game.find({ _id: { $in: namesList } }).exec(function (err, games) {
+        curSession.votes = votes;
+        console.log("CurSession: ", curSession.votes);
+        console.log("Games: ", games);
+        //Right now, games is getting every game instead of just the ones that were newly added
+        for (var i = 0; i < games.length; i++) {
+          curSession.votes.push({
+            game: games[i]._id,
+            name: games[i].name,
+            voters: [],
+            active: true,
+          });
+        }
+        const options = { keys: ["name"], includeScore: true };
+        const fuse = new Fuse(curSession.votes, options);
         var htmlString =
           `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
           `<div id="addGroupGamesContainer">` +
@@ -572,21 +596,25 @@ router.post("/lock_games", function (req, res) {
           `</div>` +
           `<div class="tip" id="dupTip">Potential duplicates are highlighted in gold</div>` +
           `<div id="editGameList">`;
-        for (var i = 0; i < games.length; i++) {
-          curSession.votes.push({
-            game: games[i]._id,
-            voters: [],
-          });
+        var checked = "";
+        var green = "";
+        for (var i = 0; i < curSession.votes.length; i++) {
+          curSession.votes[i].active ? (checked = " checked") : (checked = "");
+          curSession.votes[i].active ? (green = " greenText") : (green = "");
           htmlString +=
             `<li` +
-            games[i].dup +
-            `><div class="editGame">` +
-            games[i].name +
+            dupeSearch(fuse, curSession.votes[i]) +
+            `><div class="editGame` +
+            green +
+            `">` +
+            curSession.votes[i].name +
             `</div>` +
             `<div class='toggle'>
           <label class="switch">
-              <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
-            games[i]._id +
+              <input type="checkbox"` +
+            checked +
+            ` onclick="toggleEdit(this)" game_id="` +
+            curSession.votes[i].game +
             `">
               <span class="slider round"></span>
           </label>
@@ -603,8 +631,27 @@ router.post("/lock_games", function (req, res) {
   } else {
     res.send({ err: "Not logged in" });
   }
+
+  function dupeSearch(fuse, vote) {
+    vote.dup = "";
+    var searchres = fuse.search(vote.name);
+    //console.log(vote.name, Object.keys(searchres).length, searchres);
+    for (let key in searchres) {
+      if (searchres[key].score > 0.4) {
+        delete searchres[key];
+      }
+    }
+    if (Object.keys(searchres).length > 1) {
+      //console.log("Dupe!");
+      //console.log(searchres);
+      return ' class="dup"';
+    } else {
+      return "";
+    }
+  }
 });
 
+//Hey wait, what does this modify? The owner's game list or the session game list? And when?
 router.post("/modify_edit_list", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
@@ -625,7 +672,10 @@ router.post("/modify_edit_list", function (req, res) {
               curSession.votes.push({
                 game: mongoose.Types.ObjectId(req.body.gamesToAdd[i]),
                 voters: [],
+                active: true,
               });
+            } else {
+              curSession.votes[indexa].active = true;
             }
           } else {
             res.send({
@@ -635,16 +685,19 @@ router.post("/modify_edit_list", function (req, res) {
         }
       } else {
         if (req.body.gamesToRemove.length > 0) {
+          console.log("removing...");
           for (var i = 0; i < req.body.gamesToRemove.length; i++) {
             var index = curSession.games.findIndex(
               (obj) => obj.game.toString() == req.body.gamesToRemove[i]
             );
             if (index > -1) {
+              console.log("Game was in the games array");
               var indexa = curSession.votes.findIndex(
                 (obj) => obj.game.toString() == req.body.gamesToRemove[i]
               );
               if (indexa > -1) {
-                curSession.votes.splice(indexa, 1); //Remove the item from voting consideration
+                console.log("Game was in the votes array");
+                curSession.votes[indexa].active = false; //Remove the item from voting consideration
               }
               console.log(indexa, " Removed: ", curSession.games[index]);
             } else {
@@ -658,7 +711,7 @@ router.post("/modify_edit_list", function (req, res) {
           res.send({ err: "No games to add or remove passed" });
         }
       }
-      curSession.save().then(function (error) {
+      curSession.save().then(function (error, result, numRows) {
         console.log("Error: ", error);
         var gameList = [];
         var ret = [];
@@ -688,6 +741,15 @@ router.post("/unlock_games", function (req, res) {
 
     socketAPI.unlockGames(data);
     res.send({ status: "Unlocking..." });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/start_voting", function (req, res) {
+  if (req.user) {
+    //Send the voting socket event to both client and owner
+    socketAPI.startVoting(req.body);
   } else {
     res.send({ err: "Not logged in" });
   }

@@ -327,6 +327,10 @@ window.addEventListener("load", function () {
                 window.hist[window.hist.length - 2]
               );
             }
+            if (data.startVoting) {
+              console.log("this isn't done yet!");
+              //parse the voting data and output
+            }
           });
         }
       });
@@ -428,6 +432,12 @@ window.addEventListener("load", function () {
               lockGames(res.status.code);
             });
           });
+          socket.on(res.status.code + "owner", (data) => {
+            if (data.startVoting) {
+              console.log("this isn't done yet!");
+              //Parse the voting data and output
+            }
+          });
           $("#backArrow").removeClass("off");
           //$("#backArrow").attr("data-gobackto", "home");
           document.getElementById("code").innerHTML = res.status.code;
@@ -499,6 +509,7 @@ window.addEventListener("load", function () {
         window.setTimeout(function () {
           $("#postSelectTitle").html("Edit Games List 🐿️");
           $("#postSelectContainer").html(lres.htmlString);
+          registerEGS();
           $("#postSelectView").css({ transition: "transform 0s" });
           $("#postSelectView").css({
             transform: "translateX(200vw)",
@@ -561,6 +572,7 @@ window.addEventListener("load", function () {
                       }
                     } else {
                       $("#editGameList").append(res.status);
+                      registerEGS();
                     }
                   });
                 });
@@ -790,6 +802,14 @@ window.addEventListener("load", function () {
       });
     });
   });
+
+  /*
+   *
+   *
+   * End of window functions
+   *
+   *
+   */
 });
 //End all DOM manipulation
 
@@ -1139,9 +1159,31 @@ function toggleEdit(check) {
       </div></li>`;
         }
         $("#editGameList").html = htmlString;
+        registerEGS();
       } else {
         console.log(res.err);
       }
+    });
+  });
+}
+
+function registerEGS() {
+  $("#editGameSubmit").click(this, function () {
+    const egs_options = {
+      method: "POST",
+      body: JSON.stringify({
+        code: document.getElementById("code").innerHTML,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/start_voting", egs_options).then(function (response) {
+      return response.json().then((res) => {
+        console.log("starting voting: ", res);
+        $("#voteContainer").html(res.htmlString);
+        goForwardFrom("#postSelectView", "#voteView");
+      });
     });
   });
 }

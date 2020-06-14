@@ -26,7 +26,9 @@ var SessionSchema = new Schema(
     votes: [
       {
         game: { type: Schema.Types.ObjectId, ref: "Game" },
+        name: String,
         voters: [{ user: String, vote: Number }],
+        active: { type: Boolean, default: true },
       },
     ],
   },

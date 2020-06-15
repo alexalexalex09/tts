@@ -224,7 +224,7 @@ socketAPI.unlockGames = function (data) {
 };
 
 socketAPI.startVoting = function (data) {
-  console.log("starting voting");
+  console.log("starting voting", data);
   //Get the votes array from the session object
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     //Then send that list
@@ -233,12 +233,14 @@ socketAPI.startVoting = function (data) {
       if (curSession.votes[i].active) {
         ret.push({
           game: curSession.votes[i].game,
-          name: curSession.votes[i].game,
+          name: curSession.votes[i].name,
         });
       }
     }
-    io.sockets.emit(data.code + "client", ret);
-    io.sockets.emit(data.code + "owner", ret);
+    io.sockets.emit(data.code + "client", { startVoting: true, games: ret });
+    io.sockets.emit(data.code + "owner", { startVoting: true, games: ret });
+    curSession.lock = "#voteView";
+    curSession.save();
   });
 };
 

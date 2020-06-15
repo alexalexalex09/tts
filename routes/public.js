@@ -283,6 +283,7 @@ router.post("/join_session", function (req, res) {
         lock = "#selectView";
       }
       for (var i = 0; i < curSession.users.length; i++) {
+        //TODO: This could be changed to Array.findIndex
         if (curSession.users[i].user == req.user.id) {
           newUser = false;
           console.log(curSession.users[i]);
@@ -750,6 +751,7 @@ router.post("/start_voting", function (req, res) {
   if (req.user) {
     //Send the voting socket event to both client and owner
     socketAPI.startVoting(req.body);
+    res.send({ status: "Started voting!" });
   } else {
     res.send({ err: "Not logged in" });
   }

@@ -330,12 +330,34 @@ window.addEventListener("load", function () {
             if (data.startVoting) {
               console.log("this isn't done yet!");
               //parse the voting data and output
+              fillVotes(data.games);
             }
           });
         }
       });
     });
   });
+
+  //TODO: Move this to the right place
+  /**
+   * Desc: Create the voting html
+   *
+   * @param {Array} games
+   */
+  function fillVotes(games) {
+    var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div>`;
+    for (var i = 0; i < games.length; i++) {
+      htmlString +=
+        `<li><label for="` + games[i].game + `">` + games[i].name + `</label>`;
+      htmlString +=
+        `<input type='range' min='1' max='1000' value='500' step='1' id="` +
+        games[i].game +
+        `"/></li>`;
+    }
+    console.log("THe string: ", htmlString);
+    $("#voteContainer").html(htmlString);
+    goForwardFrom("#postSelectView", "#voteView");
+  }
 
   /***********************************/
   /*   Copy the code to clipboard    */
@@ -436,6 +458,7 @@ window.addEventListener("load", function () {
             if (data.startVoting) {
               console.log("this isn't done yet!");
               //Parse the voting data and output
+              fillVotes(data.games);
             }
           });
           $("#backArrow").removeClass("off");
@@ -1181,7 +1204,6 @@ function registerEGS() {
     fetch("/start_voting", egs_options).then(function (response) {
       return response.json().then((res) => {
         console.log("starting voting: ", res);
-        $("#voteContainer").html(res.htmlString);
         goForwardFrom("#postSelectView", "#voteView");
       });
     });

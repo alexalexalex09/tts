@@ -588,6 +588,27 @@ input:checked + .slider:before {
   color: var(--main-gold);
 }
 
+/**********************/
+/*      voteView      */
+/**********************/
+
+#voteContainer {
+  grid-area: 4/2/15/10;
+  height: 100%;
+  overflow-y: scroll;
+}
+
+#voteContainer li {
+  list-style: none;
+  width: 100%;
+}
+
+#voteInfo {
+  width: 100%;
+  text-align: center;
+  margin-bottom: calc(var(--vh) * 2);
+}
+
 /***********************************************************************************/
 /*                                                                                 */
 /*            All this work for a pure CSS color-gradient range input              */
@@ -596,13 +617,13 @@ input:checked + .slider:before {
 /***********************************************************************************/
 
 input[type="range"] {
-  position: absolute;
+  position: relative;
   top: 50%;
   left: 50%;
   border: solid 0 transparent;
   border-width: 0 1em;
   padding: 1em 0 0;
-  width: 32em;
+  width: 70vw;
   height: 2em;
   border-radius: 0.25em;
   transform: translate(-50%, -50%);
@@ -617,9 +638,9 @@ input[type="range"]::-webkit-slider-thumb {
 }
 input[type="range"]::-webkit-slider-runnable-track {
   position: relative;
-  width: 32em;
+  width: 70vw;
   height: 0.375em;
-  background: linear-gradient(90deg, #fff 0.125em, transparent 0.125em) -0.0625em
+  background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
       50%,
     linear-gradient(
       90deg,
@@ -631,12 +652,12 @@ input[type="range"]::-webkit-slider-runnable-track {
       #ace600,
       #73e600
     );
-  background-size: 2em 100%, 100% 100%;
+  background-size: 5vw 100%, 100% 100%;
 }
 input[type="range"]::-moz-range-track {
-  width: 32em;
+  width: 70vw;
   height: 0.375em;
-  background: linear-gradient(90deg, #fff 0.125em, transparent 0.125em) -0.0625em
+  background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
       50%,
     linear-gradient(
       90deg,
@@ -648,13 +669,13 @@ input[type="range"]::-moz-range-track {
       #ace600,
       #73e600
     );
-  background-size: 2em 100%, 100% 100%;
+  background-size: 5vw 100%, 100% 100%;
 }
 input[type="range"]::-ms-track {
   border: none;
-  width: 32em;
+  width: 70vw;
   height: 0.375em;
-  background: linear-gradient(90deg, #fff 0.125em, transparent 0.125em) -0.0625em
+  background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
       50%,
     linear-gradient(
       90deg,
@@ -666,7 +687,7 @@ input[type="range"]::-ms-track {
       #ace600,
       #73e600
     );
-  background-size: 2em 100%, 100% 100%;
+  background-size: 5vw 100%, 100% 100%;
   color: transparent;
 }
 input[type="range"]::-ms-fill-lower {
@@ -724,10 +745,9 @@ input[type="range"] /deep/ #track:after {
   word-spacing: 0.875em;
   content: "10 11 12 13 14 15 16";
 }
-/*input[type="range"]:focus {
+input[type="range"]:focus {
   outline: none;
-  box-shadow: 0 0 0.25em orange;
-}*/
+}
 
 /*****************/
 /*    Testing    */

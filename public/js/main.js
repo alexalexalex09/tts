@@ -282,28 +282,47 @@ window.addEventListener("load", function () {
             res.lock,
             "and lockback is " + isLockBack
           );
+          if (res.lock == "#voteView") {
+            var lock = res.lock;
+            const gv_options = {
+              method: "POST",
+              body: JSON.stringify({ code: $("#code").text() }),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            };
+            fetch("/get_votes", gv_options).then(function (response) {
+              return response.json().then((res) => {
+                console.log(res);
+                fillVotes(res.games);
+                console.log("Lock: ", lock);
+                console.log(window.hist);
+                goForwardFrom("#homeView", lock);
+              });
+            });
+          } else {
+            goForwardFrom("#homeView", res.lock);
+            if (isLockBack) {
+              console.log("running lockback()");
 
-          goForwardFrom("#homeView", res.lock);
-          if (isLockBack) {
-            console.log("running lockback()");
+              lockBack();
+              console.log("ran lockBack()");
+            }
 
-            lockBack();
-            console.log("ran lockBack()");
+            if ((res.lock = "#postSelectView")) {
+              console.log("changing history");
+              var t = window.hist.pop();
+              window.hist.push("#selectView");
+              window.hist.push(t);
+              console.log(window.hist);
+            }
+            console.log("pushing history");
+            history.pushState(
+              { code: res.code, page: "select", last: "home" },
+              "",
+              "#select"
+            );
           }
-
-          if ((res.lock = "#postSelectView")) {
-            console.log("changing history");
-            var t = window.hist.pop();
-            window.hist.push("#selectView");
-            window.hist.push(t);
-            console.log(window.hist);
-          }
-          console.log("pushing history");
-          history.pushState(
-            { code: res.code, page: "select", last: "home" },
-            "",
-            "#select"
-          );
           /*******************************************/
           /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
           /* it will lock the back arrow to home and move the client ahead to the session lock.*/
@@ -337,27 +356,6 @@ window.addEventListener("load", function () {
       });
     });
   });
-
-  //TODO: Move this to the right place
-  /**
-   * Desc: Create the voting html
-   *
-   * @param {Array} games
-   */
-  function fillVotes(games) {
-    var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div>`;
-    for (var i = 0; i < games.length; i++) {
-      htmlString +=
-        `<li><label for="` + games[i].game + `">` + games[i].name + `</label>`;
-      htmlString +=
-        `<input type='range' min='1' max='1000' value='500' step='1' id="` +
-        games[i].game +
-        `"/></li>`;
-    }
-    console.log("THe string: ", htmlString);
-    $("#voteContainer").html(htmlString);
-    goForwardFrom("#postSelectView", "#voteView");
-  }
 
   /***********************************/
   /*   Copy the code to clipboard    */
@@ -455,10 +453,24 @@ window.addEventListener("load", function () {
             });
           });
           socket.on(res.status.code + "owner", (data) => {
+            /*
+            data {
+              startVoting: Boolean
+              games: {Game object}
+              
+              voteSubmit: Boolean
+              users: {
+                doneVoting: Boolean
+                name: "Username String (first name)"
+              }
+            }
+            */
             if (data.startVoting) {
-              console.log("this isn't done yet!");
               //Parse the voting data and output
               fillVotes(data.games);
+            }
+            if (data.voteSubmit) {
+              fillPostVote(data.users);
             }
           });
           $("#backArrow").removeClass("off");
@@ -483,6 +495,28 @@ window.addEventListener("load", function () {
           if (dest == "#selectView") {
             dest = "#codeView";
           }
+          if (dest == "#voteView") {
+            var games = [];
+            for (var i = 0; i < res.status.votes.length; i++) {
+              if (res.status.votes[i].active) {
+                games.push({
+                  game: res.status.votes[i].game,
+                  name: res.status.votes[i].name,
+                });
+              }
+            }
+            fillVotes(games);
+          }
+          if (dest == "#postVoteView") {
+            var users = [];
+            for (var i = 0; i < res.status.users.length; i++) {
+              users.push({
+                doneVoting: res.status.users[i].doneVoting,
+                name: res.status.users[i].name,
+              });
+            }
+            fillPostVote(users);
+          }
           console.log("dest: " + dest);
           goForwardFrom("#homeView", dest);
           // Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
@@ -494,6 +528,9 @@ window.addEventListener("load", function () {
             case "#selectView":
               window.hist.push("#selectView");
               break;
+            case "#voteView":
+              window.hist.pop();
+              window.hist.push("#voteView");
           }
           console.log("hist after creating: ", window.hist);
           if (toLock) {
@@ -1337,6 +1374,68 @@ function listToggle(el) {
   $(el).parent().children(".listGames").first().toggleClass("off");
 }
 
+/*****************************/
+/*      fillVotes(games)     */
+/*****************************/
+/*
+ * Desc: Create the voting html
+ *
+ * @param {Array} games
+ */
+function fillVotes(games) {
+  var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><ul>`;
+  for (var i = 0; i < games.length; i++) {
+    htmlString +=
+      `<li><div class="voteLabel"><label for="` +
+      games[i].game +
+      `">` +
+      games[i].name +
+      `</label></div>`;
+    htmlString +=
+      `<input type='range' min='1' max='1000' value='500' step='1' id="` +
+      games[i].game +
+      `"/></li>`;
+  }
+  htmlString += `</ul><div class="submitButton button greenBtn" id="voteButton">Submit Votes</div>`;
+  console.log("The string: ", htmlString);
+  $("#voteContainer").html(htmlString);
+  var theCode = $("#codeInput input").val();
+  $("#voteButton").on("click", function () {
+    const vs_options = {
+      method: "POST",
+      body: JSON.stringify({ code: theCode }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/submit_votes", sv_options).then(function (response) {
+      return response.json().then((res) => {
+        goForwardFrom("#voteView", "#postVoteView");
+      });
+    });
+  });
+  goForwardFrom("#postSelectView", "#voteView");
+}
+
+/*****************************/
+/*    fillPostVote(users)    */
+/*****************************/
+function fillPostVote(users) {
+  var htmlString = ``;
+  var voted = "";
+  for (var i = 0; i < users.length; i++) {
+    users[i].doneVoting
+      ? (voted = " has finished voting")
+      : (voted = " is still voting");
+    htmlString +=
+      `<li>` + `<div class="voteUser">` + users[i].name + voted + `</div></li>`;
+  }
+  $("#postVoteContainer").html(htmlString);
+}
+
+/*****************************/
+/*          getvh()          */
+/*****************************/
 /**
  * {Sets viewport height variables, --vh, --vh5, --vh10, etc}
  *

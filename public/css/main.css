@@ -593,20 +593,52 @@ input:checked + .slider:before {
 /**********************/
 
 #voteContainer {
-  grid-area: 4/2/15/10;
+  grid-area: 3/2/18/10;
   height: 100%;
   overflow-y: scroll;
 }
 
-#voteContainer li {
+#voteContainer ul {
+  margin: calc(var(--vh) * 3) 0 0 0;
+  padding: 0;
+  height: calc(var(--vh) * 44);
+  overflow-y: auto;
+}
+
+#voteContainer ul li {
   list-style: none;
   width: 100%;
+  height: var(--vh10);
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, minmax(var(--vh5), var(--vh5)));
 }
 
 #voteInfo {
   width: 100%;
   text-align: center;
-  margin-bottom: calc(var(--vh) * 2);
+  height: var(--vh10);
+  font-size: 3.6vw;
+}
+
+.voteLabel {
+  width: 100%;
+  text-align: center;
+  font-size: calc(var(--vh) * 3.5);
+  align-self: flex-end;
+  display: flex;
+}
+
+.voteLabel label {
+  align-self: flex-end;
+  margin: 0 auto;
+  height: calc(var(--vh) * 4);
+}
+
+#voteButton {
+  position: absolute;
+  bottom: 0;
+  width: 80vw;
 }
 
 /***********************************************************************************/
@@ -618,15 +650,15 @@ input:checked + .slider:before {
 
 input[type="range"] {
   position: relative;
-  top: 50%;
   left: 50%;
   border: solid 0 transparent;
   border-width: 0 1em;
-  padding: 1em 0 0;
+  padding: 0px;
   width: 70vw;
-  height: 2em;
+
+  height: calc(var(--vh) * 2);
   border-radius: 0.25em;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   background: transparent;
   font-size: 1em;
   cursor: pointer;
@@ -639,7 +671,7 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-webkit-slider-runnable-track {
   position: relative;
   width: 70vw;
-  height: 0.375em;
+  height: calc(var(--vh) * 0.8);
   background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
       50%,
     linear-gradient(
@@ -656,7 +688,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 }
 input[type="range"]::-moz-range-track {
   width: 70vw;
-  height: 0.375em;
+  height: calc(var(--vh) * 0.8);
   background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
       50%,
     linear-gradient(
@@ -674,7 +706,7 @@ input[type="range"]::-moz-range-track {
 input[type="range"]::-ms-track {
   border: none;
   width: 70vw;
-  height: 0.375em;
+  height: calc(var(--vh) * 0.8);
   background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
       50%,
     linear-gradient(
@@ -694,11 +726,11 @@ input[type="range"]::-ms-fill-lower {
   display: none;
 }
 input[type="range"]::-webkit-slider-thumb {
-  margin-top: -0.8125em;
+  margin-top: calc(var(--vh) * -0.7);
   box-sizing: border-box;
   border: solid 1px transparent;
-  width: 2em;
-  height: 2em;
+  width: calc(var(--vh) * 3);
+  height: calc(var(--vh) * 3);
   border-radius: 0;
   transform: translateY(75%) rotate(45deg);
   background: linear-gradient(135deg, #a7a6a2 25%, transparent 25%) content-box,
@@ -707,8 +739,8 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-moz-range-thumb {
   box-sizing: border-box;
   border: solid 1px transparent;
-  width: 2em;
-  height: 2em;
+  width: calc(var(--vh) * 3);
+  height: calc(var(--vh) * 3);
   border-radius: 0;
   transform: translateY(75%) rotate(45deg);
   background: linear-gradient(135deg, #a7a6a2 25%, transparent 25%) content-box,
@@ -717,8 +749,8 @@ input[type="range"]::-moz-range-thumb {
 input[type="range"]::-ms-thumb {
   box-sizing: border-box;
   border: solid 1px transparent;
-  width: 2em;
-  height: 2em;
+  width: calc(var(--vh) * 3);
+  height: calc(var(--vh) * 3);
   border-radius: 0;
   transform: translateY(75%) rotate(45deg);
   background: linear-gradient(135deg, #a7a6a2 25%, transparent 25%) content-box,

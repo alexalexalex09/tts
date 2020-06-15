@@ -244,6 +244,49 @@ socketAPI.startVoting = function (data) {
   });
 };
 
+socketAPI.initVotes = function (data) {
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    emitVotes(curSession);
+  });
+};
+
+socketAPI.submitVotes = function (data) {
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    var index = curSession.users.findIndex(
+      (obj) => obj.user.toString == data.user
+    );
+    curSession.users[index].doneVoting = true;
+    emitVotes(curSession);
+  });
+};
+
+function emitVotes(curSession) {
+  var userList = [];
+  var users = [];
+  /*users: {
+        doneVoting: Boolean
+        name: "Username String (first name)"
+      }
+    */
+  for (var i = 0; i < curSession.users.length; i++) {
+    userList.push(curSession.users.user);
+  }
+  User.find({ profile_id: { $in: userList } })
+    .select({ doneVoting: 1, name: 1 })
+    .exec(function (err, curUsers) {
+      for (var i = 0; i < curUsers.length; i++) {
+        users.push({
+          doneVoting: curUsers[i].doneVoting,
+          name: curUsers[i].name,
+        });
+      }
+      io.sockets.emit(data.code + "owner", {
+        voteSubmit: true,
+        users: users,
+      });
+    });
+}
+
 io.on("connection", function (socket) {
   socket.on("addGame", (data) => {
     console.log("addgame was called");

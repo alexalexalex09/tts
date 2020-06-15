@@ -22,7 +22,14 @@ var SessionSchema = new Schema(
         addedBy: [String],
       },
     ],
-    users: [{ user: String, done: Boolean }],
+    users: [
+      {
+        user: String,
+        name: String,
+        done: { type: Boolean, default: false },
+        doneVoting: { type: Boolean, default: false },
+      },
+    ],
     votes: [
       {
         game: { type: Schema.Types.ObjectId, ref: "Game" },

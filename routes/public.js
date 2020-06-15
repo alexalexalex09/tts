@@ -294,7 +294,11 @@ router.post("/join_session", function (req, res) {
       }
       console.log("newUser ", newUser);
       if (newUser) {
-        curSession.users.push({ user: req.user.id, done: false });
+        curSession.users.push({
+          user: req.user.id,
+          user: req.user.profile.firstName,
+          done: false,
+        });
         curSession.save().then(function () {
           socketAPI.addGame({
             code: req.body.code,
@@ -330,6 +334,7 @@ router.post("/create_session", function (req, res) {
       console.log(curSession);
 
       function makeid(length) {
+        //TODO: Filter out bad words
         var result = "";
         var characters =
           "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -349,7 +354,13 @@ router.post("/create_session", function (req, res) {
           owner: req.user.id,
           code: theCode,
           games: [],
-          users: [{ user: req.user.id, done: false }],
+          users: [
+            {
+              user: req.user.id,
+              name: req.user.profile.firstName,
+              done: false,
+            },
+          ],
           lock: "#codeView",
         };
         var session = new Session(sessiondetail);
@@ -752,6 +763,36 @@ router.post("/start_voting", function (req, res) {
     //Send the voting socket event to both client and owner
     socketAPI.startVoting(req.body);
     res.send({ status: "Started voting!" });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/submit_votes", function (req, res) {
+  if (req.user) {
+    //Send the voting socket event to both client and owner
+    socketAPI.submitVotes({ code: req.body.code, user: req.user.id });
+    res.send({ status: "Submitted votes!" });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/get_votes", function (req, res) {
+  if (req.user) {
+    var games = [];
+    console.log(req.body);
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      for (var i = 0; i < curSession.votes.length; i++) {
+        if (curSession.votes[i].active) {
+          games.push({
+            game: curSession.votes[i].game,
+            name: curSession.votes[i].name,
+          });
+        }
+      }
+      res.send({ games: games });
+    });
   } else {
     res.send({ err: "Not logged in" });
   }

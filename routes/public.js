@@ -287,8 +287,11 @@ router.post("/join_session", function (req, res) {
         if (curSession.users[i].user == req.user.id) {
           newUser = false;
           console.log(curSession.users[i]);
-          if (curSession.users[i].done) {
+          if (curSession.users[i].done && lock == "#selectView") {
             lock = "#postSelectView";
+          }
+          if (curSession.users[i].doneVoting && lock == "#voteView") {
+            lock = "#postVoteView";
           }
         }
       }
@@ -296,8 +299,9 @@ router.post("/join_session", function (req, res) {
       if (newUser) {
         curSession.users.push({
           user: req.user.id,
-          user: req.user.profile.firstName,
+          name: req.user.profile.firstName,
           done: false,
+          doneVoting: false,
         });
         curSession.save().then(function () {
           socketAPI.addGame({
@@ -771,7 +775,11 @@ router.post("/start_voting", function (req, res) {
 router.post("/submit_votes", function (req, res) {
   if (req.user) {
     //Send the voting socket event to both client and owner
-    socketAPI.submitVotes({ code: req.body.code, user: req.user.id });
+    socketAPI.submitVotes({
+      code: req.body.code,
+      user: req.user.id,
+      voteArray: req.body.voteArray,
+    });
     res.send({ status: "Submitted votes!" });
   } else {
     res.send({ err: "Not logged in" });

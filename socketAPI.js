@@ -57,6 +57,7 @@ socketAPI.addGame = function (data) {
   //1. Get Session using data.code
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     //2. Get list of curSession.users.user(s) and make a numGames array
+    var numGames = [];
     if (curSession) {
       for (var i = 0; i < curSession.users.length; i++) {
         numGames[i] = {
@@ -253,10 +254,30 @@ socketAPI.initVotes = function (data) {
 socketAPI.submitVotes = function (data) {
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     var index = curSession.users.findIndex(
-      (obj) => obj.user.toString == data.user
+      (obj) => obj.user.toString() == data.user.toString()
     );
     curSession.users[index].doneVoting = true;
-    emitVotes(curSession);
+    for (var i = 0; i < data.voteArray.length; i++) {
+      var index = curSession.votes.findIndex(
+        (obj) => obj.game.toString() == data.voteArray[i].game.toString()
+      );
+      var indexa = curSession.votes[index].voters.findIndex(
+        (obj) => obj.user == data.user
+      );
+      console.log(index, indexa);
+      if (indexa == -1) {
+        curSession.votes[index].voters.push({
+          user: data.user,
+          vote: data.voteArray[i].vote,
+        });
+      } else {
+        curSession.votes[index].voters[indexa] ==
+          { user: data.user, vote: data.voteArray[i].vote };
+      }
+    }
+    curSession.save(function (err) {
+      emitVotes(curSession);
+    });
   });
 };
 
@@ -269,18 +290,24 @@ function emitVotes(curSession) {
       }
     */
   for (var i = 0; i < curSession.users.length; i++) {
-    userList.push(curSession.users.user);
+    userList.push(curSession.users[i].user);
   }
   User.find({ profile_id: { $in: userList } })
-    .select({ doneVoting: 1, name: 1 })
+    .select({ profile_id: 1, name: 1 })
     .exec(function (err, curUsers) {
+      console.log("userList: ", userList);
+      console.log("curUsers: ", curUsers);
       for (var i = 0; i < curUsers.length; i++) {
+        var index = curSession.users.findIndex(
+          (obj) => obj.user == curUsers[i].profile_id
+        );
         users.push({
-          doneVoting: curUsers[i].doneVoting,
+          doneVoting: curSession.users[index].doneVoting,
           name: curUsers[i].name,
         });
       }
-      io.sockets.emit(data.code + "owner", {
+      console.log(curSession.code, users);
+      io.sockets.emit(curSession.code + "owner", {
         voteSubmit: true,
         users: users,
       });

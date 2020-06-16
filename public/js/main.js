@@ -1399,11 +1399,23 @@ function fillVotes(games) {
   htmlString += `</ul><div class="submitButton button greenBtn" id="voteButton">Submit Votes</div>`;
   console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
-  var theCode = $("#codeInput input").val();
   $("#voteButton").on("click", function () {
-    const vs_options = {
+    var theCode = $("#code").text();
+    var voteArray = [];
+    var theVotes = $("#voteContainer ul").children();
+    for (var i = 0; i < theVotes.length; i++) {
+      voteArray.push({
+        game: $(theVotes[i]).children("input").first().attr("id"),
+        vote: $(theVotes[i]).children("input").first().val(),
+      });
+    }
+    console.log("voteArray", voteArray);
+    const sv_options = {
       method: "POST",
-      body: JSON.stringify({ code: theCode }),
+      body: JSON.stringify({
+        code: theCode,
+        voteArray: voteArray,
+      }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -1411,6 +1423,7 @@ function fillVotes(games) {
     fetch("/submit_votes", sv_options).then(function (response) {
       return response.json().then((res) => {
         goForwardFrom("#voteView", "#postVoteView");
+        $("#backArrow").addClass("off");
       });
     });
   });
@@ -1422,13 +1435,23 @@ function fillVotes(games) {
 /*****************************/
 function fillPostVote(users) {
   var htmlString = ``;
-  var voted = "";
+  var votedText = "";
+  var votedClass = "";
   for (var i = 0; i < users.length; i++) {
-    users[i].doneVoting
-      ? (voted = " has finished voting")
-      : (voted = " is still voting");
+    if (users[i].doneVoting) {
+      votedText = " has finished voting";
+      votedClass = " voted";
+    } else {
+      votedText = " is still voting";
+      votedClass = " voting";
+    }
     htmlString +=
-      `<li>` + `<div class="voteUser">` + users[i].name + voted + `</div></li>`;
+      `<div class="voteUser` +
+      votedClass +
+      `">` +
+      users[i].name +
+      votedText +
+      `</div>`;
   }
   $("#postVoteContainer").html(htmlString);
 }

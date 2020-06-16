@@ -463,7 +463,8 @@ input:checked + .slider:before {
   transform: translateX(-50%);
 }
 
-#postSelectContainer {
+#postSelectContainer,
+#postVoteContainer {
   height: 100%;
   grid-area: 3/2/15/10;
   text-align: center;
@@ -486,26 +487,32 @@ input:checked + .slider:before {
 
 .connecting:before,
 .selecting:before,
-.done:before {
+.done:before,
+.voted:before,
+.voting:before {
   font-family: "Font Awesome\ 5 Free";
   font-weight: 900;
   margin-right: 10px;
 }
 
 .connecting:before,
-.selecting:before {
+.selecting:before,
+.voting:before {
   content: "\f09c";
 }
 
-.done:before {
+.done:before,
+.voted:before {
   content: "\f023";
 }
 
-.selecting {
+.selecting,
+.voting {
   color: var(--main-gold);
 }
 
-.done {
+.done,
+.voted {
   color: var(--main-green);
 }
 
@@ -595,7 +602,6 @@ input:checked + .slider:before {
 #voteContainer {
   grid-area: 3/2/18/10;
   height: 100%;
-  overflow-y: scroll;
 }
 
 #voteContainer ul {
@@ -655,7 +661,7 @@ input[type="range"] {
   border-width: 0 1em;
   padding: 0px;
   width: 70vw;
-
+  box-sizing: border-box;
   height: calc(var(--vh) * 2);
   border-radius: 0.25em;
   transform: translateX(-50%);

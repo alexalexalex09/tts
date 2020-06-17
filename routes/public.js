@@ -620,6 +620,14 @@ router.post("/lock_games", function (req, res) {
           htmlString +=
             `<li` +
             dupeSearch(fuse, curSession.votes[i]) +
+            /*
+             *
+             *
+             * TODO: Green text overrides the dup yellow, and it probably shouldn't
+             *
+             *
+             *
+             */
             `><div class="editGame` +
             green +
             `">` +

@@ -331,6 +331,13 @@ socketAPI.endVote = function (data) {
     io.sockets.emit(data.code + "client", { play: true, games: games });
     curSession.lock = "#playView";
     curSession.save();
+    /*
+     *
+     *
+     * TODO: This and all other similar functions should only return ACTIVE votes
+     * TODO: The client isn't receiving this event yet
+     *
+     */
   });
 };
 

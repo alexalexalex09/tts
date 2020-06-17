@@ -639,7 +639,7 @@ router.post("/lock_games", function (req, res) {
 
         htmlString +=
           `</div>` +
-          `<div class="button greenBtn" id="editGameSubmit">Begin Voting</div>`;
+          `<div class="button greenBtn bottomBtn" id="editGameSubmit">Begin Voting</div>`;
         curSession.save();
         res.send({ status: "locked games", htmlString: htmlString });
       });
@@ -799,6 +799,37 @@ router.post("/get_votes", function (req, res) {
           });
         }
       }
+      res.send({ games: games });
+    });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/end_vote", function (req, res) {
+  if (req.user) {
+    socketAPI.endVote({ code: req.body.code });
+    res.send({ status: "Vote ended for " + req.body.code });
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
+router.post("/get_games", function (req, res) {
+  if (req.user) {
+    Session.findOne({ code: data.code }).exec(function (err, curSession) {
+      var games = [];
+      for (var i = 0; i < curSession.votes.length; i++) {
+        games[i] = { name: curSession.votes[i].name, votes: 0 };
+        for (var j = 0; j < curSession.votes[i].voters.length; j++) {
+          games[i].votes += curSession.votes[i].voters[j].vote;
+        }
+      }
+      games.sort(function (a, b) {
+        var x = a.votes;
+        var y = b.votes;
+        return x < y ? 1 : x > y ? -1 : 0;
+      });
       res.send({ games: games });
     });
   } else {

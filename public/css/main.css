@@ -65,6 +65,12 @@ a:active {
   background-color: var(--main-green);
 }
 
+.bottomBtn {
+  position: absolute;
+  width: 80vw;
+  bottom: var(--vh5);
+}
+
 .off {
   display: none !important;
 }
@@ -545,12 +551,6 @@ input:checked + .slider:before {
   margin: 0 auto;
 }
 
-#editGameSubmit {
-  position: absolute;
-  width: 80vw;
-  bottom: var(--vh5);
-}
-
 #editGameList {
   margin-top: calc(var(--vh) * 5);
   overflow-y: auto;
@@ -785,6 +785,32 @@ input[type="range"] /deep/ #track:after {
 }
 input[type="range"]:focus {
   outline: none;
+}
+
+/******************/
+/*    PlayView    */
+/******************/
+
+#playInfo {
+  width: 80vw;
+  text-align: center;
+  height: var(--vh10);
+  font-size: 3.6vw;
+  position: absolute;
+  top: var(--vh10);
+  left: 10vw;
+}
+
+#playContainer {
+  grid-area: 5/2/15/10;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.playGame {
+  min-height: var(--vh5);
+  font-size: calc(var(--vh, 1vh) * 3);
+  width: 100%;
 }
 
 /*****************/

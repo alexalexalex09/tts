@@ -15,7 +15,7 @@ var SessionSchema = new Schema(
     },
     code: String,
     lock: { type: String, default: "selectView" },
-    //selectView, postSelectView, postSelectEditView, voteView, postVoteView, playView
+    //selectView, postSelectView, postPostSelectView, voteView, postVoteView, playView
     games: [
       {
         game: { type: Schema.Types.ObjectId, ref: "Game" },

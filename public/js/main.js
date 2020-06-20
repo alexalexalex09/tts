@@ -5,10 +5,6 @@ window.addEventListener("load", function () {
   /*****************************/
   var socket = io();
 
-  socket.on("hello", (data) => {
-    console.log(data.msg);
-  });
-
   /*****************************/
   /*     Set History State     */
   /*****************************/
@@ -102,51 +98,25 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
-  /*     Back arrow handler    */
+  /*         Menu toggle       */
   /*****************************/
-  $("#backArrow").click(this, function (el) {
-    //Going to have to notify the server so that the owner of a session
-    //can know that someone went back to a previous step
-
-    var dest = $("#backArrow").attr("data-gobackto");
-
-    const gb_options = {
-      method: "POST",
-      body: JSON.stringify({
-        to: dest,
-        from: window.hist[window.hist.length - 1],
-        code: $("#code").text(),
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    fetch("/going_back", gb_options);
-
-    goBackFrom(
-      window.hist[window.hist.length - 1],
-      window.hist[window.hist.length - 2]
-    );
-    /*
-    if (!$("#codeView").hasClass("off")) {
-      $("#backArrow").addClass("off");
-      goBackFrom("#codeView", "#homeView");
-      return;
-    }
-    if (!$("#selectView").hasClass("off")) {
-      if (dest == "code") {
-        goBackFrom("#selectView", "#codeView");
-      }
-      if (dest == "home") {
-        goBackFrom("#selectView", "#homeView");
-      }
-      return;
-    }
-    if (!$("#postSelectView").hasClass("off")) {
-      if (dest == "select") {
-        goBackFrom("#postSelectView", "#selectView");
-      }
-    }*/
+  //Close menu
+  function closeMenu() {
+    $("#menu").css("transform", "translateX(-60vh)");
+    $("#menuCatch").addClass("off");
+    window.setTimeout(function () {
+      $("#menu").addClass("off");
+    }, 550);
+  }
+  $("#menuClose").on("click", closeMenu);
+  $("#menuCatch").on("click", closeMenu);
+  //Open menu
+  $("#menuIcon").click(this, function (el) {
+    $("#menu").removeClass("off");
+    $("#menuCatch").removeClass("off");
+    window.setTimeout(function () {
+      $("#menu").css("transform", "translateX(0vh)");
+    }, 10);
   });
 
   /*****************************/
@@ -182,26 +152,6 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
-  /*         Menu toggle       */
-  /*****************************/
-  function closeMenu() {
-    $("#menu").css("transform", "translateX(-60vh)");
-    $("#menuCatch").addClass("off");
-    window.setTimeout(function () {
-      $("#menu").addClass("off");
-    }, 550);
-  }
-  $("#menuClose").on("click", closeMenu);
-  $("#menuCatch").on("click", closeMenu);
-  $("#menuIcon").click(this, function (el) {
-    $("#menu").removeClass("off");
-    $("#menuCatch").removeClass("off");
-    window.setTimeout(function () {
-      $("#menu").css("transform", "translateX(0vh)");
-    }, 10);
-  });
-
-  /*****************************/
   /*  Text input clear button  */
   /*****************************/
   $(".textClear").click(this, function (el) {
@@ -233,76 +183,102 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
-  /*   Submit button handler   */
+  /*     Back arrow handler    */
   /*****************************/
-  $("#codeSubmit").click(this, function (el) {
-    clearLists();
-    $(".errorText").removeClass("shake");
-    $("#backArrow").removeClass("off");
-    var theCode = $("#codeInput input").val();
-    const cs_options = {
+  $("#backArrow").click(this, function (el) {
+    //Going to have to notify the server so that the owner of a session
+    //can know that someone went back to a previous step
+
+    var dest = $("#backArrow").attr("data-gobackto");
+
+    const gb_options = {
       method: "POST",
-      body: JSON.stringify({ code: theCode }),
+      body: JSON.stringify({
+        to: dest,
+        from: window.hist[window.hist.length - 1],
+        code: $("#code").text(),
+      }),
       headers: {
         "Content-Type": "application/json",
       },
     };
-    fetch("/join_session", cs_options).then(function (response) {
+    fetch("/going_back", gb_options);
+
+    goBackFrom(
+      window.hist[window.hist.length - 1],
+      window.hist[window.hist.length - 2]
+    );
+  });
+
+  /*****************************/
+  /*   Submit button handler   */
+  /* Checks user inputted code */
+  /*    Calls join_session     */
+  /*****************************/
+  $("#codeSubmit").click(this, function (el) {
+    clearLists(); //Clear any lists in #selectView
+    $(".errorText").removeClass("shake"); //Stop shaking if started
+    const js_options = {
+      method: "POST",
+      body: JSON.stringify({ code: $("#codeInput input").val() }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/join_session", js_options).then(function (response) {
       return response.json().then((res) => {
         console.log("join session ", res);
         if (res.err) {
+          //If there is no session to join, tell the user
           window.setTimeout(function () {
             $(".errorText").removeClass("off").addClass("shake");
           }, 5);
+          //Move the create button out of the way of the error text:
           $("#createButton").css({
             transform: "translateY(14vh)",
           });
         } else {
-          $("#backArrow").removeClass("off");
-          //$("#backArrow").attr("data-gobackto", "home");
-          document.getElementById("code").innerHTML = res.code;
-          document.getElementById("selectCodeDisplay").innerHTML =
-            "Your Code: " + res.code;
+          //If the session join was successful:
+          $("#backArrow").removeClass("off"); //Show the back arrow
+          setCode(res.code);
           console.log(res.lock);
+
           var sessionGames = "<session>";
           for (var i = 0; i < res.games.length; i++) {
             sessionGames +=
               '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
           }
-          document.getElementById("sessionContainer").innerHTML = sessionGames;
+          $("#sessionContainer").html(sessionGames);
+
           console.log("initGreenLists");
           initGreenLists();
+
           var isLockBack = false;
-          if (res.lock == "#postPostSelectView") {
-            var isLockBack = true;
-            res.lock = "#postSelectView";
-          }
-          console.log(
-            "going forward to ",
-            res.lock,
-            "and lockback is " + isLockBack
-          );
-          if (res.lock == "#voteView") {
-            var lock = res.lock;
-            const gv_options = {
-              method: "POST",
-              body: JSON.stringify({ code: $("#code").text() }),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            };
-            fetch("/get_votes", gv_options).then(function (response) {
-              return response.json().then((res) => {
-                console.log(res);
-                fillVotes(res.games);
-                console.log("Lock: ", lock);
-                console.log(window.hist);
-                goForwardFrom("#homeView", lock);
+          switch (res.lock) {
+            case "#postSelectView":
+              goForwardFrom("#homeView", "#postSelectView");
+              window.hist = ["#homeView", "#selectView", "#postSelectView"];
+            case "#postPostSelectView":
+              goForwardFrom("#homeView", "#postSelectView");
+              //lockback();
+              break;
+            case "#voteView":
+              const gv_options = {
+                method: "POST",
+                body: JSON.stringify({ code: $("#code").text() }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              };
+              fetch("/get_votes", gv_options).then(function (response) {
+                return response.json().then((res) => {
+                  console.log(res);
+                  fillVotes(res.games);
+                  goForwardFrom("#homeView", "#voteView");
+                });
               });
-            });
-          } else {
-            if (res.lock == "#playView") {
-              var lock = res.lock;
+              break;
+            case "#playView":
               const gg_options = {
                 method: "POST",
                 body: JSON.stringify({ code: $("#code").text() }),
@@ -310,35 +286,17 @@ window.addEventListener("load", function () {
                   "Content-Type": "application/json",
                 },
               };
-              fetch("/get_games", gv_options).then(function (response) {
+              fetch("/get_games", gg_options).then(function (response) {
                 return response.json().then((res) => {
                   fillGames(res.games);
-                  goForwardFrom("#homeView", lock);
+                  goForwardFrom("#homeView", "#playView");
                 });
               });
-            } else {
+              break;
+            default:
               goForwardFrom("#homeView", res.lock);
-              if (isLockBack) {
-                console.log("running lockback()");
-
-                lockBack();
-                console.log("ran lockBack()");
-              }
-
-              if ((res.lock = "#postSelectView")) {
-                console.log("changing history");
-                var t = window.hist.pop();
-                window.hist.push("#selectView");
-                window.hist.push(t);
-                console.log(window.hist);
-              }
-              console.log("pushing history");
-              history.pushState(
-                { code: res.code, page: "select", last: "home" },
-                "",
-                "#select"
-              );
-            }
+              //lockBack()
+              break;
           }
           /*******************************************/
           /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
@@ -348,7 +306,7 @@ window.addEventListener("load", function () {
           /*******************************************/
           console.log("Setting up client event with " + res.code);
           socket.on(res.code + "client", (data) => {
-            console.log("Got client event");
+            console.log("Got client event", data);
             if (data.lockBack && data.lock) {
               goForwardFrom(window.hist[window.hist.length - 1], data.lock);
               lockBack();
@@ -370,57 +328,12 @@ window.addEventListener("load", function () {
             }
             if (data.play) {
               fillGames(data.games);
+              goForwardFrom("#postVoteView", "#playView");
             }
           });
         }
       });
     });
-  });
-
-  /***********************************/
-  /*   Copy the code to clipboard    */
-  /***********************************/
-  $("#copyButton").on("click", function () {
-    $("#copiedAlert").css({ opacity: 1 });
-    var copyText = document.getElementById("code").innerHTML;
-    const el = document.createElement("textarea");
-    el.value = copyText;
-    document.body.appendChild(el);
-
-    /* Select the text field */
-    el.select();
-    el.setSelectionRange(0, 99999); /*For mobile devices*/
-
-    /* Copy the text inside the text field */
-    document.execCommand("copy");
-    document.body.removeChild(el);
-
-    window.setTimeout(function () {
-      $("#copiedAlert").css({ opacity: 0 });
-    }, 1000);
-  });
-
-  /***********************************/
-  /*         Share the code          */
-  /***********************************/
-
-  document.getElementById("shareButton").addEventListener("click", async () => {
-    var resultPara = "";
-    var shareData =
-      "Join my TidySquirrel session! Our code is " +
-      document.getElementById("code").innerHTML;
-    try {
-      await navigator.share(shareData);
-      resultPara.textContent = "MDN shared successfully";
-      console.log(resultPara.textContent);
-    } catch (err) {
-      if (resultPara) {
-        resultPara.textContent = "Error: " + err;
-        console.log(resultPara.textContent);
-      } else {
-        console.log("didn't work");
-      }
-    }
   });
 
   /*****************************/
@@ -440,67 +353,26 @@ window.addEventListener("load", function () {
       return response.json().then((res) => {
         console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
-          socket.on(res.status.code + "select", (data) => {
-            console.log("received select event ", data);
-            htmlString = "";
-            var connecting = "";
-            var plural = "s";
-            $.each(data, function (key, value) {
-              console.log("User object: ", key, value);
-              if (value.done) {
-                connecting = "done";
-              } else {
-                value.num > 0
-                  ? (connecting = "selecting")
-                  : (connecting = "connecting");
-              }
-              value.num == 1 ? (plural = "") : (plural = "s");
-              htmlString +=
-                `<div class="conUser ` +
-                connecting +
-                `">User ` +
-                value.name +
-                ` has selected ` +
-                value.num +
-                ` game` +
-                plural +
-                `...</div>`;
-            });
-            htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
-            $("#postSelectContainer").html(htmlString);
-            $("#gameLock").click(this, function () {
-              lockGames(res.status.code);
-            });
-          });
           socket.on(res.status.code + "owner", (data) => {
-            /*
-            data {
-              startVoting: Boolean
-              games: {Game object}
-              
-              voteSubmit: Boolean
-              users: {
-                doneVoting: Boolean
-                name: "Username String (first name)"
-              }
+            if (data.selectEvent) {
+              //Rewrite #postSelectContainer in real time for owner
+              showSelect(data.select);
             }
-            */
             if (data.startVoting) {
               //Parse the voting data and output
               fillVotes(data.games);
             }
             if (data.voteSubmit) {
+              //Rewrite the voting status screen in real time
               fillPostVote(data.users);
             }
             if (data.play) {
+              //Fill the final list of games to play
               fillGames(data.games);
             }
           });
           $("#backArrow").removeClass("off");
-          //$("#backArrow").attr("data-gobackto", "home");
-          document.getElementById("code").innerHTML = res.status.code;
-          document.getElementById("selectCodeDisplay").innerHTML =
-            "Your Code: " + res.status.code;
+          setCode(res.status.code);
           var index = res.status.users.findIndex((obj) => obj.user == res.user);
           var dest = res.status.lock;
           if (
@@ -586,6 +458,53 @@ window.addEventListener("load", function () {
         }
       });
     });
+  });
+
+  /***********************************/
+  /*   Copy the code to clipboard    */
+  /***********************************/
+  $("#copyButton").on("click", function () {
+    $("#copiedAlert").css({ opacity: 1 });
+    var copyText = document.getElementById("code").innerHTML;
+    const el = document.createElement("textarea");
+    el.value = copyText;
+    document.body.appendChild(el);
+
+    /* Select the text field */
+    el.select();
+    el.setSelectionRange(0, 99999); /*For mobile devices*/
+
+    /* Copy the text inside the text field */
+    document.execCommand("copy");
+    document.body.removeChild(el);
+
+    window.setTimeout(function () {
+      $("#copiedAlert").css({ opacity: 0 });
+    }, 1000);
+  });
+
+  /***********************************/
+  /*         Share the code          */
+  /*  This won't work without HTTPS  */
+  /***********************************/
+
+  document.getElementById("shareButton").addEventListener("click", async () => {
+    var resultPara = "";
+    var shareData =
+      "Join my TidySquirrel session! Our code is " +
+      document.getElementById("code").innerHTML;
+    try {
+      await navigator.share(shareData);
+      resultPara.textContent = "MDN shared successfully";
+      console.log(resultPara.textContent);
+    } catch (err) {
+      if (resultPara) {
+        resultPara.textContent = "Error: " + err;
+        console.log(resultPara.textContent);
+      } else {
+        console.log("didn't work");
+      }
+    }
   });
 
   function lockGames(code) {
@@ -1412,6 +1331,58 @@ function listToggle(el) {
 }
 
 /*****************************/
+/*       setCode(code)       */
+/*****************************/
+/*
+ * Desc: Display the session code in correct places
+ *
+ * @param {Array} select
+ */
+function setCode(code) {
+  $("#code").html(code);
+  $("#selectCodeDisplay").html("Your Code: " + code);
+}
+
+/*****************************/
+/*     showSelect(data)    */
+/*****************************/
+/*
+ * Desc: Update user selections in real time
+ *
+ * @param {Array} select
+ */
+function showSelect(data) {
+  console.log("received select event ", data);
+  htmlString = "";
+  var connecting = "";
+  var plural = "s";
+  $.each(data, function (key, value) {
+    console.log("User object: ", key, value);
+    if (value.done) {
+      connecting = "done";
+    } else {
+      value.num > 0 ? (connecting = "selecting") : (connecting = "connecting");
+    }
+    value.num == 1 ? (plural = "") : (plural = "s");
+    htmlString +=
+      `<div class="conUser ` +
+      connecting +
+      `">User ` +
+      value.name +
+      ` has selected ` +
+      value.num +
+      ` game` +
+      plural +
+      `...</div>`;
+  });
+  htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
+  $("#postSelectContainer").html(htmlString);
+  $("#gameLock").click(this, function () {
+    lockGames($("#code").text());
+  });
+}
+
+/*****************************/
 /*      fillVotes(games)     */
 /*****************************/
 /*
@@ -1516,9 +1487,12 @@ function fillPostVote(users) {
 function fillGames(games) {
   var htmlString = ``;
   for (var i = 0; i < games.length; i++) {
-    htmlString += `<div class="playGame">` + games[i].name + `</div>`;
+    if (!$.isEmptyObject(games[i])) {
+      htmlString += `<div class="playGame">` + games[i].name + `</div>`;
+    }
   }
   $("#playContainer").html(htmlString);
+  goForwardFrom("#postVoteView", "#playView");
 }
 
 /*****************************/

@@ -814,10 +814,35 @@ router.post("/get_votes", function (req, res) {
   }
 });
 
+function sortDescByKey(array, key) {
+  return array.sort(function (a, b) {
+    var x = a[key];
+    var y = b[key];
+    return x < y ? 1 : x > y ? -1 : 0;
+  });
+}
+
 router.post("/end_vote", function (req, res) {
   if (req.user) {
-    socketAPI.endVote({ code: req.body.code });
-    res.send({ status: "Vote ended for " + req.body.code });
+    console.log(req.body.code);
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      var games = [];
+      for (var i = 0; i < curSession.votes.length; i++) {
+        if (curSession.votes[i].active) {
+          games[i] = { name: curSession.votes[i].name, votes: 0 };
+          for (var j = 0; j < curSession.votes[i].voters.length; j++) {
+            games[i].votes += curSession.votes[i].voters[j].vote;
+          }
+        }
+      }
+      console.log("games unsorted:", games);
+      games = sortDescByKey(games, "votes");
+      console.log("games:", games);
+      socketAPI.endVote({ games: games, code: req.body.code });
+      curSession.lock = "#playView";
+      curSession.save();
+      res.send({ status: "Vote ended for " + req.body.code });
+    });
   } else {
     res.send({ err: "Not logged in" });
   }
@@ -825,7 +850,7 @@ router.post("/end_vote", function (req, res) {
 
 router.post("/get_games", function (req, res) {
   if (req.user) {
-    Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       var games = [];
       for (var i = 0; i < curSession.votes.length; i++) {
         games[i] = { name: curSession.votes[i].name, votes: 0 };

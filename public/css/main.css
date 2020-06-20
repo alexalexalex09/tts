@@ -909,6 +909,7 @@ input[type="range"]:focus {
   height: calc(var(--vh, 1vh) * 100);
   position: absolute;
   left: 60vw;
+  z-index: 999;
 }
 
 /****************/

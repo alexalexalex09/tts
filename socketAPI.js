@@ -315,39 +315,9 @@ function emitVotes(curSession) {
 }
 
 socketAPI.endVote = function (data) {
-  console.log(data.code);
-  Session.findOne({ code: data.code }).exec(function (err, curSession) {
-    var games = [];
-    for (var i = 0; i < curSession.votes.length; i++) {
-      games[i] = { name: curSession.votes[i].name, votes: 0 };
-      for (var j = 0; j < curSession.votes[i].voters.length; j++) {
-        games[i].votes += curSession.votes[i].voters[j].vote;
-      }
-    }
-    console.log("games unsorted:", games);
-    games = sortDescByKey(games, "votes");
-    console.log("games:", games);
-    io.sockets.emit(data.code + "owner", { play: true, games: games });
-    io.sockets.emit(data.code + "client", { play: true, games: games });
-    curSession.lock = "#playView";
-    curSession.save();
-    /*
-     *
-     *
-     * TODO: This and all other similar functions should only return ACTIVE votes
-     * TODO: The client isn't receiving this event yet
-     *
-     */
-  });
+  io.sockets.emit(data.code + "owner", { play: true, games: data.games });
+  io.sockets.emit(data.code + "client", { play: true, games: data.games });
 };
-
-function sortDescByKey(array, key) {
-  return array.sort(function (a, b) {
-    var x = a[key];
-    var y = b[key];
-    return x < y ? 1 : x > y ? -1 : 0;
-  });
-}
 
 io.on("connection", function (socket) {
   socket.on("addGame", (data) => {

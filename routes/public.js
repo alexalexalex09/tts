@@ -329,6 +329,7 @@ function checkIfAddedByUser(theSession, userId) {
 }
 
 router.post("/create_session", function (req, res) {
+  console.log(req.user);
   if (req.user) {
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
       console.log(curSession);

@@ -35,7 +35,8 @@ block content
             if user
               li
                 ion-icon(name='log-out-outline')
-                a(href="/users/logout") Logout
+                form(method="post" action="/logout")
+                  button Logout
       #menuCatch.clickCatcher.off
       .login
         
@@ -96,6 +97,8 @@ block content
       #playTitle.pageTitle Start Playing! 🐿️
       #playInfo Here are the games your group selected, beginning with the game you want to play most!
       #playContainer
+
+    #accountView.view.off
 
 
 

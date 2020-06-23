@@ -28,19 +28,21 @@ var oktaClient = new okta.Client({
   orgUrl: process.env.oUrl,
   token: process.env.oToken,
 });
+console.log("baseURL: ", baseURL);
 const oidc = new ExpressOIDC({
   issuer: process.env.oIssuer,
   client_id: process.env.oClient_id,
   client_secret: process.env.oSecret,
-  redirect_uri: baseURL + "/users/callback",
+  //redirect_uri: baseURL + "/users/callback", (upgraded to 2.0)
+  appBaseUrl: baseURL,
   scope: "openid profile",
   routes: {
     login: {
       path: "/users/login",
     },
-    callback: {
+    loginCallback: {
       path: "/users/callback",
-      defaultRedirect: "/",
+      afterCallback: "/",
     },
   },
 });
@@ -67,12 +69,14 @@ app.use(
 );
 app.use(oidc.router);
 app.use((req, res, next) => {
-  if (!req.userinfo) {
+  if (!req.userContext) {
+    console.log("no userinfo");
     return next();
   }
+  console.log("userinfo: ", req.userContext.userinfo);
   //Make user variable available
   oktaClient
-    .getUser(req.userinfo.sub)
+    .getUser(req.userContext.userinfo.sub)
     .then((user) => {
       req.user = user;
       res.locals.user = user;

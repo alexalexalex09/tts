@@ -118,7 +118,10 @@ function getNames(profiles, numGames, curSession, data) {
           numGames[i].id = "";
         }
         //6. Emit to owner
-        io.sockets.emit(data.code + "select", numGames);
+        io.sockets.emit(data.code + "owner", {
+          selectEvent: true,
+          select: numGames,
+        });
       } else {
         console.log(theError);
       }

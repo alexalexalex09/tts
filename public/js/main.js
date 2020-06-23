@@ -194,7 +194,7 @@ window.addEventListener("load", function () {
     const gb_options = {
       method: "POST",
       body: JSON.stringify({
-        to: dest,
+        to: window.hist[window.hist.length - 2],
         from: window.hist[window.hist.length - 1],
         code: $("#code").text(),
       }),
@@ -217,6 +217,7 @@ window.addEventListener("load", function () {
   /*****************************/
   $("#codeSubmit").click(this, function (el) {
     clearLists(); //Clear any lists in #selectView
+    window.hist = ["#homeView"];
     $(".errorText").removeClass("shake"); //Stop shaking if started
     const js_options = {
       method: "POST",
@@ -289,7 +290,6 @@ window.addEventListener("load", function () {
               fetch("/get_games", gg_options).then(function (response) {
                 return response.json().then((res) => {
                   fillGames(res.games);
-                  goForwardFrom("#homeView", "#playView");
                 });
               });
               break;
@@ -325,10 +325,13 @@ window.addEventListener("load", function () {
               console.log("this isn't done yet!");
               //parse the voting data and output
               fillVotes(data.games);
+              goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
+              window.hist = ["#homeView", "#voteView"];
             }
             if (data.play) {
               fillGames(data.games);
-              goForwardFrom("#postVoteView", "#playView");
+              goForwardFrom(window.hist[window.hist.length - 1], "#playView");
+              window.hist = ["#homeView", "#playView"];
             }
           });
         }
@@ -341,6 +344,7 @@ window.addEventListener("load", function () {
   /*****************************/
   $("#createButton").click(this, function () {
     console.log("create");
+    window.hist = ["#homeView"];
     clearLists();
     const cs_options = {
       method: "POST",
@@ -354,6 +358,7 @@ window.addEventListener("load", function () {
         console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
           socket.on(res.status.code + "owner", (data) => {
+            console.log("received ", data);
             if (data.selectEvent) {
               //Rewrite #postSelectContainer in real time for owner
               showSelect(data.select);
@@ -375,6 +380,7 @@ window.addEventListener("load", function () {
           setCode(res.status.code);
           var index = res.status.users.findIndex((obj) => obj.user == res.user);
           var dest = res.status.lock;
+          console.log("dest", dest);
           if (
             res.status.users[index].done == false &&
             dest == "#postSelectView"
@@ -429,18 +435,6 @@ window.addEventListener("load", function () {
           }
           console.log("dest: " + dest);
           goForwardFrom("#homeView", dest);
-          // Here we need to be sure to add all the intermediate steps to window.hist so user can backtrack as appropriate when reconnecting
-          window.hist = ["#homeView", "#codeView"];
-          switch (dest) {
-            case "#postSelectView":
-            case "#selectView":
-            case "#playView":
-              window.hist.push(dest);
-              break;
-            case "#voteView":
-              window.hist.pop();
-              window.hist.push("#voteView");
-          }
           console.log("hist after creating: ", window.hist);
           if (toLock) {
             lockGames(res.status.code);
@@ -507,295 +501,24 @@ window.addEventListener("load", function () {
     }
   });
 
-  function lockGames(code) {
-    const lg_options = {
-      method: "POST",
-      body: JSON.stringify({ code: code }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    fetch("/lock_games", lg_options).then(function (lresponse) {
-      return lresponse.json().then((lres) => {
-        console.log(lres);
-        $("#backArrow").addClass("off");
-        $("#postSelectView").css({
-          transform: "translateX(-200vw)",
-        });
-        window.setTimeout(function () {
-          $("#postSelectTitle").html("Edit Games List 🐿️");
-          $("#postSelectContainer").html(lres.htmlString);
-          registerEGS();
-          $("#postSelectView").css({ transition: "transform 0s" });
-          $("#postSelectView").css({
-            transform: "translateX(200vw)",
-          });
-          window.setTimeout(function () {
-            $("#postSelectView").css({ transition: "transform 1s" });
-            $("#postSelectView").css({
-              transform: "translateX(-0vw)",
-            });
-            var addGamesInput = document.getElementById("addGroupGamesInput");
-            addGamesInput.addEventListener("keyup", function (event) {
-              // Number 13 is the "Enter" key on the keyboard
-              if (event.keyCode === 13) {
-                console.log("submitting new group game");
-                event.preventDefault();
-                var game = addGroupGamesInput.value;
-                const options = {
-                  method: "POST",
-                  body: JSON.stringify({ game: game, code: $("#code").text() }),
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                };
-                //add_user_game_unsorted
-                fetch("/group_game_add", options).then(function (response) {
-                  return response.json().then((res) => {
-                    if (res.err) {
-                      console.log(res);
-                      if ((res.err = "added")) {
-                        $("#addGroupGamesInput").css(
-                          "color",
-                          "var(--main-red)"
-                        );
-                        $('input[game_id="' + res.game + '"]').each(
-                          function () {
-                            $(this)
-                              .parent()
-                              .parent()
-                              .parent()
-                              .css("color", "var(--main-red)");
-                          }
-                        );
-                        $("#addGroupGamesInput").addClass("shake");
-                        window.setTimeout(function () {
-                          $("#addGroupGamesInput").css(
-                            "color",
-                            "var(--main-black)"
-                          );
-                          $("#addGroupGamesInput").removeClass("shake");
-                          $('input[game_id="' + res.game + '"]').each(
-                            function () {
-                              $(this)
-                                .parent()
-                                .parent()
-                                .parent()
-                                .css("color", "var(--main-black)");
-                            }
-                          );
-                        }, 600);
-                      }
-                    } else {
-                      $("#editGameList").append(res.status);
-                      registerEGS();
-                    }
-                  });
-                });
-              }
-            });
-
-            $("#gameUnlock").click(this, function () {
-              console.log("gameUnlock");
-              const ug_options = {
-                method: "POST",
-                body: JSON.stringify({
-                  code: $("#code").text(),
-                  unlock: "selectView",
-                  unlockBack: true,
-                }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              };
-              fetch("/unlock_games", ug_options).then(function (uresponse) {
-                return uresponse.json().then((ures) => {
-                  $("#backArrow").removeClass("off");
-                  goBackFrom("#postSelectView", "#selectView");
-                  console.log(ures);
-                });
-              });
-            });
-          }, 10);
-        }, 300);
-      });
-    });
-  }
-
   /*****************************/
   /* Select button transition  */
   /*****************************/
 
+  //On the first run through, get user lists populated and add them to #selectLists
+  gulp();
   $("#selectButton").click(this, function () {
     //$("#backArrow").attr("data-gobackto", "code");
     goForwardFrom("#codeView", "#selectView");
   });
-
-  /**********************************/
-  /*  Get a User's Populated Lists  */
-  /**********************************/
-  function gulp() {
-    const gulp_options = {
-      method: "POST",
-      body: "",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    fetch("/get_user_lists_populated", gulp_options).then(function (response) {
-      //Gets the populated list, which is an object with two arrays,
-      //"allGames", which is supposed to have every game, and "custom",
-      //which has the user's custom lists. Array elements in allGames
-      //are objects which have the properties "rating", "name", and "owned".
-      //Array elements in custom are objects which have the properties "games"
-      //and "name". "Games" is an array of objects that each have the properties "rating",
-      //"name", and "owned".
-      return response.json().then((res) => {
-        if (!res.err) {
-          console.log("gulp", res);
-          addListDisplay(0, "All Games");
-          for (var i = 0; i < res.allGames.length; i++) {
-            var curSession = document.getElementsByTagName("session")[0];
-            var checked = "";
-            var greenText = "";
-            $(curSession)
-              .children()
-              .each(function (ind, el) {
-                if ($(el).attr("id") == res.allGames[i]._id.toString()) {
-                  checked = " checked";
-                  greenText = " greenText";
-                }
-              });
-            var htmlString =
-              `
-            <li>
-                <div rating="` +
-              res.allGames[i].rating +
-              `" owned="` +
-              res.allGames[i].owned +
-              `" class="gameName` +
-              greenText +
-              `" game_id="` +
-              res.allGames[i]._id +
-              `">` +
-              res.allGames[i].name +
-              `
-                </div>
-                <div class='toggle'>
-                    <label class="switch">
-                        <input type="checkbox"` +
-              checked +
-              ` onclick="toggleFont(this)" game_id="` +
-              res.allGames[i]._id +
-              `">
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </li>`;
-            $("li#0").children(".listGames").first().append(htmlString);
-          }
-          for (var i = 0; i < res.custom.length; i++) {
-            var curId = i + 1;
-            addListDisplay(curId, res.custom[i].name);
-            for (var j = 0; j < res.custom[i].games.length; j++) {
-              var htmlString =
-                `
-            <li>
-              <div rating="` +
-                res.custom[i].games[j].rating +
-                `" owned="` +
-                res.custom[i].games[j].owned +
-                `" class="gameName` +
-                greenText +
-                `" game_id="` +
-                res.custom[i].games[j]._id +
-                `">` +
-                res.custom[i].games[j].name +
-                `
-              </div>
-              <div class='toggle'>
-                  <label class="switch">
-                      <input type="checkbox"` +
-                checked +
-                ` onclick="toggleFont(this)" game_id="` +
-                res.custom[i].games[j]._id +
-                `">
-                      <span class="slider round"></span>
-                  </label>
-              </div>
-            </li>`;
-              $("li#" + curId)
-                .children(".listGames")
-                .first()
-                .append(htmlString);
-            }
-          }
-          document.getElementById("listsContainer").innerHTML = htmlString;
-        } else {
-          console.log(res.err);
-        }
-      });
-    });
-  }
-  gulp();
 
   /*****************************/
   /*    Unsorted Game Adder    */
   /*****************************/
   //Add a game to the unsorted list
   //Used in the select view
-  var addGamesInput = document.getElementById("addGamesInput");
-
-  addGamesInput.addEventListener("keyup", function (event) {
-    // Number 13 is the "Enter" key on the keyboard
-    if (event.keyCode === 13) {
-      console.log("submitting new game");
-      event.preventDefault();
-      var game = addGamesInput.value;
-      const options = {
-        method: "POST",
-        body: JSON.stringify({ game: game }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-      //add_user_game_unsorted
-      fetch("/game_add", options).then(function (response) {
-        return response.json().then((res) => {
-          if (!res.err) {
-            console.log(res);
-            //if (obj.err) {console.log('add_games err: ' + obj.err ); }
-
-            var htmlString =
-              `
-              <li>
-                  <div rating="` +
-              res.status.rating +
-              `" owned="` +
-              res.status.owned +
-              `" class="gameName" game_id="` +
-              res.status._id +
-              `">` +
-              res.status.name +
-              `
-                  </div>
-                  <div class='toggle'>
-                      <label class="switch">
-                          <input type="checkbox" onclick="toggleFont(this)" game_id="` +
-              res.status._id +
-              `">
-                          <span class="slider round"></span>
-                      </label>
-                  </div>
-              </li>`;
-            $("li#0").children(".listGames").first().append(htmlString);
-          } else {
-            console.log(res.err);
-          }
-        });
-      });
-    }
-  });
+  //Possible because #addGamesInput is defined in pug file
+  $("#addGamesInput").on("keyup", addGame(event));
 
   /*****************************/
   /*Game submit button handler */
@@ -823,7 +546,7 @@ window.addEventListener("load", function () {
    *
    *
    * End of window functions
-   *
+   * The rest of the content and click handlers are added programmatically
    *
    */
 });
@@ -856,7 +579,7 @@ function lockBack() {
 function goForwardFrom(from, to) {
   if (from != to) {
     console.log("going forward from " + from + " to " + to);
-
+    console.log(window.hist);
     if (typeof window.hist == "undefined") {
       window.hist = [from];
     }
@@ -887,55 +610,177 @@ function goForwardFrom(from, to) {
  */
 function goBackFrom(from, to) {
   if (from == to) {
-    if ($("#backArrow").attr("data-gobackto") == from) {
-      if (
-        window.hist[window.hist.length - 1] ==
-        window.hist[window.hist.length - 2]
-      ) {
-        window.hist.pop();
-      }
+    if (
+      window.hist[window.hist.length - 1] == window.hist[window.hist.length - 2]
+    ) {
+      window.hist.pop();
     }
   } else {
     if (typeof from != "undefined" && typeof to != "undefined") {
       console.log("going back from " + from + " to " + to);
-      const gb_options = {
-        method: "POST",
-        body: JSON.stringify({
-          code: document.getElementById("code").innerHTML,
-          from: from,
-          to: to,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
-      fetch("/going_back", gb_options).then(function (response) {
-        return response.json().then((res) => {
-          console.log(res);
-          window.hist.pop();
-          $("#backArrow").attr(
-            "data-gobackto",
-            window.hist[window.hist.length - 2]
-          );
-          $(to).css({ transform: "translateX(-200vw)" });
-          $(to).removeClass("off");
-          if (to == "#homeView") {
-            $("#backArrow").addClass("off");
-          }
-          console.log("888:Going back to " + to + " from " + from);
-          window.setTimeout(function () {
-            $(to).css({ transform: "translateX(0vw)" });
-            $(from).css({ transform: "translateX(200vw)" });
-          }, 100);
-          window.setTimeout(function () {
-            $(from).addClass("off");
-            catchDisplay();
-          }, 1000);
+      console.log(window.hist);
+      if (from == "#postSelectView" && to == "#selectView") {
+        const gb_options = {
+          method: "POST",
+          body: JSON.stringify({
+            code: document.getElementById("code").innerHTML,
+            from: from,
+            to: to,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        fetch("/going_back", gb_options).then(function (response) {
+          return response.json().then((res) => {
+            console.log(res);
+            goBack(from, to);
+          });
         });
-      });
-      catchDisplay();
+      } else {
+        goBack(from, to);
+        catchDisplay();
+      }
     }
   }
+}
+
+function goBack(from, to) {
+  window.hist.pop();
+  $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
+  $(to).css({ transform: "translateX(-200vw)" });
+  $(to).removeClass("off");
+  if (to == "#homeView") {
+    $("#backArrow").addClass("off");
+  }
+  console.log("...Going back to " + to + " from " + from);
+  window.setTimeout(function () {
+    $(to).css({ transform: "translateX(0vw)" });
+    $(from).css({ transform: "translateX(200vw)" });
+  }, 100);
+  window.setTimeout(function () {
+    $(from).addClass("off");
+    catchDisplay();
+  }, 1000);
+}
+
+/*****************************/
+/*       lockGames(code)     */
+/*****************************/
+/**
+ * {lock a user's game}
+ *
+ * @param {String} code
+ */
+function lockGames(code) {
+  const lg_options = {
+    method: "POST",
+    body: JSON.stringify({ code: code }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/lock_games", lg_options).then(function (lresponse) {
+    return lresponse.json().then((lres) => {
+      console.log(lres);
+      $("#backArrow").addClass("off");
+      $("#postSelectView").css({
+        transform: "translateX(-200vw)",
+      });
+      window.setTimeout(function () {
+        $("#postSelectTitle").html("Edit Games List 🐿️");
+        $("#postSelectContainer").html();
+        $("#postSelectContainer").html(lres.htmlString);
+        registerEGS();
+        $("#postSelectView").css({ transition: "transform 0s" });
+        $("#postSelectView").css({
+          transform: "translateX(200vw)",
+        });
+        window.setTimeout(function () {
+          $("#postSelectView").css({ transition: "transform 1s" });
+          $("#postSelectView").css({
+            transform: "translateX(-0vw)",
+          });
+          $("#backArrow").removeClass("off");
+          $("#addGroupGamesInput").on("keyup", function (event) {
+            // Number 13 is the "Enter" key on the keyboard
+            if (event.keyCode === 13) {
+              console.log("submitting new group game");
+              event.preventDefault();
+              var game = addGroupGamesInput.value;
+              const gga_options = {
+                method: "POST",
+                body: JSON.stringify({ game: game, code: $("#code").text() }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              };
+              //add_user_game_unsorted
+              fetch("/group_game_add", gga_options).then(function (response) {
+                return response.json().then((res) => {
+                  if (res.err) {
+                    console.log(res);
+                    if ((res.err = "added")) {
+                      $("#addGroupGamesInput").css("color", "var(--main-red)");
+                      $('input[game_id="' + res.game + '"]').each(function () {
+                        $(this)
+                          .parent()
+                          .parent()
+                          .parent()
+                          .css("color", "var(--main-red)");
+                      });
+                      $("#addGroupGamesInput").addClass("shake");
+                      window.setTimeout(function () {
+                        $("#addGroupGamesInput").css(
+                          "color",
+                          "var(--main-black)"
+                        );
+                        $("#addGroupGamesInput").removeClass("shake");
+                        $('input[game_id="' + res.game + '"]').each(
+                          function () {
+                            $(this)
+                              .parent()
+                              .parent()
+                              .parent()
+                              .css("color", "var(--main-black)");
+                          }
+                        );
+                      }, 600);
+                    }
+                  } else {
+                    $("#editGameList").append(res.status);
+                    registerEGS();
+                  }
+                });
+              });
+            }
+          });
+
+          $("#gameUnlock").click(this, function () {
+            console.log("gameUnlock");
+            const ug_options = {
+              method: "POST",
+              body: JSON.stringify({
+                code: $("#code").text(),
+                unlock: "selectView",
+                unlockBack: true,
+              }),
+              headers: {
+                "Content-Type": "application/json",
+              },
+            };
+            fetch("/unlock_games", ug_options).then(function (uresponse) {
+              return uresponse.json().then((ures) => {
+                $("#backArrow").removeClass("off");
+                goBackFrom("#postSelectView", "#selectView");
+                console.log(ures);
+              });
+            });
+          });
+        }, 10);
+      }, 300);
+    });
+  });
 }
 
 /********************************/
@@ -970,6 +815,167 @@ function addListDisplay(theId, name) {
       <div class="listGames off"></div>
     </li>`;
   $("#selectLists").append(listString);
+}
+
+/**********************************/
+/*  Get a User's Populated Lists  */
+/**********************************/
+
+function gulp() {
+  const gulp_options = {
+    method: "POST",
+    body: "",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/get_user_lists_populated", gulp_options).then(function (response) {
+    //Gets the populated list, which is an object with two arrays,
+    //"allGames", which is supposed to have every game, and "custom",
+    //which has the user's custom lists. Array elements in allGames
+    //are objects which have the properties "rating", "name", and "owned".
+    //Array elements in custom are objects which have the properties "games"
+    //and "name". "Games" is an array of objects that each have the properties "rating",
+    //"name", and "owned".
+    return response.json().then((res) => {
+      if (!res.err) {
+        console.log("gulp", res);
+        addListDisplay(0, "All Games");
+        for (var i = 0; i < res.allGames.length; i++) {
+          var curSession = document.getElementsByTagName("session")[0];
+          var checked = "";
+          var greenText = "";
+          $(curSession)
+            .children()
+            .each(function (ind, el) {
+              if ($(el).attr("id") == res.allGames[i]._id.toString()) {
+                checked = " checked";
+                greenText = " greenText";
+              }
+            });
+          var htmlString =
+            `
+            <li>
+                <div rating="` +
+            res.allGames[i].rating +
+            `" owned="` +
+            res.allGames[i].owned +
+            `" class="gameName` +
+            greenText +
+            `" game_id="` +
+            res.allGames[i]._id +
+            `">` +
+            res.allGames[i].name +
+            `
+                </div>
+                <div class='toggle'>
+                    <label class="switch">
+                        <input type="checkbox"` +
+            checked +
+            ` onclick="toggleFont(this)" game_id="` +
+            res.allGames[i]._id +
+            `">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </li>`;
+          //Append the "All Games" list to the first <li>
+          $("li#0").children(".listGames").first().append(htmlString);
+        }
+        for (var i = 0; i < res.custom.length; i++) {
+          var curId = i + 1;
+          addListDisplay(curId, res.custom[i].name);
+          for (var j = 0; j < res.custom[i].games.length; j++) {
+            var htmlString =
+              `
+            <li>
+              <div rating="` +
+              res.custom[i].games[j].rating +
+              `" owned="` +
+              res.custom[i].games[j].owned +
+              `" class="gameName` +
+              greenText +
+              `" game_id="` +
+              res.custom[i].games[j]._id +
+              `">` +
+              res.custom[i].games[j].name +
+              `
+              </div>
+              <div class='toggle'>
+                  <label class="switch">
+                      <input type="checkbox"` +
+              checked +
+              ` onclick="toggleFont(this)" game_id="` +
+              res.custom[i].games[j]._id +
+              `">
+                      <span class="slider round"></span>
+                  </label>
+              </div>
+            </li>`;
+            //Append each custom list the the corresponding li
+            $("li#" + curId)
+              .children(".listGames")
+              .first()
+              .append(htmlString);
+          }
+        }
+        document.getElementById("listsContainer").innerHTML = htmlString;
+      } else {
+        console.log(res.err);
+      }
+    });
+  });
+}
+
+function addGame(event) {
+  // Number 13 is the "Enter" key on the keyboard
+  if (event.keyCode === 13) {
+    console.log("submitting new game");
+    event.preventDefault();
+    var game = addGamesInput.value;
+    const options = {
+      method: "POST",
+      body: JSON.stringify({ game: game }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    //add_user_game_unsorted
+    fetch("/game_add", options).then(function (response) {
+      return response.json().then((res) => {
+        if (!res.err) {
+          console.log(res);
+          //if (obj.err) {console.log('add_games err: ' + obj.err ); }
+
+          var htmlString =
+            `
+            <li>
+                <div rating="` +
+            res.status.rating +
+            `" owned="` +
+            res.status.owned +
+            `" class="gameName" game_id="` +
+            res.status._id +
+            `">` +
+            res.status.name +
+            `
+                </div>
+                <div class='toggle'>
+                    <label class="switch">
+                        <input type="checkbox" onclick="toggleFont(this)" game_id="` +
+            res.status._id +
+            `">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </li>`;
+          $("li#0").children(".listGames").first().append(htmlString);
+        } else {
+          console.log(res.err);
+        }
+      });
+    });
+  }
 }
 
 function recheckGreenLists() {
@@ -1184,7 +1190,9 @@ function toggleEdit(check) {
 }
 
 function registerEGS() {
+  console.log("egs");
   $("#editGameSubmit").click(this, function () {
+    console.log("egs fired");
     const egs_options = {
       method: "POST",
       body: JSON.stringify({
@@ -1377,7 +1385,10 @@ function showSelect(data) {
   });
   htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
   $("#postSelectContainer").html(htmlString);
+  console.log("registered lockGames");
+  //Is this setting up too many events?
   $("#gameLock").click(this, function () {
+    console.log("clicked gameLock");
     lockGames($("#code").text());
   });
 }
@@ -1431,11 +1442,10 @@ function fillVotes(games) {
     fetch("/submit_votes", sv_options).then(function (response) {
       return response.json().then((res) => {
         goForwardFrom("#voteView", "#postVoteView");
-        window.hist = ["#homeView", "#codeView", "#postVoteView"];
+        window.hist = ["#homeView", "#postVoteView"];
       });
     });
   });
-  goForwardFrom("#postSelectView", "#voteView");
 }
 
 /*****************************/
@@ -1492,7 +1502,7 @@ function fillGames(games) {
     }
   }
   $("#playContainer").html(htmlString);
-  goForwardFrom("#postVoteView", "#playView");
+  console.log("fillgames");
 }
 
 /*****************************/

@@ -38,9 +38,6 @@ router.get("/", (req, res) => {
 
 // Get notified when the user is navigating back
 router.post("/going_back", function (req, res) {
-  if (req.body.from == req.body.to) {
-    res.send({ err: "Wait a second! " + req.body.from });
-  }
   console.log(req.body);
   if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
@@ -57,7 +54,6 @@ router.post("/going_back", function (req, res) {
   } else {
     res.send({
       status: "Thank you for traveling with TTS Airlines",
-      req: req.body,
     });
   }
 });

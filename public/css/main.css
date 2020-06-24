@@ -375,11 +375,17 @@ input:checked + .slider:before {
 }
 
 #copiedAlert {
-  margin-top: calc(var(--vh15) + 2vw);
-  padding-top: 2vw;
+  opacity: 1;
+  position: absolute;
+  bottom: var(--vh20);
+  width: 80vw;
+  left: 10vw;
+  box-shadow: rgb(189, 189, 189) 0px 0px 5px 0px;
+  padding: 2vw 0px;
   text-align: center;
   transition: opacity 0.5s;
   opacity: 0;
+  background-color: var(--main-white);
 }
 
 /*****************/
@@ -1003,4 +1009,13 @@ input[type="range"]:focus {
 .shake {
   animation: shake 0.2s;
   animation-iteration-count: 2;
+}
+
+/*****************************/
+/*    Mobile Media Queries   */
+/*****************************/
+@media (max-width: 400px) {
+  #codeButtons ion-icon {
+    font-size: var(--vh5);
+  }
 }

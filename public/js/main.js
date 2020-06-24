@@ -125,7 +125,41 @@ window.addEventListener("load", function () {
 
   $("#sessionsItem").click(this, function (el) {
     closeMenu();
+    const gs_options = {
+      method: "POST",
+      body: "",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
     window.setTimeout(showMenuItem("#sessionsView"), 600);
+    fetch("/get_sessions", gs_options).then(function (response) {
+      return response.json().then((res) => {
+        htmlString = "";
+        for (var i = 0; i < res.sessions.length; i++) {
+          var usersplural = setPlural(
+            res.sessions[i].users,
+            " user, ",
+            " users, "
+          );
+          var gamesplural = setPlural(res.sessions[i].games, " game", " games");
+          htmlString +=
+            `<li id="` +
+            res.sessions[i].code +
+            `" onclick="copyText('` +
+            res.sessions[i].code +
+            `')">` +
+            res.sessions[i].code +
+            `: ` +
+            res.sessions[i].users +
+            usersplural +
+            res.sessions[i].games +
+            gamesplural +
+            `</li>`;
+        }
+        $("#sessionsContainer").html(htmlString);
+      });
+    });
   });
 
   $("#sessionsClose").click(this, function (el) {
@@ -267,100 +301,11 @@ window.addEventListener("load", function () {
           });
         } else {
           //If the session join was successful:
-          $("#backArrow").removeClass("off"); //Show the back arrow
-          setCode(res.code);
-          console.log(res.lock);
-
-          var sessionGames = "<session>";
-          for (var i = 0; i < res.games.length; i++) {
-            sessionGames +=
-              '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+          if (res.owned) {
+            createSession(res.status);
+          } else {
+            joinSession(res.status);
           }
-          $("#sessionContainer").html(sessionGames);
-
-          console.log("initGreenLists");
-          initGreenLists();
-
-          var isLockBack = false;
-          switch (res.lock) {
-            case "#postSelectView":
-              goForwardFrom("#homeView", "#postSelectView");
-              window.hist = ["#homeView", "#selectView", "#postSelectView"];
-            case "#postPostSelectView":
-              goForwardFrom("#homeView", "#postSelectView");
-              //lockback();
-              break;
-            case "#voteView":
-              const gv_options = {
-                method: "POST",
-                body: JSON.stringify({ code: $("#code").text() }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              };
-              fetch("/get_votes", gv_options).then(function (response) {
-                return response.json().then((res) => {
-                  console.log(res);
-                  fillVotes(res.games);
-                  goForwardFrom("#homeView", "#voteView");
-                });
-              });
-              break;
-            case "#playView":
-              const gg_options = {
-                method: "POST",
-                body: JSON.stringify({ code: $("#code").text() }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              };
-              fetch("/get_games", gg_options).then(function (response) {
-                return response.json().then((res) => {
-                  fillGames(res.games);
-                });
-              });
-              break;
-            default:
-              goForwardFrom("#homeView", res.lock);
-              //lockBack()
-              break;
-          }
-          /*******************************************/
-          /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
-          /* it will lock the back arrow to home and move the client ahead to the session lock.*/
-          /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
-          /* a string or an array of history states which the client will have access to.*/
-          /*******************************************/
-          console.log("Setting up client event with " + res.code);
-          socket.on(res.code + "client", (data) => {
-            console.log("Got client event", data);
-            if (data.lockBack && data.lock) {
-              goForwardFrom(window.hist[window.hist.length - 1], data.lock);
-              lockBack();
-            }
-            if (data.unlockBack && data.unlock) {
-              console.log(data);
-              if (data.unlock == "selectView") {
-                window.hist = ["#homeView", "#selectView", "#postSelectView"];
-              }
-              goBackFrom(
-                window.hist[window.hist.length - 1],
-                window.hist[window.hist.length - 2]
-              );
-            }
-            if (data.startVoting) {
-              console.log("this isn't done yet!");
-              //parse the voting data and output
-              fillVotes(data.games);
-              goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
-              window.hist = ["#homeView", "#voteView"];
-            }
-            if (data.play) {
-              fillGames(data.games);
-              goForwardFrom(window.hist[window.hist.length - 1], "#playView");
-              window.hist = ["#homeView", "#playView"];
-            }
-          });
         }
       });
     });
@@ -384,98 +329,7 @@ window.addEventListener("load", function () {
       return response.json().then((res) => {
         console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
-          socket.on(res.status.code + "owner", (data) => {
-            console.log("received ", data);
-            if (data.selectEvent) {
-              //Rewrite #postSelectContainer in real time for owner
-              showSelect(data.select);
-            }
-            if (data.startVoting) {
-              //Parse the voting data and output
-              fillVotes(data.games);
-            }
-            if (data.voteSubmit) {
-              //Rewrite the voting status screen in real time
-              fillPostVote(data.users);
-            }
-            if (data.play) {
-              //Fill the final list of games to play
-              fillGames(data.games);
-            }
-          });
-          $("#backArrow").removeClass("off");
-          setCode(res.status.code);
-          var index = res.status.users.findIndex((obj) => obj.user == res.user);
-          var dest = res.status.lock;
-          console.log("dest", dest);
-          if (
-            res.status.users[index].done == false &&
-            dest == "#postSelectView"
-          ) {
-            dest = "#selectView";
-            console.log("changing");
-          }
-          var toLock = false;
-          if (dest == "#postPostSelectView") {
-            dest = "#postSelectView";
-            toLock = true;
-          }
-          if (dest == "#selectView") {
-            dest = "#codeView";
-          }
-          if (dest == "#voteView") {
-            var games = [];
-            for (var i = 0; i < res.status.votes.length; i++) {
-              if (res.status.votes[i].active) {
-                games.push({
-                  game: res.status.votes[i].game,
-                  name: res.status.votes[i].name,
-                });
-              }
-            }
-            fillVotes(games);
-          }
-          if (dest == "#postVoteView") {
-            var users = [];
-            for (var i = 0; i < res.status.users.length; i++) {
-              users.push({
-                doneVoting: res.status.users[i].doneVoting,
-                name: res.status.users[i].name,
-              });
-            }
-            fillPostVote(users);
-          }
-          if (dest == "#playView") {
-            var games = [];
-            for (var i = 0; i < res.status.votes.length; i++) {
-              games[i] = { name: res.status.votes[i].name, votes: 0 };
-              for (var j = 0; j < res.status.votes[i].voters.length; j++) {
-                games[i].votes += res.status.votes[i].voters[j].vote;
-              }
-            }
-            games.sort(function (a, b) {
-              var x = a.votes;
-              var y = b.votes;
-              return x < y ? 1 : x > y ? -1 : 0;
-            });
-            fillGames(games);
-          }
-          console.log("dest: " + dest);
-          goForwardFrom("#homeView", dest);
-          console.log("hist after creating: ", window.hist);
-          if (toLock) {
-            lockGames(res.status.code);
-          }
-          var sessionGames = "<session>";
-          if (res.games) {
-            for (var i = 0; i < res.games.length; i++) {
-              sessionGames +=
-                '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
-            }
-          }
-          document.getElementById("sessionContainer").innerHTML = sessionGames;
-          console.log("initGreenLists");
-          initGreenLists();
+          createSession(res.status);
         }
       });
     });
@@ -485,23 +339,7 @@ window.addEventListener("load", function () {
   /*   Copy the code to clipboard    */
   /***********************************/
   $("#copyButton").on("click", function () {
-    $("#copiedAlert").css({ opacity: 1 });
-    var copyText = document.getElementById("code").innerHTML;
-    const el = document.createElement("textarea");
-    el.value = copyText;
-    document.body.appendChild(el);
-
-    /* Select the text field */
-    el.select();
-    el.setSelectionRange(0, 99999); /*For mobile devices*/
-
-    /* Copy the text inside the text field */
-    document.execCommand("copy");
-    document.body.removeChild(el);
-
-    window.setTimeout(function () {
-      $("#copiedAlert").css({ opacity: 0 });
-    }, 1000);
+    copyText($("#code").html());
   });
 
   /***********************************/
@@ -568,6 +406,196 @@ window.addEventListener("load", function () {
       });
     });
   });
+
+  function createSession(res) {
+    console.log(res);
+    socket.on(res.session.code + "owner", (data) => {
+      console.log("received ", data);
+      if (data.selectEvent) {
+        //Rewrite #postSelectContainer in real time for owner
+        showSelect(data.select);
+      }
+      if (data.startVoting) {
+        //Parse the voting data and output
+        fillVotes(data.games);
+      }
+      if (data.voteSubmit) {
+        //Rewrite the voting status screen in real time
+        fillPostVote(data.users);
+      }
+      if (data.play) {
+        //Fill the final list of games to play
+        fillGames(data.games);
+      }
+    });
+    $("#backArrow").removeClass("off");
+    setCode(res.session.code);
+    var index = res.session.users.findIndex((obj) => obj.user == res.user);
+    var dest = res.session.lock;
+    console.log("dest", dest);
+    if (res.session.users[index].done == false && dest == "#postSelectView") {
+      dest = "#selectView";
+      console.log("changing");
+    }
+    var toLock = false;
+    if (dest == "#postPostSelectView") {
+      dest = "#postSelectView";
+      toLock = true;
+    }
+    if (dest == "#selectView") {
+      dest = "#codeView";
+    }
+    if (dest == "#voteView") {
+      var games = [];
+      for (var i = 0; i < res.session.votes.length; i++) {
+        if (res.session.votes[i].active) {
+          games.push({
+            game: res.session.votes[i].game,
+            name: res.session.votes[i].name,
+          });
+        }
+      }
+      fillVotes(games);
+    }
+    if (dest == "#postVoteView") {
+      var users = [];
+      for (var i = 0; i < res.session.users.length; i++) {
+        users.push({
+          doneVoting: res.session.users[i].doneVoting,
+          name: res.session.users[i].name,
+        });
+      }
+      fillPostVote(users);
+    }
+    if (dest == "#playView") {
+      var games = [];
+      for (var i = 0; i < res.session.votes.length; i++) {
+        games[i] = { name: res.session.votes[i].name, votes: 0 };
+        for (var j = 0; j < res.session.votes[i].voters.length; j++) {
+          games[i].votes += res.session.votes[i].voters[j].vote;
+        }
+      }
+      games.sort(function (a, b) {
+        var x = a.votes;
+        var y = b.votes;
+        return x < y ? 1 : x > y ? -1 : 0;
+      });
+      fillGames(games);
+    }
+    console.log("dest: " + dest);
+    goForwardFrom("#homeView", dest);
+    console.log("hist after creating: ", window.hist);
+    if (toLock) {
+      lockGames(res.session.code);
+    }
+    var sessionGames = "<session>";
+    if (res.games) {
+      for (var i = 0; i < res.games.length; i++) {
+        sessionGames +=
+          '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+      }
+    }
+    document.getElementById("sessionContainer").innerHTML = sessionGames;
+    console.log("initGreenLists");
+    initGreenLists();
+  }
+
+  function joinSession(res) {
+    $("#backArrow").removeClass("off"); //Show the back arrow
+    setCode(res.code);
+    console.log(res.lock);
+
+    var sessionGames = "<session>";
+    for (var i = 0; i < res.games.length; i++) {
+      sessionGames +=
+        '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+    }
+    $("#sessionContainer").html(sessionGames);
+
+    console.log("initGreenLists");
+    initGreenLists();
+
+    var isLockBack = false;
+    switch (res.lock) {
+      case "#postSelectView":
+        goForwardFrom("#homeView", "#postSelectView");
+        window.hist = ["#homeView", "#selectView", "#postSelectView"];
+      case "#postPostSelectView":
+        goForwardFrom("#homeView", "#postSelectView");
+        //lockback();
+        break;
+      case "#voteView":
+        const gv_options = {
+          method: "POST",
+          body: JSON.stringify({ code: $("#code").text() }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        fetch("/get_votes", gv_options).then(function (response) {
+          return response.json().then((res) => {
+            console.log(res);
+            fillVotes(res.games);
+            goForwardFrom("#homeView", "#voteView");
+          });
+        });
+        break;
+      case "#playView":
+        const gg_options = {
+          method: "POST",
+          body: JSON.stringify({ code: $("#code").text() }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        fetch("/get_games", gg_options).then(function (response) {
+          return response.json().then((res) => {
+            fillGames(res.games);
+          });
+        });
+        break;
+      default:
+        goForwardFrom("#homeView", res.lock);
+        //lockBack()
+        break;
+    }
+    /*******************************************/
+    /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
+    /* it will lock the back arrow to home and move the client ahead to the session lock.*/
+    /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
+    /* a string or an array of history states which the client will have access to.*/
+    /*******************************************/
+    console.log("Setting up client event with " + res.code);
+    socket.on(res.code + "client", (data) => {
+      console.log("Got client event", data);
+      if (data.lockBack && data.lock) {
+        goForwardFrom(window.hist[window.hist.length - 1], data.lock);
+        lockBack();
+      }
+      if (data.unlockBack && data.unlock) {
+        console.log(data);
+        if (data.unlock == "selectView") {
+          window.hist = ["#homeView", "#selectView", "#postSelectView"];
+        }
+        goBackFrom(
+          window.hist[window.hist.length - 1],
+          window.hist[window.hist.length - 2]
+        );
+      }
+      if (data.startVoting) {
+        console.log("this isn't done yet!");
+        //parse the voting data and output
+        fillVotes(data.games);
+        goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
+        window.hist = ["#homeView", "#voteView"];
+      }
+      if (data.play) {
+        fillGames(data.games);
+        goForwardFrom(window.hist[window.hist.length - 1], "#playView");
+        window.hist = ["#homeView", "#playView"];
+      }
+    });
+  }
 
   /*
    *
@@ -958,7 +986,9 @@ function gulp() {
           htmlString +=
             `<li id="` +
             res.sessions[i].code +
-            `">` +
+            `" onclick="copyText('` +
+            res.sessions[i].code +
+            `')">` +
             res.sessions[i].code +
             `: ` +
             res.sessions[i].users +
@@ -1412,6 +1442,34 @@ function listToggle(el) {
 function setCode(code) {
   $("#code").html(code);
   $("#selectCodeDisplay").html("Your Code: " + code);
+}
+
+/*****************************/
+/*    copyText(codeArea)     */
+/*****************************/
+/**
+ * {Desc} Copy text from the codeArea to the clipboard
+ *
+ * @param {*} codeArea
+ */
+function copyText(copy) {
+  console.log("copying");
+  $("#copiedAlert").css({ opacity: 1 });
+  const el = document.createElement("textarea");
+  el.value = copy;
+  document.body.appendChild(el);
+
+  /* Select the text field */
+  el.select();
+  el.setSelectionRange(0, 99999); /*For mobile devices*/
+
+  /* Copy the text inside the text field */
+  document.execCommand("copy");
+  document.body.removeChild(el);
+
+  window.setTimeout(function () {
+    $("#copiedAlert").css({ opacity: 0 });
+  }, 1000);
 }
 
 /*****************************/

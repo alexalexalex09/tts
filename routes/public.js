@@ -94,9 +94,18 @@ router.post("/get_user_lists_populated", (req, res) => {
   }
 });
 
+router.post("/get_sessions", (req, res) => {
+  if (req.user) {
+    getSessions(req.user.id, "", res);
+  } else {
+    res.send({ err: "Not logged in" });
+  }
+});
+
 function getSessions(theId, lists, res) {
   Session.find({ owner: theId }).exec(function (err, curSessions) {
     var sessions = [];
+    console.log("Sessions:", curSessions);
     for (var i = 0; i < curSessions.length; i++) {
       sessions.push({
         code: curSessions[i].code,
@@ -287,43 +296,70 @@ router.post("/join_session", function (req, res) {
       res.send({ err: "No such session" });
     } else {
       var sendGames = checkIfAddedByUser(curSession, req.user.id);
-      var newUser = true;
-      var lock = curSession.lock;
-      if (lock == "#codeView") {
-        lock = "#selectView";
-      }
-      for (var i = 0; i < curSession.users.length; i++) {
-        //TODO: This could be changed to Array.findIndex
-        if (curSession.users[i].user == req.user.id) {
-          newUser = false;
-          console.log(curSession.users[i]);
-          if (curSession.users[i].done && lock == "#selectView") {
-            lock = "#postSelectView";
+      if (curSession.owner == req.user.id) {
+        //Join as owner
+        var tosave = false;
+        for (var i = 0; i < curSession.games.length; i++) {
+          if (curSession.games[i].addedBy.length == 0) {
+            curSession.games[i].addedBy = curSession.owner;
+            tosave = true;
           }
-          if (curSession.users[i].doneVoting && lock == "#voteView") {
-            lock = "#postVoteView";
+          console.log(curSession.games[i], tosave);
+          if (tosave) {
+            curSession.save();
           }
         }
-      }
-      console.log("newUser ", newUser);
-      if (newUser) {
-        curSession.users.push({
-          user: req.user.id,
-          name: req.user.profile.firstName,
-          done: false,
-          doneVoting: false,
+        socketAPI.sendNotification("Session already created...");
+        socketAPI.addGame({
+          code: curSession.code,
         });
-        curSession.save().then(function () {
-          socketAPI.addGame({
-            code: req.body.code,
+        res.send({
+          owned: true,
+          status: { session: curSession, games: sendGames, user: req.user.id },
+        });
+      } else {
+        //Join as client
+        var newUser = true;
+        var lock = curSession.lock;
+        if (lock == "#codeView") {
+          lock = "#selectView";
+        }
+        for (var i = 0; i < curSession.users.length; i++) {
+          //TODO: This could be changed to Array.findIndex
+          if (curSession.users[i].user == req.user.id) {
+            newUser = false;
+            console.log(curSession.users[i]);
+            if (curSession.users[i].done && lock == "#selectView") {
+              lock = "#postSelectView";
+            }
+            if (curSession.users[i].doneVoting && lock == "#voteView") {
+              lock = "#postVoteView";
+            }
+          }
+        }
+        console.log("newUser ", newUser);
+        if (newUser) {
+          curSession.users.push({
+            user: req.user.id,
+            name: req.user.profile.firstName,
+            done: false,
+            doneVoting: false,
           });
+          curSession.save().then(function () {
+            socketAPI.addGame({
+              code: req.body.code,
+            });
+          });
+        }
+        res.send({
+          owned: false,
+          status: {
+            code: curSession.code,
+            lock: lock,
+            games: sendGames,
+          },
         });
       }
-      res.send({
-        code: curSession.code,
-        lock: lock,
-        games: sendGames,
-      });
     }
   });
 });
@@ -345,6 +381,22 @@ function checkIfAddedByUser(theSession, userId) {
 router.post("/create_session", function (req, res) {
   console.log(req.user);
   if (req.user) {
+    function makeid(length) {
+      //TODO: Filter out bad words
+      var result = "";
+      var characters =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      var charactersLength = characters.length;
+      for (var i = 0; i < length; i++) {
+        result += characters.charAt(
+          Math.floor(Math.random() * charactersLength)
+        );
+      }
+      return result;
+    }
+
+    var theCode = makeid(5);
+
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
       console.log(curSession);
 
@@ -363,48 +415,30 @@ router.post("/create_session", function (req, res) {
       }
 
       var theCode = makeid(5);
-
-      if (!curSession) {
-        var sessiondetail = {
-          owner: req.user.id,
-          code: theCode,
-          games: [],
-          users: [
-            {
-              user: req.user.id,
-              name: req.user.profile.firstName,
-              done: false,
-            },
-          ],
-          lock: "#codeView",
-        };
-        var session = new Session(sessiondetail);
-        session.save().then(function (theSession) {
-          socketAPI.sendNotification("Session created...");
-          socketAPI.addGame({
-            code: theCode,
-          });
-          res.send({ status: theSession, user: req.user.id });
-        });
-      } else {
-        var sendGames = checkIfAddedByUser(curSession, req.user.id);
-        var tosave = false;
-        for (var i = 0; i < curSession.games.length; i++) {
-          if (curSession.games[i].addedBy.length == 0) {
-            curSession.games[i].addedBy = curSession.owner;
-            tosave = true;
-          }
-          console.log(curSession.games[i], tosave);
-          if (tosave) {
-            curSession.save();
-          }
-        }
-        socketAPI.sendNotification("Session already created...");
+      var sessiondetail = {
+        owner: req.user.id,
+        code: theCode,
+        games: [],
+        users: [
+          {
+            user: req.user.id,
+            name: req.user.profile.firstName,
+            done: false,
+          },
+        ],
+        lock: "#codeView",
+      };
+      var session = new Session(sessiondetail);
+      session.save().then(function (theSession) {
+        console.log("Session created...");
         socketAPI.addGame({
-          code: curSession.code,
+          code: theCode,
         });
-        res.send({ status: curSession, games: sendGames, user: req.user.id });
-      }
+        res.send({
+          owned: true,
+          status: { session: theSession, user: req.user.id },
+        });
+      });
     });
   } else {
     res.send({ err: "No user" });

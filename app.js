@@ -70,10 +70,8 @@ app.use(
 app.use(oidc.router);
 app.use((req, res, next) => {
   if (!req.userContext) {
-    console.log("no userinfo");
     return next();
   }
-  console.log("userinfo: ", req.userContext.userinfo);
   //Make user variable available
   oktaClient
     .getUser(req.userContext.userinfo.sub)

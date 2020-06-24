@@ -12,28 +12,31 @@ block content
           rect(width='100' height='15' rx='8')
           rect(y='30' width='100' height='15' rx='8')
           rect(y='60' width='100' height='15' rx='8')
-      #menu.off
+      #menu.menu.off
         #menuClose.closeButton
           ion-icon(name='close-outline')
-        #menuItems
+        #menuItems.itemContainer
           ul
-            li
+            li#sessionsItem
               ion-icon(name='help-circle-outline')
-              | FAQ
-            li
+              | My Sessions
+            li#gamesItem
               ion-icon(name='library-outline')
-              | Manage Games
-            li
+              | My Games and Lists
+            li#accountItem
               ion-icon(name='person-circle-outline')
               | My Account
-            li
+            li#faqItem
+              ion-icon(name='help-circle-outline')
+              | FAQ
+            li#aboutItem
               ion-icon(name='information-circle-outline')
               | About
-            li
+            li#premiumItem
               ion-icon(name='star-outline')
               | Get Premium
             if user
-              li
+              li#logoutItem
                 ion-icon(name='log-out-outline')
                 form(method="post" action="/logout")
                   button Logout
@@ -98,7 +101,15 @@ block content
       #playInfo Here are the games your group selected, beginning with the game you want to play most!
       #playContainer
 
-    #accountView.view.off
+    #sessionsView.pop.off
+      #sessionsClose.closeButton
+        ion-icon(name='close-outline')
+      #sessionsTitle.pageTitle My Sessions 🐿️
+      #sessionsContainer
+      
+    #gamesView.pop.off
+      #gamesTitle.pageTitle My Games 🐿️
+      #gamesContainer
 
 
 

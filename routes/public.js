@@ -67,7 +67,7 @@ router.post("/get_user_lists_populated", (req, res) => {
       .exec(function (err, curUser) {
         if (curUser) {
           if (curUser.lists) {
-            res.send(curUser.lists);
+            getSessions(req.user.id, curUser.lists, res);
           } else {
             newUser = {
               profile_id: req.user.id,
@@ -76,7 +76,7 @@ router.post("/get_user_lists_populated", (req, res) => {
             };
             curUser = new User(newUser);
             curUser.save();
-            res.send(curUser.lists);
+            getSessions(req.user.id, curUser.lists, res);
           }
         } else {
           newUser = {
@@ -86,13 +86,27 @@ router.post("/get_user_lists_populated", (req, res) => {
           };
           curUser = new User(newUser);
           curUser.save();
-          res.send(curUser.lists);
+          getSessions(req.user.id, curUser.lists, res);
         }
       });
   } else {
     res.send({ err: "Log in before populating user object" });
   }
 });
+
+function getSessions(theId, lists, res) {
+  Session.find({ owner: theId }).exec(function (err, curSessions) {
+    var sessions = [];
+    for (var i = 0; i < curSessions.length; i++) {
+      sessions.push({
+        code: curSessions[i].code,
+        games: curSessions[i].games.length,
+        users: curSessions[i].users.length,
+      });
+    }
+    res.send({ lists: lists, sessions: sessions });
+  });
+}
 
 //Get current user's  lists
 router.post("/get_user_lists", (req, res) => {

@@ -156,9 +156,10 @@ input:checked + .slider:before {
   display: block;
   transition: opacity 0.5s;
   width: 100%;
-  height: var(--vh90);
+  height: var(--vh100);
   position: absolute;
   border: 0px;
+  overflow-y: hidden;
 }
 
 #hContainer {
@@ -179,6 +180,7 @@ input:checked + .slider:before {
   justify-content: center;
   align-items: center;
   display: flex;
+  cursor: pointer;
 }
 
 #menuIcon svg {
@@ -814,6 +816,46 @@ input[type="range"]:focus {
 }
 
 /*****************/
+/* Sessions View */
+/*****************/
+
+.pop {
+  position: absolute;
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
+  transition: transform 1s;
+}
+
+#sessionsView {
+  background-color: var(--main-blue);
+  padding-top: var(--vh5);
+  height: var(--vh100);
+  top: 0px;
+  transform: translateY(var(--vh100));
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+#sessionsClose {
+  color: var(--main-white);
+}
+
+#sessionsTitle {
+  height: var(--vh10);
+  color: var(--main-white);
+}
+
+#sessionsContainer li {
+  color: var(--main-white);
+  list-style: none;
+  padding-left: 5vw;
+  font-size: 1.5em;
+  cursor: pointer;
+  padding-bottom: calc(var(--vh) * 3);
+}
+
+/*****************/
 /*    Testing    */
 /*****************/
 #centerbutton {
@@ -839,51 +881,60 @@ input[type="range"]:focus {
 /*****************/
 
 #menu {
+  background-color: var(--main-blue);
+}
+
+#accountView {
+  background-color: var(--main-green);
+}
+
+.menu {
   width: 60vw;
   height: calc(var(--vh, 1vh) * 100);
   z-index: 100;
   position: absolute;
   top: 0;
   left: 0;
-  background-color: var(--main-blue);
   color: var(--main-white);
   transform: translateX(-60vw);
   transition: transform 0.5s;
 }
 
-#menu a {
+.menu a {
   color: var(--main-white) !important;
 }
 
-#menuClose {
+.closeButton {
   position: absolute;
   right: 5px;
   top: 5px;
 }
 
-#menuClose ion-icon {
+.closeButton ion-icon {
   height: 30px;
   width: 30px;
   --ionicon-stroke-width: 48px;
+  cursor: pointer;
 }
 
-#menuItems {
+.itemContainer {
   margin-top: calc(var(--vh, 1vh) * 10);
 }
 
-#menuItems ul {
+.itemContainer ul {
   list-style-type: none;
   padding-left: 5vw;
 }
 
-#menuItems ul li {
+.itemContainer ul li {
   margin-top: calc(var(--vh, 1vh) * 2);
+  cursor: pointer;
 }
 
-#menuItems ul li .i-manage,
-#menuItems ul li .i-account,
-#menuItems ul li .i-about,
-#menuItems ul li .i-premium {
+.itemContainer ul li .i-manage,
+.itemContainer ul li .i-account,
+.itemContainer ul li .i-about,
+.itemContainer ul li .i-premium {
   background-image: url("../img/close-circle-outline.svg");
   height: 20px;
   width: 20px;
@@ -892,7 +943,7 @@ input[type="range"]:focus {
   transform: translateY(4px);
 }
 
-#menuItems ul li ion-icon {
+.itemContainer ul li ion-icon {
   width: 20px;
   height: 20px;
   margin-right: 10px;
@@ -903,13 +954,25 @@ input[type="range"]:focus {
   stroke: white !important;
 }
 
-#menuCatch {
+.clickCatcher {
   top: 0px;
   width: 40vw;
   height: calc(var(--vh, 1vh) * 100);
   position: absolute;
   left: 60vw;
   z-index: 999;
+}
+
+#logoutItem form {
+  display: inline;
+}
+
+#logoutItem form button {
+  color: var(--main-white);
+  background-color: #0000;
+  border: none;
+  padding: 0px;
+  cursor: pointer;
 }
 
 /****************/

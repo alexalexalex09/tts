@@ -120,6 +120,33 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
+  /*    My Sessions Handler    */
+  /*****************************/
+
+  $("#sessionsItem").click(this, function (el) {
+    closeMenu();
+    window.setTimeout(showMenuItem("#sessionsView"), 600);
+  });
+
+  $("#sessionsClose").click(this, function (el) {
+    closeMenuItem("#sessionsView");
+  });
+
+  function showMenuItem(view) {
+    $(view).removeClass("off");
+    window.setTimeout(function () {
+      $(view).css("transform", "translateY(0vh)");
+    }, 10);
+  }
+
+  function closeMenuItem(view) {
+    $(view).css("transform", "translateY(var(--vh100))");
+    window.setTimeout(function () {
+      $(view).addClass("off");
+    }, 600);
+  }
+
+  /*****************************/
   /* Join button click handler */
   /*****************************/
   $("#joinButton").click(this, function (el) {
@@ -841,14 +868,14 @@ function gulp() {
       if (!res.err) {
         console.log("gulp", res);
         addListDisplay(0, "All Games");
-        for (var i = 0; i < res.allGames.length; i++) {
+        for (var i = 0; i < res.lists.allGames.length; i++) {
           var curSession = document.getElementsByTagName("session")[0];
           var checked = "";
           var greenText = "";
           $(curSession)
             .children()
             .each(function (ind, el) {
-              if ($(el).attr("id") == res.allGames[i]._id.toString()) {
+              if ($(el).attr("id") == res.lists.allGames[i]._id.toString()) {
                 checked = " checked";
                 greenText = " greenText";
               }
@@ -857,15 +884,15 @@ function gulp() {
             `
             <li>
                 <div rating="` +
-            res.allGames[i].rating +
+            res.lists.allGames[i].rating +
             `" owned="` +
-            res.allGames[i].owned +
+            res.lists.allGames[i].owned +
             `" class="gameName` +
             greenText +
             `" game_id="` +
-            res.allGames[i]._id +
+            res.lists.allGames[i]._id +
             `">` +
-            res.allGames[i].name +
+            res.lists.allGames[i].name +
             `
                 </div>
                 <div class='toggle'>
@@ -873,7 +900,7 @@ function gulp() {
                         <input type="checkbox"` +
             checked +
             ` onclick="toggleFont(this)" game_id="` +
-            res.allGames[i]._id +
+            res.lists.allGames[i]._id +
             `">
                         <span class="slider round"></span>
                     </label>
@@ -882,23 +909,23 @@ function gulp() {
           //Append the "All Games" list to the first <li>
           $("li#0").children(".listGames").first().append(htmlString);
         }
-        for (var i = 0; i < res.custom.length; i++) {
+        for (var i = 0; i < res.lists.custom.length; i++) {
           var curId = i + 1;
-          addListDisplay(curId, res.custom[i].name);
-          for (var j = 0; j < res.custom[i].games.length; j++) {
+          addListDisplay(curId, res.lists.custom[i].name);
+          for (var j = 0; j < res.lists.custom[i].games.length; j++) {
             var htmlString =
               `
             <li>
               <div rating="` +
-              res.custom[i].games[j].rating +
+              res.lists.custom[i].games[j].rating +
               `" owned="` +
-              res.custom[i].games[j].owned +
+              res.lists.custom[i].games[j].owned +
               `" class="gameName` +
               greenText +
               `" game_id="` +
-              res.custom[i].games[j]._id +
+              res.lists.custom[i].games[j]._id +
               `">` +
-              res.custom[i].games[j].name +
+              res.lists.custom[i].games[j].name +
               `
               </div>
               <div class='toggle'>
@@ -906,7 +933,7 @@ function gulp() {
                       <input type="checkbox"` +
               checked +
               ` onclick="toggleFont(this)" game_id="` +
-              res.custom[i].games[j]._id +
+              res.lists.custom[i].games[j]._id +
               `">
                       <span class="slider round"></span>
                   </label>
@@ -919,12 +946,48 @@ function gulp() {
               .append(htmlString);
           }
         }
-        document.getElementById("listsContainer").innerHTML = htmlString;
+        $("#listsContainer").html(htmlString);
+        htmlString = "";
+        for (var i = 0; i < res.sessions.length; i++) {
+          var usersplural = setPlural(
+            res.sessions[i].users,
+            " user, ",
+            " users, "
+          );
+          var gamesplural = setPlural(res.sessions[i].games, " game", " games");
+          htmlString +=
+            `<li id="` +
+            res.sessions[i].code +
+            `">` +
+            res.sessions[i].code +
+            `: ` +
+            res.sessions[i].users +
+            usersplural +
+            res.sessions[i].games +
+            gamesplural +
+            `</li>`;
+        }
+        $("#sessionsContainer").html(htmlString);
       } else {
         console.log(res.err);
       }
     });
   });
+}
+
+/** setPlural(countable, singular, plural)
+ * {Desc} Returns singular if countable is singular, plural if otherwise
+ *
+ * @param {Number} countable
+ * @param {String} singular
+ * @param {String} plural
+ * @returns {String} Singluar or plural
+ */
+function setPlural(countable, singular, plural) {
+  if (countable == 1) {
+    return singular;
+  }
+  return plural;
 }
 
 function addGame(event) {

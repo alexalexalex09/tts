@@ -417,7 +417,7 @@ input:checked + .slider:before {
   display: grid;
   grid-template-columns: 1fr 11vw 11vw;
   grid-template-rows: 1fr;
-  align-items: end;
+  align-items: start;
 }
 
 #selectLists .listGames {
@@ -831,9 +831,6 @@ input[type="range"]:focus {
   justify-content: center;
   align-items: center;
   transition: transform 1s;
-}
-
-#sessionsView {
   background-color: var(--main-blue);
   padding-top: var(--vh5);
   height: var(--vh100);
@@ -843,22 +840,40 @@ input[type="range"]:focus {
   box-sizing: border-box;
 }
 
-#sessionsClose {
+#sessionsClose,
+#gamesClose {
   color: var(--main-white);
 }
 
-#sessionsTitle {
+#sessionsTitle,
+#gamesTitle {
   height: var(--vh10);
   color: var(--main-white);
 }
 
-#sessionsContainer li {
+#sessionsContainer li,
+#gamesContainer > li,
+#gamesContainer .listGames {
   color: var(--main-white);
   list-style: none;
   padding-left: 5vw;
-  font-size: 1.5em;
+  font-size: 1em;
   cursor: pointer;
   padding-bottom: calc(var(--vh) * 3);
+}
+
+#gamesContainer > li {
+  min-height: var(--vh5);
+  font-size: calc(var(--vh, 1vh) * 3);
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 11vw;
+  grid-template-rows: 1fr;
+  align-items: start;
+}
+
+#gamesContainer .listExpand {
+  justify-self: center;
 }
 
 /*****************/

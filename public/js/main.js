@@ -135,51 +135,28 @@ window.addEventListener("load", function () {
     window.setTimeout(showMenuItem("#sessionsView"), 600);
     fetch("/get_sessions", gs_options).then(function (response) {
       return response.json().then((res) => {
-        htmlString = "";
-        for (var i = 0; i < res.sessions.length; i++) {
-          var usersplural = setPlural(
-            res.sessions[i].users,
-            " user, ",
-            " users, "
-          );
-          var gamesplural = setPlural(res.sessions[i].games, " game", " games");
-          htmlString +=
-            `<li id="` +
-            res.sessions[i].code +
-            `" onclick="copyText('` +
-            res.sessions[i].code +
-            `')">` +
-            res.sessions[i].code +
-            `: ` +
-            res.sessions[i].users +
-            usersplural +
-            res.sessions[i].games +
-            gamesplural +
-            `</li>`;
-        }
-        $("#sessionsContainer").html(htmlString);
+        writeSessions(res);
       });
     });
   });
 
-  //test
   $("#sessionsClose").click(this, function (el) {
     closeMenuItem("#sessionsView");
   });
 
-  function showMenuItem(view) {
-    $(view).removeClass("off");
-    window.setTimeout(function () {
-      $(view).css("transform", "translateY(0vh)");
-    }, 10);
-  }
+  /*****************************/
+  /*      My Games Handler     */
+  /*****************************/
+  //Populate all games on the first run through
+  $("#gamesItem").click(this, function (el) {
+    gulp();
+    closeMenu();
+    window.setTimeout(showMenuItem("#gamesView"), 600);
+  });
 
-  function closeMenuItem(view) {
-    $(view).css("transform", "translateY(var(--vh100))");
-    window.setTimeout(function () {
-      $(view).addClass("off");
-    }, 600);
-  }
+  $("#gamesClose").click(this, function (el) {
+    closeMenuItem("#gamesView");
+  });
 
   /*****************************/
   /* Join button click handler */
@@ -850,7 +827,7 @@ function lockGames(code) {
  * @param {String} theId
  * @param {String} name
  */
-function addListDisplay(theId, name) {
+function addListDisplay(theId, name, dest, toggle) {
   var listString =
     `<li id="` +
     theId +
@@ -861,16 +838,47 @@ function addListDisplay(theId, name) {
       </div>
       <div class="listExpand" onclick="listToggle(this)">
           <ion-icon name="chevron-down-outline"></ion-icon>
-      </div>
-      <div class='toggle' >
+      </div>`;
+  if (toggle) {
+    listString += `<div class='toggle' >
           <label class="switch">
               <input type="checkbox" onclick="toggleFont(this)">
               <span class="slider round"></span>
           </label>
-      </div>
-      <div class="listGames off"></div>
+      </div>`;
+  }
+  listString += `<div class="listGames off"></div>
     </li>`;
-  $("#selectLists").append(listString);
+  $(dest).append(listString);
+}
+
+/**********************************/
+/*   Get all of a User's Games    */
+/**********************************/
+function guag() {
+  const guag_options = {
+    method: "POST",
+    body: "",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/get_user_all_games", guag_options).then(function (response) {
+    return response.json().then((res) => {
+      if (!res.err) {
+        console.log(res);
+        var htmlString = "";
+        for (var i = 0; i < res.lists.allGames.length; i++) {
+          htmlString +=
+            `<li id="` +
+            res.lists.allGames[i]._id +
+            `">` +
+            res.lists.allGames[i].name +
+            `</li>`;
+        }
+      }
+    });
+  });
 }
 
 /**********************************/
@@ -896,7 +904,9 @@ function gulp() {
     return response.json().then((res) => {
       if (!res.err) {
         console.log("gulp", res);
-        addListDisplay(0, "All Games");
+        $("#gamesContainer").html(" ");
+        addListDisplay(0, "All Games", "#selectLists", true);
+        addListDisplay("games0", "All Games", "#gamesContainer", false);
         for (var i = 0; i < res.lists.allGames.length; i++) {
           var curSession = document.getElementsByTagName("session")[0];
           var checked = "";
@@ -935,12 +945,25 @@ function gulp() {
                     </label>
                 </div>
             </li>`;
+          var gameString =
+            `<li id="` +
+            res.lists.allGames[i]._id +
+            `">` +
+            res.lists.allGames[i].name +
+            `</li>`;
           //Append the "All Games" list to the first <li>
           $("li#0").children(".listGames").first().append(htmlString);
+          $("li#games0").children(".listGames").first().append(gameString);
         }
         for (var i = 0; i < res.lists.custom.length; i++) {
           var curId = i + 1;
-          addListDisplay(curId, res.lists.custom[i].name);
+          addListDisplay(curId, res.lists.custom[i].name, "#selectLists", true);
+          addListDisplay(
+            "games" + curId,
+            res.lists.custom[i].name,
+            "#gamesContainer",
+            false
+          );
           for (var j = 0; j < res.lists.custom[i].games.length; j++) {
             var htmlString =
               `
@@ -968,42 +991,81 @@ function gulp() {
                   </label>
               </div>
             </li>`;
+            var gameString =
+              `<li id="` +
+              res.lists.custom[i].games[j]._id +
+              `">` +
+              res.lists.custom[i].games[j].name +
+              `</li>`;
             //Append each custom list the the corresponding li
             $("li#" + curId)
               .children(".listGames")
               .first()
               .append(htmlString);
+            $("li#games" + curId)
+              .children(".listGames")
+              .first()
+              .append(gameString);
           }
         }
         $("#listsContainer").html(htmlString);
-        htmlString = "";
-        for (var i = 0; i < res.sessions.length; i++) {
-          var usersplural = setPlural(
-            res.sessions[i].users,
-            " user, ",
-            " users, "
-          );
-          var gamesplural = setPlural(res.sessions[i].games, " game", " games");
-          htmlString +=
-            `<li id="` +
-            res.sessions[i].code +
-            `" onclick="copyText('` +
-            res.sessions[i].code +
-            `')">` +
-            res.sessions[i].code +
-            `: ` +
-            res.sessions[i].users +
-            usersplural +
-            res.sessions[i].games +
-            gamesplural +
-            `</li>`;
-        }
-        $("#sessionsContainer").html(htmlString);
+        writeSessions(res);
       } else {
         console.log(res.err);
       }
     });
   });
+}
+
+/**
+ * {Desc} Shows a menu view
+ *
+ * @param {*} view
+ */
+function showMenuItem(view) {
+  $(view).removeClass("off");
+  window.setTimeout(function () {
+    $(view).css("transform", "translateY(0vh)");
+  }, 10);
+}
+
+/**
+ * {Desc} Closes a menu view
+ *
+ * @param {*} view
+ */
+function closeMenuItem(view) {
+  $(view).css("transform", "translateY(var(--vh100))");
+  window.setTimeout(function () {
+    $(view).addClass("off");
+  }, 600);
+}
+
+/**
+ * {Desc} Takes the sessions object from /get_sessions and fills #sessionsContainer
+ *
+ * @param {Object} res
+ */
+function writeSessions(res) {
+  htmlString = "";
+  for (var i = 0; i < res.sessions.length; i++) {
+    var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
+    var gamesplural = setPlural(res.sessions[i].games, " game", " games");
+    htmlString +=
+      `<li id="` +
+      res.sessions[i].code +
+      `" onclick="copyText('` +
+      res.sessions[i].code +
+      `')">` +
+      res.sessions[i].code +
+      `: ` +
+      res.sessions[i].users +
+      usersplural +
+      res.sessions[i].games +
+      gamesplural +
+      `</li>`;
+  }
+  $("#sessionsContainer").html(htmlString);
 }
 
 /** setPlural(countable, singular, plural)

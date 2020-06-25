@@ -138,12 +138,14 @@ router.post("/get_user_lists", (req, res) => {
   }
 });
 
-//Get games from a user's single list
-router.post("/get_user_list_games", (req, res) => {
+//Get games from a user's all games list
+router.post("/get_user_all_games", (req, res) => {
   if (req.user) {
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")
-      .exec(function (err, curUser) {});
+      .exec(function (err, curUser) {
+        res.send(curUser);
+      });
   }
 });
 

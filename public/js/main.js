@@ -162,6 +162,7 @@ window.addEventListener("load", function () {
     });
   });
 
+  //test
   $("#sessionsClose").click(this, function (el) {
     closeMenuItem("#sessionsView");
   });

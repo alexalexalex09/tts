@@ -691,12 +691,12 @@ input[type="range"]::-webkit-slider-runnable-track {
     linear-gradient(
       90deg,
       #e60000,
-      #e63900,
-      #e67300,
       #e6ac00,
       #e6e600,
-      #ace600,
-      #73e600
+      #cdf80b,
+      #79c008,
+      #50be10,
+      #03961c
     );
   background-size: 5vw 100%, 100% 100%;
 }
@@ -708,12 +708,12 @@ input[type="range"]::-moz-range-track {
     linear-gradient(
       90deg,
       #e60000,
-      #e63900,
-      #e67300,
       #e6ac00,
       #e6e600,
-      #ace600,
-      #73e600
+      #cdf80b,
+      #79c008,
+      #50be10,
+      #03961c
     );
   background-size: 5vw 100%, 100% 100%;
 }
@@ -726,12 +726,12 @@ input[type="range"]::-ms-track {
     linear-gradient(
       90deg,
       #e60000,
-      #e63900,
-      #e67300,
       #e6ac00,
       #e6e600,
-      #ace600,
-      #73e600
+      #cdf80b,
+      #79c008,
+      #50be10,
+      #03961c
     );
   background-size: 5vw 100%, 100% 100%;
   color: transparent;

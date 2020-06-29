@@ -290,7 +290,10 @@ function userCreate(id, name) {
 }
 
 router.post("/join_session", function (req, res) {
-  Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+  var theCode = req.body.code.toUpperCase();
+  theCode = theCode.replace("I", "1");
+  theCode = theCode.replace("O", "0");
+  Session.findOne({ code: theCode }).exec(function (err, curSession) {
     console.log(curSession);
     if (!curSession) {
       console.log("Error: ", err);
@@ -349,7 +352,7 @@ router.post("/join_session", function (req, res) {
           });
           curSession.save().then(function () {
             socketAPI.addGame({
-              code: req.body.code,
+              code: theCode,
             });
           });
         }
@@ -386,8 +389,7 @@ router.post("/create_session", function (req, res) {
     function makeid(length) {
       //TODO: Filter out bad words
       var result = "";
-      var characters =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      var characters = "ABCEGHJKLMNPQRTUVWXYZ0123456789";
       var charactersLength = characters.length;
       for (var i = 0; i < length; i++) {
         result += characters.charAt(
@@ -397,24 +399,10 @@ router.post("/create_session", function (req, res) {
       return result;
     }
 
-    var theCode = makeid(5);
+    var theCode = makeid(6);
 
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
       console.log(curSession);
-
-      function makeid(length) {
-        //TODO: Filter out bad words
-        var result = "";
-        var characters =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        var charactersLength = characters.length;
-        for (var i = 0; i < length; i++) {
-          result += characters.charAt(
-            Math.floor(Math.random() * charactersLength)
-          );
-        }
-        return result;
-      }
 
       var theCode = makeid(5);
       var sessiondetail = {

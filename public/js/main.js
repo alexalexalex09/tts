@@ -905,6 +905,7 @@ function gulp() {
       if (!res.err) {
         console.log("gulp", res);
         $("#gamesContainer").html(" ");
+        $("#gamesContextContainer").html(" ");
         addListDisplay(0, "All Games", "#selectLists", true);
         addListDisplay("games0", "All Games", "#gamesContainer", false);
         for (var i = 0; i < res.lists.allGames.length; i++) {
@@ -948,12 +949,22 @@ function gulp() {
           var gameString =
             `<li id="` +
             res.lists.allGames[i]._id +
-            `">` +
+            `" onclick="gameContext({id: '` +
+            res.lists.allGames[i]._id +
+            `', name: '` +
+            res.lists.allGames[i].name +
+            `'})">` +
             res.lists.allGames[i].name +
             `</li>`;
           //Append the "All Games" list to the first <li>
           $("li#0").children(".listGames").first().append(htmlString);
           $("li#games0").children(".listGames").first().append(gameString);
+          $("#gamesContextContainer").append(
+            displayGameContext({
+              id: res.lists.allGames[i]._id,
+              name: res.lists.allGames[i].name,
+            })
+          );
         }
         for (var i = 0; i < res.lists.custom.length; i++) {
           var curId = i + 1;
@@ -994,9 +1005,14 @@ function gulp() {
             var gameString =
               `<li id="` +
               res.lists.custom[i].games[j]._id +
-              `">` +
+              `" onclick="gameContext({id: '` +
+              res.lists.custom[i].games[j]._id +
+              `', name: '` +
+              res.lists.custom[i].games[j].name +
+              `'})">` +
               res.lists.custom[i].games[j].name +
               `</li>`;
+
             //Append each custom list the the corresponding li
             $("li#" + curId)
               .children(".listGames")
@@ -1006,8 +1022,15 @@ function gulp() {
               .children(".listGames")
               .first()
               .append(gameString);
+            $("#gamesContextContainer").append(
+              displayGameContext({
+                id: res.lists.custom[i].games[j]._id,
+                name: res.lists.custom[i].games[j].name,
+              })
+            );
           }
         }
+
         $("#listsContainer").html(htmlString);
         writeSessions(res);
       } else {
@@ -1039,6 +1062,53 @@ function closeMenuItem(view) {
   window.setTimeout(function () {
     $(view).addClass("off");
   }, 600);
+}
+
+function gameContext(game) {
+  //TODO: showGameContext(game);
+  //$("#gamesContainer").append(displayGameContext(game));
+  /*
+  No reason for this to not already exist, just hidden, and then gets displayed
+  Only need to get more data when actually completing an action
+  const ggc_options = {
+    method: "POST",
+    body: JSON.stringify({ game: game.id }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  //add_user_game_unsorted
+  fetch("/get_game_context", ggc_options).then(function (response) {
+    return response.json().then((res) => {
+      if (!res.err) {
+        displayGameContext(game);
+      }
+    });
+  });*/
+}
+
+function displayGameContext(contextObj) {
+  var htmlString =
+    `<div class="contextMenu off">` +
+    `<div class="contextGame">` +
+    contextObj.name +
+    `</div>` +
+    `<ul class="contextActions">` +
+    `<li onclick="contextMove(` +
+    contextObj.name +
+    `)">Move</li>` +
+    `<li onclick="contextCopy(` +
+    contextObj.name +
+    `)">Copy</li>` +
+    `<li onclick="contextRename(` +
+    contextObj.name +
+    `)">Rename</li>` +
+    `<li onclick="contextDelete(` +
+    contextObj.name +
+    `)">Delete</li>` +
+    `</ul>` +
+    `</div>`;
+  return htmlString;
 }
 
 /**

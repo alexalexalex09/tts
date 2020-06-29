@@ -996,6 +996,18 @@ input[type="range"]:focus {
   cursor: pointer;
 }
 
+/***********************/
+/*  Game Context Manu  */
+/***********************/
+
+.contextMenu {
+  color: white;
+}
+
+.contextMenu ul {
+  list-style: none;
+}
+
 /****************/
 /*  Animations  */
 /****************/

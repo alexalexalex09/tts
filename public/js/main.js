@@ -948,9 +948,9 @@ function gulp() {
                 </div>
             </li>`;
           var gameString =
-            `<li id="` +
+            `<li id="games0` +
             res.lists.allGames[i]._id +
-            `" onclick="showGameContext({id: '` +
+            `" onclick="showGameContext({id: 'games0` +
             res.lists.allGames[i]._id +
             `', name: '` +
             res.lists.allGames[i].name +
@@ -962,7 +962,7 @@ function gulp() {
           $("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
             writeGameContext({
-              id: res.lists.allGames[i]._id,
+              id: "games0" + res.lists.allGames[i]._id,
               name: res.lists.allGames[i].name,
             })
           );
@@ -1004,9 +1004,11 @@ function gulp() {
               </div>
             </li>`;
             var gameString =
-              `<li id="` +
+              `<li id="games` +
+              curId +
               res.lists.custom[i].games[j]._id +
-              `" onclick="showGameContext({id: '` +
+              `" onclick="showGameContext({id: 'games` +
+              curId +
               res.lists.custom[i].games[j]._id +
               `', name: '` +
               res.lists.custom[i].games[j].name +
@@ -1025,7 +1027,7 @@ function gulp() {
               .append(gameString);
             $("#gamesContextContainer").append(
               writeGameContext({
-                id: res.lists.custom[i].games[j]._id,
+                id: "games" + curId + res.lists.custom[i].games[j]._id,
                 name: res.lists.custom[i].games[j].name,
               })
             );
@@ -1066,8 +1068,9 @@ function closeMenuItem(view) {
 }
 
 function showGameContext(game) {
+  console.log("#context_" + game.id);
+  console.log($("#context_" + game.id).length);
   if ($("#context_" + game.id).length == 0) {
-    console.log("showGameContext " + game.name);
     $("#context_stage_" + game.id)
       .clone(true)
       .prop("id", "context_" + game.id)
@@ -1083,10 +1086,33 @@ function showGameContext(game) {
   } else {
     console.log("already clicked");
   }
-
-  //TODO: showGameContext(game);
-  //It's currently generated automatically, but when clicked it should slide over into place
 }
+
+function contextMove(game) {
+  var lists = [];
+  $("#gamesContainer")
+    .children()
+    .children(".listName")
+    .each(function () {
+      lists.push($(this).text().trim());
+    });
+  displaySubContext(game, lists);
+}
+
+function displaySubContext(game, items) {
+  var el = `<div id="subContext_` + game.id + `">`;
+  for (var i = 0; i < items.length; i++) {
+    el += `<li id="subContextGame_` + game.id + `">` + game.name + `</li>`;
+  }
+  el += `</div>`;
+  $("context_" + game.id).append(el);
+}
+
+function contextCopy(game) {}
+
+function contextRename(game) {}
+
+function contextDelete(game) {}
 
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {
@@ -1115,18 +1141,26 @@ function writeGameContext(contextObj) {
     `<div class="contextActions off" id="context_stage_` +
     contextObj.id +
     `">` +
-    `<li onclick="contextMove(` +
+    `<li onclick="contextMove({id: '` +
     contextObj.id +
-    `)">Move</li>` +
-    `<li onclick="contextCopy(` +
+    `', name:'` +
+    contextObj.name +
+    `'})">Move</li>` +
+    `<li onclick="contextCopy({id: '` +
     contextObj.id +
-    `)">Copy</li>` +
-    `<li onclick="contextRename(` +
+    `', name:'` +
+    contextObj.name +
+    `'})">Copy</li>` +
+    `<li onclick="contextRename({id: '` +
     contextObj.id +
-    `)">Rename</li>` +
-    `<li onclick="contextDelete(` +
+    `', name:'` +
+    contextObj.name +
+    `'})">Rename</li>` +
+    `<li onclick="contextDelete({id: '` +
     contextObj.id +
-    `)">Delete</li>` +
+    `', name:'` +
+    contextObj.name +
+    `'})">Delete</li>` +
     `</div>`;
   return htmlString;
 }

@@ -436,6 +436,7 @@ input:checked + .slider:before {
   overflow-x: hidden;
   white-space: nowrap;
   min-height: 0px;
+  cursor: pointer;
 }
 
 .listExpand {
@@ -1006,6 +1007,17 @@ input[type="range"]:focus {
 
 .contextMenu ul {
   list-style: none;
+}
+
+.contextActions {
+  border: 1px solid white;
+  padding: 5px;
+  margin-left: 5vw;
+  width: 4em;
+  background-color: white;
+  color: var(--main-grey);
+  font-size: 0.9em;
+  margin-bottom: 10px;
 }
 
 /****************/

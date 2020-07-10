@@ -832,7 +832,7 @@ function addListDisplay(theId, name, dest, toggle) {
     `<li id="` +
     theId +
     `">
-      <div class="listName">` +
+      <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
     name +
     `
       </div>
@@ -906,6 +906,7 @@ function gulp() {
         console.log("gulp", res);
         $("#gamesContainer").html(" ");
         $("#gamesContextContainer").html(" ");
+        $("#selectLists").html(" ");
         addListDisplay(0, "All Games", "#selectLists", true);
         addListDisplay("games0", "All Games", "#gamesContainer", false);
         for (var i = 0; i < res.lists.allGames.length; i++) {
@@ -949,7 +950,7 @@ function gulp() {
           var gameString =
             `<li id="` +
             res.lists.allGames[i]._id +
-            `" onclick="gameContext({id: '` +
+            `" onclick="showGameContext({id: '` +
             res.lists.allGames[i]._id +
             `', name: '` +
             res.lists.allGames[i].name +
@@ -960,7 +961,7 @@ function gulp() {
           $("li#0").children(".listGames").first().append(htmlString);
           $("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
-            displayGameContext({
+            writeGameContext({
               id: res.lists.allGames[i]._id,
               name: res.lists.allGames[i].name,
             })
@@ -1005,7 +1006,7 @@ function gulp() {
             var gameString =
               `<li id="` +
               res.lists.custom[i].games[j]._id +
-              `" onclick="gameContext({id: '` +
+              `" onclick="showGameContext({id: '` +
               res.lists.custom[i].games[j]._id +
               `', name: '` +
               res.lists.custom[i].games[j].name +
@@ -1023,7 +1024,7 @@ function gulp() {
               .first()
               .append(gameString);
             $("#gamesContextContainer").append(
-              displayGameContext({
+              writeGameContext({
                 id: res.lists.custom[i].games[j]._id,
                 name: res.lists.custom[i].games[j].name,
               })
@@ -1064,49 +1065,68 @@ function closeMenuItem(view) {
   }, 600);
 }
 
-function gameContext(game) {
+function showGameContext(game) {
+  if ($("#context_" + game.id).length == 0) {
+    console.log("showGameContext " + game.name);
+    $("#context_stage_" + game.id)
+      .clone(true)
+      .prop("id", "context_" + game.id)
+      .insertAfter($("#" + game.id));
+    setTimeout(function () {
+      hideOnClickOutside(
+        "#context_" + game.id,
+        "#context_" + game.id,
+        "#" + game.id
+      );
+    }, 10);
+    $("#context_" + game.id).removeClass("off");
+  } else {
+    console.log("already clicked");
+  }
+
   //TODO: showGameContext(game);
-  //$("#gamesContainer").append(displayGameContext(game));
-  /*
-  No reason for this to not already exist, just hidden, and then gets displayed
-  Only need to get more data when actually completing an action
-  const ggc_options = {
-    method: "POST",
-    body: JSON.stringify({ game: game.id }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  //add_user_game_unsorted
-  fetch("/get_game_context", ggc_options).then(function (response) {
-    return response.json().then((res) => {
-      if (!res.err) {
-        displayGameContext(game);
-      }
-    });
-  });*/
+  //It's currently generated automatically, but when clicked it should slide over into place
 }
 
-function displayGameContext(contextObj) {
+function hideOnClickOutside(selector, toHide, extraSelector) {
+  const outsideClickListener = (event) => {
+    console.log("listening", event);
+    const $target = $(event.target);
+    if (
+      (!$target.closest(selector).length && $(selector).is(":visible")) ||
+      $(extraSelector) == $target
+    ) {
+      $(toHide).remove();
+      console.log("clicked outside: ", $target);
+      removeClickListener();
+    }
+  };
+
+  const removeClickListener = () => {
+    document.removeEventListener("click", outsideClickListener);
+  };
+
+  document.addEventListener("click", outsideClickListener);
+}
+
+function writeGameContext(contextObj) {
+  console.log("dGC");
   var htmlString =
-    `<div class="contextMenu off">` +
-    `<div class="contextGame">` +
-    contextObj.name +
-    `</div>` +
-    `<ul class="contextActions">` +
+    `<div class="contextActions off" id="context_stage_` +
+    contextObj.id +
+    `">` +
     `<li onclick="contextMove(` +
-    contextObj.name +
+    contextObj.id +
     `)">Move</li>` +
     `<li onclick="contextCopy(` +
-    contextObj.name +
+    contextObj.id +
     `)">Copy</li>` +
     `<li onclick="contextRename(` +
-    contextObj.name +
+    contextObj.id +
     `)">Rename</li>` +
     `<li onclick="contextDelete(` +
-    contextObj.name +
+    contextObj.id +
     `)">Delete</li>` +
-    `</ul>` +
     `</div>`;
   return htmlString;
 }

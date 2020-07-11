@@ -1089,6 +1089,7 @@ function showGameContext(game) {
 }
 
 function contextMove(game) {
+  console.log("contextMove ", game);
   var lists = [];
   $("#gamesContainer")
     .children()
@@ -1096,16 +1097,32 @@ function contextMove(game) {
     .each(function () {
       lists.push($(this).text().trim());
     });
-  displaySubContext(game, lists);
+  displaySubContext(game, lists, 0);
 }
 
-function displaySubContext(game, items) {
+function displaySubContext(game, items, location) {
   var el = `<div id="subContext_` + game.id + `">`;
   for (var i = 0; i < items.length; i++) {
-    el += `<li id="subContextGame_` + game.id + `">` + game.name + `</li>`;
+    el +=
+      `<li id="subContextGame_` +
+      game.id +
+      `" onclick="moveToList({toList: '` +
+      items[i] +
+      `', game:'` +
+      game.id +
+      `'})">` +
+      items[i] +
+      `</li>`;
   }
   el += `</div>`;
-  $("context_" + game.id).append(el);
+  $("#context_" + game.id)
+    .children()
+    .eq(location)
+    .append(el);
+}
+
+function moveToList(options) {
+  console.log(options);
 }
 
 function contextCopy(game) {}

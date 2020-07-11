@@ -1013,11 +1013,20 @@ input[type="range"]:focus {
   border: 1px solid white;
   padding: 5px;
   margin-left: 5vw;
-  width: 4em;
+  width: 14vw;
   background-color: white;
   color: var(--main-grey);
-  font-size: 0.9em;
+  font-size: 3vw;
   margin-bottom: 10px;
+}
+
+.contextActions li:nth-child(1) div {
+  margin-left: 14vw;
+  background-color: white;
+  position: absolute;
+  border-radius: 3px;
+  margin-top: -4vw;
+  padding: 5px;
 }
 
 /****************/

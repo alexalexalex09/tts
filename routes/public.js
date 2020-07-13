@@ -905,4 +905,37 @@ router.post("/get_games", function (req, res) {
   }
 });
 
+router.post("/move_to_list", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var fromList = Number(req.body.fromList.substr(5)) - 1;
+      var game = req.body.game.substr(req.body.fromList.length);
+      if (fromList == -1) {
+        res.send({ err: "Can't move to or from your All Games list" });
+      } else {
+        var index = curUser.lists.custom[fromList].games.findIndex(
+          (obj) => obj.toString() == game
+        );
+        var gameToMove = curUser.lists.custom[fromList].games.splice(index, 1);
+      }
+      var toList = Number(req.body.toList.substr(5)) - 1;
+      if (toList == -1) {
+        res.send({ err: "Can't move to or from your All Games list" });
+      } else {
+        if (
+          curUser.lists.custom[toList].games.findIndex(
+            (obj) => obj == gameToMove
+          ) == -1
+        ) {
+          curUser.lists.custom[toList].games.push(gameToMove);
+        } else {
+          res.send({ err: "Not moved: game is already in list" });
+        }
+      }
+      curUser.save();
+      res.send({ status: curUser });
+    });
+  }
+});
+
 module.exports = router;

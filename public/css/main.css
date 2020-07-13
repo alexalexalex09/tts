@@ -1020,6 +1020,13 @@ input[type="range"]:focus {
   margin-bottom: 10px;
 }
 
+.subContextContainer {
+  width: 100vw;
+  height: var(--vh100);
+  position: absolute;
+  backdrop-filter: blur(3px);
+}
+
 .subContext {
   margin-left: 0;
   background-color: white;
@@ -1040,6 +1047,11 @@ input[type="range"]:focus {
 
 .subContextTitle {
   line-height: 30px;
+}
+
+.subContext li {
+  list-style: none;
+  cursor: pointer;
 }
 
 /****************/

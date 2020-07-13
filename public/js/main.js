@@ -961,10 +961,24 @@ function gulp() {
           $("li#0").children(".listGames").first().append(htmlString);
           $("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
-            writeGameContext({
-              id: "games0" + res.lists.allGames[i]._id,
-              name: res.lists.allGames[i].name,
-            })
+            `<div class="contextActions off" id="context_stage_games0` +
+              res.lists.allGames[i]._id +
+              `">` +
+              `<li onclick="contextCopy({id: games0'` +
+              res.lists.allGames[i]._id +
+              `', name:'` +
+              res.lists.allGames[i].name +
+              `'})">Copy</li>` +
+              `<li onclick="contextRename({id: games0'` +
+              res.lists.allGames[i]._id +
+              `', name:'` +
+              res.lists.allGames[i].name +
+              `'})">Rename</li>` +
+              `<li onclick="contextDelete({id: games0'` +
+              res.lists.allGames[i]._id +
+              `', name:'` +
+              res.lists.allGames[i].name +
+              `'})">Delete</li>`
           );
         }
         for (var i = 0; i < res.lists.custom.length; i++) {
@@ -1088,16 +1102,29 @@ function showGameContext(game) {
   }
 }
 
-function contextMove(game) {
+function contextMove(game, caller) {
   console.log("contextMove ", game);
   var lists = [];
   $("#gamesContainer")
     .children()
     .children(".listName")
     .each(function () {
-      lists.push($(this).text().trim());
+      lists.push({
+        name: $(this).text().trim(),
+        id: $(this).parent().attr("id"),
+      });
     });
-  displaySubContext(game, lists, 0);
+  var index = lists.findIndex(
+    (obj) => obj.id == $(caller).parent().parent().parent().attr("id")
+  );
+  console.log({
+    caller: caller,
+    index: index,
+    parent: $(caller).parent().parent().parent().attr("id"),
+    lists: lists,
+  });
+  lists.splice(index, 1);
+  displaySubContext(game, lists);
 }
 
 function closeSubContext(view) {
@@ -1105,10 +1132,13 @@ function closeSubContext(view) {
   $(view).remove();
 }
 
-function displaySubContext(game, items, location) {
-  var el = `<div class="subContext" id="subContext_` + game.id + `">`;
+function displaySubContext(game, items) {
+  var el =
+    `<div class="subContextContainer"><div class="subContext" id="subContext_` +
+    game.id +
+    `">`;
   el +=
-    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Moving ` +
     game.name +
     `</div><hr/>`;
@@ -1117,19 +1147,51 @@ function displaySubContext(game, items, location) {
       `<li id="subContextGame_` +
       game.id +
       `" onclick="moveToList({toList: '` +
-      items[i] +
+      items[i].id +
       `', game:'` +
       game.id +
+      `', fromList: '` +
+      $("#" + game.id)
+        .parent()
+        .parent()
+        .attr("id") +
       `'})">` +
-      items[i] +
+      items[i].name +
       `</li>`;
   }
-  el += `</div>`;
+  el += `</div></div>`;
   $("body").append(el);
 }
 
 function moveToList(options) {
   console.log(options);
+  const mtl_options = {
+    method: "POST",
+    body: JSON.stringify({
+      code: document.getElementById("code").innerHTML,
+      game: options.game,
+      toList: options.toList,
+      fromList: options.fromList,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/move_to_list", mtl_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        alert(res.err);
+        //TODO: Nice notification for handling moving to a list already containing the game, as well as confirmation before moving
+      } else {
+        $("#" + options.toList + " .listGames")
+          .first()
+          .append($("#" + options.game));
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      }
+    });
+  });
 }
 
 function contextCopy(game) {}
@@ -1169,7 +1231,7 @@ function writeGameContext(contextObj) {
     contextObj.id +
     `', name:'` +
     contextObj.name +
-    `'})">Move</li>` +
+    `'}, this)">Move</li>` +
     `<li onclick="contextCopy({id: '` +
     contextObj.id +
     `', name:'` +

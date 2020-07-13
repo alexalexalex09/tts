@@ -1020,13 +1020,26 @@ input[type="range"]:focus {
   margin-bottom: 10px;
 }
 
-.contextActions li:nth-child(1) div {
-  margin-left: 14vw;
+.subContext {
+  margin-left: 0;
   background-color: white;
   position: absolute;
   border-radius: 3px;
-  margin-top: -4vw;
   padding: 5px;
+  left: 5vw;
+  width: 90vw;
+  top: calc(var(--vh) * 2);
+  height: calc(var(--vh) * 96);
+  box-sizing: border-box;
+  font-size: 1.5em;
+}
+
+.subContext hr {
+  margin: var(--vh);
+}
+
+.subContextTitle {
+  line-height: 30px;
 }
 
 /****************/

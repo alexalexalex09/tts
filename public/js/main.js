@@ -1100,8 +1100,18 @@ function contextMove(game) {
   displaySubContext(game, lists, 0);
 }
 
+function closeSubContext(view) {
+  closeMenuItem(view);
+  $(view).remove();
+}
+
 function displaySubContext(game, items, location) {
-  var el = `<div id="subContext_` + game.id + `">`;
+  var el = `<div class="subContext" id="subContext_` + game.id + `">`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Moving ` +
+    game.name +
+    `</div><hr/>`;
   for (var i = 0; i < items.length; i++) {
     el +=
       `<li id="subContextGame_` +
@@ -1115,10 +1125,7 @@ function displaySubContext(game, items, location) {
       `</li>`;
   }
   el += `</div>`;
-  $("#context_" + game.id)
-    .children()
-    .eq(location)
-    .append(el);
+  $("body").append(el);
 }
 
 function moveToList(options) {

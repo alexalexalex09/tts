@@ -96,6 +96,15 @@ window.addEventListener("load", function () {
       fWidth: "6",
     },
   });
+  cFont({
+    data: {
+      el: "#addListTitle",
+      mHeight: "10",
+      mWidth: "10",
+      fHeight: "4",
+      fWidth: "6",
+    },
+  });
 
   /*****************************/
   /*         Menu toggle       */
@@ -361,8 +370,17 @@ window.addEventListener("load", function () {
   //Add a game to the unsorted list
   //Used in the select view
   //Possible because #addGamesInput is defined in pug file
-  $("#addGamesInput").on("keyup", addGame(event));
+  //$("#addGamesInput").on("keyup", addGame(event));
 
+  /*****************************/
+  /*        List Adder         */
+  /*****************************/
+  //Add a list
+  //Used in #gamesview.pop
+  //#addListInput is also defined in pug file
+  //setTimeout(function () {
+  //  $("#addListInput").on("keyup", console.log(event));
+  //}, 2000);
   /*****************************/
   /*Game submit button handler */
   /*****************************/
@@ -835,7 +853,7 @@ function addListDisplay(theId, name, dest, toggle) {
       <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
     name +
     `
-      </div>
+    <ion-icon name="ellipsis-horizontal-outline" onclick="editList($(this).parent().parent().attr('id'))"></ion-icon></div>
       <div class="listExpand" onclick="listToggle(this)">
           <ion-icon name="chevron-down-outline"></ion-icon>
       </div>`;
@@ -1057,6 +1075,20 @@ function gulp() {
   });
 }
 
+function toggleGamesAdder() {
+  if ($(".gamesAdder").hasClass("off")) {
+    $(".gamesAdder").removeClass("off");
+    setTimeout(function () {
+      $(".gamesAdder").removeClass("slideDown");
+    }, 20);
+  } else {
+    $(".gamesAdder").addClass("slideDown");
+    setTimeout(function () {
+      $(".gamesAdder").addClass("off");
+    }, 501);
+  }
+}
+
 /**
  * {Desc} Shows a menu view
  *
@@ -1123,7 +1155,9 @@ function contextMove(game, caller) {
     parent: $(caller).parent().parent().parent().attr("id"),
     lists: lists,
   });
+  //Remove the origin list and All Games
   lists.splice(index, 1);
+  lists.splice(0, 1);
   displaySubContext(game, lists);
 }
 
@@ -1338,6 +1372,47 @@ function addGame(event) {
           $("li#0").children(".listGames").first().append(htmlString);
         } else {
           console.log(res.err);
+        }
+      });
+    });
+  }
+}
+
+function addList(event) {
+  // Number 13 is the "Enter" key on the keyboard
+  console.log("addList");
+  if (event.keyCode === 13) {
+    console.log("submitting new game");
+    event.preventDefault();
+    var list = addListInput.value;
+    const options = {
+      method: "POST",
+      body: JSON.stringify({ list: list }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    //add_user_game_unsorted
+    fetch("/list_add", options).then(function (response) {
+      return response.json().then((res) => {
+        if (res.err) {
+          console.log(res);
+        } else {
+          var gamesNum = $("#gamesView #gamesContainer").children("li").length;
+          $("#gamesView #gamesContainer").append(
+            `<li id="games` +
+              gamesNum +
+              `">
+          <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
+              list +
+              `
+              <ion-icon name="ellipsis-horizontal-outline" onclick="editList($(this).parent().parent().attr('id'))"></ion-icon></div>
+          <div class="listExpand" onclick="listToggle(this)">
+              <ion-icon name="chevron-down-outline"></ion-icon>
+          </div>
+          <div class="listGames off"></div>
+        </li>`
+          );
         }
       });
     });
@@ -1897,6 +1972,28 @@ function fillGames(games) {
   }
   $("#playContainer").html(htmlString);
   console.log("fillgames");
+}
+
+function editList(list) {
+  const el_options = {
+    method: "POST",
+    body: JSON.stringify({
+      gamesToAdd: gamesToAdd,
+      gamesToRemove: gamesToRemove,
+      code: document.getElementById("code").innerHTML,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/edit_list", el_options).then(function (response) {
+    return response.json().then((res) => {
+      if (!res.err) {
+      } else {
+        console.log(res);
+      }
+    });
+  });
 }
 
 /*****************************/

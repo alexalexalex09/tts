@@ -938,4 +938,20 @@ router.post("/move_to_list", function (req, res) {
   }
 });
 
+router.post("/list_add", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var index = curUser.lists.custom.findIndex(
+        (obj) => obj.name == req.body.list
+      );
+      if (index == -1) {
+        curUser.lists.custom.push({ name: req.body.list, games: [] });
+        curUser.save();
+        res.send({ status: "Success" });
+      } else {
+        res.send({ err: "Already added a list with this name" });
+      }
+    });
+  }
+});
 module.exports = router;

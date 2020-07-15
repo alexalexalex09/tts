@@ -872,6 +872,11 @@ input[type="range"]:focus {
   color: var(--main-white);
 }
 
+#gamesContainer {
+  height: var(--vh60);
+  overflow-y: auto;
+}
+
 #sessionsContainer li,
 #gamesContainer > li,
 #gamesContainer .listGames {
@@ -905,12 +910,22 @@ input[type="range"]:focus {
 ion-icon#addListButton {
   color: var(--main-white);
   position: absolute;
-  width: 100vw;
+  width: 16vw;
   align-content: start;
   font-size: var(--vh10);
   bottom: var(--vh5);
   cursor: pointer;
   transition: transform 0.5s;
+  z-index: 1;
+  margin-left: 42vw;
+}
+
+#gamesAdderContainer {
+  height: var(--vh20);
+  position: absolute;
+  bottom: 0;
+  width: 100vw;
+  background-color: var(--main-blue);
 }
 
 .gamesAdder {
@@ -1132,6 +1147,7 @@ ion-icon#addListButton {
   height: var(--vh100);
   position: absolute;
   backdrop-filter: blur(3px);
+  z-index: 11;
 }
 
 .subContext {

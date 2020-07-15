@@ -935,6 +935,46 @@ router.post("/move_to_list", function (req, res) {
       curUser.save();
       res.send({ status: curUser });
     });
+  } else {
+    res.send({ err: "Not logged in!" });
+  }
+});
+
+router.post("/copy_to_list", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var toList = Number(req.body.toList.substr(5)) - 1;
+      var fromList = Number(req.body.fromList.substr(5)) - 1;
+      var game = req.body.game.substr(req.body.fromList.length);
+      if (toList == -1) {
+        res.send({ err: "Can't copy to your All Games list" });
+      } else {
+        if (fromList == -1) {
+          var index = curUser.lists.allGames.findIndex(
+            (obj) => obj.toString() == game
+          );
+          var gameToCopy = curUser.lists.allGames[index];
+        } else {
+          var index = curUser.lists.custom[fromList].games.findIndex(
+            (obj) => obj.toString() == game
+          );
+          var gameToCopy = curUser.lists.custom[fromList].games[index];
+        }
+        if (
+          curUser.lists.custom[toList].games.findIndex(
+            (obj) => obj == gameToCopy
+          ) == -1
+        ) {
+          curUser.lists.custom[toList].games.push(gameToCopy);
+          curUser.save();
+          res.send({ status: curUser });
+        } else {
+          res.send({ err: "Not copied: game is already in list" });
+        }
+      }
+    });
+  } else {
+    res.send({ err: "Not logged in!" });
   }
 });
 

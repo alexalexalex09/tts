@@ -840,6 +840,7 @@ input[type="range"]:focus {
   transform: translateY(var(--vh100));
   overflow: hidden;
   box-sizing: border-box;
+  z-index: 10;
 }
 
 #sessionsClose,
@@ -908,6 +909,8 @@ ion-icon#addListButton {
   align-content: start;
   font-size: var(--vh10);
   bottom: var(--vh5);
+  cursor: pointer;
+  transition: transform 0.5s;
 }
 
 .gamesAdder {
@@ -925,6 +928,7 @@ ion-icon#addListButton {
   justify-content: center;
   background-color: var(--main-blue);
   padding: 2.5vw 0vw;
+  cursor: pointer;
 }
 
 .gamesAdder div {
@@ -942,6 +946,37 @@ ion-icon#addListButton {
 
 .gamesAdder:nth-child(1) {
   left: 50vw;
+}
+
+#menuAddListContainer,
+#menuAddGamesContainer {
+  position: absolute;
+  bottom: var(--vh20);
+  width: 80vw;
+  left: 10vw;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+#menuAddListTitle,
+#menuAddGamesTitle {
+  color: white;
+  text-align: center;
+  font-size: 2em;
+}
+
+#backgroundListButton {
+  color: var(--main-white);
+  position: absolute;
+  width: 100vw;
+  align-content: start;
+  font-size: var(--vh10);
+  bottom: var(--vh5);
+  transition: transform 0.5s;
+  z-index: -1;
+}
+
+.rotated {
+  transform: rotate(45deg);
 }
 
 .slideDown {

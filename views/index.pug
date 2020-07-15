@@ -77,7 +77,7 @@ block content
       #addGamesContainer
         #addGamesTitle Add Games
         #addGamesInputCont.textInputCont
-          input.textInput(type='text'  onkeyup='addGame(event)')#addGamesInput
+          input.textInput(type='text'  onkeyup='addGame(event, "#addGamesInput")')#addGamesInput
           .textClear
       #selectLists
       #gameSubmit.button.greenBtn(type='submit')
@@ -112,14 +112,19 @@ block content
       #gamesTitle.pageTitle Games and Lists 🐿️
       ion-icon(name="add-circle-outline" onclick="toggleGamesAdder()")#addListButton
       div#gamesAdderContainer
-        div.gamesAdder.slideDown.off
+        div.gamesAdder.slideDown.off(onclick="showMenuAddGame()")
           div Add Game
-        div.gamesAdder.slideDown.off
+        div.gamesAdder.slideDown.off(onclick="showMenuAddList()")
           div Add List
-      #addListContainer.off
-        #addListTitle Add a List  
-        #addListInputCont.textInputCont
-          input.textInput(type='text' onkeyup='addList(event)')#addListInput
+      div#menuAddGamesContainer.slideDown.off
+        #menuAddGamesTitle Add Games
+        #menuAddGamesInputCont.textInputCont
+          input.textInput(type='text' onkeyup='addGame(event, "#menuAddGamesInput")')#menuAddGamesInput
+          .textClear
+      div#menuAddListContainer.slideDown.off
+        #menuAddListTitle Add List
+        #menuAddListInputCont.textInputCont
+          input.textInput(type='text' onkeyup='addList(event)')#menuAddListInput
           .textClear
       #gamesContainer
       #gamesContextContainer.off

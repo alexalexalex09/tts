@@ -1075,18 +1075,54 @@ function gulp() {
   });
 }
 
+/**
+ * Hide or show the add game and add list buttons in the menu
+ *
+ */
 function toggleGamesAdder() {
   if ($(".gamesAdder").hasClass("off")) {
     $(".gamesAdder").removeClass("off");
+    $("#menuAddListContainer").addClass("slideDown");
+    $("#menuAddGamesContainer").addClass("slideDown");
+    setTimeout(function () {
+      $("#menuAddListContainer").addClass("off");
+      $("#menuAddGamesContainer").addClass("off");
+    }, 501);
     setTimeout(function () {
       $(".gamesAdder").removeClass("slideDown");
+      $("#addListButton").addClass("rotated");
     }, 20);
   } else {
-    $(".gamesAdder").addClass("slideDown");
-    setTimeout(function () {
-      $(".gamesAdder").addClass("off");
-    }, 501);
+    hideGamesAdderButtons();
+    $("#addListButton").removeClass("rotated");
   }
+}
+
+function hideGamesAdderButtons() {
+  $(".gamesAdder").addClass("slideDown");
+  setTimeout(function () {
+    $(".gamesAdder").addClass("off");
+  }, 501);
+}
+
+/**
+ * Shows the add Game menu in My Games and Lists
+ *
+ */
+function showMenuAddGame() {
+  hideGamesAdderButtons();
+  $("#menuAddGamesContainer").removeClass("off");
+  setTimeout(function () {
+    $("#menuAddGamesContainer").removeClass("slideDown");
+  }, 5);
+}
+
+function showMenuAddList() {
+  hideGamesAdderButtons();
+  $("#menuAddListContainer").removeClass("off");
+  setTimeout(function () {
+    $("#menuAddListContainer").removeClass("slideDown");
+  }, 5);
 }
 
 /**
@@ -1327,12 +1363,17 @@ function setPlural(countable, singular, plural) {
   return plural;
 }
 
-function addGame(event) {
+/**
+ * Adds a game to user, unsorted
+ *
+ * @param {*} event
+ */
+function addGame(event, el) {
   // Number 13 is the "Enter" key on the keyboard
   if (event.keyCode === 13) {
     console.log("submitting new game");
     event.preventDefault();
-    var game = addGamesInput.value;
+    var game = $(el).val();
     const options = {
       method: "POST",
       body: JSON.stringify({ game: game }),
@@ -1378,13 +1419,18 @@ function addGame(event) {
   }
 }
 
+/**
+ * Adds a list to a user
+ *
+ * @param {*} event
+ */
 function addList(event) {
   // Number 13 is the "Enter" key on the keyboard
   console.log("addList");
   if (event.keyCode === 13) {
     console.log("submitting new game");
     event.preventDefault();
-    var list = addListInput.value;
+    var list = menuAddListInput.value;
     const options = {
       method: "POST",
       body: JSON.stringify({ list: list }),

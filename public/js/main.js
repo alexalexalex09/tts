@@ -1312,9 +1312,65 @@ function copyToList(options) {
   });
 }
 
-function contextRename(game, caller) {}
+function contextRename(game, caller) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
+    game.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Renaming ` +
+    game.name +
+    `</div><hr/><div id="renameGameInputCont" class="textInputCont">
+    <input class="textInput" type="text" onkeyup='renameGame(event, this, "` +
+    game.id.substr($(caller).parent().parent().parent().attr("id").length) +
+    `", "` +
+    game.name +
+    `")' id="renameGameInput"></input>
+    <div class="textClear"></div>`;
+  $("body").append(el);
+}
 
-function contextDelete(game, caller) {}
+function renameGame(event, caller, game, oldGame) {
+  if (event.keyCode === 13) {
+    const rg_options = {
+      method: "POST",
+      body: JSON.stringify({
+        code: document.getElementById("code").innerHTML,
+        game: game,
+        newName: $(caller).val(),
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/rename_game", rg_options).then(function (response) {
+      return response.json().then((res) => {
+        if (res.err) {
+          console.log(res.err);
+          //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+        } else {
+          console.log("copied");
+          //$("#" + game).text(res.status.newName);
+          $("#gamesContainer")
+            .children()
+            .children(".listGames")
+            .children("li")
+            .each(function () {
+              if ($(this).text() == oldGame) {
+                $(this).text($(caller).val());
+              }
+            });
+          $(".subContextContainer").each(function () {
+            $(this).remove();
+          });
+        }
+      });
+    });
+  }
+}
+
+function contextDelete(game) {}
 
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {

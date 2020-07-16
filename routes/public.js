@@ -978,6 +978,60 @@ router.post("/copy_to_list", function (req, res) {
   }
 });
 
+router.post("/rename_game", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var upsertOptions = { new: true, upsert: true };
+      Game.findOneAndUpdate(
+        { name: "FDNJ" },
+        { name: req.body.newName },
+        upsertOptions,
+        function (err, game) {
+          game.save().then(function (curGame) {
+            //**Get the game meta info from the user (currently not there!)
+            //**var gameMeta = getGameMeta(curUser, req.body.game);
+            //
+            //Splice the new game in the user doc in place of the old game at all the right places
+            replaceInUserDoc(req.body.game, curUser, curGame._id.toString());
+            //The user now has a brand new game with a new name but everything else the exact same
+            //The advantage is that if the renamed game exists, the system can reference that game
+            //rather than having a game that references an object that doesn't share its name
+            curUser.save();
+            res.send({ status: "Success" });
+            //Save the user, the game has already been saved under pushToGamesDocAndSave
+          });
+        }
+      );
+    });
+  } else {
+    res.send({ err: "Not logged in!" });
+  }
+});
+
+function replaceInUserDoc(game, curUser, newGame) {
+  console.log("CurUser: ", curUser);
+  console.log(curUser.lists.allGames.findIndex((obj) => obj == game));
+  curUser.lists.allGames.splice(
+    curUser.lists.allGames.findIndex((obj) => obj == game),
+    1,
+    newGame
+  );
+  for (var i = 0; i < curUser.lists.custom.length; i++) {
+    curUser.lists.custom[i].games.splice(
+      curUser.lists.custom[i].games.findIndex((obj) => obj == game),
+      1,
+      newGame
+    );
+  }
+}
+
+function getAllIndexes(arr, val) {
+  var indexes = [],
+    i;
+  for (i = 0; i < arr.length; i++) if (arr[i] === val) indexes.push(i);
+  return indexes;
+}
+
 router.post("/list_add", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {

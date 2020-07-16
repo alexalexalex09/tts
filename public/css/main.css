@@ -1150,7 +1150,8 @@ ion-icon#addListButton {
   z-index: 11;
 }
 
-.subContext {
+.subContext,
+.subContextRename {
   margin-left: 0;
   background-color: white;
   position: absolute;
@@ -1159,9 +1160,16 @@ ion-icon#addListButton {
   left: 5vw;
   width: 90vw;
   top: calc(var(--vh) * 2);
-  height: calc(var(--vh) * 96);
   box-sizing: border-box;
   font-size: 1.5em;
+}
+
+.subContext {
+  height: calc(var(--vh) * 96);
+}
+
+.subContextRename {
+  height: var(--vh15);
 }
 
 .subContext hr {

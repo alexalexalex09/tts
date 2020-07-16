@@ -983,7 +983,7 @@ router.post("/rename_game", function (req, res) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
       var upsertOptions = { new: true, upsert: true };
       Game.findOneAndUpdate(
-        { name: "FDNJ" },
+        { name: req.body.newName },
         { name: req.body.newName },
         upsertOptions,
         function (err, game) {
@@ -1011,26 +1011,46 @@ router.post("/rename_game", function (req, res) {
 function replaceInUserDoc(game, curUser, newGame) {
   console.log("CurUser: ", curUser);
   console.log(curUser.lists.allGames.findIndex((obj) => obj == game));
-  curUser.lists.allGames.splice(
-    curUser.lists.allGames.findIndex((obj) => obj == game),
-    1,
-    newGame
-  );
-  for (var i = 0; i < curUser.lists.custom.length; i++) {
-    curUser.lists.custom[i].games.splice(
-      curUser.lists.custom[i].games.findIndex((obj) => obj == game),
+  if (newGame == "") {
+    curUser.lists.allGames.splice(
+      curUser.lists.allGames.findIndex((obj) => obj == game),
+      1
+    );
+  } else {
+    curUser.lists.allGames.splice(
+      curUser.lists.allGames.findIndex((obj) => obj == game),
       1,
       newGame
     );
   }
+  for (var i = 0; i < curUser.lists.custom.length; i++) {
+    if (newGame == "") {
+      curUser.lists.custom[i].games.splice(
+        curUser.lists.custom[i].games.findIndex((obj) => obj == game),
+        1
+      );
+    } else {
+      curUser.lists.custom[i].games.splice(
+        curUser.lists.custom[i].games.findIndex((obj) => obj == game),
+        1,
+        newGame
+      );
+    }
+  }
 }
 
-function getAllIndexes(arr, val) {
-  var indexes = [],
-    i;
-  for (i = 0; i < arr.length; i++) if (arr[i] === val) indexes.push(i);
-  return indexes;
-}
+router.post("/delete_game", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      //use this function to delete all instances of the game in a user instead of replacing by not passing a string
+      replaceInUserDoc(req.body.game, curUser);
+      curUser.save();
+      res.send({ status: "Success" });
+    });
+  } else {
+    res.send({ err: "Not logged in!" });
+  }
+});
 
 router.post("/list_add", function (req, res) {
   if (req.user) {

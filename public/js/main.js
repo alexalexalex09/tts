@@ -1336,7 +1336,6 @@ function renameGame(event, caller, game, oldGame) {
     const rg_options = {
       method: "POST",
       body: JSON.stringify({
-        code: document.getElementById("code").innerHTML,
         game: game,
         newName: $(caller).val(),
       }),
@@ -1350,7 +1349,7 @@ function renameGame(event, caller, game, oldGame) {
           console.log(res.err);
           //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
         } else {
-          console.log("copied");
+          console.log("renamed");
           //$("#" + game).text(res.status.newName);
           $("#gamesContainer")
             .children()
@@ -1370,7 +1369,57 @@ function renameGame(event, caller, game, oldGame) {
   }
 }
 
-function contextDelete(game) {}
+function contextDelete(game, caller) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
+    game.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Really delete ` +
+    game.name +
+    ` ?</div><hr/>
+  <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+  <div class="button redBtn" id="deleteConfirm" onclick="deleteGame('` +
+    game.id.substr($(caller).parent().parent().parent().attr("id").length) +
+    `', '` +
+    game.name +
+    `')">Delete</div>`;
+  $("body").append(el);
+}
+
+function deleteGame(game, name) {
+  const dg_options = {
+    method: "POST",
+    body: JSON.stringify({
+      game: game,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/delete_game", dg_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        $("#gamesContainer")
+          .children()
+          .children(".listGames")
+          .children("li")
+          .each(function () {
+            if ($(this).text() == name) {
+              $(this).remove();
+            }
+          });
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      }
+    });
+  });
+}
 
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {

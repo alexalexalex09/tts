@@ -66,6 +66,10 @@ a:active {
   background-color: var(--main-green);
 }
 
+.redBtn {
+  background-color: var(--main-red);
+}
+
 .bottomBtn {
   position: absolute;
   width: 80vw;
@@ -295,7 +299,7 @@ input:checked + .slider:before {
 
 .textInput {
   left: 0vw;
-  top: calc(var(--vh, 1vh) * 0);
+  top: 0px;
   position: absolute;
   border: 0px;
   height: 100%;
@@ -1151,7 +1155,8 @@ ion-icon#addListButton {
 }
 
 .subContext,
-.subContextRename {
+.subContextRename,
+.subContextDelete {
   margin-left: 0;
   background-color: white;
   position: absolute;
@@ -1168,11 +1173,19 @@ ion-icon#addListButton {
   height: calc(var(--vh) * 96);
 }
 
-.subContextRename {
+.subContextRename,
+.subContextDelete {
   height: var(--vh15);
 }
 
-.subContext hr {
+.subContextDelete .button {
+  width: 40%;
+  margin: 0.4em 5% 0px;
+  float: left;
+  height: var(--vh5);
+}
+
+.subContextContainer hr {
   margin: var(--vh);
 }
 

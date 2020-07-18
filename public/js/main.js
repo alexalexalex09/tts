@@ -1270,6 +1270,7 @@ function moveToList(options) {
         $(".subContextContainer").each(function () {
           $(this).remove();
         });
+        gulp();
       }
     });
   });
@@ -1307,6 +1308,7 @@ function copyToList(options) {
         $(".subContextContainer").each(function () {
           $(this).remove();
         });
+        gulp();
       }
     });
   });
@@ -1363,6 +1365,7 @@ function renameGame(event, caller, game, oldGame) {
           $(".subContextContainer").each(function () {
             $(this).remove();
           });
+          gulp();
         }
       });
     });
@@ -1416,6 +1419,7 @@ function deleteGame(game, name) {
         $(".subContextContainer").each(function () {
           $(this).remove();
         });
+        gulp();
       }
     });
   });
@@ -1605,7 +1609,7 @@ function addList(event) {
           <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
               list +
               `
-              <ion-icon name="ellipsis-horizontal-outline" onclick="editList($(this).parent().parent().attr('id'))"></ion-icon></div>
+              </div>
           <div class="listExpand" onclick="listToggle(this)">
               <ion-icon name="chevron-down-outline"></ion-icon>
           </div>

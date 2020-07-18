@@ -924,18 +924,25 @@ router.post("/move_to_list", function (req, res) {
       if (toList == -1) {
         res.send({ err: "Can't move to or from your All Games list" });
       } else {
+        console.log(
+          curUser.lists.custom[toList].games[0],
+          gameToMove[0],
+          curUser.lists.custom[toList].games[0] == gameToMove[0].toString(),
+          typeof curUser.lists.custom[toList].games[0],
+          typeof gameToMove
+        );
         if (
           curUser.lists.custom[toList].games.findIndex(
-            (obj) => obj == gameToMove
+            (obj) => obj == gameToMove[0].toString()
           ) == -1
         ) {
           curUser.lists.custom[toList].games.push(gameToMove);
+          curUser.save();
+          res.send({ status: curUser });
         } else {
           res.send({ err: "Not moved: game is already in list" });
         }
       }
-      curUser.save();
-      res.send({ status: curUser });
     });
   } else {
     res.send({ err: "Not logged in!" });
@@ -962,9 +969,10 @@ router.post("/copy_to_list", function (req, res) {
           );
           var gameToCopy = curUser.lists.custom[fromList].games[index];
         }
+        console.log(curUser.lists.custom[toList].games, gameToCopy);
         if (
           curUser.lists.custom[toList].games.findIndex(
-            (obj) => obj == gameToCopy
+            (obj) => obj == gameToCopy.toString()
           ) == -1
         ) {
           curUser.lists.custom[toList].games.push(gameToCopy);
@@ -1052,8 +1060,21 @@ router.post("/delete_game", function (req, res) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
       //use this function to delete all instances of the game in a user instead of replacing by not passing a string
       replaceInUserDoc(req.body.game, curUser);
-      console.log("deleting");
-      console.log(curUser);
+      curUser.save();
+      res.send({ status: "Success" });
+    });
+  } else {
+    res.send({ err: "Not logged in!" });
+  }
+});
+
+router.post("/remove_game", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var index = curUser.lists.custom[req.body.list - 1].games.findIndex(
+        (obj) => obj._id.toString() == req.body.game
+      );
+      curUser.lists.custom[req.body.list - 1].games.splice(index, 1);
       curUser.save();
       res.send({ status: "Success" });
     });

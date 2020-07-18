@@ -992,7 +992,7 @@ function gulp() {
               `', name:'` +
               res.lists.allGames[i].name +
               `'}, this)">Rename</li>` +
-              `<li onclick="contextDelete({id: 'games0` +
+              `<li class="red" onclick="contextDelete({id: 'games0` +
               res.lists.allGames[i]._id +
               `', name:'` +
               res.lists.allGames[i].name +
@@ -1218,9 +1218,9 @@ function displaySubContext(text, game, items, fname) {
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">` +
     text +
-    ` ` +
+    ` "` +
     game.name +
-    `</div><hr/>`;
+    `"</div><hr/>`;
   for (var i = 0; i < items.length; i++) {
     el +=
       `<li id="subContextGame_` +
@@ -1321,9 +1321,9 @@ function contextRename(game, caller) {
     `" >`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-    `<div class="subContextTitle">Renaming ` +
+    `<div class="subContextTitle">Renaming "` +
     game.name +
-    `</div><hr/><div id="renameGameInputCont" class="textInputCont">
+    `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <input class="textInput" type="text" onkeyup='renameGame(event, this, "` +
     game.id.substr($(caller).parent().parent().parent().attr("id").length) +
     `", "` +
@@ -1379,9 +1379,9 @@ function contextDelete(game, caller) {
     `" >`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-    `<div class="subContextTitle">Really delete ` +
+    `<div class="subContextTitle">Really delete "` +
     game.name +
-    ` ?</div><hr/>
+    `"?</div><hr/>
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button redBtn" id="deleteConfirm" onclick="deleteGame('` +
     game.id.substr($(caller).parent().parent().parent().attr("id").length) +
@@ -1402,6 +1402,65 @@ function deleteGame(game, name) {
     },
   };
   fetch("/delete_game", dg_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        $("#gamesContainer")
+          .children()
+          .children(".listGames")
+          .children("li")
+          .each(function () {
+            if ($(this).text() == name) {
+              $(this).remove();
+            }
+          });
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+        gulp();
+      }
+    });
+  });
+}
+
+function contextRemove(game, caller) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextRemove" id="subContext_` +
+    game.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Remove "` +
+    game.name +
+    `" from this list?</div><hr/>
+  <div class="button greenBtn" id="removeCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+  <div class="button redBtn" id="removeConfirm" onclick="removeGame('` +
+    game.id.substr($(caller).parent().parent().parent().attr("id").length) +
+    `', '` +
+    game.name +
+    `', '` +
+    game.id.substr(
+      5,
+      $(caller).parent().parent().parent().attr("id").length - 5
+    ) +
+    `')">Remove</div>`;
+  $("body").append(el);
+}
+
+function removeGame(game, name, list) {
+  const rg_options = {
+    method: "POST",
+    body: JSON.stringify({
+      game: game,
+      list: list,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/remove_game", rg_options).then(function (response) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
@@ -1467,11 +1526,11 @@ function writeGameContext(contextObj) {
     `', name:'` +
     contextObj.name +
     `'}, this)">Rename</li>` +
-    `<li onclick="contextDelete({id: '` +
+    `<li onclick="contextRemove({id: '` +
     contextObj.id +
     `', name:'` +
     contextObj.name +
-    `'}, this)">Delete</li>` +
+    `'}, this)">Remove</li>` +
     `</div>`;
   return htmlString;
 }

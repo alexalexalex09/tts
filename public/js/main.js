@@ -756,54 +756,8 @@ function lockGames(code) {
           $("#addGroupGamesInput").on("keyup", function (event) {
             // Number 13 is the "Enter" key on the keyboard
             if (event.keyCode === 13) {
-              console.log("submitting new group game");
               event.preventDefault();
-              var game = addGroupGamesInput.value;
-              const gga_options = {
-                method: "POST",
-                body: JSON.stringify({ game: game, code: $("#code").text() }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              };
-              //add_user_game_unsorted
-              fetch("/group_game_add", gga_options).then(function (response) {
-                return response.json().then((res) => {
-                  if (res.err) {
-                    console.log(res);
-                    if ((res.err = "added")) {
-                      $("#addGroupGamesInput").css("color", "var(--main-red)");
-                      $('input[game_id="' + res.game + '"]').each(function () {
-                        $(this)
-                          .parent()
-                          .parent()
-                          .parent()
-                          .css("color", "var(--main-red)");
-                      });
-                      $("#addGroupGamesInput").addClass("shake");
-                      window.setTimeout(function () {
-                        $("#addGroupGamesInput").css(
-                          "color",
-                          "var(--main-black)"
-                        );
-                        $("#addGroupGamesInput").removeClass("shake");
-                        $('input[game_id="' + res.game + '"]').each(
-                          function () {
-                            $(this)
-                              .parent()
-                              .parent()
-                              .parent()
-                              .css("color", "var(--main-black)");
-                          }
-                        );
-                      }, 600);
-                    }
-                  } else {
-                    $("#editGameList").append(res.status);
-                    registerEGS();
-                  }
-                });
-              });
+              addGroupGame();
             }
           });
 
@@ -830,6 +784,47 @@ function lockGames(code) {
           });
         }, 10);
       }, 300);
+    });
+  });
+}
+
+function addGroupGame() {
+  console.log("submitting new group game");
+  var game = addGroupGamesInput.value;
+  const gga_options = {
+    method: "POST",
+    body: JSON.stringify({ game: game, code: $("#code").text() }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  //add_user_game_unsorted
+  fetch("/group_game_add", gga_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res);
+        if ((res.err = "added")) {
+          $("#addGroupGamesInput").css("color", "var(--main-red)");
+          $('input[game_id="' + res.game + '"]').each(function () {
+            $(this).parent().parent().parent().css("color", "var(--main-red)");
+          });
+          $("#addGroupGamesInput").addClass("shake");
+          window.setTimeout(function () {
+            $("#addGroupGamesInput").css("color", "var(--main-black)");
+            $("#addGroupGamesInput").removeClass("shake");
+            $('input[game_id="' + res.game + '"]').each(function () {
+              $(this)
+                .parent()
+                .parent()
+                .parent()
+                .css("color", "var(--main-black)");
+            });
+          }, 600);
+        }
+      } else {
+        $("#editGameList").append(res.status);
+        registerEGS();
+      }
     });
   });
 }
@@ -1329,7 +1324,7 @@ function contextRename(game, caller) {
     `", "` +
     game.name +
     `")' id="renameGameInput"></input>
-    <div class="textClear"></div>`;
+    <div class="textSubmit"></div>`;
   $("body").append(el);
 }
 
@@ -1582,57 +1577,50 @@ function setPlural(countable, singular, plural) {
  *
  * @param {*} event
  */
-function addGame(event, el) {
-  // Number 13 is the "Enter" key on the keyboard
-  if (event.keyCode === 13) {
-    console.log("submitting new game");
-    event.preventDefault();
-    var game = $(el).val();
-    const options = {
-      method: "POST",
-      body: JSON.stringify({ game: game }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    //add_user_game_unsorted
-    fetch("/game_add", options).then(function (response) {
-      return response.json().then((res) => {
-        if (!res.err) {
-          console.log(res);
-          //if (obj.err) {console.log('add_games err: ' + obj.err ); }
-
-          var htmlString =
-            `
+function addNewGame(el) {
+  console.log("submitting new game");
+  var game = $(el).val();
+  const options = {
+    method: "POST",
+    body: JSON.stringify({ game: game }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/game_add", options).then(function (response) {
+    return response.json().then((res) => {
+      if (!res.err) {
+        console.log(res);
+        var htmlString =
+          `
             <li>
                 <div rating="` +
-            res.status.rating +
-            `" owned="` +
-            res.status.owned +
-            `" class="gameName" game_id="` +
-            res.status._id +
-            `">` +
-            res.status.name +
-            `
+          res.status.rating +
+          `" owned="` +
+          res.status.owned +
+          `" class="gameName" game_id="` +
+          res.status._id +
+          `">` +
+          res.status.name +
+          `
                 </div>
                 <div class='toggle'>
                     <label class="switch">
                         <input type="checkbox" onclick="toggleFont(this)" game_id="` +
-            res.status._id +
-            `">
+          res.status._id +
+          `">
                         <span class="slider round"></span>
                     </label>
                 </div>
             </li>`;
-          $("li#0").children(".listGames").first().append(htmlString);
-          gulp();
-          recheckGreenLists();
-        } else {
-          console.log(res.err);
-        }
-      });
+        $("li#0").children(".listGames").first().append(htmlString);
+        gulp();
+        recheckGreenLists();
+      } else {
+        console.log(res.err);
+      }
     });
-  }
+  });
 }
 
 /**
@@ -1640,45 +1628,46 @@ function addGame(event, el) {
  *
  * @param {*} event
  */
-function addList(event) {
+function addList() {
   // Number 13 is the "Enter" key on the keyboard
   console.log("addList");
-  if (event.keyCode === 13) {
-    console.log("submitting new game");
-    event.preventDefault();
-    var list = menuAddListInput.value;
-    const options = {
-      method: "POST",
-      body: JSON.stringify({ list: list }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    //add_user_game_unsorted
-    fetch("/list_add", options).then(function (response) {
-      return response.json().then((res) => {
-        if (res.err) {
-          console.log(res);
-        } else {
-          var gamesNum = $("#gamesView #gamesContainer").children("li").length;
-          $("#gamesView #gamesContainer").append(
-            `<li id="games` +
-              gamesNum +
-              `">
+  //if (event.keyCode === 13) {
+  console.log("submitting new game");
+  //event.preventDefault();
+  var list = menuAddListInput.value;
+  const options = {
+    method: "POST",
+    body: JSON.stringify({ list: list }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  //add_user_game_unsorted
+  fetch("/list_add", options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res);
+      } else {
+        var gamesNum = $("#gamesView #gamesContainer").children("li").length;
+        $("#gamesView #gamesContainer").append(
+          `<li id="games` +
+            gamesNum +
+            `">
           <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
-              list +
-              `
+            list +
+            `
               </div>
           <div class="listExpand" onclick="listToggle(this)">
               <ion-icon name="chevron-down-outline"></ion-icon>
           </div>
           <div class="listGames off"></div>
         </li>`
-          );
-        }
-      });
+        );
+      }
     });
-  }
+  });
+  //}
+  return false;
 }
 
 function recheckGreenLists() {
@@ -2226,6 +2215,12 @@ function fillPostVote(users) {
       });
     });
   });
+}
+
+function textSubmit(el) {
+  console.log("textSubmit");
+  addNewGame(el);
+  return false;
 }
 
 function fillGames(games) {

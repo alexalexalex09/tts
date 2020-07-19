@@ -77,10 +77,11 @@ block content
       #addGamesContainer
         #addGamesTitle Add Games
         #addGamesInputCont.textInputCont
-          input.textInput(type='text'  onkeyup='addGame(event, "#addGamesInput")')#addGamesInput
-          .textClear
+          form(onsubmit="return textSubmit('#addGamesInput')")
+            input.textInput(type='text')#addGamesInput
+            input.textSubmit(type='submit' value='')
       #selectLists
-      #gameSubmit.button.greenBtn(type='submit')
+      #gameSubmit.button.greenBtn(type='submit' value='')
         | Submit These Games
     
     #postSelectView.view.off
@@ -119,13 +120,15 @@ block content
       div#menuAddGamesContainer.slideDown.off
         #menuAddGamesTitle Add Games
         #menuAddGamesInputCont.textInputCont
-          input.textInput(type='text' onkeyup='addGame(event, "#menuAddGamesInput")')#menuAddGamesInput
-          .textClear
+          form(onsubmit="return textSubmit('#menuAddGamesInput')")
+            input.textInput(type='text')#menuAddGamesInput
+            input.textSubmit(type='submit' value='')
       div#menuAddListContainer.slideDown.off
         #menuAddListTitle Add List
         #menuAddListInputCont.textInputCont
-          input.textInput(type='text' onkeyup='addList(event)')#menuAddListInput
-          .textClear
+          form(onsubmit='return addList()')
+            input.textInput(type='text')#menuAddListInput
+            input.textSubmit(type='submit' value='')
       #gamesContainer
       #gamesContextContainer.off
 

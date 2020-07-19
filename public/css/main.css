@@ -312,14 +312,27 @@ input:checked + .slider:before {
   padding: 0px 7vw 0px 5px;
 }
 
+.textInputCont input.textSubmit {
+  border: none;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.textSubmit,
 .textClear {
-  background-image: url(../img/close-circle-outline.svg);
   height: calc(var(--vh, 1vh) * 4);
   width: calc(var(--vh, 1vh) * 4);
   background-size: contain;
   right: 3px;
   position: absolute;
   margin-top: calc(var(--vh, 1vh) * 0.5);
+}
+
+.textSubmit {
+  background-image: url(../img/checkmark-circle-outline.svg);
+}
+
+.textClear {
+  background-image: url(../img/close-circle-outline.svg);
 }
 
 #codeError {

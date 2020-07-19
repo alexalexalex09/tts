@@ -753,13 +753,14 @@ function lockGames(code) {
             transform: "translateX(-0vw)",
           });
           $("#backArrow").removeClass("off");
-          $("#addGroupGamesInput").on("keyup", function (event) {
+          /*$("#addGroupGamesInput").on("keyup", function (event) {
             // Number 13 is the "Enter" key on the keyboard
             if (event.keyCode === 13) {
               event.preventDefault();
               addGroupGame();
             }
-          });
+            return false;
+          });*/
 
           $("#gameUnlock").click(this, function () {
             console.log("gameUnlock");
@@ -827,6 +828,7 @@ function addGroupGame() {
       }
     });
   });
+  return false;
 }
 
 /********************************/

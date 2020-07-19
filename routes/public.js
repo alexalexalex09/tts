@@ -643,8 +643,10 @@ router.post("/lock_games", function (req, res) {
           `<div id="addGroupGamesContainer">` +
           `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
           `<div class="textInputCont" id="addGroupGamesInputCont">` +
+          `<form onsubmit='return addGroupGame()'>` +
           `<input class="textInput" type="text" id="addGroupGamesInput">` +
-          `<div class="textSubmit"></div>` +
+          `<input class="textSubmit" type="submit" value=""></input>` +
+          `</form>` +
           `</div>` +
           `</div>` +
           `<div class="tip" id="dupTip">Potential duplicates are highlighted in gold</div>` +

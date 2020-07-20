@@ -846,11 +846,14 @@ function addListDisplay(theId, name, dest, toggle) {
   var listString =
     `<li id="` +
     theId +
-    `">
-      <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
+    `">` +
+    `<div class="menuGamesContainer">` +
+    `<ion-icon name="reorder-two-outline"></ion-icon>` +
+    `<ion-icon name="settings-outline"></ion-icon>` +
+    `<div class="listName" onclick="listToggle($(this).parent().parent().children('.listExpand'))">` +
     name +
     `
-    </div>
+    </div></div>
       <div class="listExpand" onclick="listToggle(this)">
           <ion-icon name="chevron-down-outline"></ion-icon>
       </div>`;
@@ -1654,8 +1657,8 @@ function addList() {
         $("#gamesView #gamesContainer").append(
           `<li id="games` +
             gamesNum +
-            `">
-          <div class="listName" onclick="listToggle(this.nextElementSibling)">` +
+            `">` +
+            `<div class="listName" onclick="listToggle($(this).parent().parent().children('.listExpand'))">` +
             list +
             `
               </div>

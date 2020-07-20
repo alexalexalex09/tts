@@ -1022,6 +1022,23 @@ ion-icon#addListButton {
   opacity: 0;
 }
 
+.menuGamesContainer {
+  display: flex;
+}
+
+.menuGamesContainer ion-icon {
+  flex: 0 0 30px;
+}
+
+#gamesContainer .menuGamesContainer .listName {
+  overflow-x: hidden;
+  white-space: nowrap;
+  min-height: 0px;
+  cursor: pointer;
+  flex-grow: 20;
+  padding-left: 20px;
+}
+
 /*****************/
 /*    Testing    */
 /*****************/

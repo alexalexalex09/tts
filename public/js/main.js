@@ -843,18 +843,25 @@ function addGroupGame() {
  * @param {String} name
  */
 function addListDisplay(theId, name, dest, toggle) {
-  var listString =
-    `<li id="` +
-    theId +
-    `">` +
-    `<div class="menuGamesContainer">` +
-    `<ion-icon name="reorder-two-outline"></ion-icon>` +
-    `<ion-icon name="settings-outline"></ion-icon>` +
-    `<div class="listName" onclick="listToggle($(this).parent().parent().children('.listExpand'))">` +
-    name +
-    `
-    </div></div>
-      <div class="listExpand" onclick="listToggle(this)">
+  var listString = `<li id="` + theId + `">`;
+  if (dest == "#gamesContainer") {
+    listString +=
+      `<div class="menuGamesContainer">` +
+      `<div class="reorder-two-outline"><ion-icon name="reorder-two-outline"></ion-icon></div>` +
+      `<div class="settings-outline" onclick="showListSettings(this)"><ion-icon name="settings-outline"></ion-icon></div>` +
+      `<div class="listName" onclick="listToggle($(this).parent().parent().children('.listExpand'))">` +
+      name +
+      `
+    </div></div>`;
+  } else {
+    console.log(dest, name);
+    listString +=
+      `<div class="listName" onclick="listToggle(this.nextElementSibling)">` +
+      name +
+      `
+    </div>`;
+  }
+  listString += `<div class="listExpand" onclick="listToggle(this)">
           <ion-icon name="chevron-down-outline"></ion-icon>
       </div>`;
   if (toggle) {
@@ -2237,6 +2244,24 @@ function fillGames(games) {
   }
   $("#playContainer").html(htmlString);
   console.log("fillgames");
+}
+
+function showListSettings(el) {
+  console.log(el);
+  if ($(el).hasClass("listExpanded")) {
+    console.log($(el).children(".listSettings"));
+    $(el).next().children(".listSettings").remove();
+    $(el).toggleClass("listExpanded");
+  } else {
+    htmlString =
+      `<div class="listSettings">` +
+      `<div id="listMove" onclick="listRename(this)">Move</div>` +
+      `<div id="listRename" onclick="listRename(this)">Rename</div>` +
+      `<div id="listDelete" onclick="listRename(this)">Delete</div>` +
+      `</div>`;
+    $(el).next().append(htmlString);
+    $(el).toggleClass("listExpanded");
+  }
 }
 
 function editList(list) {

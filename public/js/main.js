@@ -842,27 +842,42 @@ function addGroupGame() {
  * @param {String} theId
  * @param {String} name
  */
-function addListDisplay(theId, name, dest, toggle) {
+function addListDisplay(
+  theId,
+  name,
+  dest,
+  toggle,
+  titleFunc,
+  iconFunc,
+  ionicon
+) {
   var listString = `<li id="` + theId + `">`;
   if (dest == "#gamesContainer") {
     listString +=
       `<div class="menuGamesContainer">` +
-      `<div class="reorder-two-outline"><ion-icon name="reorder-two-outline"></ion-icon></div>` +
-      `<div class="settings-outline" onclick="showListSettings(this)"><ion-icon name="settings-outline"></ion-icon></div>` +
-      `<div class="listName" onclick="listToggle($(this).parent().parent().children('.listExpand'))">` +
+      `<div class="listName" onclick="` +
+      titleFunc +
+      `">` +
       name +
       `
     </div></div>`;
   } else {
     console.log(dest, name);
     listString +=
-      `<div class="listName" onclick="listToggle(this.nextElementSibling)">` +
+      `<div class="listName" onclick="` +
+      titleFunc +
+      `">` +
       name +
       `
     </div>`;
   }
-  listString += `<div class="listExpand" onclick="listToggle(this)">
-          <ion-icon name="chevron-down-outline"></ion-icon>
+  listString +=
+    `<div class="listExpand" onclick="` +
+    iconFunc +
+    `">
+          <ion-icon name="` +
+    ionicon +
+    `"></ion-icon>
       </div>`;
   if (toggle) {
     listString += `<div class='toggle' >
@@ -932,8 +947,24 @@ function gulp() {
         $("#gamesContainer").html(" ");
         $("#gamesContextContainer").html(" ");
         $("#selectLists").html(" ");
-        addListDisplay(0, "All Games", "#selectLists", true);
-        addListDisplay("games0", "All Games", "#gamesContainer", false);
+        addListDisplay(
+          0,
+          "All Games",
+          "#selectLists",
+          true,
+          "listToggle(this.nextElementSibling)",
+          "listToggle(this)",
+          "chevron-down-outline"
+        );
+        addListDisplay(
+          "games0",
+          "All Games",
+          "#gamesContainer",
+          false,
+          "listToggle($(this).parent().parent().children('.listExpand'))",
+          "listToggle(this)",
+          "ellipsis-vertical"
+        );
         for (var i = 0; i < res.lists.allGames.length; i++) {
           var curSession = document.getElementsByTagName("session")[0];
           var checked = "";
@@ -972,7 +1003,7 @@ function gulp() {
                     </label>
                 </div>
             </li>`;
-          var gameString =
+          /*var gameString =
             `<li id="games0` +
             res.lists.allGames[i]._id +
             `" onclick="showGameContext({id: 'games0` +
@@ -981,10 +1012,10 @@ function gulp() {
             res.lists.allGames[i].name +
             `'})">` +
             res.lists.allGames[i].name +
-            `</li>`;
+            `</li>`;*/
           //Append the "All Games" list to the first <li>
           $("li#0").children(".listGames").first().append(htmlString);
-          $("li#games0").children(".listGames").first().append(gameString);
+          /*$("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
             `<div class="contextActions off" id="context_stage_games0` +
               res.lists.allGames[i]._id +
@@ -1004,16 +1035,27 @@ function gulp() {
               `', name:'` +
               res.lists.allGames[i].name +
               `'}, this)">Delete</li>`
-          );
+          );*/
         }
         for (var i = 0; i < res.lists.custom.length; i++) {
           var curId = i + 1;
-          addListDisplay(curId, res.lists.custom[i].name, "#selectLists", true);
+          addListDisplay(
+            curId,
+            res.lists.custom[i].name,
+            "#selectLists",
+            true,
+            "listToggle(this.nextElementSibling)",
+            "listToggle(this)",
+            "chevron-down-outline"
+          );
           addListDisplay(
             "games" + curId,
             res.lists.custom[i].name,
             "#gamesContainer",
-            false
+            false,
+            "listToggle($(this).parent().parent().children('.listExpand'))",
+            "listToggle(this)",
+            "ellipsis-vertical"
           );
           for (var j = 0; j < res.lists.custom[i].games.length; j++) {
             var htmlString =
@@ -1042,7 +1084,7 @@ function gulp() {
                   </label>
               </div>
             </li>`;
-            var gameString =
+            /*var gameString =
               `<li id="games` +
               curId +
               res.lists.custom[i].games[j]._id +
@@ -1053,14 +1095,14 @@ function gulp() {
               res.lists.custom[i].games[j].name +
               `'})">` +
               res.lists.custom[i].games[j].name +
-              `</li>`;
+              `</li>`;*/
 
             //Append each custom list the the corresponding li
             $("li#" + curId)
               .children(".listGames")
               .first()
               .append(htmlString);
-            $("li#games" + curId)
+            /*$("li#games" + curId)
               .children(".listGames")
               .first()
               .append(gameString);
@@ -1069,7 +1111,7 @@ function gulp() {
                 id: "games" + curId + res.lists.custom[i].games[j]._id,
                 name: res.lists.custom[i].games[j].name,
               })
-            );
+            );*/
           }
         }
 
@@ -1670,7 +1712,7 @@ function addList() {
             `
               </div>
           <div class="listExpand" onclick="listToggle(this)">
-              <ion-icon name="chevron-down-outline"></ion-icon>
+            <ion-icon name="ellipsis-vertical"></ion-icon>
           </div>
           <div class="listGames off"></div>
         </li>`

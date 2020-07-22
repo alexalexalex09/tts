@@ -17,6 +17,15 @@ var app = express();
 //CF variables
 
 var appEnv = cfenv.getAppEnv();
+console.log(appEnv);
+var envs = {
+  orgUrl: process.env.oUrl,
+  token: process.env.oToken,
+  issuer: process.env.oIssuer,
+  client_id: process.env.oClient_id,
+  client_secret: process.env.oSecret,
+  secret: process.env.sSecret,
+};
 if (appEnv.isLocal) {
   var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
 } else {
@@ -25,14 +34,14 @@ if (appEnv.isLocal) {
 
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({
-  orgUrl: process.env.oUrl,
-  token: process.env.oToken,
+  orgUrl: envs.orgUrl,
+  token: envs.token,
 });
 console.log("baseURL: ", baseURL);
 const oidc = new ExpressOIDC({
-  issuer: process.env.oIssuer,
-  client_id: process.env.oClient_id,
-  client_secret: process.env.oSecret,
+  issuer: envs.issuer,
+  client_id: envs.client_id,
+  client_secret: envs.client_secret,
   //redirect_uri: baseURL + "/users/callback", (upgraded to 2.0)
   appBaseUrl: baseURL,
   scope: "openid profile",
@@ -62,7 +71,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Okta setup
 app.use(
   session({
-    secret: process.env.sSecret,
+    secret: envs.secret,
     resave: true,
     saveUninitialized: false,
   })

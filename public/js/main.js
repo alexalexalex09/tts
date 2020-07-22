@@ -961,8 +961,8 @@ function gulp() {
           "All Games",
           "#gamesContainer",
           false,
-          "listToggle($(this).parent().parent().children('.listExpand'))",
-          "listToggle(this)",
+          "openList($(this).parent().parent().attr('id'))",
+          "listProperties($(this).parent().parent().attr('id'))",
           "ellipsis-vertical"
         );
         for (var i = 0; i < res.lists.allGames.length; i++) {
@@ -1003,7 +1003,7 @@ function gulp() {
                     </label>
                 </div>
             </li>`;
-          /*var gameString =
+          var gameString =
             `<li id="games0` +
             res.lists.allGames[i]._id +
             `" onclick="showGameContext({id: 'games0` +
@@ -1012,10 +1012,10 @@ function gulp() {
             res.lists.allGames[i].name +
             `'})">` +
             res.lists.allGames[i].name +
-            `</li>`;*/
+            `</li>`;
           //Append the "All Games" list to the first <li>
           $("li#0").children(".listGames").first().append(htmlString);
-          /*$("li#games0").children(".listGames").first().append(gameString);
+          $("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
             `<div class="contextActions off" id="context_stage_games0` +
               res.lists.allGames[i]._id +
@@ -1035,7 +1035,7 @@ function gulp() {
               `', name:'` +
               res.lists.allGames[i].name +
               `'}, this)">Delete</li>`
-          );*/
+          );
         }
         for (var i = 0; i < res.lists.custom.length; i++) {
           var curId = i + 1;
@@ -1053,8 +1053,8 @@ function gulp() {
             res.lists.custom[i].name,
             "#gamesContainer",
             false,
-            "listToggle($(this).parent().parent().children('.listExpand'))",
-            "listToggle(this)",
+            "openList($(this).parent().parent().attr('id'))",
+            "listProperties($(this).parent().parent().attr('id'))",
             "ellipsis-vertical"
           );
           for (var j = 0; j < res.lists.custom[i].games.length; j++) {
@@ -1084,7 +1084,7 @@ function gulp() {
                   </label>
               </div>
             </li>`;
-            /*var gameString =
+            var gameString =
               `<li id="games` +
               curId +
               res.lists.custom[i].games[j]._id +
@@ -1095,14 +1095,14 @@ function gulp() {
               res.lists.custom[i].games[j].name +
               `'})">` +
               res.lists.custom[i].games[j].name +
-              `</li>`;*/
+              `</li>`;
 
             //Append each custom list the the corresponding li
             $("li#" + curId)
               .children(".listGames")
               .first()
               .append(htmlString);
-            /*$("li#games" + curId)
+            $("li#games" + curId)
               .children(".listGames")
               .first()
               .append(gameString);
@@ -1111,7 +1111,7 @@ function gulp() {
                 id: "games" + curId + res.lists.custom[i].games[j]._id,
                 name: res.lists.custom[i].games[j].name,
               })
-            );*/
+            );
           }
         }
 
@@ -1172,6 +1172,66 @@ function showMenuAddList() {
   setTimeout(function () {
     $("#menuAddListContainer").removeClass("slideDown");
   }, 5);
+}
+
+function openList(list) {
+  var games = getListGames(list);
+  var htmlString =
+    '<div class="listTitle">' +
+    $("#" + list)
+      .children(".menuGamesContainer")
+      .first()
+      .children(".listName")
+      .first()
+      .html() +
+    "</div>" +
+    createNode(games, "listContents", "");
+  $("#" + list).after(htmlString);
+  showSubList(".listContents");
+}
+
+function getListGames(list) {
+  var arr = [];
+  $("#" + list)
+    .children(".listGames")
+    .first()
+    .children()
+    .each(function (ind, el) {
+      arr.push($(el)[0].outerHTML);
+    });
+  return arr;
+}
+
+function listProperties(list) {
+  var actions = [
+    prepareAction("Rename", "renameList(this)"),
+    prepareAction("Delete", "deleteList(this)"),
+  ];
+  var htmlString = createNode(actions, "listProperties", "");
+  $("#" + list).after(htmlString);
+  showSubList(".listProperties");
+}
+
+function prepareAction(name, func) {
+  return `<div class="action" onclick="` + func + `">` + name + `</div>`;
+}
+
+function createNode(arr, nodeClass, nodeId) {
+  var htmlString = `<div class="` + nodeClass + `" id="` + nodeId + `">`;
+  for (var i = 0; i < arr.length; i++) {
+    htmlString += arr[i];
+  }
+  htmlString += "</div>";
+  return htmlString;
+}
+
+function showSubList(subList) {
+  $(subList).removeClass("off");
+  $(".listTitle").removeClass("off");
+  setTimeout(function () {
+    $(subList).addClass("slideUp");
+    $(".listTitle").addClass("slideUp");
+  }, 10);
 }
 
 /**

@@ -1257,6 +1257,17 @@ subContextRemove {
   font-size: calc(var(--vh, 1vh) * 3);
 }
 
+.listTitle ion-icon {
+  position: absolute;
+  top: 0.5vh;
+  left: 7vw;
+  cursor: pointer;
+}
+
+.listTitleText {
+  cursor: pointer;
+}
+
 .listContents {
   transition: transform 0.5s;
   transform: translateX(200vh);
@@ -1274,6 +1285,11 @@ subContextRemove {
   font-size: calc(var(--vh, 1vh) * 3);
   color: var(--main-white);
   list-style: none;
+}
+
+.listContents li {
+  cursor: pointer;
+  display: table;
 }
 
 .listContents.slideUp,

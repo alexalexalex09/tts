@@ -962,7 +962,7 @@ function gulp() {
           "#gamesContainer",
           false,
           "openList($(this).parent().parent().attr('id'))",
-          "listProperties($(this).parent().parent().attr('id'))",
+          "listProperties($(this).parent().attr('id'))",
           "ellipsis-vertical"
         );
         for (var i = 0; i < res.lists.allGames.length; i++) {
@@ -1054,7 +1054,7 @@ function gulp() {
             "#gamesContainer",
             false,
             "openList($(this).parent().parent().attr('id'))",
-            "listProperties($(this).parent().parent().attr('id'))",
+            "listProperties($(this).parent().attr('id'))",
             "ellipsis-vertical"
           );
           for (var j = 0; j < res.lists.custom[i].games.length; j++) {
@@ -1177,17 +1177,24 @@ function showMenuAddList() {
 function openList(list) {
   var games = getListGames(list);
   var htmlString =
-    '<div class="listTitle">' +
+    `<div class="listTitle"><ion-icon name="arrow-back-outline" onclick="hideSubList('.listContents')"></ion-icon><div class="listTitleText" onclick="showPropsFromContents($(this).parent().prev().attr('id'))">` +
     $("#" + list)
       .children(".menuGamesContainer")
       .first()
       .children(".listName")
       .first()
       .html() +
-    "</div>" +
+    `</div></div>` +
     createNode(games, "listContents", "");
   $("#" + list).after(htmlString);
   showSubList(".listContents");
+}
+
+function showPropsFromContents(theId) {
+  hideSubList(".listContents");
+  setTimeout(function () {
+    listProperties(theId);
+  }, 511);
 }
 
 function getListGames(list) {
@@ -1197,12 +1204,13 @@ function getListGames(list) {
     .first()
     .children()
     .each(function (ind, el) {
-      arr.push($(el)[0].outerHTML);
+      arr.push($(el)[0].outerHTML.replace(`id="games`, `id="display_games`));
     });
   return arr;
 }
 
 function listProperties(list) {
+  console.log(list);
   var actions = [
     prepareAction("Rename", "renameList(this)"),
     prepareAction("Delete", "deleteList(this)"),
@@ -1232,6 +1240,15 @@ function showSubList(subList) {
     $(subList).addClass("slideUp");
     $(".listTitle").addClass("slideUp");
   }, 10);
+}
+
+function hideSubList(subList) {
+  $(subList).removeClass("slideUp");
+  $(".listTitle").removeClass("slideUp");
+  setTimeout(function () {
+    $(subList).remove();
+    $(".listTitle").remove();
+  }, 510);
 }
 
 /**
@@ -1265,7 +1282,7 @@ function showGameContext(game) {
     $("#context_stage_" + game.id)
       .clone(true)
       .prop("id", "context_" + game.id)
-      .insertAfter($("#" + game.id));
+      .insertAfter($("#display_" + game.id));
     setTimeout(function () {
       hideOnClickOutside(
         "#context_" + game.id,
@@ -1288,6 +1305,7 @@ function contextMove(game, caller) {
 function getMenuLists(caller) {
   var lists = [];
   $("#gamesContainer")
+    .children()
     .children()
     .children(".listName")
     .each(function () {

@@ -1177,7 +1177,7 @@ function showMenuAddList() {
 function openList(list) {
   var games = getListGames(list);
   var htmlString =
-    `<div class="listTitle"><ion-icon name="arrow-back-outline" onclick="hideSubList('.listContents')"></ion-icon><div class="listTitleText" onclick="showPropsFromContents($(this).parent().prev().attr('id'))">` +
+    `<div class="listTitle"><ion-icon name="arrow-back-outline" onclick="hideSubList('.listContents')"></ion-icon><div class="listTitleText">` +
     $("#" + list)
       .children(".menuGamesContainer")
       .first()
@@ -1204,7 +1204,12 @@ function getListGames(list) {
     .first()
     .children()
     .each(function (ind, el) {
-      arr.push($(el)[0].outerHTML.replace(`id="games`, `id="display_games`));
+      arr.push(
+        $(el)[0].outerHTML.replace(`id="games`, `id="display_games`) +
+          `<ion-icon name="ellipsis-vertical" onclick="` +
+          $(el).attr("onclick") +
+          `"></ion-icon>`
+      );
     });
   return arr;
 }
@@ -1227,7 +1232,7 @@ function prepareAction(name, func) {
 function createNode(arr, nodeClass, nodeId) {
   var htmlString = `<div class="` + nodeClass + `" id="` + nodeId + `">`;
   for (var i = 0; i < arr.length; i++) {
-    htmlString += arr[i];
+    htmlString += `<div class="displayGameContainer">` + arr[i] + `</div>`;
   }
   htmlString += "</div>";
   return htmlString;

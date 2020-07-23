@@ -1278,7 +1278,7 @@ subContextRemove {
   height: var(--vh75);
   overflow-y: auto;
   backdrop-filter: blur(3px);
-  padding: 0 var(--vh5);
+  padding: calc(var(--vh) * 3);
   background: var(--main-blue);
   z-index: 1;
   box-sizing: border-box;
@@ -1287,9 +1287,28 @@ subContextRemove {
   list-style: none;
 }
 
+.displayGameContainer {
+  width: 100%;
+  grid-template-columns: 1fr 50px;
+  max-width: 100vw;
+  grid-template-rows: var(--vh10);
+  display: grid;
+}
+
+.displayGameContainer li {
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 100%;
+  width: 100%;
+  text-overflow: ellipsis;
+}
+
+.displayGameContainer ion-icon {
+  justify-self: end;
+}
+
 .listContents li {
   cursor: pointer;
-  display: table;
 }
 
 .listContents.slideUp,

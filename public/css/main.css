@@ -1173,13 +1173,24 @@ ion-icon#addListButton {
 
 .contextActions {
   border: 1px solid white;
-  padding: 5px;
-  margin-left: 5vw;
-  width: 14vw;
+  padding: 5vw 5vw 15vw 5vw;
+  width: 100vw;
   background-color: white;
   color: var(--main-grey);
-  font-size: 3vw;
-  margin-bottom: 10px;
+  font-size: 6vw;
+  position: absolute;
+  bottom: 0px;
+  z-index: 10;
+  list-style: none;
+  box-sizing: border-box;
+  border-radius: 15px 15px 0px 0px;
+  transition: transform 0.5s;
+  transform: translateY(calc(var(--vh) * -200));
+}
+
+.contextTitle {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--main-black);
 }
 
 #gamesContainer .listGames .contextActions li {
@@ -1312,7 +1323,9 @@ subContextRemove {
 }
 
 .listContents.slideUp,
-.listTitle.slideUp {
+.listTitle.slideUp,
+.contextActions.slideUp,
+.slideUp {
   transform: translateX(0px);
 }
 

@@ -1287,7 +1287,7 @@ function showGameContext(game) {
     $("#context_stage_" + game.id)
       .clone(true)
       .prop("id", "context_" + game.id)
-      .insertAfter($("#display_" + game.id));
+      .appendTo($("body"));
     setTimeout(function () {
       hideOnClickOutside(
         "#context_" + game.id,
@@ -1296,6 +1296,7 @@ function showGameContext(game) {
       );
     }, 10);
     $("#context_" + game.id).removeClass("off");
+    $("#context_" + game.id).addClass("slideUp");
   } else {
     console.log("already clicked");
   }
@@ -1643,6 +1644,9 @@ function writeGameContext(contextObj) {
     `<div class="contextActions off" id="context_stage_` +
     contextObj.id +
     `">` +
+    `<div class="contextTitle">` +
+    contextObj.name +
+    `</div>` +
     `<li onclick="contextMove({id: '` +
     contextObj.id +
     `', name:'` +

@@ -1188,6 +1188,10 @@ ion-icon#addListButton {
   transform: translateY(calc(var(--vh) * -200));
 }
 
+.contextActions li {
+  cursor: pointer;
+}
+
 .contextTitle {
   margin-bottom: 20px;
   border-bottom: 1px solid var(--main-black);
@@ -1254,6 +1258,16 @@ subContextRemove {
   cursor: pointer;
 }
 
+#contextShadow {
+  background-color: rgba(0, 0, 0, 0.7);
+  width: 100vw;
+  height: var(--vh70);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
 .listTitle {
   position: fixed;
   transform: translateX(200vh);
@@ -1261,9 +1275,10 @@ subContextRemove {
   width: 100%;
   left: 0px;
   top: var(--vh15);
+  height: var(--vh15);
   text-align: center;
   background-color: var(--main-blue);
-  z-index: 2;
+  z-index: 1;
   color: var(--main-white);
   font-size: calc(var(--vh, 1vh) * 3);
 }
@@ -1316,6 +1331,7 @@ subContextRemove {
 
 .displayGameContainer ion-icon {
   justify-self: end;
+  cursor: pointer;
 }
 
 .listContents li {

@@ -1110,6 +1110,7 @@ function gulp() {
               writeGameContext({
                 id: "games" + curId + res.lists.custom[i].games[j]._id,
                 name: res.lists.custom[i].games[j].name,
+                list: curId,
               })
             );
           }
@@ -1294,6 +1295,7 @@ function showGameContext(game) {
         "#context_" + game.id,
         "#" + game.id
       );
+      $("#contextShadow").removeClass("off");
     }, 10);
     $("#context_" + game.id).removeClass("off");
     $("#context_" + game.id).addClass("slideUp");
@@ -1304,11 +1306,11 @@ function showGameContext(game) {
 
 function contextMove(game, caller) {
   console.log("contextMove ", game);
-  var lists = getMenuLists(caller);
+  var lists = getMenuLists(caller, game.list);
   displaySubContext("Moving", game, lists, "moveToList");
 }
 
-function getMenuLists(caller) {
+function getMenuLists(caller, fromList) {
   var lists = [];
   $("#gamesContainer")
     .children()
@@ -1317,16 +1319,14 @@ function getMenuLists(caller) {
     .each(function () {
       lists.push({
         name: $(this).text().trim(),
-        id: $(this).parent().attr("id"),
+        id: $(this).parent().parent().attr("id"),
       });
     });
-  var index = lists.findIndex(
-    (obj) => obj.id == $(caller).parent().parent().parent().attr("id")
-  );
+  var index = lists.findIndex((obj) => obj.id == "games" + fromList);
   console.log({
     caller: caller,
     index: index,
-    parent: $(caller).parent().parent().parent().attr("id"),
+    parent: fromList,
     lists: lists,
   });
   //Remove the origin list and All Games
@@ -1625,6 +1625,7 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
       (!$target.closest(selector).length && $(selector).is(":visible")) ||
       $(extraSelector) == $target
     ) {
+      $("#contextShadow").addClass("off");
       $(toHide).remove();
       console.log("clicked outside: ", $target);
       removeClickListener();
@@ -1651,21 +1652,29 @@ function writeGameContext(contextObj) {
     contextObj.id +
     `', name:'` +
     contextObj.name +
+    `', list:'` +
+    contextObj.list +
     `'}, this)">Move</li>` +
     `<li onclick="contextCopy({id: '` +
     contextObj.id +
     `', name:'` +
     contextObj.name +
+    `', list:'` +
+    contextObj.list +
     `'}, this)">Copy</li>` +
     `<li onclick="contextRename({id: '` +
     contextObj.id +
     `', name:'` +
     contextObj.name +
+    `', list:'` +
+    contextObj.list +
     `'}, this)">Rename</li>` +
     `<li onclick="contextRemove({id: '` +
     contextObj.id +
     `', name:'` +
     contextObj.name +
+    `', list:'` +
+    contextObj.list +
     `'}, this)">Remove</li>` +
     `</div>`;
   return htmlString;

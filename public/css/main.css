@@ -1265,7 +1265,7 @@ subContextRemove {
 #contextShadow {
   background-color: rgba(0, 0, 0, 0.7);
   width: 100vw;
-  height: var(--vh70);
+  height: var(--vh100);
   position: absolute;
   top: 0;
   left: 0;

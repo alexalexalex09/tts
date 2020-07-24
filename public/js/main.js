@@ -929,6 +929,7 @@ function gulp() {
         console.log("gulp", res);
         $("#gamesContainer").html(" ");
         $("#gamesContextContainer").html(" ");
+        $("#listContextContainer").html(" ");
         $("#selectLists").html(" ");
         addListDisplay(
           0,
@@ -945,7 +946,7 @@ function gulp() {
           "#gamesContainer",
           false,
           "openList($(this).parent().parent().attr('id'))",
-          "listProperties($(this).parent().attr('id'))",
+          "showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})",
           "ellipsis-vertical"
         );
         for (var i = 0; i < res.lists.allGames.length; i++) {
@@ -1003,6 +1004,9 @@ function gulp() {
             `<div class="contextActions off" id="context_stage_games0` +
               res.lists.allGames[i]._id +
               `">` +
+              `<div class="contextTitle">` +
+              res.lists.allGames[i].name +
+              `</div>` +
               `<li onclick="contextCopy({id: 'games0` +
               res.lists.allGames[i]._id +
               `', name:'` +
@@ -1020,6 +1024,12 @@ function gulp() {
               `'}, this)">Delete</li>`
           );
         }
+        $("#listContextContainer").append(
+          writeListContext({
+            id: "list0",
+            name: "All Games",
+          })
+        );
         for (var i = 0; i < res.lists.custom.length; i++) {
           var curId = i + 1;
           addListDisplay(
@@ -1037,7 +1047,7 @@ function gulp() {
             "#gamesContainer",
             false,
             "openList($(this).parent().parent().attr('id'))",
-            "listProperties($(this).parent().attr('id'))",
+            "showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})",
             "ellipsis-vertical"
           );
           for (var j = 0; j < res.lists.custom[i].games.length; j++) {
@@ -1097,6 +1107,12 @@ function gulp() {
               })
             );
           }
+          $("#listContextContainer").append(
+            writeListContext({
+              id: "list" + curId,
+              name: res.lists.custom[i].name,
+            })
+          );
         }
 
         $("#listsContainer").html(htmlString);
@@ -1206,11 +1222,29 @@ function listProperties(list) {
   ];
   var htmlString = createNode(actions, "listProperties", "");
   $("#" + list).after(htmlString);
+
   showSubList(".listProperties");
 }
 
-function prepareAction(name, func) {
-  return `<div class="action" onclick="` + func + `">` + name + `</div>`;
+/**
+ *
+ *
+ * @param {String} name
+ * @param {String} func
+ * @param {Array} classes
+ * @returns
+ */
+function prepareAction(name, func, classes) {
+  var htmlString = `<li class="action`;
+  if (typeof classes == "object") {
+    if (Array.isArray(classes)) {
+      for (var i = 0; i < classes.length; i++) {
+        htmlString += " " + classes[i];
+      }
+    }
+  }
+  htmlString += `" onclick="` + func + `">` + name + `</li>`;
+  return htmlString;
 }
 
 function createNode(arr, nodeClass, nodeId) {
@@ -1624,6 +1658,7 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
 
 function writeGameContext(contextObj) {
   console.log("dGC");
+  var co = createContextObject(contextObj.id, contextObj.name, contextObj.list);
   var htmlString =
     `<div class="contextActions off" id="context_stage_` +
     contextObj.id +
@@ -1631,34 +1666,40 @@ function writeGameContext(contextObj) {
     `<div class="contextTitle">` +
     contextObj.name +
     `</div>` +
-    `<li onclick="contextMove({id: '` +
+    `<li onclick="contextMove(` +
+    co +
+    `, this)">Move</li>` +
+    `<li onclick="contextCopy(` +
+    co +
+    `, this)">Copy</li>` +
+    `<li onclick="contextRename(` +
+    co +
+    `, this)">Rename</li>` +
+    `<li onclick="contextRemove(` +
+    co +
+    `, this)">Remove</li>` +
+    `</div>`;
+  return htmlString;
+}
+
+function createContextObject(id, name, list) {
+  return `{id: '` + id + `', name:'` + name + `', list:'` + list + `'}`;
+}
+
+function writeListContext(contextObj) {
+  var htmlString =
+    `<div class="contextActions off" id="context_stage_` +
     contextObj.id +
-    `', name:'` +
+    `">` +
+    `<div class="contextTitle">` +
     contextObj.name +
-    `', list:'` +
-    contextObj.list +
-    `'}, this)">Move</li>` +
-    `<li onclick="contextCopy({id: '` +
+    `</div>` +
+    `<li onclick="renameList('` +
     contextObj.id +
-    `', name:'` +
-    contextObj.name +
-    `', list:'` +
-    contextObj.list +
-    `'}, this)">Copy</li>` +
-    `<li onclick="contextRename({id: '` +
+    `')">Rename</li>` +
+    `<li onclick="deleteList('` +
     contextObj.id +
-    `', name:'` +
-    contextObj.name +
-    `', list:'` +
-    contextObj.list +
-    `'}, this)">Rename</li>` +
-    `<li onclick="contextRemove({id: '` +
-    contextObj.id +
-    `', name:'` +
-    contextObj.name +
-    `', list:'` +
-    contextObj.list +
-    `'}, this)">Remove</li>` +
+    `')">Delete</li>` +
     `</div>`;
   return htmlString;
 }

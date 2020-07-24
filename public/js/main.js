@@ -854,14 +854,16 @@ function addListDisplay(
       `
     </div>`;
   }
-  listString +=
-    `<div class="listExpand" onclick="` +
-    iconFunc +
-    `">
+  if (iconFunc && ionicon) {
+    listString +=
+      `<div class="listExpand" onclick="` +
+      iconFunc +
+      `">
           <ion-icon name="` +
-    ionicon +
-    `"></ion-icon>
+      ionicon +
+      `"></ion-icon>
       </div>`;
+  }
   if (toggle) {
     listString += `<div class='toggle' >
           <label class="switch">
@@ -946,8 +948,8 @@ function gulp() {
           "#gamesContainer",
           false,
           "openList($(this).parent().parent().attr('id'))",
-          "showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})",
-          "ellipsis-vertical"
+          false,
+          false
         );
         for (var i = 0; i < res.lists.allGames.length; i++) {
           var curSession = document.getElementsByTagName("session")[0];
@@ -1017,7 +1019,7 @@ function gulp() {
               `', name:'` +
               res.lists.allGames[i].name +
               `'}, this)">Rename</li>` +
-              `<li class="red" onclick="contextDelete({id: 'games0` +
+              `<li class="red" onclick="showDeleteGame({id: 'games0` +
               res.lists.allGames[i]._id +
               `', name:'` +
               res.lists.allGames[i].name +
@@ -1190,13 +1192,6 @@ function openList(list) {
   showSubList(".listContents");
 }
 
-function showPropsFromContents(theId) {
-  hideSubList(".listContents");
-  setTimeout(function () {
-    listProperties(theId);
-  }, 511);
-}
-
 function getListGames(list) {
   var arr = [];
   $("#" + list)
@@ -1212,18 +1207,6 @@ function getListGames(list) {
       );
     });
   return arr;
-}
-
-function listProperties(list) {
-  console.log(list);
-  var actions = [
-    prepareAction("Rename", "renameList(this)"),
-    prepareAction("Delete", "deleteList(this)"),
-  ];
-  var htmlString = createNode(actions, "listProperties", "");
-  $("#" + list).after(htmlString);
-
-  showSubList(".listProperties");
 }
 
 /**
@@ -1310,7 +1293,7 @@ function showGameContext(game) {
       hideOnClickOutside(
         "#context_" + game.id,
         "#context_" + game.id,
-        "#" + game.id
+        ".subContextContainer"
       );
       $("#contextShadow").removeClass("off");
     }, 10);
@@ -1359,6 +1342,14 @@ function closeSubContext(view) {
   $(view).remove();
 }
 
+/**
+ *
+ *
+ * @param {String} text The action
+ * @param {Object} game game.name [The subject], game.id [The subject id]
+ * @param {Array} items items[i].id [toList], items[i].name [item name]
+ * @param {*} fname
+ */
 function displaySubContext(text, game, items, fname) {
   var el =
     `<div class="subContextContainer"><div class="subContext" id="subContext_` +
@@ -1475,7 +1466,7 @@ function contextRename(game, caller) {
     game.name +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <input class="textInput" type="text" onkeyup='renameGame(event, this, "` +
-    game.id.substr($(caller).parent().parent().parent().attr("id").length) +
+    game.id.substr(5 + game.list.length) +
     `", "` +
     game.name +
     `")' id="renameGameInput"></input>
@@ -1522,7 +1513,104 @@ function renameGame(event, caller, game, oldGame) {
   }
 }
 
-function contextDelete(game, caller) {
+function showRenameList(list) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
+    list.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Renaming list "` +
+    list.name +
+    `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
+    <input class="textInput" type="text" onkeyup='renameList(event, this, "` +
+    list.id.substr(4) +
+    `")' id="renameGameInput"></input>
+    <div class="textSubmit"></div>`;
+  $("body").append(el);
+}
+
+function renameList(event, caller, list) {
+  if (event.keyCode === 13) {
+    const rl_options = {
+      method: "POST",
+      body: JSON.stringify({
+        list: list,
+        newName: $(caller).val(),
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/rename_list", rl_options).then(function (response) {
+      return response.json().then((res) => {
+        if (res.err) {
+          console.log(res.err);
+          //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+        } else {
+          console.log("renamed list");
+          //$("#" + game).text(res.status.newName);
+          $("#gamesContainer")
+            .children("#games" + list)
+            .children(".menuGamesContainer")
+            .children(".listName")
+            .text($(caller).val());
+          $(".subContextContainer").each(function () {
+            $(this).remove();
+          });
+          gulp();
+        }
+      });
+    });
+  }
+}
+
+function showDeleteList(list) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
+    list.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Really delete list "` +
+    list.name +
+    `"?</div><hr/>
+  <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+  <div class="button redBtn" id="deleteConfirm" onclick="deleteList('` +
+    list.id +
+    `')">Delete</div>`;
+  $("body").append(el);
+}
+
+function deleteList(list) {
+  const dl_options = {
+    method: "POST",
+    body: JSON.stringify({
+      list: list,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/delete_list", dl_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        $("#gamesContainer")
+          .children("#games" + list.substr(5))
+          .remove();
+        gulp();
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      }
+    });
+  });
+}
+
+function showDeleteGame(game, caller) {
   var el =
     `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
     game.id +
@@ -1587,14 +1675,11 @@ function contextRemove(game, caller) {
     `" from this list?</div><hr/>
   <div class="button greenBtn" id="removeCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button redBtn" id="removeConfirm" onclick="removeGame('` +
-    game.id.substr($(caller).parent().parent().parent().attr("id").length) +
+    game.id.substr(5 + game.list.length) +
     `', '` +
     game.name +
     `', '` +
-    game.id.substr(
-      5,
-      $(caller).parent().parent().parent().attr("id").length - 5
-    ) +
+    game.list.length +
     `')">Remove</div>`;
   $("body").append(el);
 }
@@ -1636,11 +1721,13 @@ function removeGame(game, name, list) {
 
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {
-    console.log("listening", event);
     const $target = $(event.target);
+    console.log("clicked: ", $target);
+    console.log("extra: ", $(extraSelector));
     if (
       (!$target.closest(selector).length && $(selector).is(":visible")) ||
-      $(extraSelector) == $target
+      (!$target.closest(extraSelector).length &&
+        $(extraSelector).is(":visible"))
     ) {
       $("#contextShadow").addClass("off");
       $(toHide).remove();
@@ -1694,12 +1781,16 @@ function writeListContext(contextObj) {
     `<div class="contextTitle">` +
     contextObj.name +
     `</div>` +
-    `<li onclick="renameList('` +
+    `<li onclick="showRenameList({id: '` +
     contextObj.id +
-    `')">Rename</li>` +
-    `<li onclick="deleteList('` +
+    `', name: '` +
+    contextObj.name +
+    `'})">Rename</li>` +
+    `<li onclick="showDeleteList({id: '` +
     contextObj.id +
-    `')">Delete</li>` +
+    `', name: '` +
+    contextObj.name +
+    `'})">Delete</li>` +
     `</div>`;
   return htmlString;
 }

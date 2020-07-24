@@ -9,6 +9,7 @@ var Game = require("../models/games.js");
 var Session = require("../models/sessions.js");
 var socketAPI = require("../socketAPI");
 var Fuse = require("fuse.js");
+const { response } = require("express");
 
 //CF variables
 var appEnv = cfenv.getAppEnv();
@@ -1020,6 +1021,23 @@ router.post("/rename_game", function (req, res) {
   }
 });
 
+router.post("/rename_list", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var listNum = Number(req.body.list) - 1;
+      if (listNum == -1) {
+        res.send({ err: "Can't rename All Games" });
+      } else {
+        curUser.lists.custom[listNum].name = req.body.newName;
+        curUser.save();
+        res.send({ status: "Success" });
+      }
+    });
+  } else {
+    res.send({ err: "Not logged in!" });
+  }
+});
+
 function replaceInUserDoc(game, curUser, newGame) {
   console.log("CurUser: ", newGame);
   console.log(curUser.lists.allGames.findIndex((obj) => obj == game));
@@ -1064,6 +1082,23 @@ router.post("/delete_game", function (req, res) {
       replaceInUserDoc(req.body.game, curUser);
       curUser.save();
       res.send({ status: "Success" });
+    });
+  } else {
+    res.send({ err: "Not logged in!" });
+  }
+});
+
+router.post("/delete_list", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var listNum = Number(req.body.list.substr(4)) - 1;
+      if (listNum == -1) {
+        res.send({ err: "Can't delete All Games" });
+      } else {
+        curUser.lists.custom.splice(listNum);
+        curUser.save();
+        res.send({ status: "Success" });
+      }
     });
   } else {
     res.send({ err: "Not logged in!" });

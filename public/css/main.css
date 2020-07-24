@@ -1220,7 +1220,7 @@ ion-icon#addListButton {
   margin-left: 0;
   background-color: white;
   position: absolute;
-  border-radius: 3px;
+  border-radius: 12px;
   padding: 5px;
   left: 5vw;
   width: 90vw;

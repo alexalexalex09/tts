@@ -657,7 +657,7 @@ input:checked + .slider:before {
   width: 100%;
   text-align: center;
   height: var(--vh10);
-  font-size: 3.6vw;
+  font-size: max(3 * (1vw + 1vh) / 2, 12px);
 }
 
 .voteLabel {
@@ -672,6 +672,10 @@ input:checked + .slider:before {
   align-self: flex-end;
   margin: 0 auto;
   height: calc(var(--vh) * 4);
+  max-width: 80vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #voteButton {
@@ -828,7 +832,7 @@ input[type="range"]:focus {
   width: 80vw;
   text-align: center;
   height: var(--vh10);
-  font-size: 3.6vw;
+  font-size: max(3 * (1vw + 1vh) / 2, 12px);
   position: absolute;
   top: var(--vh10);
   left: 10vw;

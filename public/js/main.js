@@ -1,9 +1,203 @@
 //All DOM manipulation
+var createSession = function () {};
+var joinSession = function () {};
+
 window.addEventListener("load", function () {
   /*****************************/
   /*      Socket.io logic      */
   /*****************************/
   var socket = io();
+
+  createSession = function (res) {
+    console.log(res);
+    socket.on(res.session.code + "owner", (data) => {
+      console.log("received ", data);
+      if (data.selectEvent) {
+        //Rewrite #postSelectContainer in real time for owner
+        showSelect(data.select);
+      }
+      if (data.startVoting) {
+        //Parse the voting data and output
+        fillVotes(data.games);
+      }
+      if (data.voteSubmit) {
+        //Rewrite the voting status screen in real time
+        fillPostVote(data.users);
+      }
+      if (data.play) {
+        //Fill the final list of games to play
+        fillGames(data.games);
+      }
+    });
+    $("#backArrow").removeClass("off");
+    setCode(res.session.code);
+    var index = res.session.users.findIndex((obj) => obj.user == res.user);
+    var dest = res.session.lock;
+    console.log("dest", dest);
+    if (res.session.users[index].done == false && dest == "#postSelectView") {
+      dest = "#selectView";
+      console.log("changing");
+    }
+    var toLock = false;
+    if (dest == "#postPostSelectView") {
+      dest = "#postSelectView";
+      toLock = true;
+    }
+    if (dest == "#selectView") {
+      dest = "#codeView";
+    }
+    if (dest == "#voteView") {
+      var games = [];
+      for (var i = 0; i < res.session.votes.length; i++) {
+        if (res.session.votes[i].active) {
+          games.push({
+            game: res.session.votes[i].game,
+            name: res.session.votes[i].name,
+          });
+        }
+      }
+      fillVotes(games);
+    }
+    if (dest == "#postVoteView") {
+      var users = [];
+      for (var i = 0; i < res.session.users.length; i++) {
+        users.push({
+          doneVoting: res.session.users[i].doneVoting,
+          name: res.session.users[i].name,
+        });
+      }
+      fillPostVote(users);
+    }
+    if (dest == "#playView") {
+      var games = [];
+      for (var i = 0; i < res.session.votes.length; i++) {
+        games[i] = { name: res.session.votes[i].name, votes: 0 };
+        for (var j = 0; j < res.session.votes[i].voters.length; j++) {
+          games[i].votes += res.session.votes[i].voters[j].vote;
+        }
+      }
+      games.sort(function (a, b) {
+        var x = a.votes;
+        var y = b.votes;
+        return x < y ? 1 : x > y ? -1 : 0;
+      });
+      fillGames(games);
+    }
+    console.log("dest: " + dest);
+    goForwardFrom("#homeView", dest);
+    console.log("hist after creating: ", window.hist);
+    if (toLock) {
+      lockGames(res.session.code);
+    }
+    var sessionGames = "<session>";
+    if (res.games) {
+      for (var i = 0; i < res.games.length; i++) {
+        sessionGames +=
+          '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+      }
+    }
+    document.getElementById("sessionContainer").innerHTML = sessionGames;
+    console.log("initGreenLists");
+    initGreenLists();
+  };
+
+  joinSession = function (res) {
+    $("#backArrow").removeClass("off"); //Show the back arrow
+    setCode(res.code);
+    console.log(res.lock);
+
+    var sessionGames = "<session>";
+    for (var i = 0; i < res.games.length; i++) {
+      sessionGames +=
+        '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
+    }
+    $("#sessionContainer").html(sessionGames);
+
+    console.log("initGreenLists");
+    initGreenLists();
+
+    var isLockBack = false;
+    switch (res.lock) {
+      case "#postSelectView":
+        goForwardFrom("#homeView", "#postSelectView");
+        window.hist = ["#homeView", "#selectView", "#postSelectView"];
+      case "#postPostSelectView":
+        goForwardFrom("#homeView", "#postSelectView");
+        //lockback();
+        break;
+      case "#voteView":
+        const gv_options = {
+          method: "POST",
+          body: JSON.stringify({ code: $("#code").text() }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        fetch("/get_votes", gv_options).then(function (response) {
+          return response.json().then((res) => {
+            console.log(res);
+            fillVotes(res.games);
+            goForwardFrom("#homeView", "#voteView");
+          });
+        });
+        break;
+      case "#playView":
+        const gg_options = {
+          method: "POST",
+          body: JSON.stringify({ code: $("#code").text() }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        fetch("/get_games", gg_options).then(function (response) {
+          return response.json().then((res) => {
+            fillGames(res.games);
+          });
+        });
+        break;
+      default:
+        goForwardFrom("#homeView", res.lock);
+        //lockBack()
+        break;
+    }
+    /*******************************************/
+    /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
+    /* it will lock the back arrow to home and move the client ahead to the session lock.*/
+    /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
+    /* a string or an array of history states which the client will have access to.*/
+    /*******************************************/
+    console.log("Setting up client event with " + res.code);
+    socket.on(res.code + "client", (data) => {
+      console.log("Got client event", data);
+      if (data.lockBack && data.lock) {
+        goForwardFrom(window.hist[window.hist.length - 1], data.lock);
+        lockBack();
+      }
+      if (data.unlockBack && data.unlock) {
+        console.log(data);
+        if (data.unlock == "selectView") {
+          window.hist = ["#homeView", "#selectView", "#postSelectView"];
+        }
+        goBackFrom(
+          window.hist[window.hist.length - 1],
+          window.hist[window.hist.length - 2]
+        );
+      }
+      if (data.startVoting) {
+        console.log("this isn't done yet!");
+        //parse the voting data and output
+        fillVotes(data.games);
+        goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
+        window.hist = ["#homeView", "#voteView"];
+      }
+      if (data.play) {
+        fillGames(data.games);
+        goForwardFrom(window.hist[window.hist.length - 1], "#playView");
+        window.hist = ["#homeView", "#playView"];
+      }
+    });
+    catchDisplay();
+  };
 
   /*****************************/
   /*     Set History State     */
@@ -25,23 +219,7 @@ window.addEventListener("load", function () {
   /*****************************/
   /*      Set font sizes       */
   /*****************************/
-  function cFont(e) {
-    var iH = window.innerHeight;
-    var iW = window.innerWidth;
-    var fS =
-      iW / (100 / e.data.fWidth) > iH / (100 / e.data.fHeight)
-        ? "calc(var(--vh, 1vh) * " + e.data.fHeight + ")"
-        : e.data.fWidth + "vw";
-    $(e.data.el).css("font-size", fS);
-    /*console.log(
-      "width: " +
-        iW / (100 / e.data.fWidth) +
-        ", height: " +
-        iH / (100 / e.data.fHeight) +
-        ", result: " +
-        fS
-    );*/
-  }
+
   $(window).on(
     "resize",
     {
@@ -110,13 +288,7 @@ window.addEventListener("load", function () {
   /*         Menu toggle       */
   /*****************************/
   //Close menu
-  function closeMenu() {
-    $("#menu").css("transform", "translateX(-60vh)");
-    $("#menuCatch").addClass("off");
-    window.setTimeout(function () {
-      $("#menu").addClass("off");
-    }, 550);
-  }
+
   $("#menuClose").on("click", closeMenu);
   $("#menuCatch").on("click", closeMenu);
   //Open menu
@@ -263,39 +435,8 @@ window.addEventListener("load", function () {
   /* Checks user inputted code */
   /*    Calls join_session     */
   /*****************************/
-  $("#codeSubmit").click(this, function (el) {
-    clearLists(); //Clear any lists in #selectView
-    window.hist = ["#homeView"];
-    $(".errorText").removeClass("shake"); //Stop shaking if started
-    const js_options = {
-      method: "POST",
-      body: JSON.stringify({ code: $("#codeInput input").val() }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    fetch("/join_session", js_options).then(function (response) {
-      return response.json().then((res) => {
-        console.log("join session ", res);
-        if (res.err) {
-          //If there is no session to join, tell the user
-          window.setTimeout(function () {
-            $(".errorText").removeClass("off").addClass("shake");
-          }, 5);
-          //Move the create button out of the way of the error text:
-          $("#createButton").css({
-            transform: "translateY(14vh)",
-          });
-        } else {
-          //If the session join was successful:
-          if (res.owned) {
-            createSession(res.status);
-          } else {
-            joinSession(res.status);
-          }
-        }
-      });
-    });
+  $("#codeSubmit").click(this, function (e) {
+    submitCode(this, $("#codeInput input").val());
   });
 
   /*****************************/
@@ -403,196 +544,6 @@ window.addEventListener("load", function () {
     });
   });
 
-  function createSession(res) {
-    console.log(res);
-    socket.on(res.session.code + "owner", (data) => {
-      console.log("received ", data);
-      if (data.selectEvent) {
-        //Rewrite #postSelectContainer in real time for owner
-        showSelect(data.select);
-      }
-      if (data.startVoting) {
-        //Parse the voting data and output
-        fillVotes(data.games);
-      }
-      if (data.voteSubmit) {
-        //Rewrite the voting status screen in real time
-        fillPostVote(data.users);
-      }
-      if (data.play) {
-        //Fill the final list of games to play
-        fillGames(data.games);
-      }
-    });
-    $("#backArrow").removeClass("off");
-    setCode(res.session.code);
-    var index = res.session.users.findIndex((obj) => obj.user == res.user);
-    var dest = res.session.lock;
-    console.log("dest", dest);
-    if (res.session.users[index].done == false && dest == "#postSelectView") {
-      dest = "#selectView";
-      console.log("changing");
-    }
-    var toLock = false;
-    if (dest == "#postPostSelectView") {
-      dest = "#postSelectView";
-      toLock = true;
-    }
-    if (dest == "#selectView") {
-      dest = "#codeView";
-    }
-    if (dest == "#voteView") {
-      var games = [];
-      for (var i = 0; i < res.session.votes.length; i++) {
-        if (res.session.votes[i].active) {
-          games.push({
-            game: res.session.votes[i].game,
-            name: res.session.votes[i].name,
-          });
-        }
-      }
-      fillVotes(games);
-    }
-    if (dest == "#postVoteView") {
-      var users = [];
-      for (var i = 0; i < res.session.users.length; i++) {
-        users.push({
-          doneVoting: res.session.users[i].doneVoting,
-          name: res.session.users[i].name,
-        });
-      }
-      fillPostVote(users);
-    }
-    if (dest == "#playView") {
-      var games = [];
-      for (var i = 0; i < res.session.votes.length; i++) {
-        games[i] = { name: res.session.votes[i].name, votes: 0 };
-        for (var j = 0; j < res.session.votes[i].voters.length; j++) {
-          games[i].votes += res.session.votes[i].voters[j].vote;
-        }
-      }
-      games.sort(function (a, b) {
-        var x = a.votes;
-        var y = b.votes;
-        return x < y ? 1 : x > y ? -1 : 0;
-      });
-      fillGames(games);
-    }
-    console.log("dest: " + dest);
-    goForwardFrom("#homeView", dest);
-    console.log("hist after creating: ", window.hist);
-    if (toLock) {
-      lockGames(res.session.code);
-    }
-    var sessionGames = "<session>";
-    if (res.games) {
-      for (var i = 0; i < res.games.length; i++) {
-        sessionGames +=
-          '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
-      }
-    }
-    document.getElementById("sessionContainer").innerHTML = sessionGames;
-    console.log("initGreenLists");
-    initGreenLists();
-  }
-
-  function joinSession(res) {
-    $("#backArrow").removeClass("off"); //Show the back arrow
-    setCode(res.code);
-    console.log(res.lock);
-
-    var sessionGames = "<session>";
-    for (var i = 0; i < res.games.length; i++) {
-      sessionGames +=
-        '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
-    }
-    $("#sessionContainer").html(sessionGames);
-
-    console.log("initGreenLists");
-    initGreenLists();
-
-    var isLockBack = false;
-    switch (res.lock) {
-      case "#postSelectView":
-        goForwardFrom("#homeView", "#postSelectView");
-        window.hist = ["#homeView", "#selectView", "#postSelectView"];
-      case "#postPostSelectView":
-        goForwardFrom("#homeView", "#postSelectView");
-        //lockback();
-        break;
-      case "#voteView":
-        const gv_options = {
-          method: "POST",
-          body: JSON.stringify({ code: $("#code").text() }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        };
-        fetch("/get_votes", gv_options).then(function (response) {
-          return response.json().then((res) => {
-            console.log(res);
-            fillVotes(res.games);
-            goForwardFrom("#homeView", "#voteView");
-          });
-        });
-        break;
-      case "#playView":
-        const gg_options = {
-          method: "POST",
-          body: JSON.stringify({ code: $("#code").text() }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        };
-        fetch("/get_games", gg_options).then(function (response) {
-          return response.json().then((res) => {
-            fillGames(res.games);
-          });
-        });
-        break;
-      default:
-        goForwardFrom("#homeView", res.lock);
-        //lockBack()
-        break;
-    }
-    /*******************************************/
-    /* Subscribe to the code+"client" event, where if lockBack==true and unlock is set,*/
-    /* it will lock the back arrow to home and move the client ahead to the session lock.*/
-    /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
-    /* a string or an array of history states which the client will have access to.*/
-    /*******************************************/
-    console.log("Setting up client event with " + res.code);
-    socket.on(res.code + "client", (data) => {
-      console.log("Got client event", data);
-      if (data.lockBack && data.lock) {
-        goForwardFrom(window.hist[window.hist.length - 1], data.lock);
-        lockBack();
-      }
-      if (data.unlockBack && data.unlock) {
-        console.log(data);
-        if (data.unlock == "selectView") {
-          window.hist = ["#homeView", "#selectView", "#postSelectView"];
-        }
-        goBackFrom(
-          window.hist[window.hist.length - 1],
-          window.hist[window.hist.length - 2]
-        );
-      }
-      if (data.startVoting) {
-        console.log("this isn't done yet!");
-        //parse the voting data and output
-        fillVotes(data.games);
-        goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
-        window.hist = ["#homeView", "#voteView"];
-      }
-      if (data.play) {
-        fillGames(data.games);
-        goForwardFrom(window.hist[window.hist.length - 1], "#playView");
-        window.hist = ["#homeView", "#playView"];
-      }
-    });
-  }
-
   /*
    *
    *
@@ -604,10 +555,42 @@ window.addEventListener("load", function () {
 //End all DOM manipulation
 
 /***************************************************/
+/***************************************************/
+/***************************************************/
+/***************************************************/
 /*                                                 */
 /*               Universal Functions               */
 /*                                                 */
 /***************************************************/
+/***************************************************/
+/***************************************************/
+/***************************************************/
+
+function cFont(e) {
+  var iH = window.innerHeight;
+  var iW = window.innerWidth;
+  var fS =
+    iW / (100 / e.data.fWidth) > iH / (100 / e.data.fHeight)
+      ? "calc(var(--vh, 1vh) * " + e.data.fHeight + ")"
+      : e.data.fWidth + "vw";
+  $(e.data.el).css("font-size", fS);
+  /*console.log(
+    "width: " +
+      iW / (100 / e.data.fWidth) +
+      ", height: " +
+      iH / (100 / e.data.fHeight) +
+      ", result: " +
+      fS
+  );*/
+}
+
+function closeMenu() {
+  $("#menu").css("transform", "translateX(-60vh)");
+  $("#menuCatch").addClass("off");
+  window.setTimeout(function () {
+    $("#menu").addClass("off");
+  }, 550);
+}
 
 /*****************************/
 /*         lockBack()        */
@@ -1693,7 +1676,7 @@ function writeSessions(res) {
     htmlString +=
       `<li id="` +
       res.sessions[i].code +
-      `" onclick="copyText('` +
+      `" onclick="menuSubmitCode(this, '` +
       res.sessions[i].code +
       `')">` +
       res.sessions[i].code +
@@ -1705,6 +1688,47 @@ function writeSessions(res) {
       `</li>`;
   }
   $("#sessionsContainer").html(htmlString);
+}
+
+function menuSubmitCode(el, code) {
+  closeMenuItem("#sessionsView");
+  submitCode(el, code);
+}
+
+function submitCode(el, code) {
+  console.log(el);
+  clearLists(); //Clear any lists in #selectView
+  window.hist = ["#homeView"];
+  $(".errorText").removeClass("shake"); //Stop shaking if started
+  const js_options = {
+    method: "POST",
+    body: JSON.stringify({ code: code }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/join_session", js_options).then(function (response) {
+    return response.json().then((res) => {
+      console.log("join session ", res);
+      if (res.err) {
+        //If there is no session to join, tell the user
+        window.setTimeout(function () {
+          $(".errorText").removeClass("off").addClass("shake");
+        }, 5);
+        //Move the create button out of the way of the error text:
+        $("#createButton").css({
+          transform: "translateY(14vh)",
+        });
+      } else {
+        //If the session join was successful:
+        if (res.owned) {
+          createSession(res.status);
+        } else {
+          joinSession(res.status);
+        }
+      }
+    });
+  });
 }
 
 /** setPlural(countable, singular, plural)

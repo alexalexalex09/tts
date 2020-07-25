@@ -476,21 +476,15 @@ window.addEventListener("load", function () {
   /***********************************/
 
   document.getElementById("shareButton").addEventListener("click", async () => {
-    var resultPara = "";
-    var shareData =
-      "Join my TidySquirrel session! Our code is " +
-      document.getElementById("code").innerHTML;
-    try {
-      await navigator.share(shareData);
-      resultPara.textContent = "MDN shared successfully";
-      console.log(resultPara.textContent);
-    } catch (err) {
-      if (resultPara) {
-        resultPara.textContent = "Error: " + err;
-        console.log(resultPara.textContent);
-      } else {
-        console.log("didn't work");
-      }
+    if (navigator.share) {
+  navigator.share({
+    title: 'Tidy Squirrel',
+    text: "Join my TidySquirrel session! Our code is " +
+    document.getElementById("code").innerHTML;,
+    url: 'https://ttsalexscottbecker.cfapps.io/',
+  })
+    .then(() => console.log('Successful share'))
+    .catch((error) => console.log('Error sharing', error));
     }
   });
 

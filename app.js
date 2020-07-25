@@ -5,7 +5,7 @@ var path = require("path");
 var logger = require("morgan");
 const bodyParser = require("body-parser");
 const publicRouter = require("./routes/public");
-const usersRouter = require("./routes/users");
+var authRouter = require("./routes/auth");
 const session = require("express-session");
 const okta = require("@okta/okta-sdk-nodejs");
 const ExpressOIDC = require("@okta/oidc-middleware").ExpressOIDC;
@@ -13,6 +13,25 @@ const cfenv = require("cfenv");
 var socket_io = require("socket.io");
 
 var app = express();
+
+//Auth0 vars
+var sess = {
+  secret: process.env.oaSecret,
+  cookie: {},
+  resave: false,
+  saveUninitialized: true,
+};
+
+if (app.get("env") === "production") {
+  // Use secure cookies in production (requires SSL/TLS)
+  sess.cookie.secure = true;
+
+  // Uncomment the line below if your application is behind a proxy (like on Heroku)
+  // or if you're encountering the error message:
+  // "Unable to verify authorization request state"
+  // app.set('trust proxy', 1);
+}
+app.use(session(sess));
 
 //CF variables
 
@@ -32,6 +51,41 @@ if (appEnv.isLocal) {
   var baseURL = appEnv.url;
 }
 
+// Load Passport
+var passport = require("passport");
+var Auth0Strategy = require("passport-auth0");
+
+// Configure Passport to use Auth0
+var strategy = new Auth0Strategy(
+  {
+    domain: process.env.AUTH0_DOMAIN,
+    clientID: process.env.AUTH0_CLIENT_ID,
+    clientSecret: process.env.AUTH0_CLIENT_SECRET,
+    callbackURL:
+      process.env.AUTH0_CALLBACK_URL || "http://dev.tts:3000/callback",
+  },
+  function (accessToken, refreshToken, extraParams, profile, done) {
+    // accessToken is the token to call Auth0 API (not needed in the most cases)
+    // extraParams.id_token has the JSON Web Token
+    // profile has all the information from the user
+    return done(null, profile);
+  }
+);
+
+passport.use(strategy);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
+
+/*
 // Okta/OIDC middleware
 var oktaClient = new okta.Client({
   orgUrl: envs.orgUrl,
@@ -55,7 +109,7 @@ const oidc = new ExpressOIDC({
     },
   },
 });
-
+*/
 //configure body-parser to be used as middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -68,6 +122,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
+/*
 // Okta setup
 app.use(
   session({
@@ -93,19 +148,25 @@ app.use((req, res, next) => {
       next(err);
     });
 });
+*/
+
+app.use((req, res, next) => {
+  res.locals.user = req.user;
+  next();
+});
 
 //Routers
 app.use("/", publicRouter);
-app.use("/users", usersRouter);
+app.use("/", authRouter);
 
 //Authenticated page logic - just call loginRequired to protect!
-function loginRequired(req, res, next) {
+/*function loginRequired(req, res, next) {
   if (!req.user) {
     return res.status(401).render("unauthenticated");
   }
 
   next();
-}
+}*/
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

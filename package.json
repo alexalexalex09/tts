@@ -26,6 +26,8 @@
     "mongoose": "^5.9.20",
     "morgan": "~1.9.1",
     "mysql": "^2.18.1",
+    "passport": "^0.4.1",
+    "passport-auth0": "^1.3.3",
     "pug": "^2.0.4",
     "socket.io": "^2.3.0"
   }

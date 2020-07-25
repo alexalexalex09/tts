@@ -30,6 +30,9 @@ db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 // Home page
 router.get("/", (req, res) => {
+  if (typeof req.user != "undefined") {
+    console.log(req.user);
+  }
   socketAPI.sendNotification("Reloading...");
   res.render("index", {
     appEnv: appEnv,
@@ -61,6 +64,9 @@ router.post("/going_back", function (req, res) {
 
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
+  if (typeof req.user != "undefined") {
+    console.log(req.user);
+  }
   if (req.user) {
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")
@@ -72,7 +78,7 @@ router.post("/get_user_lists_populated", (req, res) => {
           } else {
             newUser = {
               profile_id: req.user.id,
-              name: req.user.profile.firstName,
+              name: req.user.nickname,
               lists: { allGames: [], custom: [] },
             };
             curUser = new User(newUser);
@@ -82,7 +88,7 @@ router.post("/get_user_lists_populated", (req, res) => {
         } else {
           newUser = {
             profile_id: req.user.id,
-            name: req.user.profile.firstName,
+            name: req.user.nickname,
             lists: { allGames: [], custom: [] },
           };
           curUser = new User(newUser);
@@ -153,7 +159,7 @@ router.post("/get_user_all_games", (req, res) => {
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
   if (req.user) {
-    console.log("User2: " + req.user.profile.firstName);
+    console.log("User2: " + req.user.nickname);
     var upsertOptions = { new: true, upsert: true };
     Game.findOneAndUpdate(
       {
@@ -173,7 +179,7 @@ router.post("/game_add", function (req, res) {
           User.findOneAndUpdate(
             {
               profile_id: req.user.id,
-              name: req.user.profile.firstName,
+              name: req.user.nickname,
             },
             { profile_id: req.user.id },
             upsertOptions,
@@ -224,7 +230,7 @@ router.post("/game_add", function (req, res) {
 
 router.post("/group_game_add", function (req, res) {
   if (req.user) {
-    console.log("User2: " + req.user.profile.firstName);
+    console.log("User2: " + req.user.nickname);
     var upsertOptions = { new: true, upsert: true };
     Game.findOneAndUpdate(
       {
@@ -349,7 +355,7 @@ router.post("/join_session", function (req, res) {
         if (newUser) {
           curSession.users.push({
             user: req.user.id,
-            name: req.user.profile.firstName,
+            name: req.user.nickname,
             done: false,
             doneVoting: false,
           });
@@ -415,7 +421,7 @@ router.post("/create_session", function (req, res) {
         users: [
           {
             user: req.user.id,
-            name: req.user.profile.firstName,
+            name: req.user.nickname,
             done: false,
           },
         ],

@@ -477,14 +477,16 @@ window.addEventListener("load", function () {
 
   document.getElementById("shareButton").addEventListener("click", async () => {
     if (navigator.share) {
-  navigator.share({
-    title: 'Tidy Squirrel',
-    text: "Join my TidySquirrel session! Our code is " +
-    document.getElementById("code").innerHTML;,
-    url: 'https://ttsalexscottbecker.cfapps.io/',
-  })
-    .then(() => console.log('Successful share'))
-    .catch((error) => console.log('Error sharing', error));
+      navigator
+        .share({
+          title: "Tidy Squirrel",
+          text:
+            "Join my TidySquirrel session! Our code is " +
+            document.getElementById("code").innerHTML,
+          url: "https://ttsalexscottbecker.cfapps.io/",
+        })
+        .then(() => console.log("Successful share"))
+        .catch((error) => console.log("Error sharing", error));
     }
   });
 

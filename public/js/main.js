@@ -240,7 +240,7 @@ window.addEventListener("load", function () {
       fWidth: "10",
     },
   });
-  $(window).on(
+  /*$(window).on(
     "resize",
     { el: ".login", mHeight: "10", mWidth: "10", fHeight: "4", fWidth: "6" },
     cFont
@@ -253,7 +253,7 @@ window.addEventListener("load", function () {
       fHeight: "4",
       fWidth: "6",
     },
-  });
+  });*/
   $(window).on(
     "resize",
     {
@@ -1462,7 +1462,7 @@ function contextRename(game, caller) {
     game.name +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <input class="textInput" type="text" onkeyup='renameGame(event, this, "` +
-    game.id.substr(5 + game.list.length) +
+    game.id.substr(5 + game.length) +
     `", "` +
     game.name +
     `")' id="renameGameInput"></input>

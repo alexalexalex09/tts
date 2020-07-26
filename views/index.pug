@@ -44,7 +44,11 @@ block content
       .login
         
         if user
-          | Hello, #{user.nickname} 
+          .userNameContainer
+            .userName(onclick="$('.logout').toggleClass('flexCollapse')")
+              | Hello, #{user.nickname}
+            .logout.flexCollapse
+              a(href="/logout")  | logout
         else 
           a(href="/login") Login
     #homeView.view

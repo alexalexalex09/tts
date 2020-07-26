@@ -196,17 +196,58 @@ input:checked + .slider:before {
 }
 
 .login {
-  grid-area: 1/6/3/11;
+  grid-area: 1/4/3/11;
   justify-self: end;
   align-self: center;
   color: var(--main-blue);
   padding-right: 3vw;
+  cursor: pointer;
+  font-size: max(4 * (1vw + 1vh) / 2, 12px);
 }
 
 .login a,
 .login a:visited,
 .login a:active {
   color: var(--main-blue);
+}
+
+.userNameContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  width: 80vw;
+  align-content: flex-end;
+  flex-flow: nowrap;
+  align-items: center;
+}
+
+.userName,
+.logout {
+  overflow: hidden;
+  transition: flex 0.3s ease-out;
+  display: block;
+}
+
+.userName {
+  overflow: hidden;
+  transition: flex 0.3s ease-out;
+  width: auto;
+  flex-grow: 1;
+  display: block;
+  text-align: right;
+  flex-basis: 30vw;
+  white-space: nowrap;
+}
+
+.logout {
+  flex-basis: min(14 * (1vw + 1vh) / 2, 25vw);
+  flex-grow: 0;
+  white-space: nowrap;
+  padding-left: 1vw;
+}
+
+.flexCollapse {
+  flex: 0;
 }
 
 .view {

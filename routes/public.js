@@ -64,9 +64,6 @@ router.post("/going_back", function (req, res) {
 
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
-  if (typeof req.user != "undefined") {
-    console.log(req.user);
-  }
   if (req.user) {
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")

@@ -29,7 +29,7 @@ if (app.get("env") === "production") {
   // Uncomment the line below if your application is behind a proxy (like on Heroku)
   // or if you're encountering the error message:
   // "Unable to verify authorization request state"
-  // app.set('trust proxy', 1);
+  app.set("trust proxy", 1);
 }
 app.use(session(sess));
 
@@ -56,6 +56,8 @@ var passport = require("passport");
 var Auth0Strategy = require("passport-auth0");
 
 // Configure Passport to use Auth0
+
+console.log("Callback: ", process.env.AUTH0_CALLBACK_URL);
 var strategy = new Auth0Strategy(
   {
     domain: process.env.AUTH0_DOMAIN,

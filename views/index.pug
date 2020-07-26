@@ -38,8 +38,8 @@ block content
             if user
               li#logoutItem
                 ion-icon(name='log-out-outline')
-                form(method="post" action="/logout")
-                  button Logout
+                a(href="/logout")
+                  | Logout
       #menuCatch.clickCatcher.off
       .login
         

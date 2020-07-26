@@ -7,8 +7,6 @@ const bodyParser = require("body-parser");
 const publicRouter = require("./routes/public");
 var authRouter = require("./routes/auth");
 const session = require("express-session");
-const okta = require("@okta/okta-sdk-nodejs");
-const ExpressOIDC = require("@okta/oidc-middleware").ExpressOIDC;
 const cfenv = require("cfenv");
 var socket_io = require("socket.io");
 

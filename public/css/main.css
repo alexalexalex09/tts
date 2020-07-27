@@ -746,7 +746,7 @@ input[type="range"] {
   border: solid 0 transparent;
   border-width: 0 1em;
   padding: 0px;
-  width: 70vw;
+  width: 70%;
   box-sizing: border-box;
   height: calc(var(--vh) * 2);
   border-radius: 0.25em;
@@ -885,7 +885,7 @@ input[type="range"]:focus {
 }
 
 #playContainer {
-  grid-area: 6/2/15/10;
+  grid-area: 7/2/15/10;
   height: 100%;
   overflow-y: auto;
 }
@@ -894,6 +894,7 @@ input[type="range"]:focus {
   min-height: var(--vh5);
   font-size: calc(var(--vh, 1vh) * 3);
   width: 100%;
+  text-align: center;
 }
 
 /*****************/
@@ -1431,5 +1432,37 @@ subContextRemove {
 @media (max-width: 400px) {
   #codeButtons ion-icon {
     font-size: var(--vh5);
+  }
+}
+
+/*****************************/
+/*        Desktop CSS        */
+/*****************************/
+@media (min-width: 1000px) {
+  .menu {
+    width: 250px;
+    transform: translateX(0vh);
+  }
+  .menu.off {
+    display: block !important;
+  }
+  #menuClose {
+    display: none;
+  }
+  .itemContainer ul {
+    padding-left: 25px;
+  }
+  .view {
+    left: 250px;
+    width: calc(100% - 250px);
+    grid-template-columns: repeat(10, 10%);
+  }
+  .button {
+    max-width: 250px;
+    margin: 0 auto;
+  }
+  .bottomBtn {
+    left: 50%;
+    transform: translateX(-50%);
   }
 }

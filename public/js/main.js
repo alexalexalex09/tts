@@ -2431,7 +2431,7 @@ function showSelect(data) {
       plural +
       `...</div>`;
   });
-  htmlString += `<div class="button greenBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
+  htmlString += `<div class="button greenBtn bottomBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
   $("#postSelectContainer").html(htmlString);
   console.log("registered lockGames");
   //Is this setting up too many events?
@@ -2463,7 +2463,7 @@ function fillVotes(games) {
       games[i].game +
       `"/></li>`;
   }
-  htmlString += `</ul><div class="submitButton button greenBtn" id="voteButton">Submit Votes</div>`;
+  htmlString += `</ul><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
   console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
   $("#voteButton").on("click", function () {

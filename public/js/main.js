@@ -906,7 +906,7 @@ function guag() {
 /*  Get a User's Populated Lists  */
 /**********************************/
 
-function gulp() {
+function gulp(showAllGames = false) {
   const gulp_options = {
     method: "POST",
     body: "",
@@ -997,6 +997,9 @@ function gulp() {
             `</li>`;
           //Append the "All Games" list to the first <li>
           $("li#0").children(".listGames").first().append(htmlString);
+          if (showAllGames) {
+            listToggle($("#0").children(".listExpand")[0]);
+          }
           $("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
             `<div class="contextActions off" id="context_stage_games0` +
@@ -1093,6 +1096,7 @@ function gulp() {
               .children(".listGames")
               .first()
               .append(htmlString);
+
             $("li#games" + curId)
               .children(".listGames")
               .first()
@@ -1326,10 +1330,11 @@ function getMenuLists(caller, fromList) {
     lists: lists,
   });
   //Remove the origin list and All Games
-  lists.splice(index, 1);
+
   if (index > 0) {
-    lists.splice(0, 1);
+    lists.splice(index, 1);
   }
+  lists.splice(0, 1);
   return lists;
 }
 
@@ -1769,6 +1774,12 @@ function createContextObject(id, name, list) {
   return `{id: '` + id + `', name:'` + name + `', list:'` + list + `'}`;
 }
 
+/**
+ *
+ *
+ * @param {Object} contextObj id, name
+ * @returns
+ */
 function writeListContext(contextObj) {
   var htmlString =
     `<div class="contextActions off" id="context_stage_` +
@@ -1882,6 +1893,7 @@ function setPlural(countable, singular, plural) {
 function addNewGame(el) {
   console.log("submitting new game");
   var game = $(el).val();
+  $(el).val("");
   const options = {
     method: "POST",
     body: JSON.stringify({ game: game }),
@@ -1916,7 +1928,7 @@ function addNewGame(el) {
                 </div>
             </li>`;
         $("li#0").children(".listGames").first().append(htmlString);
-        gulp();
+        gulp(true);
         recheckGreenLists();
       } else {
         console.log(res.err);
@@ -1955,15 +1967,23 @@ function addList() {
           `<li id="games` +
             gamesNum +
             `">` +
-            `<div class="listName" onclick="listToggle($(this).parent().parent().children('.listExpand'))">` +
+            `<div class="menuGamesContainer">
+              <div class="listName" onclick="openList($(this).parent().parent().attr('id'))">` +
             list +
             `
               </div>
-          <div class="listExpand" onclick="listToggle(this)">
-            <ion-icon name="ellipsis-vertical"></ion-icon>
-          </div>
-          <div class="listGames off"></div>
+            </div>
+            <div class="listExpand" onclick="showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})"> 
+              <ion-icon name="ellipsis-vertical" role="img" class="md hydrated" aria-label="ellipsis vertical"></ion-icon> 
+            </div>
+            <div class="listGames off"></div>
         </li>`
+        );
+        $("#listContextContainer").append(
+          writeListContext({
+            id: "list" + gamesNum,
+            name: list,
+          })
         );
       }
     });
@@ -1989,7 +2009,8 @@ function recheckGreenLists() {
           );
         }
       });
-    if (count == $(ele).children(".listGames").first().children("li").length) {
+    var theCount = $(ele).children(".listGames").first().children("li").length;
+    if (count == theCount && theCount > 0) {
       $(ele).children(".listName").first().addClass("greenText");
       $(ele)
         .children(".toggle")
@@ -2342,7 +2363,9 @@ function listToggle(el) {
  */
 function setCode(code) {
   $("#code").html(code);
-  $("#selectCodeDisplay").html("Your Code: " + code);
+  $(".codeDisplay").each(function () {
+    $(this).html("Your Code: " + code);
+  });
 }
 
 /*****************************/
@@ -2520,8 +2543,12 @@ function fillPostVote(users) {
 }
 
 function textSubmit(el) {
-  console.log("textSubmit");
   addNewGame(el);
+  $("#addGamesInputCont .textSubmit").first().addClass("green");
+  setTimeout(function () {
+    $("#addGamesInputCont .textSubmit").first().removeClass("green");
+  }, 1000);
+  console.log("Toggled: ", $("#0").children(".listExpand")[0]);
   return false;
 }
 

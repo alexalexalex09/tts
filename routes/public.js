@@ -296,83 +296,91 @@ function userCreate(id, name) {
 }
 
 router.post("/join_session", function (req, res) {
-  var theCode = req.body.code.toUpperCase();
-  theCode = theCode.replace("I", "1");
-  theCode = theCode.replace("O", "0");
-  Session.findOne({ code: theCode }).exec(function (err, curSession) {
-    console.log(curSession);
-    if (!curSession) {
-      console.log("Error: ", err);
-      console.log("Session: ", curSession);
-      res.send({ err: "No such session" });
-    } else {
-      var sendGames = checkIfAddedByUser(curSession, req.user.id);
-      if (curSession.owner == req.user.id) {
-        //Join as owner
-        var tosave = false;
-        for (var i = 0; i < curSession.games.length; i++) {
-          if (curSession.games[i].addedBy.length == 0) {
-            curSession.games[i].addedBy = curSession.owner;
-            tosave = true;
-          }
-          console.log(curSession.games[i], tosave);
-          if (tosave) {
-            curSession.save();
-          }
-        }
-        socketAPI.sendNotification("Session already created...");
-        socketAPI.addGame({
-          code: curSession.code,
-        });
-        res.send({
-          owned: true,
-          status: { session: curSession, games: sendGames, user: req.user.id },
-        });
+  if (req.user) {
+    var theCode = req.body.code.toUpperCase();
+    theCode = theCode.replace("I", "1");
+    theCode = theCode.replace("O", "0");
+    Session.findOne({ code: theCode }).exec(function (err, curSession) {
+      console.log(curSession);
+      if (!curSession) {
+        console.log("Error: ", err);
+        console.log("Session: ", curSession);
+        res.send({ err: "No such session" });
       } else {
-        //Join as client
-        var newUser = true;
-        var lock = curSession.lock;
-        if (lock == "#codeView") {
-          lock = "#selectView";
-        }
-        for (var i = 0; i < curSession.users.length; i++) {
-          //TODO: This could be changed to Array.findIndex
-          if (curSession.users[i].user == req.user.id) {
-            newUser = false;
-            console.log(curSession.users[i]);
-            if (curSession.users[i].done && lock == "#selectView") {
-              lock = "#postSelectView";
+        var sendGames = checkIfAddedByUser(curSession, req.user.id);
+        if (curSession.owner == req.user.id) {
+          //Join as owner
+          var tosave = false;
+          for (var i = 0; i < curSession.games.length; i++) {
+            if (curSession.games[i].addedBy.length == 0) {
+              curSession.games[i].addedBy = curSession.owner;
+              tosave = true;
             }
-            if (curSession.users[i].doneVoting && lock == "#voteView") {
-              lock = "#postVoteView";
+            console.log(curSession.games[i], tosave);
+            if (tosave) {
+              curSession.save();
             }
           }
-        }
-        console.log("newUser ", newUser);
-        if (newUser) {
-          curSession.users.push({
-            user: req.user.id,
-            name: req.user.nickname,
-            done: false,
-            doneVoting: false,
-          });
-          curSession.save().then(function () {
-            socketAPI.addGame({
-              code: theCode,
-            });
-          });
-        }
-        res.send({
-          owned: false,
-          status: {
+          socketAPI.sendNotification("Session already created...");
+          socketAPI.addGame({
             code: curSession.code,
-            lock: lock,
-            games: sendGames,
-          },
-        });
+          });
+          res.send({
+            owned: true,
+            status: {
+              session: curSession,
+              games: sendGames,
+              user: req.user.id,
+            },
+          });
+        } else {
+          //Join as client
+          var newUser = true;
+          var lock = curSession.lock;
+          if (lock == "#codeView") {
+            lock = "#selectView";
+          }
+          for (var i = 0; i < curSession.users.length; i++) {
+            //TODO: This could be changed to Array.findIndex
+            if (curSession.users[i].user == req.user.id) {
+              newUser = false;
+              console.log(curSession.users[i]);
+              if (curSession.users[i].done && lock == "#selectView") {
+                lock = "#postSelectView";
+              }
+              if (curSession.users[i].doneVoting && lock == "#voteView") {
+                lock = "#postVoteView";
+              }
+            }
+          }
+          console.log("newUser ", newUser);
+          if (newUser) {
+            curSession.users.push({
+              user: req.user.id,
+              name: req.user.nickname,
+              done: false,
+              doneVoting: false,
+            });
+            curSession.save().then(function () {
+              socketAPI.addGame({
+                code: theCode,
+              });
+            });
+          }
+          res.send({
+            owned: false,
+            status: {
+              code: curSession.code,
+              lock: lock,
+              games: sendGames,
+            },
+          });
+        }
       }
-    }
-  });
+    });
+  } else {
+    res.send({ err: "Log in first!" });
+  }
 });
 
 function checkIfAddedByUser(theSession, userId) {

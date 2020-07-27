@@ -356,6 +356,12 @@ input:checked + .slider:before {
 .textInputCont input.textSubmit {
   border: none;
   background-color: rgba(0, 0, 0, 0);
+  border-radius: 20px;
+  transition: background-color 0.5s;
+}
+
+.textInputCont input.textSubmit.green {
+  background-color: var(--main-green);
 }
 
 .textSubmit,
@@ -449,6 +455,7 @@ input:checked + .slider:before {
   transition: opacity 0.5s;
   opacity: 0;
   background-color: var(--main-white);
+  z-index: -1;
 }
 
 /*****************/
@@ -546,7 +553,7 @@ input:checked + .slider:before {
 #postSelectContainer,
 #postVoteContainer {
   height: 100%;
-  grid-area: 3/2/15/10;
+  grid-area: 4/2/15/10;
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
@@ -674,7 +681,7 @@ input:checked + .slider:before {
 /**********************/
 
 #voteContainer {
-  grid-area: 3/2/18/10;
+  grid-area: 4/2/18/10;
   height: 100%;
 }
 
@@ -698,7 +705,7 @@ input:checked + .slider:before {
   width: 100%;
   text-align: center;
   height: var(--vh10);
-  font-size: max(3 * (1vw + 1vh) / 2, 12px);
+  font-size: max(2.5 * (1vw + 1vh) / 2, 12px);
 }
 
 .voteLabel {
@@ -870,13 +877,10 @@ input[type="range"]:focus {
 /******************/
 
 #playInfo {
-  width: 80vw;
   text-align: center;
-  height: var(--vh10);
   font-size: max(3 * (1vw + 1vh) / 2, 12px);
-  position: absolute;
-  top: var(--vh10);
-  left: 10vw;
+  grid-area: 4/2/18/10;
+  height: 100%;
 }
 
 #playContainer {

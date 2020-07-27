@@ -220,7 +220,7 @@ window.addEventListener("load", function () {
   /*      Set font sizes       */
   /*****************************/
 
-  $(window).on(
+  /*$(window).on(
     "resize",
     {
       el: ".pageTitle",
@@ -239,7 +239,7 @@ window.addEventListener("load", function () {
       fHeight: "8",
       fWidth: "10",
     },
-  });
+  });*/
   /*$(window).on(
     "resize",
     { el: ".login", mHeight: "10", mWidth: "10", fHeight: "4", fWidth: "6" },
@@ -296,7 +296,7 @@ window.addEventListener("load", function () {
     $("#menu").removeClass("off");
     $("#menuCatch").removeClass("off");
     window.setTimeout(function () {
-      $("#menu").css("transform", "translateX(0vh)");
+      $("#menu").removeClass("left");
     }, 10);
   });
 
@@ -305,20 +305,25 @@ window.addEventListener("load", function () {
   /*****************************/
 
   $("#sessionsItem").click(this, function (el) {
-    closeMenu();
-    const gs_options = {
-      method: "POST",
-      body: "",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    window.setTimeout(showMenuItem("#sessionsView"), 600);
-    fetch("/get_sessions", gs_options).then(function (response) {
-      return response.json().then((res) => {
-        writeSessions(res);
+    if ($("#sessionsView").hasClass("off")) {
+      closeMenu();
+      closeMenuItem("#gamesView");
+      const gs_options = {
+        method: "POST",
+        body: "",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      window.setTimeout(showMenuItem("#sessionsView"), 600);
+      fetch("/get_sessions", gs_options).then(function (response) {
+        return response.json().then((res) => {
+          writeSessions(res);
+        });
       });
-    });
+    } else {
+      closeMenuItem("#sessionsView");
+    }
   });
 
   $("#sessionsClose").click(this, function (el) {
@@ -330,9 +335,14 @@ window.addEventListener("load", function () {
   /*****************************/
   //Populate all games on the first run through
   $("#gamesItem").click(this, function (el) {
-    gulp();
-    closeMenu();
-    window.setTimeout(showMenuItem("#gamesView"), 600);
+    if ($("#gamesView").hasClass("off")) {
+      gulp();
+      closeMenuItem("#sessionsView");
+      closeMenu();
+      window.setTimeout(showMenuItem("#gamesView"), 600);
+    } else {
+      closeMenuItem("#gamesView");
+    }
   });
 
   $("#gamesClose").click(this, function (el) {
@@ -581,7 +591,7 @@ function cFont(e) {
 }
 
 function closeMenu() {
-  $("#menu").css("transform", "translateX(-60vh)");
+  $("#menu").addClass("left");
   $("#menuCatch").addClass("off");
   window.setTimeout(function () {
     $("#menu").addClass("off");

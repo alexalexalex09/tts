@@ -83,6 +83,10 @@ li.red {
   display: none !important;
 }
 
+.menu.left {
+  transform: translateX(-60vw);
+}
+
 /*****************/
 /* Toggle Switch */
 /*****************/
@@ -201,8 +205,7 @@ input:checked + .slider:before {
   align-self: center;
   color: var(--main-blue);
   padding-right: 3vw;
-  cursor: pointer;
-  font-size: max(4 * (1vw + 1vh) / 2, 12px);
+  font-size: max(2.5 * (1vw + 1vh) / 2, 25px);
 }
 
 .login a,
@@ -239,11 +242,16 @@ input:checked + .slider:before {
   white-space: nowrap;
 }
 
+.userName span {
+  cursor: pointer;
+}
+
 .logout {
   flex-basis: min(14 * (1vw + 1vh) / 2, 25vw);
   flex-grow: 0;
   white-space: nowrap;
   padding-left: 1vw;
+  cursor: pointer;
 }
 
 .flexCollapse {
@@ -266,7 +274,7 @@ input:checked + .slider:before {
 
 .pageTitle {
   grid-area: 1/1/3/11;
-  font-size: 10vw;
+  font-size: min(10 * (1vw + 1vh) / 2, 7vw);
   color: var(--main-grey);
   text-align: center;
   height: 100%;
@@ -557,7 +565,7 @@ input:checked + .slider:before {
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
-  font-size: 1.4em;
+  font-size: min(2.4 * (1vw + 1vh) / 2, 20px);
 }
 
 #postSelectLoadingMessage {
@@ -668,7 +676,7 @@ input:checked + .slider:before {
 #dupTip {
   top: calc(var(--vh) * 2.5);
   position: relative;
-  font-size: 3vw;
+  font-size: max(2 * (1vw + 1vh) / 2, 25px);
   color: var(--main-gold);
 }
 
@@ -706,7 +714,7 @@ input:checked + .slider:before {
   width: 100%;
   text-align: center;
   height: var(--vh10);
-  font-size: max(2.5 * (1vw + 1vh) / 2, 12px);
+  font-size: max(1.5 * (1vw + 1vh) / 2, 15px);
 }
 
 .voteLabel {
@@ -879,7 +887,7 @@ input[type="range"]:focus {
 
 #playInfo {
   text-align: center;
-  font-size: max(3 * (1vw + 1vh) / 2, 12px);
+  font-size: max(1.5 * (1vw + 1vh) / 2, 20px);
   grid-area: 4/2/18/10;
   height: 100%;
 }
@@ -967,7 +975,7 @@ input[type="range"]:focus {
   font-size: calc(var(--vh, 1vh) * 3);
   list-style: none;
   display: grid;
-  grid-template-columns: 1fr 11vw;
+  grid-template-columns: 1fr 40px;
   grid-template-rows: 1fr;
   align-items: start;
 }
@@ -978,7 +986,7 @@ input[type="range"]:focus {
 }
 
 #gamesContainer .listExpand {
-  justify-self: center;
+  justify-self: start;
 }
 
 ion-icon#addListButton {
@@ -1131,7 +1139,7 @@ ion-icon#addListButton {
   top: 0;
   left: 0;
   color: var(--main-white);
-  transform: translateX(-60vw);
+  transform: translateX(0vw);
   transition: transform 0.5s;
 }
 
@@ -1154,6 +1162,7 @@ ion-icon#addListButton {
 
 .itemContainer {
   margin-top: calc(var(--vh, 1vh) * 10);
+  font-size: 1.3em;
 }
 
 .itemContainer ul {
@@ -1453,8 +1462,9 @@ subContextRemove {
     padding-left: 25px;
   }
   .view {
-    left: 250px;
-    width: calc(100% - 250px);
+    left: calc(calc(100% - 1000px) / 2);
+    width: 750px;
+    margin-left: 250px;
     grid-template-columns: repeat(10, 10%);
   }
   .button {
@@ -1464,5 +1474,53 @@ subContextRemove {
   .bottomBtn {
     left: 50%;
     transform: translateX(-50%);
+  }
+  .pop {
+    width: 250px;
+    left: 250px;
+  }
+  .menu.left {
+    transform: translateX(0vh);
+  }
+
+  #gamesContainer > li,
+  #gamesContainer .listGames {
+    padding-left: 0px;
+  }
+
+  #sessionsContainer li {
+    padding-left: 10px;
+  }
+
+  #shareButton {
+    display: none;
+  }
+  #copyButton {
+    float: none;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto;
+  }
+  #codeButtons {
+    grid-area: 8/5/9/7;
+    height: 100%;
+    width: 100%;
+  }
+  #codeButtons ion-icon {
+    font-size: 64px;
+  }
+  #selectLists li {
+    grid-template-columns: 1fr 30px 50px;
+  }
+  #addGroupGamesContainer {
+    width: 60%;
+  }
+
+  .pageTitle#playTitle {
+    font-size: max(4 * (1vw + 1vh) / 2, 30px);
+  }
+
+  .pageTitle {
+    font-size: 30px;
   }
 }

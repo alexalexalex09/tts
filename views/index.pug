@@ -12,20 +12,20 @@ block content
           rect(width='100' height='15' rx='8')
           rect(y='30' width='100' height='15' rx='8')
           rect(y='60' width='100' height='15' rx='8')
-      #menu.menu.off
+      #menu.menu.off.left
         #menuClose.closeButton
           ion-icon(name='close-outline')
         #menuItems.itemContainer
           ul
             li#sessionsItem
               ion-icon(name='help-circle-outline')
-              | My Sessions
+              | Sessions
             li#gamesItem
               ion-icon(name='library-outline')
-              | My Games and Lists
+              | Games and Lists
             li#accountItem
               ion-icon(name='person-circle-outline')
-              | My Account
+              | Account
             li#faqItem
               ion-icon(name='help-circle-outline')
               | FAQ
@@ -45,8 +45,8 @@ block content
         
         if user
           .userNameContainer
-            .userName(onclick="$('.logout').toggleClass('flexCollapse')")
-              | Hello, #{user.nickname}
+            .userName
+              span(onclick="$('.logout').toggleClass('flexCollapse')") Hello, #{user.nickname}
             .logout.flexCollapse
               a(href="/logout")  | logout
         else 

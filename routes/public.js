@@ -227,7 +227,6 @@ router.post("/game_add", function (req, res) {
 
 router.post("/group_game_add", function (req, res) {
   if (req.user) {
-    console.log("User2: " + req.user.nickname);
     var upsertOptions = { new: true, upsert: true };
     Game.findOneAndUpdate(
       {
@@ -254,10 +253,14 @@ router.post("/group_game_add", function (req, res) {
             if (index > -1) {
               res.send({ err: "added", game: game._id.toString() });
             } else {
-              curSession.votes.push({ game: game._id, voters: [] });
+              curSession.votes.push({
+                game: game._id,
+                name: req.body.game,
+                voters: [],
+              });
               curSession.games.push({ game: game._id, addedBy: [req.user.id] });
               htmlString =
-                `<li> <div class="editGame">` +
+                `<li> <div class="editGame greenText">` +
                 game.name +
                 `</div>` +
                 `<div class='toggle'>

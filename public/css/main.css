@@ -672,6 +672,7 @@ input:checked + .slider:before {
   color: var(--main-gold);
 }
 
+.dup .greenText,
 .dup {
   color: var(--main-gold);
 }
@@ -884,7 +885,7 @@ input[type="range"]:focus {
 }
 
 #playContainer {
-  grid-area: 5/2/15/10;
+  grid-area: 6/2/15/10;
   height: 100%;
   overflow-y: auto;
 }

@@ -1275,7 +1275,7 @@ function hideSubList(subList) {
 function showMenuItem(view) {
   $(view).removeClass("off");
   window.setTimeout(function () {
-    $(view).css("transform", "translateY(0vh)");
+    $(view).addClass("showMenuItem");
   }, 10);
 }
 
@@ -1285,7 +1285,7 @@ function showMenuItem(view) {
  * @param {*} view
  */
 function closeMenuItem(view) {
-  $(view).css("transform", "translateY(var(--vh100))");
+  $(view).removeClass("showMenuItem");
   window.setTimeout(function () {
     $(view).addClass("off");
   }, 600);

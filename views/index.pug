@@ -119,6 +119,7 @@ block content
       #gamesClose.closeButton
         ion-icon(name='close-outline')
       #gamesTitle.pageTitle Games and Lists 🐿️
+      #gamesAdderTitle.off Add New
       ion-icon(name="add-circle-outline" onclick="toggleGamesAdder()")#addListButton
       div#gamesAdderContainer
         div.gamesAdder.slideDown.off(onclick="showMenuAddGame()")
@@ -140,7 +141,7 @@ block content
       #gamesContainer
       #gamesContextContainer.off
       #listContextContainer.off
-      #contextShadow.off
+
 
 
   #copiedAlert Code copied to clipboard!
@@ -149,6 +150,7 @@ block content
     ion-icon(name="caret-back-outline")
   #listsContainer
   #sessionContainer
+  #contextShadow.off
 //-
   #report
     p name: #{appEnv.name}

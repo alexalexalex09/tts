@@ -47,6 +47,7 @@ a:active {
   border-radius: 7px;
   color: var(--main-white);
   cursor: pointer;
+  font-size: max(3.5 * (1vw + 1vh) / 2, 30px);
 }
 
 .blueBtn {
@@ -85,6 +86,10 @@ li.red {
 
 .menu.left {
   transform: translateX(-60vw);
+}
+
+.pop.showMenuItem {
+  transform: translateY(0vh);
 }
 
 /*****************/
@@ -919,7 +924,7 @@ input[type="range"]:focus {
   padding-top: var(--vh5);
   height: var(--vh100);
   top: 0px;
-  transform: translateY(var(--vh100));
+  transform: translateY(100vh);
   overflow: hidden;
   box-sizing: border-box;
   z-index: 10;
@@ -1240,7 +1245,7 @@ ion-icon#addListButton {
   font-size: 6vw;
   position: absolute;
   bottom: 0px;
-  z-index: 10;
+  z-index: 200;
   list-style: none;
   box-sizing: border-box;
   border-radius: 15px 15px 0px 0px;
@@ -1277,7 +1282,7 @@ ion-icon#addListButton {
   background-color: white;
   position: absolute;
   border-radius: 12px;
-  padding: 5px;
+  padding: 15px;
   left: 5vw;
   width: 90vw;
   top: calc(var(--vh) * 2);
@@ -1319,13 +1324,13 @@ subContextRemove {
 }
 
 #contextShadow {
-  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
   width: 100vw;
   height: var(--vh100);
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 2;
+  z-index: 100;
 }
 
 .listTitle {
@@ -1455,6 +1460,9 @@ subContextRemove {
   .menu.off {
     display: block !important;
   }
+  #menuIcon {
+    display: none;
+  }
   #menuClose {
     display: none;
   }
@@ -1470,14 +1478,11 @@ subContextRemove {
   .button {
     max-width: 250px;
     margin: 0 auto;
+    font-size: max(2 * (1vw + 1vh) / 2, 24px);
   }
   .bottomBtn {
     left: 50%;
     transform: translateX(-50%);
-  }
-  .pop {
-    width: 250px;
-    left: 250px;
   }
   .menu.left {
     transform: translateX(0vh);
@@ -1490,6 +1495,11 @@ subContextRemove {
 
   #sessionsContainer li {
     padding-left: 10px;
+  }
+
+  #gamesContainer li,
+  #sessionsContainer li {
+    font-size: 28px;
   }
 
   #shareButton {
@@ -1516,11 +1526,94 @@ subContextRemove {
     width: 60%;
   }
 
+  .itemContainer {
+    font-size: 24px;
+  }
+
   .pageTitle#playTitle {
     font-size: max(4 * (1vw + 1vh) / 2, 30px);
   }
 
   .pageTitle {
-    font-size: 30px;
+    font-size: 36px;
+  }
+
+  .pop {
+    transform: translateY(0);
+    transform: translateX(calc(var(--vh100) * -1));
+    width: 400px;
+    left: 250px;
+  }
+
+  .showMenuItem {
+    transform: translateX(0vh);
+  }
+
+  .listTitle ion-icon {
+    left: 10px;
+  }
+
+  .contextActions {
+    padding: 10px 10px 31px 10px;
+    width: 380px;
+    left: 260px;
+    font-size: 20px;
+    top: 4%;
+    height: 200px;
+    border-radius: 15px;
+  }
+
+  .subContextContainer {
+    z-index: 100;
+  }
+
+  .subContext,
+  .subContextRename,
+  .subContextDelete,
+  .subContextRemove {
+    left: 10px;
+    width: 630px;
+    padding: 15px;
+  }
+
+  .subContextDelete .button,
+  .subContextRemove .button {
+    padding: 6px 0px;
+  }
+
+  ion-icon#addListButton {
+    z-index: 250;
+    width: 110px;
+    z-index: 201;
+    margin-left: 0px;
+    left: 145px;
+  }
+
+  .listContents {
+    padding: 5px;
+  }
+
+  .displayGameContainer li {
+    width: 240px;
+  }
+
+  .gamesAdder div {
+    height: 75px;
+  }
+
+  .gamesAdder {
+    font-size: 25px;
+    width: 100px;
+    left: 50px;
+  }
+
+  .gamesAdder:nth-child(1) {
+    left: 250px;
+  }
+
+  #menuAddListContainer,
+  #menuAddGamesContainer {
+    width: 80%;
+    left: 10%;
   }
 }

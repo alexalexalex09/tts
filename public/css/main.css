@@ -363,7 +363,7 @@ input:checked + .slider:before {
   height: 100%;
   box-sizing: border-box;
   width: 100%;
-  padding: 0px 7vw 0px 5px;
+  padding: 0px 50px 0px 5px;
 }
 
 .textInputCont input.textSubmit {
@@ -672,6 +672,7 @@ input:checked + .slider:before {
   overflow-x: hidden;
   white-space: nowrap;
   min-height: 0px;
+  text-overflow: ellipsis;
 }
 
 .tip {
@@ -728,6 +729,7 @@ input:checked + .slider:before {
   font-size: calc(var(--vh) * 3.5);
   align-self: flex-end;
   display: flex;
+  overflow: hidden;
 }
 
 .voteLabel label {
@@ -777,8 +779,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   position: relative;
   width: 70vw;
   height: calc(var(--vh) * 0.8);
-  background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
-      50%,
+  background: linear-gradient(90deg, #fff 1px, transparent 1px) -1px 50%,
     linear-gradient(
       90deg,
       #e60000,
@@ -789,13 +790,12 @@ input[type="range"]::-webkit-slider-runnable-track {
       #50be10,
       #03961c
     );
-  background-size: 5vw 100%, 100% 100%;
+  background-size: 12.5% 100%, 100% 100%;
 }
 input[type="range"]::-moz-range-track {
   width: 70vw;
   height: calc(var(--vh) * 0.8);
-  background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
-      50%,
+  background: linear-gradient(90deg, #fff 1px, transparent 1px) -1px 50%,
     linear-gradient(
       90deg,
       #e60000,
@@ -806,14 +806,13 @@ input[type="range"]::-moz-range-track {
       #50be10,
       #03961c
     );
-  background-size: 5vw 100%, 100% 100%;
+  background-size: 12.5% 100%, 100% 100%;
 }
 input[type="range"]::-ms-track {
   border: none;
   width: 70vw;
   height: calc(var(--vh) * 0.8);
-  background: linear-gradient(90deg, #fff 0.125vw, transparent 0.125vw) -0.0625vw
-      50%,
+  background: linear-gradient(90deg, #fff 1px, transparent 1px) -1px 50%,
     linear-gradient(
       90deg,
       #e60000,
@@ -824,7 +823,7 @@ input[type="range"]::-ms-track {
       #50be10,
       #03961c
     );
-  background-size: 5vw 100%, 100% 100%;
+  background-size: 12.5% 100%, 100% 100%;
   color: transparent;
 }
 input[type="range"]::-ms-fill-lower {
@@ -1478,7 +1477,7 @@ subContextRemove {
   .button {
     max-width: 250px;
     margin: 0 auto;
-    font-size: max(2 * (1vw + 1vh) / 2, 24px);
+    font-size: 24px;
   }
   .bottomBtn {
     left: 50%;
@@ -1486,6 +1485,10 @@ subContextRemove {
   }
   .menu.left {
     transform: translateX(0vh);
+  }
+
+  .textInput {
+    font-size: 24px;
   }
 
   #gamesContainer > li,
@@ -1520,10 +1523,20 @@ subContextRemove {
     font-size: 64px;
   }
   #selectLists li {
-    grid-template-columns: 1fr 30px 50px;
+    grid-template-columns: 1fr 30px 70px;
   }
+
+  #editGameList li {
+    grid-template-columns: 1fr 1px 70px;
+  }
+
   #addGroupGamesContainer {
     width: 60%;
+  }
+
+  .displayGameContainer {
+    grid-template-rows: var(--vh5);
+    max-width: 400px;
   }
 
   .itemContainer {
@@ -1541,8 +1554,8 @@ subContextRemove {
   .pop {
     transform: translateY(0);
     transform: translateX(calc(var(--vh100) * -1));
-    width: 400px;
-    left: 250px;
+    width: 401px;
+    left: 249px;
   }
 
   .showMenuItem {
@@ -1591,10 +1604,7 @@ subContextRemove {
 
   .listContents {
     padding: 5px;
-  }
-
-  .displayGameContainer li {
-    width: 240px;
+    width: 400px;
   }
 
   .gamesAdder div {
@@ -1615,5 +1625,33 @@ subContextRemove {
   #menuAddGamesContainer {
     width: 80%;
     left: 10%;
+  }
+
+  #backArrow ion-icon {
+    left: 255px;
+    padding-right: 100px;
+    height: var(--vh10);
+    top: var(--vh5);
+  }
+
+  #backArrow ion-icon:after {
+    content: "Back";
+    position: absolute;
+    font-size: 32px;
+    height: 38px;
+    width: 168px;
+    color: var(--main-blue);
+    left: 40px;
+    top: var(--vh5);
+    transform: translateY(-50%);
+  }
+
+  .codeDisplay {
+    font-size: 28px;
+  }
+
+  #postSelectContainer,
+  #postVoteContainer {
+    font-size: 28px;
   }
 }

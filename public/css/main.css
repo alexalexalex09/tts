@@ -907,6 +907,9 @@ input[type="range"]:focus {
   font-size: calc(var(--vh, 1vh) * 3);
   width: 100%;
   text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /*****************/

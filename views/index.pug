@@ -46,7 +46,7 @@ block content
         if user
           .userNameContainer
             .userName
-              span(onclick="$('.logout').toggleClass('flexCollapse')") Hello, #{user.nickname}
+              span(onclick="$('.logout').toggleClass('flexCollapse')") Hello, #{username}
             .logout.flexCollapse
               a(href="/logout")  | logout
         else 

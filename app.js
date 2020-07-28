@@ -152,6 +152,17 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   res.locals.user = req.user;
+  if (typeof req.user != "undefined") {
+    console.log("NAME");
+    console.log(req.user.name);
+    console.log(req.user.nickname);
+    console.log(typeof req.user.name.givenName);
+    if (typeof req.user.name.givenName != "undefined") {
+      res.locals.username = req.user.name.givenName;
+    } else {
+      res.locals.username = req.user.nickname;
+    }
+  }
   next();
 });
 

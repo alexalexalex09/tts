@@ -8,8 +8,7 @@ var SessionSchema = new Schema(
     owner: String,
     creation: {
       type: Date,
-      expires: 2000,
-      //2592000
+      expires: 2592000,
       default: Date.now,
       required: true,
     },

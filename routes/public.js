@@ -69,13 +69,18 @@ router.post("/get_user_lists_populated", (req, res) => {
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
+        if (typeof req.user.name.givenName != "undefined") {
+          var username = req.user.name.givenName;
+        } else {
+          var username = req.user.nickname;
+        }
         if (curUser) {
           if (curUser.lists) {
             getSessions(req.user.id, curUser.lists, res);
           } else {
             newUser = {
               profile_id: req.user.id,
-              name: req.user.nickname,
+              name: username,
               lists: { allGames: [], custom: [] },
             };
             curUser = new User(newUser);
@@ -85,7 +90,7 @@ router.post("/get_user_lists_populated", (req, res) => {
         } else {
           newUser = {
             profile_id: req.user.id,
-            name: req.user.nickname,
+            name: username,
             lists: { allGames: [], custom: [] },
           };
           curUser = new User(newUser);
@@ -156,7 +161,6 @@ router.post("/get_user_all_games", (req, res) => {
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
   if (req.user) {
-    console.log("User2: " + req.user.nickname);
     var upsertOptions = { new: true, upsert: true };
     Game.findOneAndUpdate(
       {
@@ -176,7 +180,6 @@ router.post("/game_add", function (req, res) {
           User.findOneAndUpdate(
             {
               profile_id: req.user.id,
-              name: req.user.nickname,
             },
             { profile_id: req.user.id },
             upsertOptions,
@@ -358,9 +361,14 @@ router.post("/join_session", function (req, res) {
           }
           console.log("newUser ", newUser);
           if (newUser) {
+            if (typeof req.user.name.givenName != "undefined") {
+              var username = req.user.name.givenName;
+            } else {
+              var username = req.user.nickname;
+            }
             curSession.users.push({
               user: req.user.id,
-              name: req.user.nickname,
+              name: username,
               done: false,
               doneVoting: false,
             });
@@ -422,6 +430,11 @@ router.post("/create_session", function (req, res) {
       console.log(curSession);
 
       var theCode = makeid(5);
+      if (typeof req.user.name.givenName != "undefined") {
+        var username = req.user.name.givenName;
+      } else {
+        var username = req.user.nickname;
+      }
       var sessiondetail = {
         owner: req.user.id,
         code: theCode,
@@ -429,7 +442,7 @@ router.post("/create_session", function (req, res) {
         users: [
           {
             user: req.user.id,
-            name: req.user.nickname,
+            name: username,
             done: false,
           },
         ],

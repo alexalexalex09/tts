@@ -353,7 +353,11 @@ window.addEventListener("load", function () {
   /*****************************/
   /* Join button click handler */
   /*****************************/
-  $("#joinButton").click(this, function (el) {
+  $("#joinButton").click(this, function () {
+    console.log("join clicked");
+    joinClick();
+  });
+  function joinClick() {
     console.log("join click");
     var oldCode = $("#code").html();
     if (oldCode != false) {
@@ -380,8 +384,7 @@ window.addEventListener("load", function () {
         $("#joinButton").addClass("off");
       }, 600);
     }, 10);
-  });
-
+  }
   /*****************************/
   /*  Text input clear button  */
   /*****************************/
@@ -557,6 +560,7 @@ window.addEventListener("load", function () {
     window.location.search.substr(1, 2) == "s=" &&
     /^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3))
   ) {
+    joinClick();
     console.log("code: ", window.location.search.substr(3));
     submitCode($("codeSubmit"), window.location.search.substr(3));
   }

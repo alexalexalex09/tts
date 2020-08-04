@@ -184,7 +184,7 @@ app.use(function (req, res, next) {
   ) {
     res.redirect("/?s=" + req.originalUrl.substr(1));
   } else {
-    next(createError(404));
+    res.redirect("/?err=404");
   }
 });
 

@@ -1,6 +1,7 @@
 //All DOM manipulation
 var createSession = function () {};
 var joinSession = function () {};
+//import Sprite from "./sprite.mjs";
 
 window.addEventListener("load", function () {
   /*****************************/
@@ -1207,26 +1208,42 @@ function openList(list) {
       .first()
       .html() +
     `</div></div>` +
-    createNode(games, "listContents", "");
+    createNode("listContents", "", "displayGameContainer", games);
+  htmlString += `<div id="bulkSelect" class="off"><ion-icon name="arrow-back-outline"></ion-icon><ion-icon name="cut-sharp"></ion-icon><ion-icon name="copy-outline"></ion-icon><ion-icon name="trash-outline"></ion-icon></div>`;
   $("#" + list).after(htmlString);
   showSubList(".listContents");
 }
 
 function getListGames(list) {
+  console.log("list: ", list);
   var arr = [];
   $("#" + list)
     .children(".listGames")
     .first()
     .children()
     .each(function (ind, el) {
+      //console.log($(el));
       arr.push(
-        $(el)[0].outerHTML.replace(`id="games`, `id="display_games`) +
+        hashToColor($(el).attr("id").substr(10)) +
+          $(el)[0].outerHTML.replace(`id="games`, `id="display_games`) +
           `<ion-icon name="ellipsis-vertical" onclick="` +
           $(el).attr("onclick") +
           `"></ion-icon>`
       );
     });
   return arr;
+}
+
+function bulkSelectGame(el) {
+  $(el).toggleClass("flipped");
+  $(el).children(".spriteChecked").toggleClass("spriteUnchecked");
+  console.log($(el).parent().parent().children().children(".flipped"));
+  if ($(el).parent().parent().children().children(".flipped").length > 0) {
+    $("#bulkSelect").removeClass("off");
+  } else {
+    $("#bulkSelect").addClass("off");
+  }
+  console.log($(el).children("spriteChecked"));
 }
 
 /**
@@ -1250,10 +1267,10 @@ function prepareAction(name, func, classes) {
   return htmlString;
 }
 
-function createNode(arr, nodeClass, nodeId) {
+function createNode(nodeClass, nodeId, subNodeClass, arr) {
   var htmlString = `<div class="` + nodeClass + `" id="` + nodeId + `">`;
   for (var i = 0; i < arr.length; i++) {
-    htmlString += `<div class="displayGameContainer">` + arr[i] + `</div>`;
+    htmlString += `<div class="` + subNodeClass + `">` + arr[i] + `</div>`;
   }
   htmlString += "</div>";
   return htmlString;
@@ -1828,7 +1845,7 @@ function writeListContext(contextObj) {
  * @param {Object} res
  */
 function writeSessions(res) {
-  htmlString = "";
+  var htmlString = "";
   for (var i = 0; i < res.sessions.length; i++) {
     var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
     var gamesplural = setPlural(res.sessions[i].games, " game", " games");
@@ -2657,3 +2674,100 @@ function getvh() {
   document.documentElement.style.setProperty("--vh75", `${vh * 75}px`);
 }
 getvh();
+
+function hashToColor(game) {
+  var htmlString =
+    `<div class="sprite" onclick="bulkSelectGame(this)" id="sprite_` +
+    game +
+    `"><div class="spriteChecked spriteUnchecked">✓</div>`;
+  for (var i = 0; i < 16; i++) {
+    htmlString +=
+      `<div class="spriteCell" style="background-color: #` +
+      murmurhash3_32_gc(game, i).toString(16).substr(0, 6) +
+      `"></div>`;
+  }
+  htmlString += `</div>`;
+  return htmlString;
+}
+
+/**
+ * JS Implementation of MurmurHash3 (r136) (as of May 20, 2011)
+ *
+ * @author <a href="mailto:gary.court@gmail.com">Gary Court</a>
+ * @see http://github.com/garycourt/murmurhash-js
+ * @author <a href="mailto:aappleby@gmail.com">Austin Appleby</a>
+ * @see http://sites.google.com/site/murmurhash/
+ *
+ * @param {string} key ASCII only
+ * @param {number} seed Positive integer only
+ * @return {number} 32-bit positive integer hash
+ */
+
+function murmurhash3_32_gc(key, seed) {
+  var remainder, bytes, h1, h1b, c1, c1b, c2, c2b, k1, i;
+
+  remainder = key.length & 3; // key.length % 4
+  bytes = key.length - remainder;
+  h1 = seed;
+  c1 = 0xcc9e2d51;
+  c2 = 0x1b873593;
+  i = 0;
+
+  while (i < bytes) {
+    k1 =
+      (key.charCodeAt(i) & 0xff) |
+      ((key.charCodeAt(++i) & 0xff) << 8) |
+      ((key.charCodeAt(++i) & 0xff) << 16) |
+      ((key.charCodeAt(++i) & 0xff) << 24);
+    ++i;
+
+    k1 =
+      ((k1 & 0xffff) * c1 + ((((k1 >>> 16) * c1) & 0xffff) << 16)) & 0xffffffff;
+    k1 = (k1 << 15) | (k1 >>> 17);
+    k1 =
+      ((k1 & 0xffff) * c2 + ((((k1 >>> 16) * c2) & 0xffff) << 16)) & 0xffffffff;
+
+    h1 ^= k1;
+    h1 = (h1 << 13) | (h1 >>> 19);
+    h1b =
+      ((h1 & 0xffff) * 5 + ((((h1 >>> 16) * 5) & 0xffff) << 16)) & 0xffffffff;
+    h1 = (h1b & 0xffff) + 0x6b64 + ((((h1b >>> 16) + 0xe654) & 0xffff) << 16);
+  }
+
+  k1 = 0;
+
+  switch (remainder) {
+    case 3:
+      k1 ^= (key.charCodeAt(i + 2) & 0xff) << 16;
+    case 2:
+      k1 ^= (key.charCodeAt(i + 1) & 0xff) << 8;
+    case 1:
+      k1 ^= key.charCodeAt(i) & 0xff;
+
+      k1 =
+        ((k1 & 0xffff) * c1 + ((((k1 >>> 16) * c1) & 0xffff) << 16)) &
+        0xffffffff;
+      k1 = (k1 << 15) | (k1 >>> 17);
+      k1 =
+        ((k1 & 0xffff) * c2 + ((((k1 >>> 16) * c2) & 0xffff) << 16)) &
+        0xffffffff;
+      h1 ^= k1;
+  }
+
+  h1 ^= key.length;
+
+  h1 ^= h1 >>> 16;
+  h1 =
+    ((h1 & 0xffff) * 0x85ebca6b +
+      ((((h1 >>> 16) * 0x85ebca6b) & 0xffff) << 16)) &
+    0xffffffff;
+  h1 ^= h1 >>> 13;
+  h1 =
+    ((h1 & 0xffff) * 0xc2b2ae35 +
+      ((((h1 >>> 16) * 0xc2b2ae35) & 0xffff) << 16)) &
+    0xffffffff;
+  h1 ^= h1 >>> 16;
+  var consoleval = h1;
+  console.log(key, seed, consoleval >>> 0);
+  return h1 >>> 0;
+}

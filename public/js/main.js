@@ -1209,7 +1209,7 @@ function openList(list) {
       .html() +
     `</div></div>` +
     createNode("listContents", "", "displayGameContainer", games);
-  htmlString += `<div id="bulkSelect" class="off"><ion-icon name="arrow-back-outline"></ion-icon><ion-icon name="cut-sharp"></ion-icon><ion-icon name="copy-outline"></ion-icon><ion-icon name="trash-outline"></ion-icon></div>`;
+  htmlString += `<div id="bulkSelect" class="off"><ion-icon name="square-outline"></ion-icon><div class="blank"></div><ion-icon name="trash-outline"></ion-icon><ion-icon name="cut-sharp"></ion-icon><ion-icon name="copy-outline"></ion-icon><ion-icon name="close-outline"></ion-icon></div>`;
   $("#" + list).after(htmlString);
   showSubList(".listContents");
 }
@@ -1240,8 +1240,10 @@ function bulkSelectGame(el) {
   console.log($(el).parent().parent().children().children(".flipped"));
   if ($(el).parent().parent().children().children(".flipped").length > 0) {
     $("#bulkSelect").removeClass("off");
+    $(".listContents.slideUp").addClass("bulkShowing");
   } else {
     $("#bulkSelect").addClass("off");
+    $(".listContents.slideUp").removeClass("bulkShowing");
   }
   console.log($(el).children("spriteChecked"));
 }

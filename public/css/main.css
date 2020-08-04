@@ -1436,22 +1436,30 @@ subContextRemove {
   display: none;
 }
 
+.listContents.slideUp.bulkShowing {
+  transform: translateX(0px) translateY(calc(var(--vh) * 7));
+}
+
 #bulkSelect {
   width: 96vw;
-  bottom: 0px;
-  height: var(--vh10);
+  bottom: calc(var(--vh) * 73);
+  height: calc(var(--vh, 1vh) * 7);
   background-color: var(--main-white);
   position: absolute;
   z-index: 1;
   display: grid;
-  grid-template-columns: 10vw 1fr 15vw 15vw;
+  grid-template-columns: 10vw 1fr 10vw 10vw 10vw 10vw;
   align-items: center;
   justify-items: end;
   padding: 0px 2vw;
 }
 
 #bulkSelect ion-icon {
-  font-size: var(--vh5);
+  font-size: calc(var(--vh, 1vh) * 3);
+}
+
+#bulkSelect ion-icon:first-child {
+  justify-self: center;
 }
 
 .listContents li {

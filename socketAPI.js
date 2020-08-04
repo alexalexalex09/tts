@@ -259,7 +259,9 @@ socketAPI.submitVotes = function (data) {
     var index = curSession.users.findIndex(
       (obj) => obj.user.toString() == data.user.toString()
     );
-    curSession.users[index].doneVoting = true;
+    if (index > -1) {
+      curSession.users[index].doneVoting = true;
+    }
     for (var i = 0; i < data.voteArray.length; i++) {
       var index = curSession.votes.findIndex(
         (obj) => obj.game.toString() == data.voteArray[i].game.toString()

@@ -11,9 +11,10 @@ var socketAPI = require("../socketAPI");
 var Fuse = require("fuse.js");
 const { response } = require("express");
 
+const ERR_LOGIN = { err: "Log in first" };
+
 //CF variables
 var appEnv = cfenv.getAppEnv();
-console.log(appEnv);
 
 var sURL = appEnv.getServiceURL("ad_16459ca7380ad71");
 if (appEnv.port == 6002) {
@@ -23,13 +24,44 @@ if (appEnv.port == 6002) {
 }
 
 var mongoDB = process.env.mongo;
-mongoose.connect(mongoDB, { useNewUrlParser: true });
+console.log("Mongo: ", mongoDB);
+mongoose.connect(mongoDB, {
+  useNewUrlParser: true,
+  useFindAndModify: false,
+  useUnifiedTopology: true,
+  w: "majority",
+  family: 4,
+});
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
+function makeid(length) {
+  //TODO: Filter out bad words
+  var result = "";
+  var characters = "ABCEGHJKLMNPQRTUVWXYZ0123456789";
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+router.get("/j/:session", (req, res) => {
+  res.render("index", {
+    appEnv: appEnv,
+    redirect_uri: baseURL + "/users/callback",
+    sessionCode: req.params.session,
+  });
+});
+
 // Home page
 router.get("/", (req, res) => {
+  console.log("query: ", req.query);
+  console.log("req.session: ", req.session);
+  if (typeof req.session.userNonce == "undefined") {
+    req.session.userNonce = makeid(20);
+  }
   if (typeof req.user != "undefined") {
     console.log(req.user);
   }
@@ -37,6 +69,7 @@ router.get("/", (req, res) => {
   res.render("index", {
     appEnv: appEnv,
     redirect_uri: baseURL + "/users/callback",
+    sessionCode: "none",
   });
 });
 
@@ -99,7 +132,7 @@ router.post("/get_user_lists_populated", (req, res) => {
         }
       });
   } else {
-    res.send({ err: "Log in before populating user object" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -107,14 +140,13 @@ router.post("/get_sessions", (req, res) => {
   if (req.user) {
     getSessions(req.user.id, "", res);
   } else {
-    res.send({ err: "Not logged in" });
+    res.send(ERR_LOGIN);
   }
 });
 
 function getSessions(theId, lists, res) {
   Session.find({ owner: theId }).exec(function (err, curSessions) {
     var sessions = [];
-    console.log("Sessions:", curSessions);
     for (var i = 0; i < curSessions.length; i++) {
       sessions.push({
         code: curSessions[i].code,
@@ -143,7 +175,7 @@ router.post("/get_user_lists", (req, res) => {
       res.send(resArray);
     });
   } else {
-    res.send({ err: "Log in first!!!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -224,7 +256,7 @@ router.post("/game_add", function (req, res) {
       }
     );
   } else {
-    res.send({ err: "Log in first!!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -302,17 +334,17 @@ function userCreate(id, name) {
 }
 
 router.post("/join_session", function (req, res) {
-  if (req.user) {
-    var theCode = req.body.code.toUpperCase();
-    theCode = theCode.replace("I", "1");
-    theCode = theCode.replace("O", "0");
-    Session.findOne({ code: theCode }).exec(function (err, curSession) {
-      console.log(curSession);
-      if (!curSession) {
-        console.log("Error: ", err);
-        console.log("Session: ", curSession);
-        res.send({ err: "No such session" });
-      } else {
+  var theCode = req.body.code.toUpperCase();
+  theCode = theCode.replace("I", "1");
+  theCode = theCode.replace("O", "0");
+  Session.findOne({ code: theCode }).exec(function (err, curSession) {
+    if (!curSession) {
+      console.log("Error: ", err);
+      console.log("Session: ", curSession);
+      res.send({ err: "No such session" });
+    } else {
+      var lock = curSession.lock;
+      if (req.user) {
         var sendGames = checkIfAddedByUser(curSession, req.user.id);
         if (curSession.owner == req.user.id) {
           //Join as owner
@@ -341,8 +373,7 @@ router.post("/join_session", function (req, res) {
           });
         } else {
           //Join as client
-          var newUser = true;
-          var lock = curSession.lock;
+          var newUser = true; //Initialize to true, set to false if user is found
           if (lock == "#codeView") {
             lock = "#selectView";
           }
@@ -387,11 +418,19 @@ router.post("/join_session", function (req, res) {
             },
           });
         }
+      } else {
+        //Joining as guest. Not added to users or voting array
+        res.send({
+          owned: false,
+          status: {
+            code: curSession.code,
+            lock: lock,
+            games: [],
+          },
+        });
       }
-    });
-  } else {
-    res.send({ err: "Log in first!" });
-  }
+    }
+  });
 });
 
 function checkIfAddedByUser(theSession, userId) {
@@ -411,24 +450,9 @@ function checkIfAddedByUser(theSession, userId) {
 router.post("/create_session", function (req, res) {
   console.log(req.user);
   if (req.user) {
-    function makeid(length) {
-      //TODO: Filter out bad words
-      var result = "";
-      var characters = "ABCEGHJKLMNPQRTUVWXYZ0123456789";
-      var charactersLength = characters.length;
-      for (var i = 0; i < length; i++) {
-        result += characters.charAt(
-          Math.floor(Math.random() * charactersLength)
-        );
-      }
-      return result;
-    }
-
     var theCode = makeid(6);
 
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
-      console.log(curSession);
-
       var theCode = makeid(5);
       if (typeof req.user.name.givenName != "undefined") {
         var username = req.user.name.givenName;
@@ -461,7 +485,7 @@ router.post("/create_session", function (req, res) {
       });
     });
   } else {
-    res.send({ err: "No user" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -578,7 +602,7 @@ router.post("/add_game_to_session", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "Must log in to add games" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -609,7 +633,7 @@ router.post("/submit_games", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "Not logged in." });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -653,8 +677,6 @@ router.post("/lock_games", function (req, res) {
       //Then, take all the namesList games and add their names and ids to the vote array
       Game.find({ _id: { $in: namesList } }).exec(function (err, games) {
         curSession.votes = votes;
-        console.log("CurSession: ", curSession.votes);
-        console.log("Games: ", games);
         //Right now, games is getting every game instead of just the ones that were newly added
         for (var i = 0; i < games.length; i++) {
           curSession.votes.push({
@@ -720,7 +742,7 @@ router.post("/lock_games", function (req, res) {
       });
     });
   } else {
-    res.send({ err: "Not logged in" });
+    res.send(ERR_LOGIN);
   }
 
   function dupeSearch(fuse, vote) {
@@ -818,7 +840,7 @@ router.post("/modify_edit_list", function (req, res) {
       });
     });
   } else {
-    res.send({ err: "Not logged in" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -833,18 +855,18 @@ router.post("/unlock_games", function (req, res) {
     socketAPI.unlockGames(data);
     res.send({ status: "Unlocking..." });
   } else {
-    res.send({ err: "Not logged in" });
+    res.send(ERR_LOGIN);
   }
 });
 
 router.post("/start_voting", function (req, res) {
-  if (req.user) {
-    //Send the voting socket event to both client and owner
-    socketAPI.startVoting(req.body);
-    res.send({ status: "Started voting!" });
-  } else {
-    res.send({ err: "Not logged in" });
-  }
+  //if (req.user) {
+  //Send the voting socket event to both client and owner
+  socketAPI.startVoting(req.body);
+  res.send({ status: "Started voting!" });
+  //} else {
+  //  res.send(ERR_LOGIN);
+  //}
 });
 
 router.post("/submit_votes", function (req, res) {
@@ -857,28 +879,33 @@ router.post("/submit_votes", function (req, res) {
     });
     res.send({ status: "Submitted votes!" });
   } else {
-    res.send({ err: "Not logged in" });
+    socketAPI.submitVotes({
+      code: req.body.code,
+      user: "guest" + req.session.userNonce,
+      voteArray: req.body.voteArray,
+    });
+    res.send({ status: "Submitted votes!" });
   }
 });
 
 router.post("/get_votes", function (req, res) {
-  if (req.user) {
-    var games = [];
-    console.log(req.body);
-    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      for (var i = 0; i < curSession.votes.length; i++) {
-        if (curSession.votes[i].active) {
-          games.push({
-            game: curSession.votes[i].game,
-            name: curSession.votes[i].name,
-          });
-        }
+  //if (req.user) {
+  var games = [];
+  console.log(req.body);
+  Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+    for (var i = 0; i < curSession.votes.length; i++) {
+      if (curSession.votes[i].active) {
+        games.push({
+          game: curSession.votes[i].game,
+          name: curSession.votes[i].name,
+        });
       }
-      res.send({ games: games });
-    });
-  } else {
-    res.send({ err: "Not logged in" });
-  }
+    }
+    res.send({ games: games });
+  });
+  //} else {
+  //  res.send(ERR_LOGIN);
+  //}
 });
 
 function sortDescByKey(array, key) {
@@ -911,30 +938,30 @@ router.post("/end_vote", function (req, res) {
       res.send({ status: "Vote ended for " + req.body.code });
     });
   } else {
-    res.send({ err: "Not logged in" });
+    res.send(ERR_LOGIN);
   }
 });
 
 router.post("/get_games", function (req, res) {
-  if (req.user) {
-    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      var games = [];
-      for (var i = 0; i < curSession.votes.length; i++) {
-        games[i] = { name: curSession.votes[i].name, votes: 0 };
-        for (var j = 0; j < curSession.votes[i].voters.length; j++) {
-          games[i].votes += curSession.votes[i].voters[j].vote;
-        }
+  //if (req.user) {
+  Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+    var games = [];
+    for (var i = 0; i < curSession.votes.length; i++) {
+      games[i] = { name: curSession.votes[i].name, votes: 0 };
+      for (var j = 0; j < curSession.votes[i].voters.length; j++) {
+        games[i].votes += curSession.votes[i].voters[j].vote;
       }
-      games.sort(function (a, b) {
-        var x = a.votes;
-        var y = b.votes;
-        return x < y ? 1 : x > y ? -1 : 0;
-      });
-      res.send({ games: games });
+    }
+    games.sort(function (a, b) {
+      var x = a.votes;
+      var y = b.votes;
+      return x < y ? 1 : x > y ? -1 : 0;
     });
-  } else {
-    res.send({ err: "Not logged in" });
-  }
+    res.send({ games: games });
+  });
+  //} else {
+  //res.send(ERR_LOGIN);
+  //}
 });
 
 router.post("/move_to_list", function (req, res) {
@@ -975,7 +1002,7 @@ router.post("/move_to_list", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1014,7 +1041,7 @@ router.post("/copy_to_list", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1044,7 +1071,7 @@ router.post("/rename_game", function (req, res) {
       );
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1061,7 +1088,7 @@ router.post("/rename_list", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1078,7 +1105,6 @@ function replaceInUserDoc(game, curUser, newGame) {
       "Removing ",
       curUser.lists.allGames.findIndex((obj) => obj == game)
     );
-    console.log(curUser.lists.allGames);
   } else {
     curUser.lists.allGames.splice(
       curUser.lists.allGames.findIndex((obj) => obj == game),
@@ -1111,7 +1137,7 @@ router.post("/delete_game", function (req, res) {
       res.send({ status: "Success" });
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1128,7 +1154,7 @@ router.post("/delete_list", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1143,7 +1169,7 @@ router.post("/remove_game", function (req, res) {
       res.send({ status: "Success" });
     });
   } else {
-    res.send({ err: "Not logged in!" });
+    res.send(ERR_LOGIN);
   }
 });
 

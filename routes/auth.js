@@ -17,6 +17,7 @@ router.get(
     scope: "openid email profile",
   }),
   function (req, res) {
+    //set req.session.returnTo here? Yes.
     res.redirect("/");
   }
 );

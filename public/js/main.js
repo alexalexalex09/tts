@@ -152,6 +152,7 @@ window.addEventListener("load", function () {
         fetch("/get_games", gg_options).then(function (response) {
           return response.json().then((res) => {
             fillGames(res.games);
+            goForwardFrom("#homeView", "#playView");
           });
         });
         break;
@@ -477,7 +478,7 @@ window.addEventListener("load", function () {
   /*   Copy the code to clipboard    */
   /***********************************/
   $("#copyButton").on("click", function () {
-    copyText($("#code").html());
+    copyText(window.location.origin + "/" + $("#code").html());
   });
 
   /***********************************/
@@ -490,10 +491,10 @@ window.addEventListener("load", function () {
       navigator
         .share({
           title: "Tidy Squirrel",
-          text:
-            "Join my TidySquirrel session! Our code is " +
+          text: "Join my TidySquirrel session! ",
+          url:
+            "https://tts.alexscottbecker.com/" +
             document.getElementById("code").innerHTML,
-          url: "https://ttsalexscottbecker.cfapps.io/",
         })
         .then(() => console.log("Successful share"))
         .catch((error) => console.log("Error sharing", error));
@@ -549,6 +550,16 @@ window.addEventListener("load", function () {
       });
     });
   });
+
+  console.log("code: ", window.location.search.substr(2));
+  console.log(/^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3)));
+  if (
+    window.location.search.substr(1, 2) == "s=" &&
+    /^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3))
+  ) {
+    console.log("code: ", window.location.search.substr(3));
+    submitCode($("codeSubmit"), window.location.search.substr(3));
+  }
 
   /*
    *
@@ -673,7 +684,6 @@ function goBackFrom(from, to) {
         };
         fetch("/going_back", gb_options).then(function (response) {
           return response.json().then((res) => {
-            console.log(res);
             goBack(from, to);
           });
         });
@@ -722,7 +732,6 @@ function lockGames(code) {
   };
   fetch("/lock_games", lg_options).then(function (lresponse) {
     return lresponse.json().then((lres) => {
-      console.log(lres);
       $("#backArrow").addClass("off");
       $("#postSelectView").css({
         transform: "translateX(-200vw)",
@@ -768,7 +777,6 @@ function lockGames(code) {
               return uresponse.json().then((ures) => {
                 $("#backArrow").removeClass("off");
                 goBackFrom("#postSelectView", "#selectView");
-                console.log(ures);
               });
             });
           });
@@ -792,7 +800,6 @@ function addGroupGame() {
   fetch("/group_game_add", gga_options).then(function (response) {
     return response.json().then((res) => {
       if (res.err) {
-        console.log(res);
         if ((res.err = "added")) {
           $("#addGroupGamesInput").css("color", "var(--main-red)");
           $('input[game_id="' + res.game + '"]').each(function () {
@@ -897,7 +904,6 @@ function guag() {
   fetch("/get_user_all_games", guag_options).then(function (response) {
     return response.json().then((res) => {
       if (!res.err) {
-        console.log(res);
         var htmlString = "";
         for (var i = 0; i < res.lists.allGames.length; i++) {
           htmlString +=
@@ -1942,6 +1948,9 @@ function addNewGame(el) {
         recheckGreenLists();
       } else {
         console.log(res.err);
+        if ((res.err = "Log in first")) {
+          showAlert("#loginAlert");
+        }
       }
     });
   });
@@ -2388,7 +2397,7 @@ function setCode(code) {
  */
 function copyText(copy) {
   console.log("copying");
-  $("#copiedAlert").css({ opacity: 1, "z-index": 11 });
+  showAlert("#copiedAlert");
   const el = document.createElement("textarea");
   el.value = copy;
   document.body.appendChild(el);
@@ -2400,11 +2409,14 @@ function copyText(copy) {
   /* Copy the text inside the text field */
   document.execCommand("copy");
   document.body.removeChild(el);
+}
 
+function showAlert(alert) {
+  $(alert).css({ opacity: 1, "z-index": 11 });
   setTimeout(function () {
-    $("#copiedAlert").css({ opacity: 0 });
+    $(alert).css({ opacity: 0 });
     setTimeout(function () {
-      $("#copiedAlert").css({ "z-index": 0 });
+      $(alert).css({ "z-index": 0 });
     }, 1000);
   }, 1000);
 }
@@ -2474,7 +2486,7 @@ function fillVotes(games) {
       `"/></li>`;
   }
   htmlString += `</ul><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
-  console.log("The string: ", htmlString);
+  //console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
   $("#voteButton").on("click", function () {
     var theCode = $("#code").text();

@@ -43,6 +43,7 @@ var envs = {
   client_secret: process.env.oSecret,
   secret: process.env.sSecret,
 };
+console.log(envs);
 if (appEnv.isLocal) {
   var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
 } else {
@@ -153,10 +154,6 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.user = req.user;
   if (typeof req.user != "undefined") {
-    console.log("NAME");
-    console.log(req.user.name);
-    console.log(req.user.nickname);
-    console.log(typeof req.user.name.givenName);
     if (typeof req.user.name.givenName != "undefined") {
       res.locals.username = req.user.name.givenName;
     } else {
@@ -181,7 +178,14 @@ app.use("/", authRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  next(createError(404));
+  if (
+    req.originalUrl.substr(1).length == 5 &&
+    /^([a-zA-Z0-9]{5})$/.test(req.originalUrl.substr(1))
+  ) {
+    res.redirect("/?s=" + req.originalUrl.substr(1));
+  } else {
+    next(createError(404));
+  }
 });
 
 // error handler

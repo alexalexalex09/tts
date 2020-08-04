@@ -456,7 +456,8 @@ input:checked + .slider:before {
   float: right;
 }
 
-#copiedAlert {
+#copiedAlert,
+#loginAlert {
   opacity: 1;
   position: absolute;
   bottom: var(--vh20);

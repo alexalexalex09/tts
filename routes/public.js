@@ -1093,7 +1093,8 @@ router.post("/rename_list", function (req, res) {
 });
 
 function replaceInUserDoc(game, curUser, newGame) {
-  console.log("CurUser: ", newGame);
+  console.log("CurGame: ", game);
+  console.log("CurUser: ", curUser);
   console.log(curUser.lists.allGames.findIndex((obj) => obj == game));
   if (typeof newGame == "undefined") {
     console.log("Will remove");
@@ -1132,6 +1133,8 @@ router.post("/delete_game", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
       //use this function to delete all instances of the game in a user instead of replacing by not passing a string
+
+      console.log("Deleting: ", req.body.game);
       replaceInUserDoc(req.body.game, curUser);
       curUser.save();
       res.send({ status: "Success" });

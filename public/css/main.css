@@ -1456,9 +1456,11 @@ subContextRemove {
 
 #bulkSelect ion-icon {
   font-size: calc(var(--vh, 1vh) * 3);
+  cursor: pointer;
 }
 
-#bulkSelect ion-icon:first-child {
+#bulkSelect ion-icon[name="square-outline"],
+#bulkSelect ion-icon[name="checkbox-outline"] {
   justify-self: center;
 }
 

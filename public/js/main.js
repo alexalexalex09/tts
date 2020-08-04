@@ -1209,7 +1209,10 @@ function openList(list) {
       .html() +
     `</div></div>` +
     createNode("listContents", "", "displayGameContainer", games);
-  htmlString += `<div id="bulkSelect" class="off"><ion-icon name="square-outline"></ion-icon><div class="blank"></div><ion-icon name="trash-outline"></ion-icon><ion-icon name="cut-sharp"></ion-icon><ion-icon name="copy-outline"></ion-icon><ion-icon name="close-outline"></ion-icon></div>`;
+  htmlString +=
+    `<div id="bulkSelect" list="` +
+    list +
+    `"class="off"><ion-icon name="square-outline" onclick="selectAllBulk()"></ion-icon><ion-icon name="checkbox-outline" onclick="closeBulk()" class="off"></ion-icon><div class="blank"></div><ion-icon name="trash-outline" onclick="deleteRemoveBulk()"></ion-icon><ion-icon name="cut-sharp" onclick="moveBulk()"></ion-icon><ion-icon name="copy-outline" onclick="copyBulk()"></ion-icon><ion-icon name="close-outline" onclick="closeBulk()"></ion-icon></div>`;
   $("#" + list).after(htmlString);
   showSubList(".listContents");
 }
@@ -1241,11 +1244,57 @@ function bulkSelectGame(el) {
   if ($(el).parent().parent().children().children(".flipped").length > 0) {
     $("#bulkSelect").removeClass("off");
     $(".listContents.slideUp").addClass("bulkShowing");
+    if (
+      $(el).parent().parent().children().children(".flipped").length ==
+      $(el).parent().parent().children().children(".sprite").length
+    ) {
+      $('#bulkSelect ion-icon[name="square-outline"]').addClass("off");
+      $('#bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
+    } else {
+      $('#bulkSelect ion-icon[name="square-outline"]').removeClass("off");
+      $('#bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+    }
   } else {
     $("#bulkSelect").addClass("off");
     $(".listContents.slideUp").removeClass("bulkShowing");
+    $('#bulkSelect ion-icon[name="square-outline"]').removeClass("off");
+    $('#bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
   }
   console.log($(el).children("spriteChecked"));
+}
+
+function closeBulk() {
+  $(".bulkShowing")
+    .children()
+    .children(".flipped")
+    .each(function () {
+      $(this).removeClass("flipped");
+      $(this).children(".spriteChecked").first().addClass("spriteUnchecked");
+    });
+  $("#bulkSelect").addClass("off");
+  $(".listContents.slideUp").removeClass("bulkShowing");
+  $('#bulkSelect ion-icon[name="square-outline"]').removeClass("off");
+  $('#bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+}
+
+function selectAllBulk() {
+  $('#bulkSelect ion-icon[name="square-outline"]').addClass("off");
+  $('#bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
+  $(".bulkShowing")
+    .children()
+    .children(".sprite")
+    .each(function () {
+      $(this).addClass("flipped");
+      $(this).children(".spriteChecked").first().removeClass("spriteUnchecked");
+    });
+}
+
+function deleteBulk() {
+  if ($("#bulkSelect").attr("list")=="games0" {
+    fetchDeleteBulk();
+  } else {
+    fetchRemoveBulk();
+  }
 }
 
 /**
@@ -1650,7 +1699,9 @@ function deleteList(list) {
   });
 }
 
-function showDeleteGame(game, caller) {
+function showDeleteGame(game, caller, list) {
+  console.log(game);
+  console.log($(caller));
   var el =
     `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
     game.id +
@@ -1661,44 +1712,63 @@ function showDeleteGame(game, caller) {
     game.name +
     `"?</div><hr/>
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
-  <div class="button redBtn" id="deleteConfirm" onclick="deleteGame('` +
-    game.id.substr($(caller).parent().parent().parent().attr("id").length) +
-    `', '` +
+  <div class="button redBtn" id="deleteConfirm" onclick="deleteGame([{game: '` +
+    game.id.substr(6) +
+    `', name: '` +
     game.name +
-    `')">Delete</div>`;
+    `'}])">Delete</div>`;
   $("body").append(el);
 }
 
-function deleteGame(game, name) {
-  const dg_options = {
-    method: "POST",
-    body: JSON.stringify({
-      game: game,
-    }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  fetch("/delete_game", dg_options).then(function (response) {
-    return response.json().then((res) => {
-      if (res.err) {
-        console.log(res.err);
-        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
-      } else {
-        $("#gamesContainer")
-          .children()
-          .children(".listGames")
-          .children("li")
-          .each(function () {
-            if ($(this).text() == name) {
-              $(this).remove();
-            }
+function deleteGame(arr) {
+  console.log("arr: ", arr);
+  arr.forEach(function (e, i) {
+    var game = e.game;
+    var name = e.name;
+    console.log("Game and name:", game, name);
+    const dg_options = {
+      method: "POST",
+      body: JSON.stringify({
+        game: game,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    fetch("/delete_game", dg_options).then(function (response) {
+      return response.json().then((res) => {
+        if (res.err) {
+          console.log(res.err);
+          //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+        } else {
+          $("#gamesContainer")
+            .children()
+            .children(".listGames")
+            .children("li")
+            .each(function () {
+              if ($(this).text() == name) {
+                console.log("removing...");
+                console.log(this);
+                $(this).remove();
+              }
+            });
+          $("#gamesContainer")
+            .children(".listContents")
+            .children(".displayGameContainer")
+            .children("li")
+            .each(function () {
+              if ($(this).text() == name) {
+                console.log("removing...");
+                console.log(this);
+                $(this).parent().remove();
+              }
+            });
+          $(".subContextContainer").each(function () {
+            $(this).remove();
           });
-        $(".subContextContainer").each(function () {
-          $(this).remove();
-        });
-        gulp();
-      }
+          gulp();
+        }
+      });
     });
   });
 }
@@ -2770,6 +2840,5 @@ function murmurhash3_32_gc(key, seed) {
     0xffffffff;
   h1 ^= h1 >>> 16;
   var consoleval = h1;
-  console.log(key, seed, consoleval >>> 0);
   return h1 >>> 0;
 }

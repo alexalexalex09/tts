@@ -1039,11 +1039,13 @@ function gulp(showAllGames = false) {
               `', name:'` +
               res.lists.allGames[i].name +
               `'}, this)">Rename</li>` +
-              `<li class="red" onclick="showDeleteGame({id: 'games0` +
+              `<li class="red" onclick="showDeleteGame([{id: '` +
               res.lists.allGames[i]._id +
               `', name:'` +
               res.lists.allGames[i].name +
-              `'}, this)">Delete</li>`
+              `'}], '&quot;` +
+              res.lists.allGames[i].name +
+              `&quot;')">Delete</li>`
           );
         }
         $("#listContextContainer").append(
@@ -1289,12 +1291,36 @@ function selectAllBulk() {
     });
 }
 
-function deleteBulk() {
-  if ($("#bulkSelect").attr("list")=="games0" {
-    fetchDeleteBulk();
+function deleteRemoveBulk() {
+  if ($("#bulkSelect").attr("list") == "games0") {
+    showDeleteBulk();
   } else {
-    fetchRemoveBulk();
+    showRemoveBulk();
   }
+}
+
+function showDeleteBulk() {
+  var listlen = $("#bulkSelect").attr("list").length + 8;
+  var toDelete = [];
+  var count = 0;
+  $("#bulkSelect")
+    .parent()
+    .children(".listContents")
+    .first()
+    .children()
+    .children(".sprite.flipped")
+    .each(function () {
+      toDelete.push({
+        id: $(this).parent().children("li").first().attr("id").substr(listlen),
+        name: $(this).parent().children("li").first().text(),
+      });
+      count++;
+    });
+  var text = "games";
+  if (count == 1) {
+    text = "game";
+  }
+  showDeleteGame(toDelete, count + " " + text);
 }
 
 /**
@@ -1699,54 +1725,47 @@ function deleteList(list) {
   });
 }
 
-function showDeleteGame(game, caller, list) {
-  console.log(game);
-  console.log($(caller));
-  var el =
-    `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
-    game.id +
-    `" >`;
+function showDeleteGame(arr, string) {
+  var el = `<div class="subContextContainer"><div class="subContextDelete">`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-    `<div class="subContextTitle">Really delete "` +
-    game.name +
-    `"?</div><hr/>
+    `<div class="subContextTitle">Really delete ` +
+    string +
+    `?</div><hr/>
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
-  <div class="button redBtn" id="deleteConfirm" onclick="deleteGame([{game: '` +
-    game.id.substr(6) +
-    `', name: '` +
-    game.name +
-    `'}])">Delete</div>`;
+  <div class="button redBtn" id="deleteConfirm" onclick="deleteGame([`;
+  arr.forEach(function (e, i) {
+    el += "{id: '" + e.id + "', name: '" + e.name + "'},";
+  });
+  el = el.substr(0, el.length - 1);
+  el += `])">Delete</div>`;
   $("body").append(el);
 }
 
 function deleteGame(arr) {
   console.log("arr: ", arr);
-  arr.forEach(function (e, i) {
-    var game = e.game;
-    var name = e.name;
-    console.log("Game and name:", game, name);
-    const dg_options = {
-      method: "POST",
-      body: JSON.stringify({
-        game: game,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    fetch("/delete_game", dg_options).then(function (response) {
-      return response.json().then((res) => {
-        if (res.err) {
-          console.log(res.err);
-          //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
-        } else {
+  const dg_options = {
+    method: "POST",
+    body: JSON.stringify({
+      games: arr,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/delete_game", dg_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        res.arr.forEach(function (e, i) {
           $("#gamesContainer")
             .children()
             .children(".listGames")
             .children("li")
             .each(function () {
-              if ($(this).text() == name) {
+              if ($(this).text() == e) {
                 console.log("removing...");
                 console.log(this);
                 $(this).remove();
@@ -1757,18 +1776,18 @@ function deleteGame(arr) {
             .children(".displayGameContainer")
             .children("li")
             .each(function () {
-              if ($(this).text() == name) {
+              if ($(this).text() == e) {
                 console.log("removing...");
                 console.log(this);
                 $(this).parent().remove();
               }
             });
-          $(".subContextContainer").each(function () {
-            $(this).remove();
-          });
-          gulp();
-        }
-      });
+        });
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+        gulp();
+      }
     });
   });
 }

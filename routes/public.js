@@ -1167,12 +1167,19 @@ router.post("/delete_list", function (req, res) {
 router.post("/remove_game", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      var index = curUser.lists.custom[req.body.list - 1].games.findIndex(
-        (obj) => obj._id.toString() == req.body.game
-      );
-      curUser.lists.custom[req.body.list - 1].games.splice(index, 1);
+      var ret = [];
+      console.log("gamesarr", req.body.games);
+      req.body.games.forEach(function (e) {
+        console.log(Number(e.list)); //wrong number!
+        console.log(curUser.lists.custom);
+        var index = curUser.lists.custom[Number(e.list) - 1].games.findIndex(
+          (obj) => obj._id.toString() == e.game
+        );
+        curUser.lists.custom[e.list - 1].games.splice(index, 1);
+        ret.push(e.name);
+      });
       curUser.save();
-      res.send({ status: "Success" });
+      res.send({ status: "Success", arr: ret });
     });
   } else {
     res.send(ERR_LOGIN);

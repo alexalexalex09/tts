@@ -1300,9 +1300,19 @@ function deleteRemoveBulk() {
 }
 
 function showDeleteBulk() {
+  var toDelete = getBulkChecked();
+  var text = "games";
+  if (toDelete.count == 1) {
+    text = "game";
+  }
+  showDeleteGame(toDelete.games, toDelete.count + " " + text);
+}
+
+function getBulkChecked() {
   var listlen = $("#bulkSelect").attr("list").length + 8;
-  var toDelete = [];
+  var games = [];
   var count = 0;
+  console.log(games);
   $("#bulkSelect")
     .parent()
     .children(".listContents")
@@ -1310,17 +1320,30 @@ function showDeleteBulk() {
     .children()
     .children(".sprite.flipped")
     .each(function () {
-      toDelete.push({
+      games.push({
         id: $(this).parent().children("li").first().attr("id").substr(listlen),
         name: $(this).parent().children("li").first().text(),
       });
       count++;
     });
+  console.log(games);
+  return { games: games, count: count };
+}
+
+function showRemoveBulk() {
+  var toRemove = "";
+  var toRemove = getBulkChecked();
+  var list = $("#bulkSelect").attr("list");
+
+  toRemove.games.forEach(function (e, i) {
+    toRemove.games[i].list = list;
+  });
+
   var text = "games";
-  if (count == 1) {
+  if (toRemove.count == 1) {
     text = "game";
   }
-  showDeleteGame(toDelete, count + " " + text);
+  contextRemove(toRemove.games, toRemove.count + " " + text);
 }
 
 /**
@@ -1363,6 +1386,7 @@ function showSubList(subList) {
 }
 
 function hideSubList(subList) {
+  closeBulk();
   $(subList).removeClass("slideUp");
   $(".listTitle").removeClass("slideUp");
   setTimeout(function () {
@@ -1792,33 +1816,37 @@ function deleteGame(arr) {
   });
 }
 
-function contextRemove(game, caller) {
-  var el =
-    `<div class="subContextContainer"><div class="subContextRemove" id="subContext_` +
-    game.id +
-    `" >`;
+function contextRemove(games, text) {
+  var el = `<div class="subContextContainer"><div class="subContextRemove">`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-    `<div class="subContextTitle">Remove "` +
-    game.name +
-    `" from this list?</div><hr/>
+    `<div class="subContextTitle">Remove ` +
+    text +
+    ` from this list?</div><hr/>
   <div class="button greenBtn" id="removeCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
-  <div class="button redBtn" id="removeConfirm" onclick="removeGame('` +
-    game.id.substr(5 + game.list.length) +
-    `', '` +
-    game.name +
-    `', '` +
-    game.list.length +
-    `')">Remove</div>`;
+  <div class="button redBtn" id="removeConfirm" onclick="removeGame([`;
+
+  games.forEach(function (e, i) {
+    console.log("e: ", e, e.list.substr(e.list.length - 1));
+    el +=
+      "{game: '" +
+      e.id.substr(5 + e.list.length) +
+      `', name: '` +
+      e.name +
+      `', list: '` +
+      e.list.substr(e.list.length - 1) +
+      "'},";
+  });
+  el = el.substr(0, el.length - 1);
+  el += `])">Remove</div>`;
   $("body").append(el);
 }
 
-function removeGame(game, name, list) {
+function removeGame(arr) {
   const rg_options = {
     method: "POST",
     body: JSON.stringify({
-      game: game,
-      list: list,
+      games: arr,
     }),
     headers: {
       "Content-Type": "application/json",
@@ -1830,15 +1858,17 @@ function removeGame(game, name, list) {
         console.log(res.err);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
-        $("#gamesContainer")
-          .children()
-          .children(".listGames")
-          .children("li")
-          .each(function () {
-            if ($(this).text() == name) {
-              $(this).remove();
-            }
-          });
+        res.arr.forEach(function (e) {
+          $("#gamesContainer")
+            .children()
+            .children(".listGames")
+            .children("li")
+            .each(function () {
+              if ($(this).text() == e) {
+                $(this).remove();
+              }
+            });
+        });
         $(".subContextContainer").each(function () {
           $(this).remove();
         });
@@ -1874,7 +1904,11 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
 
 function writeGameContext(contextObj) {
   console.log("dGC");
-  var co = createContextObject(contextObj.id, contextObj.name, contextObj.list);
+  var co = createContextObjectString(
+    contextObj.id,
+    contextObj.name,
+    contextObj.list
+  );
   var htmlString =
     `<div class="contextActions off" id="context_stage_` +
     contextObj.id +
@@ -1891,14 +1925,16 @@ function writeGameContext(contextObj) {
     `<li onclick="contextRename(` +
     co +
     `, this)">Rename</li>` +
-    `<li onclick="contextRemove(` +
+    `<li onclick="contextRemove([` +
     co +
-    `, this)">Remove</li>` +
+    `], '` +
+    contextObj.name +
+    `')">Remove</li>` +
     `</div>`;
   return htmlString;
 }
 
-function createContextObject(id, name, list) {
+function createContextObjectString(id, name, list) {
   return `{id: '` + id + `', name:'` + name + `', list:'` + list + `'}`;
 }
 

@@ -1440,7 +1440,7 @@ subContextRemove {
   transform: translateX(0px) translateY(calc(var(--vh) * 7));
 }
 
-#bulkSelect {
+.bulkSelect {
   width: 96vw;
   bottom: calc(var(--vh) * 73);
   height: calc(var(--vh, 1vh) * 7);
@@ -1454,13 +1454,13 @@ subContextRemove {
   padding: 0px 2vw;
 }
 
-#bulkSelect ion-icon {
+.bulkSelect ion-icon {
   font-size: calc(var(--vh, 1vh) * 3);
   cursor: pointer;
 }
 
-#bulkSelect ion-icon[name="square-outline"],
-#bulkSelect ion-icon[name="checkbox-outline"] {
+.bulkSelect ion-icon[name="square-outline"],
+.bulkSelect ion-icon[name="checkbox-outline"] {
   justify-self: center;
 }
 

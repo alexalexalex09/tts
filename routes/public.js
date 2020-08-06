@@ -968,38 +968,35 @@ router.post("/move_to_list", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
       var fromList = Number(req.body.fromList.substr(5)) - 1;
-      var game = req.body.game.substr(req.body.fromList.length);
+      var errors = 0;
+      var ret = [];
       if (fromList == -1) {
         res.send({ err: "Can't move to or from your All Games list" });
-      } else {
-        var index = curUser.lists.custom[fromList].games.findIndex(
-          (obj) => obj.toString() == game
-        );
-        var gameToMove = curUser.lists.custom[fromList].games.splice(index, 1);
       }
       var toList = Number(req.body.toList.substr(5)) - 1;
       if (toList == -1) {
         res.send({ err: "Can't move to or from your All Games list" });
-      } else {
-        console.log(
-          curUser.lists.custom[toList].games[0],
-          gameToMove[0],
-          curUser.lists.custom[toList].games[0] == gameToMove[0].toString(),
-          typeof curUser.lists.custom[toList].games[0],
-          typeof gameToMove
+      }
+      console.log(req.body.games);
+      req.body.games.forEach(function (e, i) {
+        var index = curUser.lists.custom[fromList].games.findIndex(
+          (obj) => obj.toString() == e
         );
+        var gameToMove = curUser.lists.custom[fromList].games.splice(index, 1);
+
         if (
           curUser.lists.custom[toList].games.findIndex(
             (obj) => obj == gameToMove[0].toString()
           ) == -1
         ) {
           curUser.lists.custom[toList].games.push(gameToMove);
-          curUser.save();
-          res.send({ status: curUser });
+          ret.push(gameToMove);
         } else {
-          res.send({ err: "Not moved: game is already in list" });
+          errors++;
         }
-      }
+      });
+      curUser.save();
+      res.send({ status: curUser, errors: errors, ret: ret });
     });
   } else {
     res.send(ERR_LOGIN);
@@ -1011,33 +1008,36 @@ router.post("/copy_to_list", function (req, res) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
       var toList = Number(req.body.toList.substr(5)) - 1;
       var fromList = Number(req.body.fromList.substr(5)) - 1;
-      var game = req.body.game.substr(req.body.fromList.length);
       if (toList == -1) {
         res.send({ err: "Can't copy to your All Games list" });
       } else {
-        if (fromList == -1) {
-          var index = curUser.lists.allGames.findIndex(
-            (obj) => obj.toString() == game
-          );
-          var gameToCopy = curUser.lists.allGames[index];
-        } else {
-          var index = curUser.lists.custom[fromList].games.findIndex(
-            (obj) => obj.toString() == game
-          );
-          var gameToCopy = curUser.lists.custom[fromList].games[index];
-        }
-        console.log(curUser.lists.custom[toList].games, gameToCopy);
-        if (
-          curUser.lists.custom[toList].games.findIndex(
-            (obj) => obj == gameToCopy.toString()
-          ) == -1
-        ) {
-          curUser.lists.custom[toList].games.push(gameToCopy);
-          curUser.save();
-          res.send({ status: curUser });
-        } else {
-          res.send({ err: "Not copied: game is already in list" });
-        }
+        var errors = 0;
+        req.body.games.forEach(function (e, i) {
+          console.log("current item: ", e);
+          if (fromList == -1) {
+            var index = curUser.lists.allGames.findIndex(
+              (obj) => obj.toString() == e
+            );
+            var gameToCopy = curUser.lists.allGames[index];
+          } else {
+            var index = curUser.lists.custom[fromList].games.findIndex(
+              (obj) => obj.toString() == e
+            );
+            var gameToCopy = curUser.lists.custom[fromList].games[index];
+          }
+          console.log(curUser.lists.custom[toList].games, gameToCopy);
+          if (
+            curUser.lists.custom[toList].games.findIndex(
+              (obj) => obj == gameToCopy.toString()
+            ) == -1
+          ) {
+            curUser.lists.custom[toList].games.push(gameToCopy);
+          } else {
+            errors++;
+          }
+        });
+        curUser.save();
+        res.send({ status: curUser, errors: errors });
       }
     });
   } else {

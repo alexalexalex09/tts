@@ -1007,13 +1007,13 @@ function gulp(showAllGames = false) {
                 </div>
             </li>`;
           var gameString =
-            `<li id="games0` +
+            `<li id="` +
             res.lists.allGames[i]._id +
-            `" onclick="showGameContext({id: 'games0` +
+            `" onclick="showGameContext({id:'` +
             res.lists.allGames[i]._id +
             `', name: '` +
             res.lists.allGames[i].name +
-            `'})">` +
+            `', list: '0'})">` +
             res.lists.allGames[i].name +
             `</li>`;
           //Append the "All Games" list to the first <li>
@@ -1023,18 +1023,18 @@ function gulp(showAllGames = false) {
           }
           $("li#games0").children(".listGames").first().append(gameString);
           $("#gamesContextContainer").append(
-            `<div class="contextActions off" id="context_stage_games0` +
+            `<div class="contextActions off" list="games0" id="context_stage_` +
               res.lists.allGames[i]._id +
               `">` +
               `<div class="contextTitle">` +
               res.lists.allGames[i].name +
               `</div>` +
-              `<li onclick="contextCopy({id: 'games0` +
+              `<li onclick="contextCopy([{id: '` +
               res.lists.allGames[i]._id +
               `', name:'` +
               res.lists.allGames[i].name +
-              `'}, this)">Copy</li>` +
-              `<li onclick="contextRename({id: 'games0` +
+              `'}])">Copy</li>` +
+              `<li onclick="contextRename({id: '` +
               res.lists.allGames[i]._id +
               `', name:'` +
               res.lists.allGames[i].name +
@@ -1101,15 +1101,16 @@ function gulp(showAllGames = false) {
                   </label>
               </div>
             </li>`;
+            var listNum = i + 1;
             var gameString =
-              `<li id="games` +
-              curId +
+              `<li id="` +
               res.lists.custom[i].games[j]._id +
-              `" onclick="showGameContext({id: 'games` +
-              curId +
+              `" onclick="showGameContext({id: '` +
               res.lists.custom[i].games[j]._id +
               `', name: '` +
               res.lists.custom[i].games[j].name +
+              `', list: '` +
+              listNum +
               `'})">` +
               res.lists.custom[i].games[j].name +
               `</li>`;
@@ -1126,7 +1127,7 @@ function gulp(showAllGames = false) {
               .append(gameString);
             $("#gamesContextContainer").append(
               writeGameContext({
-                id: "games" + curId + res.lists.custom[i].games[j]._id,
+                id: res.lists.custom[i].games[j]._id,
                 name: res.lists.custom[i].games[j].name,
                 list: curId,
               })
@@ -1212,9 +1213,15 @@ function openList(list) {
     `</div></div>` +
     createNode("listContents", "", "displayGameContainer", games);
   htmlString +=
-    `<div id="bulkSelect" list="` +
+    `<div class="bulkSelect off" list="` +
     list +
-    `"class="off"><ion-icon name="square-outline" onclick="selectAllBulk()"></ion-icon><ion-icon name="checkbox-outline" onclick="closeBulk()" class="off"></ion-icon><div class="blank"></div><ion-icon name="trash-outline" onclick="deleteRemoveBulk()"></ion-icon><ion-icon name="cut-sharp" onclick="moveBulk()"></ion-icon><ion-icon name="copy-outline" onclick="copyBulk()"></ion-icon><ion-icon name="close-outline" onclick="closeBulk()"></ion-icon></div>`;
+    `"><ion-icon name="square-outline" onclick="selectAllBulk()"></ion-icon><ion-icon name="checkbox-outline" onclick="closeBulk()" class="off"></ion-icon><div class="blank"></div>`;
+  if (list != "games0") {
+    htmlString += `<ion-icon name="trash-outline" onclick="deleteRemoveBulk()"></ion-icon><ion-icon name="cut-sharp" onclick="moveBulk()"></ion-icon>`;
+  } else {
+    htmlString += `<div></div><ion-icon name="trash-outline" onclick="deleteRemoveBulk()"></ion-icon>`;
+  }
+  htmlString += `<ion-icon name="copy-outline" onclick="copyBulk()"></ion-icon><ion-icon name="close-outline" onclick="closeBulk()"></ion-icon></div>`;
   $("#" + list).after(htmlString);
   showSubList(".listContents");
 }
@@ -1227,10 +1234,10 @@ function getListGames(list) {
     .first()
     .children()
     .each(function (ind, el) {
-      //console.log($(el));
+      console.log("gLg: ", $(el)[0].outerHTML);
       arr.push(
         hashToColor($(el).attr("id").substr(10)) +
-          $(el)[0].outerHTML.replace(`id="games`, `id="display_games`) +
+          $(el)[0].outerHTML.replace(`id="`, `id="display_`) +
           `<ion-icon name="ellipsis-vertical" onclick="` +
           $(el).attr("onclick") +
           `"></ion-icon>`
@@ -1244,23 +1251,25 @@ function bulkSelectGame(el) {
   $(el).children(".spriteChecked").toggleClass("spriteUnchecked");
   console.log($(el).parent().parent().children().children(".flipped"));
   if ($(el).parent().parent().children().children(".flipped").length > 0) {
-    $("#bulkSelect").removeClass("off");
+    console.log("showing bulk");
+    $(".bulkSelect").removeClass("off");
     $(".listContents.slideUp").addClass("bulkShowing");
     if (
       $(el).parent().parent().children().children(".flipped").length ==
       $(el).parent().parent().children().children(".sprite").length
     ) {
-      $('#bulkSelect ion-icon[name="square-outline"]').addClass("off");
-      $('#bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
+      $('.bulkSelect ion-icon[name="square-outline"]').addClass("off");
+      $('.bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
     } else {
-      $('#bulkSelect ion-icon[name="square-outline"]').removeClass("off");
-      $('#bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+      $('.bulkSelect ion-icon[name="square-outline"]').removeClass("off");
+      $('.bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
     }
   } else {
-    $("#bulkSelect").addClass("off");
+    console.log("hiding bulk");
+    $(".bulkSelect").addClass("off");
     $(".listContents.slideUp").removeClass("bulkShowing");
-    $('#bulkSelect ion-icon[name="square-outline"]').removeClass("off");
-    $('#bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+    $('.bulkSelect ion-icon[name="square-outline"]').removeClass("off");
+    $('.bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
   }
   console.log($(el).children("spriteChecked"));
 }
@@ -1273,15 +1282,15 @@ function closeBulk() {
       $(this).removeClass("flipped");
       $(this).children(".spriteChecked").first().addClass("spriteUnchecked");
     });
-  $("#bulkSelect").addClass("off");
+  $(".bulkSelect").addClass("off");
   $(".listContents.slideUp").removeClass("bulkShowing");
-  $('#bulkSelect ion-icon[name="square-outline"]').removeClass("off");
-  $('#bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+  $('.bulkSelect ion-icon[name="square-outline"]').removeClass("off");
+  $('.bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
 }
 
 function selectAllBulk() {
-  $('#bulkSelect ion-icon[name="square-outline"]').addClass("off");
-  $('#bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
+  $('.bulkSelect ion-icon[name="square-outline"]').addClass("off");
+  $('.bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
   $(".bulkShowing")
     .children()
     .children(".sprite")
@@ -1292,7 +1301,7 @@ function selectAllBulk() {
 }
 
 function deleteRemoveBulk() {
-  if ($("#bulkSelect").attr("list") == "games0") {
+  if ($(".bulkSelect").attr("list") == "games0") {
     showDeleteBulk();
   } else {
     showRemoveBulk();
@@ -1309,11 +1318,10 @@ function showDeleteBulk() {
 }
 
 function getBulkChecked() {
-  var listlen = $("#bulkSelect").attr("list").length + 8;
   var games = [];
   var count = 0;
   console.log(games);
-  $("#bulkSelect")
+  $(".bulkSelect")
     .parent()
     .children(".listContents")
     .first()
@@ -1321,7 +1329,7 @@ function getBulkChecked() {
     .children(".sprite.flipped")
     .each(function () {
       games.push({
-        id: $(this).parent().children("li").first().attr("id").substr(listlen),
+        id: $(this).parent().children("li").first().attr("id").substr(8),
         name: $(this).parent().children("li").first().text(),
       });
       count++;
@@ -1333,7 +1341,7 @@ function getBulkChecked() {
 function showRemoveBulk() {
   var toRemove = "";
   var toRemove = getBulkChecked();
-  var list = $("#bulkSelect").attr("list");
+  var list = $(".bulkSelect").attr("list");
 
   toRemove.games.forEach(function (e, i) {
     toRemove.games[i].list = list;
@@ -1344,6 +1352,43 @@ function showRemoveBulk() {
     text = "game";
   }
   contextRemove(toRemove.games, toRemove.count + " " + text);
+}
+
+function copyBulk() {
+  console.log($(".bulkSelect").first().attr("list"));
+  var lists = getMenuLists($(".bulkSelect").first().attr("list"));
+  var bc = getBulkChecked();
+  var games = bc.games;
+  games.forEach(function (e) {
+    e.list = $(".bulkSelect").first().attr("list");
+  });
+
+  console.log(games);
+  displaySubContext(
+    "Copying",
+    games,
+    lists,
+    "copyToList",
+    $(".bulkSelect").first().attr("list")
+  );
+}
+
+function moveBulk() {
+  var lists = getMenuLists($(".bulkSelect").first().attr("list"));
+  var bc = getBulkChecked();
+  var games = bc.games;
+  games.forEach(function (e) {
+    e.list = $(".bulkSelect").first().attr("list");
+  });
+
+  console.log(games);
+  displaySubContext(
+    "Moving",
+    games,
+    lists,
+    "moveToList",
+    $(".bulkSelect").first().attr("list")
+  );
 }
 
 /**
@@ -1387,6 +1432,9 @@ function showSubList(subList) {
 
 function hideSubList(subList) {
   closeBulk();
+  $(".bulkSelect").each(function () {
+    this.remove();
+  });
   $(subList).removeClass("slideUp");
   $(".listTitle").removeClass("slideUp");
   setTimeout(function () {
@@ -1420,10 +1468,15 @@ function closeMenuItem(view) {
 }
 
 function showGameContext(game) {
+  console.log("game: ", game);
   console.log("#context_" + game.id);
   console.log($("#context_" + game.id).length);
   if ($("#context_" + game.id).length == 0) {
-    $("#context_stage_" + game.id)
+    console.log("#context_stage_" + game.id + "[list=games" + game.list + "]");
+    console.log(
+      $("#context_stage_" + game.id + "[list=games" + game.list + "]")
+    );
+    $("#context_stage_" + game.id + "[list=games" + game.list + "]")
       .clone(true)
       .prop("id", "context_" + game.id)
       .appendTo($("body"));
@@ -1442,14 +1495,22 @@ function showGameContext(game) {
   }
 }
 
-function contextMove(game, caller) {
-  console.log("contextMove ", game);
-  var lists = getMenuLists(caller, game.list);
-  displaySubContext("Moving", game, lists, "moveToList");
+function contextMove(games) {
+  console.log("contextMove ", games);
+  console.log($(".contextActions.slideUp").first().attr("list"));
+  var lists = getMenuLists($(".contextActions.slideUp").first().attr("list"));
+  displaySubContext(
+    "Moving",
+    games,
+    lists,
+    "moveToList",
+    $(".contextActions.slideUp").attr("list")
+  );
 }
 
-function getMenuLists(caller, fromList) {
+function getMenuLists(fromList) {
   var lists = [];
+  console.log("gml ", fromList);
   $("#gamesContainer")
     .children()
     .children()
@@ -1460,13 +1521,8 @@ function getMenuLists(caller, fromList) {
         id: $(this).parent().parent().attr("id"),
       });
     });
-  var index = lists.findIndex((obj) => obj.id == "games" + fromList);
-  console.log({
-    caller: caller,
-    index: index,
-    parent: fromList,
-    lists: lists,
-  });
+  var index = lists.findIndex((obj) => obj.id == fromList);
+
   //Remove the origin list and All Games
 
   if (index > 0) {
@@ -1489,36 +1545,21 @@ function closeSubContext(view) {
  * @param {Array} items items[i].id [toList], items[i].name [item name]
  * @param {*} fname
  */
-function displaySubContext(text, game, items, fname) {
-  var el =
-    `<div class="subContextContainer"><div class="subContext" id="subContext_` +
-    game.id +
-    `">`;
+function displaySubContext(text, games, items, fname, fromList) {
+  console.log("display games, ", games);
+  var el = `<div class="subContextContainer"><div class="subContext">`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">` +
     text +
-    ` "` +
-    game.name +
-    `"</div><hr/>`;
+    `</div><hr/>`;
   for (var i = 0; i < items.length; i++) {
-    el +=
-      `<li id="subContextGame_` +
-      game.id +
-      `" onclick="` +
-      fname +
-      `({toList: '` +
-      items[i].id +
-      `', game:'` +
-      game.id +
-      `', fromList: '` +
-      $("#" + game.id)
-        .parent()
-        .parent()
-        .attr("id") +
-      `'})">` +
-      items[i].name +
-      `</li>`;
+    el += `<li onclick="` + fname + `({toList: '` + items[i].id + `', games:[`;
+    games.forEach(function (e) {
+      el += `'` + e.id + `',`;
+    });
+    el = el.substr(0, el.length - 1);
+    el += `], fromList: '` + fromList + `'})">` + items[i].name + `</li>`;
   }
   el += `</div></div>`;
   $("body").append(el);
@@ -1530,7 +1571,7 @@ function moveToList(options) {
     method: "POST",
     body: JSON.stringify({
       code: document.getElementById("code").innerHTML,
-      game: options.game,
+      games: options.games,
       toList: options.toList,
       fromList: options.fromList,
     }),
@@ -1544,9 +1585,6 @@ function moveToList(options) {
         alert(res.err);
         //TODO: Nice notification for handling moving to a list already containing the game, as well as confirmation before moving
       } else {
-        $("#" + options.toList + " .listGames")
-          .first()
-          .append($("#" + options.game));
         $(".subContextContainer").each(function () {
           $(this).remove();
         });
@@ -1556,9 +1594,16 @@ function moveToList(options) {
   });
 }
 
-function contextCopy(game, caller) {
-  var lists = getMenuLists(caller);
-  displaySubContext("Copying", game, lists, "copyToList");
+function contextCopy(games) {
+  console.log("gml: ", $(".contextActions.slideUp").first().attr("list"));
+  var lists = getMenuLists($(".contextActions.slideUp").first().attr("list"));
+  displaySubContext(
+    "Copying",
+    games,
+    lists,
+    "copyToList",
+    $(".contextActions.slideUp").attr("list")
+  );
 }
 
 function copyToList(options) {
@@ -1566,7 +1611,7 @@ function copyToList(options) {
     method: "POST",
     body: JSON.stringify({
       code: document.getElementById("code").innerHTML,
-      game: options.game,
+      games: options.games,
       toList: options.toList,
       fromList: options.fromList,
     }),
@@ -1580,8 +1625,8 @@ function copyToList(options) {
         alert(res.err);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
-        console.log("copied");
-        $($("#" + options.game))
+        console.log("copied with " + res.errors + " errors");
+        $($("#" + options.games))
           .first()
           .clone(true)
           .appendTo("#" + options.toList + " .listGames");
@@ -1830,7 +1875,7 @@ function contextRemove(games, text) {
     console.log("e: ", e, e.list.substr(e.list.length - 1));
     el +=
       "{game: '" +
-      e.id.substr(5 + e.list.length) +
+      e.id +
       `', name: '` +
       e.name +
       `', list: '` +
@@ -1903,25 +1948,27 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
 }
 
 function writeGameContext(contextObj) {
-  console.log("dGC");
+  console.log("dGC '", contextObj.list, "'");
   var co = createContextObjectString(
     contextObj.id,
     contextObj.name,
     contextObj.list
   );
   var htmlString =
-    `<div class="contextActions off" id="context_stage_` +
+    `<div class="contextActions off" list="games` +
+    contextObj.list +
+    `" id="context_stage_` +
     contextObj.id +
     `">` +
     `<div class="contextTitle">` +
     contextObj.name +
     `</div>` +
-    `<li onclick="contextMove(` +
+    `<li onclick="contextMove([` +
     co +
-    `, this)">Move</li>` +
-    `<li onclick="contextCopy(` +
+    `])">Move</li>` +
+    `<li onclick="contextCopy([` +
     co +
-    `, this)">Copy</li>` +
+    `])">Copy</li>` +
     `<li onclick="contextRename(` +
     co +
     `, this)">Rename</li>` +
@@ -1946,7 +1993,9 @@ function createContextObjectString(id, name, list) {
  */
 function writeListContext(contextObj) {
   var htmlString =
-    `<div class="contextActions off" id="context_stage_` +
+    `<div class="contextActions off" list="` +
+    contextObj.id +
+    `"id="context_stage_` +
     contextObj.id +
     `">` +
     `<div class="contextTitle">` +

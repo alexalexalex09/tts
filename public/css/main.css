@@ -364,6 +364,7 @@ input:checked + .slider:before {
   box-sizing: border-box;
   width: 100%;
   padding: 0px 50px 0px 5px;
+  z-index: 2;
 }
 
 .textInputCont input.textSubmit {
@@ -371,6 +372,7 @@ input:checked + .slider:before {
   background-color: rgba(0, 0, 0, 0);
   border-radius: 20px;
   transition: background-color 0.5s;
+  z-index: 2;
 }
 
 .textInputCont input.textSubmit.green {
@@ -550,6 +552,22 @@ input:checked + .slider:before {
 
 #gameSubmit {
   grid-area: 15/2/18/10;
+}
+
+.autocomplete-items {
+  position: relative;
+  width: 100%;
+  background: var(--main-white);
+  top: calc(var(--vh) * 4);
+  z-index: 1;
+  border: 1px solid black;
+  text-align: left;
+  border-top: none;
+  padding: calc(var(--vh) * 2) 5px 5px 5px;
+  box-sizing: border-box;
+  height: calc(var(--vh) * 25);
+  overflow: hidden;
+  cursor: pointer;
 }
 
 /********************/
@@ -1056,7 +1074,7 @@ ion-icon#addListButton {
 #menuAddListContainer,
 #menuAddGamesContainer {
   position: absolute;
-  bottom: var(--vh20);
+  bottom: var(--vh30);
   width: 80vw;
   left: 10vw;
   transition: transform 0.5s, opacity 0.5s;

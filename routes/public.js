@@ -10,6 +10,8 @@ var Session = require("../models/sessions.js");
 var socketAPI = require("../socketAPI");
 var Fuse = require("fuse.js");
 const { response } = require("express");
+const https = require("https");
+const Resource = require("../models/resources.js");
 
 const ERR_LOGIN = { err: "Log in first" };
 
@@ -36,6 +38,140 @@ mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
+function getBGGPage(pageNum) {
+  var promise = new Promise(function (resolve, reject) {
+    https.get(
+      "https://boardgamegeek.com/browse/boardgame/page/" + pageNum,
+      (resp) => {
+        var data = "";
+
+        // A chunk of data has been recieved.
+        resp.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on("end", () => {
+          data = data.toString();
+          console.log(pageNum);
+          var regexq = /(?<=boardgame.*?>)(.*?)(?=<)/g;
+          var matches = data.match(regexq);
+          var start = false;
+          var ret = [];
+          matches.forEach(function (e, i) {
+            if (
+              e != "" &&
+              e != "Shop" &&
+              start == true &&
+              e.indexOf("&nbsp;") == -1 &&
+              Number(e) != e &&
+              !(e.substr(0, 1) == "[" && e.substr(e.length - 1, 1) == "]") &&
+              e.indexOf("&laquo;") == -1 &&
+              e.indexOf("&raquo;") == -1
+            ) {
+              if (e.indexOf("The") == 0) {
+                ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
+                e = e.substr(4);
+              }
+              if (e.indexOf("A") == 0) {
+                ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
+                e = e.substr(2);
+              }
+              if (e.indexOf("An") == 0) {
+                ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
+                e = e.substr(3);
+              }
+              ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
+            }
+            if (e == "Num Voters") {
+              start = true;
+            }
+          });
+          resolve(ret);
+        });
+      }
+    );
+  });
+  return promise;
+}
+var topGames = [];
+getBGGPage(1)
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(2);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(3);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(4);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(5);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(6);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(7);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(8);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(9);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    return getBGGPage(10);
+  })
+  .then((ret) => {
+    topGames.push(ret);
+    var count = 0;
+    var newData = [];
+    topGames.forEach(function (e) {
+      count += e.length;
+      e.forEach(function (el) {
+        newData.push(el);
+      });
+    });
+    console.log("length: ", count);
+    Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+      if (curResource) {
+        curResource.data = { games: newData };
+        curResource.save();
+      } else {
+        var newResource = new Resource({
+          name: "topGames",
+          data: { games: newData },
+        });
+        newResource.save();
+      }
+    });
+  });
+
+/*
+TopGame.findOne({ name: "topGames" }).exec(function (err, gameList) {
+  var index = gameList.games.findIndex((obj) => {
+    if (obj) {
+      obj.rank == (pageNum - 1) * 50 + i;
+    }
+  });
+  if (index == -1) {
+    gameList.games[(pageNum - 1) * 50 + i] = { name: e, rank: i };
+  } else {
+    gameList.games[index].name = e;
+  }
+  gameList.update();
+});
+*/
 function makeid(length) {
   //TODO: Filter out bad words
   var result = "";
@@ -1202,4 +1338,17 @@ router.post("/list_add", function (req, res) {
     });
   }
 });
+
+router.post("/get_top_list", function (req, res) {
+  Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+    if (curResource) {
+      var ret = [];
+      curResource.data.games.forEach(function (e) {
+        ret.push(e.name);
+      });
+      res.send({ games: ret });
+    }
+  });
+});
+
 module.exports = router;

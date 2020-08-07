@@ -82,7 +82,7 @@ block content
         #addGamesTitle Add Games
         #addGamesInputCont.textInputCont
           form(onsubmit="return textSubmit('#addGamesInput')")
-            input.textInput(type='text')#addGamesInput
+            input.textInput(type='text' autocomplete="off")#addGamesInput
             input.textSubmit(type='submit' value='')
       #selectLists
       #gameSubmit.button.greenBtn(type='submit' value='')
@@ -130,13 +130,13 @@ block content
         #menuAddGamesTitle Add Games
         #menuAddGamesInputCont.textInputCont
           form(onsubmit="return textSubmit('#menuAddGamesInput')")
-            input.textInput(type='text')#menuAddGamesInput
+            input.textInput(type='text' autocomplete="off")#menuAddGamesInput
             input.textSubmit(type='submit' value='')
       div#menuAddListContainer.slideDown.off
         #menuAddListTitle Add List
         #menuAddListInputCont.textInputCont
           form(onsubmit='return addList()')
-            input.textInput(type='text')#menuAddListInput
+            input.textInput(type='text' autocomplete="off")#menuAddListInput
             input.textSubmit(type='submit' value='')
       #gamesContainer
       #gamesContextContainer.off

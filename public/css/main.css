@@ -565,7 +565,7 @@ input:checked + .slider:before {
   border-top: none;
   padding: calc(var(--vh) * 2) 5px 5px 5px;
   box-sizing: border-box;
-  height: calc(var(--vh) * 25);
+  max-height: calc(var(--vh) * 25);
   overflow: hidden;
   cursor: pointer;
 }

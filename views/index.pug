@@ -152,6 +152,11 @@ block content
   #listsContainer
   #sessionContainer
   #contextShadow.off
+  #listPopup
+    ion-icon(name="reader-outline" onclick="showCurrentGames()")#listIcon.off
+    #currentGames.off
+    #curGamesClose.closeButton.off(onclick="closeCurrentGames()")
+      ion-icon(name="close-outline")
 //-
   #report
     p name: #{appEnv.name}

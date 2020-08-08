@@ -686,11 +686,13 @@ router.post("/add_game_to_session", function (req, res) {
         curSession.save().then(function () {
           socketAPI.addGame({
             code: req.body.code,
+            games: curSession.games,
           });
         });
         res.send(results);
       } else {
         if (req.body.gamesToRemove.length > 0) {
+          console.log("gamesToRemove: ", req.body.gamesToRemove);
           //Find the game to remove, then remove the owner from the addedBy array
           for (var i = 0; i < req.body.gamesToRemove.length; i++) {
             var numGames = 0;
@@ -700,15 +702,18 @@ router.post("/add_game_to_session", function (req, res) {
             var game = curSession.games.findIndex(
               (obj) => obj.game.toString() == req.body.gamesToRemove[i]
             );
-            //console.log("game: ", game);
+            console.log("game: ", game);
             if (game > -1) {
-              //console.log(curSession.games[game]);
+              console.log(curSession.games[game]);
               var toRemove = curSession.games[game].addedBy.findIndex(
                 (obj) => obj == req.user.id
               );
               //console.log("toRemove: ", toRemove);
               if (toRemove > -1) {
                 curSession.games[game].addedBy.splice(toRemove, 1);
+                if (curSession.games[game].addedBy.length == 0) {
+                  curSession.games.splice(game, 1);
+                }
                 socketAPI.sendNotification("A user removed a game...");
               }
             }
@@ -728,10 +733,11 @@ router.post("/add_game_to_session", function (req, res) {
             }
           }
           console.log("numGamestoRemove: ", numGames);
-
+          console.log(req.body.gamesToRemove);
           curSession.save().then(function () {
             socketAPI.addGame({
               code: req.body.code,
+              games: curSession.games,
             });
           });
         }
@@ -934,7 +940,7 @@ router.post("/modify_edit_list", function (req, res) {
         }
       } else {
         if (req.body.gamesToRemove.length > 0) {
-          console.log("removing...");
+          console.log("removing...", req.body.gamesToRemove);
           for (var i = 0; i < req.body.gamesToRemove.length; i++) {
             var index = curSession.games.findIndex(
               (obj) => obj.game.toString() == req.body.gamesToRemove[i]

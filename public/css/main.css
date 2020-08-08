@@ -92,6 +92,41 @@ li.red {
   transform: translateY(0vh);
 }
 
+#listIcon {
+  position: absolute;
+  cursor: pointer;
+  background: var(--main-blue);
+  border-radius: 50px;
+  padding: 5px;
+  color: var(--main-white);
+  font-size: calc(var(--vh) * 5);
+  top: var(--vh20);
+  left: 2vw;
+  box-shadow: 3px 3px 6px var(--main-light-grey);
+}
+
+#currentGames {
+  width: 90vw;
+  height: var(--vh90);
+  position: absolute;
+  left: 5vw;
+  top: var(--vh5);
+  background-color: var(--main-blue);
+  z-index: 100;
+  padding: var(--vh5) 2vw 2vw 2vw;
+  box-sizing: border-box;
+  border-radius: 7px;
+  color: var(--main-white);
+  font-size: calc(var(--vh, 1vh) * 3);
+}
+
+#curGamesClose {
+  z-index: 101;
+  top: var(--vh5);
+  right: 5vw;
+  color: var(--main-white);
+}
+
 /*****************/
 /* Toggle Switch */
 /*****************/
@@ -566,7 +601,7 @@ input:checked + .slider:before {
   padding: calc(var(--vh) * 2) 5px 5px 5px;
   box-sizing: border-box;
   max-height: calc(var(--vh) * 25);
-  overflow: hidden;
+  overflow: auto;
   cursor: pointer;
 }
 

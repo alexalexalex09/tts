@@ -47,6 +47,9 @@ function getSessionGames(curSession) {
 }
 
 socketAPI.addGame = function (data) {
+  //Take these two pieces of data (arrays) into account if available and
+  //then get all remaining game names to output the current list
+
   //This function really just needs to output:
   //  1) Each connected user's name
   //  2) The associated number of added games
@@ -117,10 +120,28 @@ function getNames(profiles, numGames, curSession, data) {
         for (var i = 0; i < numGames.length; i++) {
           numGames[i].id = "";
         }
-        //6. Emit to owner
-        io.sockets.emit(data.code + "owner", {
-          selectEvent: true,
-          select: numGames,
+        //6. Emit to owner and client
+        var gamesList = [];
+        var namesList = [];
+        console.log("curSession.games: ", curSession.games);
+        curSession.games.forEach(function (e) {
+          gamesList.push(mongoose.Types.ObjectId(e.game));
+        });
+        Game.find({ _id: { $in: gamesList } }).exec(function (err, games) {
+          games.forEach(function (e) {
+            namesList.push(e.name);
+          });
+          console.log("namesList: ", gamesList, namesList);
+          io.sockets.emit(data.code + "owner", {
+            selectEvent: true,
+            select: numGames,
+            curGames: namesList,
+          });
+          io.sockets.emit(data.code + "client", {
+            selectEvent: true,
+            select: numGames,
+            curGames: namesList,
+          });
         });
       } else {
         console.log(theError);
@@ -333,11 +354,3 @@ io.on("connection", function (socket) {
 });
 
 module.exports = socketAPI;
-
-/*This needs to:
-    1) Hear from the client which session the user is currently owning (if any)
-    2) If a session is owned, notice when the Session document for that user's owned session is changed
-    3) Emit an event to the client with
-        1) Each connected user
-        2) Each user's number of added games
-*/

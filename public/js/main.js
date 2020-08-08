@@ -16,6 +16,7 @@ window.addEventListener("load", function () {
       if (data.selectEvent) {
         //Rewrite #postSelectContainer in real time for owner
         showSelect(data.select);
+        updateCurrentGames(data.curGames);
       }
       if (data.startVoting) {
         //Parse the voting data and output
@@ -174,6 +175,12 @@ window.addEventListener("load", function () {
       if (data.lockBack && data.lock) {
         goForwardFrom(window.hist[window.hist.length - 1], data.lock);
         lockBack();
+      }
+      if (data.selectEvent) {
+        console.log("SelectEvent: ", data);
+        //Rewrite #postSelectContainer in real time for owner
+        showSelect(data.select);
+        updateCurrentGames(data.curGames);
       }
       if (data.unlockBack && data.unlock) {
         console.log(data);
@@ -653,6 +660,19 @@ function lockBack() {
  */
 function goForwardFrom(from, to) {
   if (from != to) {
+    if (to == "#selectView" || to == "#postSelectView") {
+      window.setTimeout(function () {
+        $("#listIcon").removeClass("off"), 1000;
+      });
+    }
+    if (
+      (from == "#selectView" && to != "#postSelectView") ||
+      (from == "#postSelectView" && to != "selectView")
+    ) {
+      window.setTimeout(function () {
+        $("#listIcon").addClass("off"), 1000;
+      });
+    }
     console.log("going forward from " + from + " to " + to);
     console.log(window.hist);
     if (typeof window.hist == "undefined") {
@@ -691,6 +711,19 @@ function goBackFrom(from, to) {
       window.hist.pop();
     }
   } else {
+    if (to == "#selectView" || to == "#postSelectView") {
+      window.setTimeout(function () {
+        $("#listIcon").removeClass("off"), 1000;
+      });
+    }
+    if (
+      (from == "#selectView" && to != "#postSelectView") ||
+      (from == "#postSelectView" && to != "selectView")
+    ) {
+      window.setTimeout(function () {
+        $("#listIcon").addClass("off"), 1000;
+      });
+    }
     if (typeof from != "undefined" && typeof to != "undefined") {
       console.log("going back from " + from + " to " + to);
       console.log(window.hist);
@@ -2637,6 +2670,14 @@ function showAlert(alert) {
   }, 1000);
 }
 
+function updateCurrentGames(curGames) {
+  var htmlString = ``;
+  curGames.forEach(function (e) {
+    htmlString += `<div class="curGameItem">` + e + `</div>`;
+  });
+  $("#currentGames").html(htmlString);
+}
+
 /*****************************/
 /*     showSelect(data)    */
 /*****************************/
@@ -2839,6 +2880,18 @@ function editList(list) {
       }
     });
   });
+}
+
+function showCurrentGames() {
+  $("#currentGames").removeClass("off");
+  $("#contextShadow").removeClass("off");
+  $("#curGamesClose").removeClass("off");
+}
+
+function closeCurrentGames() {
+  $("#currentGames").addClass("off");
+  $("#contextShadow").addClass("off");
+  $("#curGamesClose").addClass("off");
 }
 
 /*****************************/

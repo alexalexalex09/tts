@@ -1581,7 +1581,7 @@ subContextRemove {
   position: fixed;
   top: calc(var(--vh10) - 25px);
   left: calc(10vw - 25px);
-  z-index: 9999;
+  z-index: 99;
 }
 
 /*****************************/

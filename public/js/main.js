@@ -454,9 +454,8 @@ window.addEventListener("load", function () {
         "Content-Type": "application/json",
       },
     };
-    startLoader();
     fetch("/going_back", gb_options);
-    finishLoader();
+
     goBackFrom(
       window.hist[window.hist.length - 1],
       window.hist[window.hist.length - 2]
@@ -732,6 +731,7 @@ function goBackFrom(from, to) {
       window.hist.pop();
     }
   } else {
+    console.log("going back to ", to);
     if (to == "#selectView" || to == "#postSelectView") {
       window.setTimeout(function () {
         $("#listIcon").removeClass("off"), 1000;
@@ -739,8 +739,14 @@ function goBackFrom(from, to) {
     }
     if (
       (from == "#selectView" && to != "#postSelectView") ||
-      (from == "#postSelectView" && to != "selectView")
+      (from == "#postSelectView" && to != "#selectView")
     ) {
+      console.log(
+        "turning off listIcon because to is ",
+        to,
+        " and from is ",
+        from
+      );
       window.setTimeout(function () {
         $("#listIcon").addClass("off"), 1000;
       });
@@ -763,7 +769,9 @@ function goBackFrom(from, to) {
             "Content-Type": "application/json",
           },
         };
+        startLoader();
         fetch("/going_back", gb_options).then(function (response) {
+          finishLoader();
           return response.json().then((res) => {
             goBack(from, to);
           });
@@ -2988,11 +2996,15 @@ function closeCurrentGames() {
 
 function startLoader() {
   console.log("startLoader");
-  $(".preloader").fadeIn(1000);
+  console.trace();
+  $(".preloader").fadeIn(1500);
 }
 
 function finishLoader() {
-  $(".preloader").fadeOut(1000);
+  console.log("finishLoader");
+  console.trace();
+  $(".preloader").fadeOut(200);
+  //this should somehow resolve a promise since it's Async. Instead it's turning the loader off before start can turn it on.
 }
 
 /*****************************/

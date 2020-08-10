@@ -118,6 +118,11 @@ li.red {
   border-radius: 7px;
   color: var(--main-white);
   font-size: calc(var(--vh, 1vh) * 3);
+  overflow-y: auto;
+}
+
+.curGameItem {
+  margin-bottom: calc(var(--vh) * 1.5);
 }
 
 #curGamesClose {
@@ -523,6 +528,7 @@ input:checked + .slider:before {
   text-align: center;
   align-self: end;
   height: var(--vh5);
+  font-size: max(4 * (1vw + 1vh) / 2, 30px);
 }
 
 #selectLists {
@@ -685,6 +691,7 @@ input:checked + .slider:before {
   margin: 0 auto;
   height: var(--vh5);
   margin-top: calc(var(--vh) * 2);
+  padding-top: 5px;
 }
 
 #addGroupGamesContainer {
@@ -997,6 +1004,12 @@ input[type="range"]:focus {
   color: var(--main-white);
 }
 
+#sessionsContainer {
+  overflow-y: auto;
+  top: var(--vh15);
+  height: calc(var(--vh) * 85);
+}
+
 #addListContainer {
   grid-area: 4/2/6/10;
   text-align: center;
@@ -1013,6 +1026,7 @@ input[type="range"]:focus {
   align-self: end;
   height: var(--vh5);
   color: var(--main-white);
+  font-size: max(4 * (1vw + 1vh) / 2, 30px);
 }
 
 #gamesContainer {
@@ -1558,6 +1572,18 @@ subContextRemove {
   animation-iteration-count: 2;
 }
 
+.preloader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  width: 50px;
+  position: fixed;
+  top: calc(var(--vh10) - 25px);
+  left: calc(10vw - 25px);
+  z-index: 9999;
+}
+
 /*****************************/
 /*    Mobile Media Queries   */
 /*****************************/
@@ -1571,6 +1597,9 @@ subContextRemove {
 /*        Desktop CSS        */
 /*****************************/
 @media (min-width: 1000px) {
+  .desktopAlwaysOff {
+    display: none !important;
+  }
   .menu {
     width: 250px;
     transform: translateX(0vh);
@@ -1583,6 +1612,15 @@ subContextRemove {
   }
   #menuClose {
     display: none;
+  }
+  #copiedAlert,
+  #loginAlert {
+    width: 500px;
+    left: calc(50% + 125px);
+    transform: translateX(-50%);
+  }
+  #listIcon {
+    left: calc(50% - 250px);
   }
   .itemContainer ul {
     padding-left: 25px;
@@ -1724,6 +1762,11 @@ subContextRemove {
   .listContents {
     padding: 5px;
     width: 400px;
+    height: var(--vh60);
+  }
+
+  #gamesAdderContainer {
+    height: var(--vh20);
   }
 
   .gamesAdder div {
@@ -1733,17 +1776,20 @@ subContextRemove {
   .gamesAdder {
     font-size: 25px;
     width: 100px;
-    left: 50px;
+    left: 0px;
+    padding: 20px 67px 0px;
+    z-index: 2;
   }
 
   .gamesAdder:nth-child(1) {
-    left: 250px;
+    left: 167px;
   }
 
   #menuAddListContainer,
   #menuAddGamesContainer {
     width: 80%;
     left: 10%;
+    z-index: 2;
   }
 
   #backArrow ion-icon {
@@ -1772,5 +1818,24 @@ subContextRemove {
   #postSelectContainer,
   #postVoteContainer {
     font-size: 28px;
+  }
+
+  .bulkSelect {
+    width: calc(100% - 11px);
+    grid-template-columns: 30px 1fr 40px 40px 40px 40px;
+    justify-items: center;
+    padding: 0px 5px;
+  }
+
+  #currentGames {
+    width: 250px;
+    height: calc(var(--vh) * 98);
+    left: 260px;
+    top: var(--vh);
+  }
+
+  #curGamesClose {
+    top: calc(var(--vh) * 2);
+    left: 470px;
   }
 }

@@ -15,7 +15,7 @@ window.addEventListener("load", function () {
       console.log("received ", data);
       if (data.selectEvent) {
         //Rewrite #postSelectContainer in real time for owner
-        showSelect(data.select);
+        showSelect(data.select, true);
         updateCurrentGames(data.curGames);
       }
       if (data.startVoting) {
@@ -44,6 +44,10 @@ window.addEventListener("load", function () {
     if (dest == "#postPostSelectView") {
       dest = "#postSelectView";
       toLock = true;
+    }
+    if (dest == "#postSelectView") {
+      goForwardFrom("#homeView", "#postSelectView");
+      window.hist = ["#homeView", "#selectView", "#postSelectView"];
     }
     if (dest == "#selectView") {
       dest = "#codeView";
@@ -135,7 +139,9 @@ window.addEventListener("load", function () {
             "Content-Type": "application/json",
           },
         };
+        startLoader();
         fetch("/get_votes", gv_options).then(function (response) {
+          finishLoader();
           return response.json().then((res) => {
             console.log(res);
             fillVotes(res.games);
@@ -151,7 +157,9 @@ window.addEventListener("load", function () {
             "Content-Type": "application/json",
           },
         };
+        startLoader();
         fetch("/get_games", gg_options).then(function (response) {
+          finishLoader();
           return response.json().then((res) => {
             fillGames(res.games);
             goForwardFrom("#homeView", "#playView");
@@ -179,7 +187,7 @@ window.addEventListener("load", function () {
       if (data.selectEvent) {
         console.log("SelectEvent: ", data);
         //Rewrite #postSelectContainer in real time for owner
-        showSelect(data.select);
+        showSelect(data.select, false);
         updateCurrentGames(data.curGames);
       }
       if (data.unlockBack && data.unlock) {
@@ -223,7 +231,7 @@ window.addEventListener("load", function () {
   /*      Set Window Height    */
   /*****************************/
 
-  window.addEventListener("resize", getvh);
+  //window.addEventListener("resize", getvh);
 
   /*****************************/
   /*      Set font sizes       */
@@ -263,7 +271,7 @@ window.addEventListener("load", function () {
       fWidth: "6",
     },
   });*/
-  $(window).on(
+  /* $(window).on(
     "resize",
     {
       el: "#addGamesTitle",
@@ -291,7 +299,7 @@ window.addEventListener("load", function () {
       fHeight: "4",
       fWidth: "6",
     },
-  });
+  });*/
 
   /*****************************/
   /*         Menu toggle       */
@@ -325,7 +333,9 @@ window.addEventListener("load", function () {
         },
       };
       window.setTimeout(showMenuItem("#sessionsView"), 600);
+      startLoader();
       fetch("/get_sessions", gs_options).then(function (response) {
+        finishLoader();
         return response.json().then((res) => {
           writeSessions(res);
         });
@@ -444,8 +454,9 @@ window.addEventListener("load", function () {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/going_back", gb_options);
-
+    finishLoader();
     goBackFrom(
       window.hist[window.hist.length - 1],
       window.hist[window.hist.length - 2]
@@ -475,7 +486,9 @@ window.addEventListener("load", function () {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/create_session", cs_options).then(function (response) {
+      finishLoader();
       return response.json().then((res) => {
         console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
@@ -553,7 +566,10 @@ window.addEventListener("load", function () {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/submit_games", gs_options).then(function (response) {
+      console.log("finished");
+      finishLoader();
       return response.json().then((res) => {
         console.log("submit res: ", res);
         //$("#backArrow").attr("data-gobackto", "select");
@@ -580,7 +596,9 @@ window.addEventListener("load", function () {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/get_top_list", gtl_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
         autocomplete(document.getElementById("menuAddGamesInput"), res.games);
@@ -673,6 +691,9 @@ function goForwardFrom(from, to) {
         $("#listIcon").addClass("off"), 1000;
       });
     }
+    if (to == "#postSelectView") {
+      triggerPostSelectEvent();
+    }
     console.log("going forward from " + from + " to " + to);
     console.log(window.hist);
     if (typeof window.hist == "undefined") {
@@ -724,6 +745,9 @@ function goBackFrom(from, to) {
         $("#listIcon").addClass("off"), 1000;
       });
     }
+    if (to == "#postSelectView") {
+      triggerPostSelectEvent();
+    }
     if (typeof from != "undefined" && typeof to != "undefined") {
       console.log("going back from " + from + " to " + to);
       console.log(window.hist);
@@ -771,6 +795,21 @@ function goBack(from, to) {
   }, 1000);
 }
 
+function triggerPostSelectEvent() {
+  const gsps_options = {
+    method: "POST",
+    body: JSON.stringify({ code: $("#code").text() }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  fetch("/get_session_post_select", gsps_options).then(function (response) {
+    return response.json().then((res) => {
+      console.log("triggered socket event for gsps");
+    });
+  });
+}
+
 /*****************************/
 /*       lockGames(code)     */
 /*****************************/
@@ -787,7 +826,9 @@ function lockGames(code) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/lock_games", lg_options).then(function (lresponse) {
+    finishLoader();
     return lresponse.json().then((lres) => {
       $("#backArrow").addClass("off");
       $("#postSelectView").css({
@@ -830,7 +871,9 @@ function lockGames(code) {
                 "Content-Type": "application/json",
               },
             };
+            startLoader();
             fetch("/unlock_games", ug_options).then(function (uresponse) {
+              finishLoader();
               return uresponse.json().then((ures) => {
                 $("#backArrow").removeClass("off");
                 goBackFrom("#postSelectView", "#selectView");
@@ -854,7 +897,9 @@ function addGroupGame() {
     },
   };
   //add_user_game_unsorted
+  startLoader();
   fetch("/group_game_add", gga_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         if ((res.err = "added")) {
@@ -958,7 +1003,9 @@ function guag() {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/get_user_all_games", guag_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
         var htmlString = "";
@@ -987,7 +1034,9 @@ function gulp(showAllGames = false) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/get_user_lists_populated", gulp_options).then(function (response) {
+    finishLoader();
     //Gets the populated list, which is an object with two arrays,
     //"allGames", which is supposed to have every game, and "custom",
     //which has the user's custom lists. Array elements in allGames
@@ -1528,10 +1577,17 @@ function showGameContext(game) {
     console.log(
       $("#context_stage_" + game.id + "[list=games" + game.list + "]")
     );
-    $("#context_stage_" + game.id + "[list=games" + game.list + "]")
-      .clone(true)
-      .prop("id", "context_" + game.id)
-      .appendTo($("body"));
+    if (game.list) {
+      $("#context_stage_" + game.id + "[list=games" + game.list + "]")
+        .clone(true)
+        .prop("id", "context_" + game.id)
+        .appendTo($("body"));
+    } else {
+      $("#context_stage_" + game.id)
+        .clone(true)
+        .prop("id", "context_" + game.id)
+        .appendTo($("body"));
+    }
     setTimeout(function () {
       hideOnClickOutside(
         "#context_" + game.id,
@@ -1631,7 +1687,9 @@ function moveToList(options) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/move_to_list", mtl_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         alert(res.err);
@@ -1671,7 +1729,9 @@ function copyToList(options) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/copy_to_list", ctl_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         alert(res.err);
@@ -1722,7 +1782,9 @@ function renameGame(event, caller, game, oldGame) {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/rename_game", rg_options).then(function (response) {
+      finishLoader();
       return response.json().then((res) => {
         if (res.err) {
           console.log(res.err);
@@ -1778,7 +1840,9 @@ function renameList(event, caller, list) {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/rename_list", rl_options).then(function (response) {
+      finishLoader();
       return response.json().then((res) => {
         if (res.err) {
           console.log(res.err);
@@ -1828,7 +1892,9 @@ function deleteList(list) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/delete_list", dl_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
@@ -1874,7 +1940,9 @@ function deleteGame(arr) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/delete_game", dg_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
@@ -1949,7 +2017,9 @@ function removeGame(arr) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/remove_game", rg_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
@@ -2111,7 +2181,9 @@ function submitCode(el, code) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/join_session", js_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       console.log("join session ", res);
       if (res.err) {
@@ -2166,7 +2238,9 @@ function addNewGame(el) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/game_add", options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
         console.log(res);
@@ -2225,7 +2299,9 @@ function addList() {
     },
   };
   //add_user_game_unsorted
+  startLoader();
   fetch("/list_add", options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.err) {
         console.log(res);
@@ -2445,7 +2521,9 @@ function toggleEdit(check) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/modify_edit_list", mel_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
         var htmlString = "";
@@ -2485,7 +2563,9 @@ function registerEGS() {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/start_voting", egs_options).then(function (response) {
+      finishLoader();
       return response.json().then((res) => {
         console.log("starting voting: ", res);
         goForwardFrom("#postSelectView", "#voteView");
@@ -2575,7 +2655,9 @@ function toggleFont(check) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/add_game_to_session", agts_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
         console.log(res);
@@ -2686,7 +2768,7 @@ function updateCurrentGames(curGames) {
  *
  * @param {Array} select
  */
-function showSelect(data) {
+function showSelect(data, isOwner) {
   console.log("received select event ", data);
   htmlString = "";
   var connecting = "";
@@ -2710,7 +2792,9 @@ function showSelect(data) {
       plural +
       `...</div>`;
   });
-  htmlString += `<div class="button greenBtn bottomBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
+  if (isOwner) {
+    htmlString += `<div class="button greenBtn bottomBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
+  }
   $("#postSelectContainer").html(htmlString);
   console.log("registered lockGames");
   //Is this setting up too many events?
@@ -2766,7 +2850,9 @@ function fillVotes(games) {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/submit_votes", sv_options).then(function (response) {
+      finishLoader();
       return response.json().then((res) => {
         goForwardFrom("#voteView", "#postVoteView");
         window.hist = ["#homeView", "#postVoteView"];
@@ -2812,7 +2898,9 @@ function fillPostVote(users) {
         "Content-Type": "application/json",
       },
     };
+    startLoader();
     fetch("/end_vote", ev_options).then(function (response) {
+      finishLoader();
       return response.json().then((res) => {
         goForwardFrom("#postVoteView", "#playView");
         //window.hist = ["#homeView", "#codeView", "#playView"];
@@ -2872,7 +2960,9 @@ function editList(list) {
       "Content-Type": "application/json",
     },
   };
+  startLoader();
   fetch("/edit_list", el_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
       } else {
@@ -2885,13 +2975,24 @@ function editList(list) {
 function showCurrentGames() {
   $("#currentGames").removeClass("off");
   $("#contextShadow").removeClass("off");
+  $("#contextShadow").addClass("desktopAlwaysOff");
   $("#curGamesClose").removeClass("off");
 }
 
 function closeCurrentGames() {
   $("#currentGames").addClass("off");
   $("#contextShadow").addClass("off");
+  $("#contextShadow").removeClass("desktopAlwaysOff");
   $("#curGamesClose").addClass("off");
+}
+
+function startLoader() {
+  console.log("startLoader");
+  $(".preloader").fadeIn(1000);
+}
+
+function finishLoader() {
+  $(".preloader").fadeOut(1000);
 }
 
 /*****************************/
@@ -2902,6 +3003,8 @@ function closeCurrentGames() {
  *
  */
 function getvh() {
+  console.log("getvh");
+  console.log(this);
   // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
   let vh = window.innerHeight * 0.01;
   // Then we set the value in the --vh custom property to the root of the document

@@ -231,6 +231,12 @@ router.post("/going_back", function (req, res) {
   }
 });
 
+router.post("/get_session_post_select", (req, res) => {
+  if (req.body.code) {
+    socketAPI.addGame({ code: req.body.code });
+  }
+});
+
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
   if (req.user) {

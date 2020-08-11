@@ -121,23 +121,6 @@ block content
       #gamesTitle.pageTitle Games and Lists 🐿️
       #gamesAdderTitle.off Add New
       ion-icon(name="add-circle-outline" onclick="toggleGamesAdder()")#addListButton
-      div#gamesAdderContainer
-        div.gamesAdder.slideDown.off(onclick="showMenuAddGame()")
-          div Add Game
-        div.gamesAdder.slideDown.off(onclick="showMenuAddList()")
-          div Add List
-      div#menuAddGamesContainer.slideDown.off
-        #menuAddGamesTitle Add Games
-        #menuAddGamesInputCont.textInputCont
-          form(onsubmit="return textSubmit('#menuAddGamesInput')")
-            input.textInput(type='text' autocomplete="off")#menuAddGamesInput
-            input.textSubmit(type='submit' value='')
-      div#menuAddListContainer.slideDown.off
-        #menuAddListTitle Add List
-        #menuAddListInputCont.textInputCont
-          form(onsubmit='return addList()')
-            input.textInput(type='text' autocomplete="off")#menuAddListInput
-            input.textSubmit(type='submit' value='')
       #gamesContainer
       #gamesContextContainer.off
       #listContextContainer.off

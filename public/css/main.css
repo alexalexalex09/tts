@@ -413,6 +413,7 @@ input:checked + .slider:before {
   border-radius: 20px;
   transition: background-color 0.5s;
   z-index: 2;
+  cursor: pointer;
 }
 
 .textInputCont input.textSubmit.green {
@@ -427,6 +428,7 @@ input:checked + .slider:before {
   right: 3px;
   position: absolute;
   margin-top: calc(var(--vh, 1vh) * 0.5);
+  z-index: 3;
 }
 
 .textSubmit {
@@ -528,7 +530,7 @@ input:checked + .slider:before {
   text-align: center;
   align-self: end;
   height: var(--vh5);
-  font-size: max(4 * (1vw + 1vh) / 2, 30px);
+  font-size: max(3 * (1vw + 1vh) / 2, 30px);
 }
 
 #selectLists {
@@ -1026,7 +1028,7 @@ input[type="range"]:focus {
   align-self: end;
   height: var(--vh5);
   color: var(--main-white);
-  font-size: max(4 * (1vw + 1vh) / 2, 30px);
+  font-size: max(3 * (1vw + 1vh) / 2, 30px);
 }
 
 #gamesContainer {
@@ -1441,7 +1443,7 @@ subContextRemove {
   backdrop-filter: blur(3px);
   padding: calc(var(--vh) * 3);
   background: var(--main-blue);
-  z-index: 1;
+  z-index: 3;
   box-sizing: border-box;
   font-size: calc(var(--vh, 1vh) * 3);
   color: var(--main-white);
@@ -1701,7 +1703,7 @@ subContextRemove {
   }
 
   .pageTitle#playTitle {
-    font-size: max(4 * (1vw + 1vh) / 2, 30px);
+    font-size: max(3 * (1vw + 1vh) / 2, 30px);
   }
 
   .pageTitle {

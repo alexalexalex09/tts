@@ -335,68 +335,75 @@ router.post("/get_user_all_games", (req, res) => {
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
   if (req.user) {
-    var upsertOptions = { new: true, upsert: true };
-    Game.findOneAndUpdate(
-      {
-        name: req.body.game,
-      },
-      { name: req.body.game },
-      upsertOptions,
-      function (err, game) {
-        if (!game.rating) {
-          game.rating = 0;
-        }
-        if (!game.owned) {
-          game.owned = 0;
-        }
-        console.log(game);
-        game.save().then(function (game) {
-          User.findOneAndUpdate(
-            {
-              profile_id: req.user.id,
-            },
-            { profile_id: req.user.id },
-            upsertOptions,
-            function (err, curUser) {
-              //if game and user both exist, add the game unless it's already added
-              function findGame(checkGame) {
-                return checkGame.toString() == game._id.toString();
-              }
-              var gamesList = curUser.lists.allGames;
-              console.log(err);
-              console.log(gamesList);
-              theGame = gamesList.find(findGame);
+    if (req.body.game) {
+      var upsertOptions = { new: true, upsert: true };
+      Game.findOneAndUpdate(
+        {
+          name: req.body.game,
+        },
+        { name: req.body.game },
+        upsertOptions,
+        function (err, game) {
+          if (!game.rating) {
+            game.rating = 0;
+          }
+          if (!game.owned) {
+            game.owned = 0;
+          }
+          console.log(game);
+          game.save().then(function (game) {
+            User.findOneAndUpdate(
+              {
+                profile_id: req.user.id,
+              },
+              { profile_id: req.user.id },
+              upsertOptions,
+              function (err, curUser) {
+                //if game and user both exist, add the game unless it's already added
+                function findGame(checkGame) {
+                  return checkGame.toString() == game._id.toString();
+                }
+                var gamesList = curUser.lists.allGames;
+                console.log(err);
+                console.log(gamesList);
+                theGame = gamesList.find(findGame);
 
-              if (theGame) {
-                //if it's already in the array, do nothing
-                //Here's how to get the game's name
-                Game.findById(theGame, "name", function (err, gameToReport) {
-                  console.log("Game name: " + gameToReport.name);
-                });
-                res.send({ err: theGame + " has already been added" });
-              } else {
-                //if it's not, push it to the array and save the user
-                curUser.lists.allGames.push(game._id);
-                console.log("theGame: ", theGame);
-                curUser.save().then(function (theUser) {
-                  Game.findById(game._id, "name", function (err, gameToReport) {
-                    if (gameToReport) {
-                      console.log("Game name: " + gameToReport.name);
-                      res.send({ status: gameToReport });
-                    } else {
-                      res.send({
-                        err:
-                          "Error: game not added, maybe you checked too early.",
-                      });
-                    }
+                if (theGame) {
+                  //if it's already in the array, do nothing
+                  //Here's how to get the game's name
+                  Game.findById(theGame, "name", function (err, gameToReport) {
+                    console.log("Game name: " + gameToReport.name);
                   });
-                });
+                  res.send({ err: theGame + " has already been added" });
+                } else {
+                  //if it's not, push it to the array and save the user
+                  curUser.lists.allGames.push(game._id);
+                  console.log("theGame: ", theGame);
+                  curUser.save().then(function (theUser) {
+                    Game.findById(game._id, "name", function (
+                      err,
+                      gameToReport
+                    ) {
+                      if (gameToReport) {
+                        console.log("Game name: " + gameToReport.name);
+                        res.send({ status: gameToReport });
+                      } else {
+                        res.send({
+                          err:
+                            "Error: game not added, maybe you checked too early.",
+                        });
+                      }
+                    });
+                  });
+                }
               }
-            }
-          );
-        });
-      }
-    );
+            );
+          });
+        }
+      );
+    } else {
+      res.send({ err: "Cannot add blank game" });
+    }
   } else {
     res.send(ERR_LOGIN);
   }
@@ -1336,18 +1343,22 @@ router.post("/remove_game", function (req, res) {
 
 router.post("/list_add", function (req, res) {
   if (req.user) {
-    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      var index = curUser.lists.custom.findIndex(
-        (obj) => obj.name == req.body.list
-      );
-      if (index == -1) {
-        curUser.lists.custom.push({ name: req.body.list, games: [] });
-        curUser.save();
-        res.send({ status: "Success" });
-      } else {
-        res.send({ err: "Already added a list with this name" });
-      }
-    });
+    if (req.body.list) {
+      User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+        var index = curUser.lists.custom.findIndex(
+          (obj) => obj.name == req.body.list
+        );
+        if (index == -1) {
+          curUser.lists.custom.push({ name: req.body.list, games: [] });
+          curUser.save();
+          res.send({ status: "Success" });
+        } else {
+          res.send({ err: "Already added a list with this name" });
+        }
+      });
+    } else {
+      res.send({ err: "Cannot add empty list" });
+    }
   }
 });
 

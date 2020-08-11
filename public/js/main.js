@@ -588,26 +588,8 @@ window.addEventListener("load", function () {
     submitCode($("codeSubmit"), window.location.search.substr(3));
   }
 
-  const gtl_options = {
-    method: "POST",
-    body: JSON.stringify({ code: code }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  startLoader();
-  fetch("/get_top_list", gtl_options).then(function (response) {
-    finishLoader();
-    return response.json().then((res) => {
-      if (!res.err) {
-        autocomplete(document.getElementById("menuAddGamesInput"), res.games);
-        autocomplete(document.getElementById("addGamesInput"), res.games);
-        console.log("added Autocomplete");
-      } else {
-        console.log("Couldn't find topGames");
-      }
-    });
-  });
+  /* Set up autocomplete */
+  getTopList();
 
   /*
    *
@@ -1264,6 +1246,8 @@ function gulp(showAllGames = false) {
  *
  */
 function toggleGamesAdder() {
+  showAdderMenu();
+  /*
   if ($(".gamesAdder").hasClass("off")) {
     $(".gamesAdder").removeClass("off");
     $("#menuAddListContainer").addClass("slideDown");
@@ -1280,6 +1264,7 @@ function toggleGamesAdder() {
     hideGamesAdderButtons();
     $("#addListButton").removeClass("rotated");
   }
+  */
 }
 
 function hideGamesAdderButtons() {
@@ -1576,15 +1561,43 @@ function closeMenuItem(view) {
   }, 600);
 }
 
+function showAdderMenu() {
+  $("body").append(writeAdder("Add a list or game"));
+  setTimeout(function () {
+    hideOnClickOutside("#menuAdder", "#menuAdder", ".subContextContainer");
+    $("#contextShadow").removeClass("off");
+  }, 10);
+  $("#menuAdder").removeClass("off");
+  $("#menuAdder").addClass("slideUp");
+}
+
+function showAdder(item, theId, func, funcArg) {
+  funcArg = `'` + funcArg + `'`;
+  var el =
+    `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
+    item +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Add new ` +
+    item +
+    `</div><hr/><div id="renameGameInputCont" class="textInputCont">
+  <form onsubmit="return ` +
+    func.substr(0, func.length - 1) +
+    funcArg +
+    `)` +
+    `">
+    <input class="textInput" type="text" autocomplete="off" id="` +
+    theId +
+    `">
+    <input class="textSubmit" type="submit" value="">
+  </form>`;
+  $("body").append(el);
+  getTopList();
+}
+
 function showGameContext(game) {
-  console.log("game: ", game);
-  console.log("#context_" + game.id);
-  console.log($("#context_" + game.id).length);
   if ($("#context_" + game.id).length == 0) {
-    console.log("#context_stage_" + game.id + "[list=games" + game.list + "]");
-    console.log(
-      $("#context_stage_" + game.id + "[list=games" + game.list + "]")
-    );
     if (game.list) {
       $("#context_stage_" + game.id + "[list=games" + game.list + "]")
         .clone(true)
@@ -1612,8 +1625,6 @@ function showGameContext(game) {
 }
 
 function contextMove(games) {
-  console.log("contextMove ", games);
-  console.log($(".contextActions.slideUp").first().attr("list"));
   var lists = getMenuLists($(".contextActions.slideUp").first().attr("list"));
   displaySubContext(
     "Moving",
@@ -1759,7 +1770,7 @@ function copyToList(options) {
   });
 }
 
-function contextRename(game, caller) {
+function contextRename(game) {
   var el =
     `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
     game.id +
@@ -1769,12 +1780,12 @@ function contextRename(game, caller) {
     `<div class="subContextTitle">Renaming "` +
     game.name +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
-    <input class="textInput" type="text" onkeyup='renameGame(event, this, "` +
+    <form onsubmit="return renameGame(event, this, '` +
     game.id.substr(5 + game.length) +
-    `", "` +
+    `', '` +
     game.name +
-    `")' id="renameGameInput"></input>
-    <div class="textSubmit"></div>`;
+    `')" id="renameGameInput"></input>
+    <input class="textSubmit" type="submit" value="">`;
   $("body").append(el);
 }
 
@@ -1829,10 +1840,10 @@ function showRenameList(list) {
     `<div class="subContextTitle">Renaming list "` +
     list.name +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
-    <input class="textInput" type="text" onkeyup='renameList(event, this, "` +
+    <form onsubmit="return renameList(event, this, '` +
     list.id.substr(4) +
-    `")' id="renameGameInput"></input>
-    <div class="textSubmit"></div>`;
+    `') id="renameGameInput"></input>
+    <input class="textSubmit" type="submit" value="">`;
   $("body").append(el);
 }
 
@@ -2077,6 +2088,18 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
   document.addEventListener("click", outsideClickListener);
 }
 
+function writeAdder(title) {
+  var htmlString =
+    `<div class="contextActions off" list="menuAdder" id="menuAdder">` +
+    `<div class="contextTitle">` +
+    title +
+    `</div>` +
+    `<li onclick="showAdder('list', 'menuAddListInput', 'addList()', '')">Add List</li>` +
+    `<li onclick="showAdder('game', 'menuAddGamesInput', 'textSubmit()', '#menuAddGamesInput')">Add Game</li>` +
+    `</div>`;
+  return htmlString;
+}
+
 function writeGameContext(contextObj) {
   console.log("dGC '", contextObj.list, "'");
   var co = createContextObjectString(
@@ -2236,7 +2259,8 @@ function setPlural(countable, singular, plural) {
  * @param {*} event
  */
 function addNewGame(el) {
-  console.log("submitting new game");
+  console.log("submitting new game ", $(el));
+  console.log($(el).val());
   var game = $(el).val();
   $(el).val("");
   const options = {
@@ -2338,6 +2362,7 @@ function addList() {
           })
         );
       }
+      $(".subContextContainer").remove();
     });
   });
   //}
@@ -2923,6 +2948,7 @@ function textSubmit(el) {
   setTimeout(function () {
     $("#addGamesInputCont .textSubmit").first().removeClass("green");
   }, 1000);
+  $(".subContextContainer").remove();
   console.log("Toggled: ", $("#0").children(".listExpand")[0]);
   return false;
 }
@@ -2975,6 +3001,33 @@ function editList(list) {
       if (!res.err) {
       } else {
         console.log(res);
+      }
+    });
+  });
+}
+
+function getTopList() {
+  const gtl_options = {
+    method: "POST",
+    body: JSON.stringify({ code: code }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/get_top_list", gtl_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (!res.err) {
+        if (document.getElementById("menuAddGamesInput") != null) {
+          autocomplete(document.getElementById("menuAddGamesInput"), res.games);
+        }
+        if (document.getElementById("addGamesInput") != null) {
+          autocomplete(document.getElementById("addGamesInput"), res.games);
+        }
+        console.log("added Autocomplete");
+      } else {
+        console.log("Couldn't find topGames");
       }
     });
   });
@@ -3159,6 +3212,8 @@ function autocomplete(inp, arr) {
     a.setAttribute("class", "autocomplete-items");
     /*append the DIV element as a child of the autocomplete container:*/
     this.parentNode.appendChild(a);
+    console.log("appended:");
+    console.log(a);
     /*for each item in the array...*/
     for (i = 0; i < arr.length; i++) {
       /*check if the item starts with the same letters as the text field value:*/

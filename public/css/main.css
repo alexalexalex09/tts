@@ -1329,6 +1329,14 @@ ion-icon#addListButton {
   cursor: pointer;
 }
 
+.contextActions .bggLink {
+  color: var(--main-light-grey);
+}
+
+.contextActions .bggLink a {
+  color: var(--main-grey);
+}
+
 .contextTitle {
   margin-bottom: 20px;
   border-bottom: 1px solid var(--main-black);

@@ -1120,6 +1120,7 @@ function gulp(showAllGames = false) {
               `<div class="contextTitle">` +
               res.lists.allGames[i].name +
               `</div>` +
+              `<li class="bggLink">BoardGameGeek Link</li>` +
               `<li onclick="contextCopy([{id: '` +
               res.lists.allGames[i]._id +
               `', name:'` +
@@ -1136,7 +1137,8 @@ function gulp(showAllGames = false) {
               res.lists.allGames[i].name +
               `'}], '&quot;` +
               res.lists.allGames[i].name +
-              `&quot;')">Delete</li>`
+              `&quot;')">Delete</li>` +
+              `</div>`
           );
         }
         $("#listContextContainer").append(
@@ -1603,6 +1605,23 @@ function showGameContext(game) {
         .clone(true)
         .prop("id", "context_" + game.id)
         .appendTo($("body"));
+      console.log(
+        $("#context_stage_" + game.id + "[list=games" + game.list + "]"),
+        "SHOWGAMECONTEXT",
+        $(".contextActions.slideUp .contextTitle").first().text()
+      );
+      contextBGG(
+        ".contextActions.slideUp li.bggLink",
+        $(
+          "#context_stage_" +
+            game.id +
+            "[list=games" +
+            game.list +
+            "] .contextTitle"
+        )
+          .first()
+          .text()
+      );
     } else {
       $("#context_stage_" + game.id)
         .clone(true)
@@ -2064,6 +2083,64 @@ function removeGame(arr) {
   });
 }
 
+function contextBGG(el, game, recur, exact) {
+  console.log(
+    "el: ",
+    el,
+    " game: ",
+    game,
+    " recur: ",
+    recur,
+    " exact: ",
+    exact
+  );
+  if (exact) {
+    var exactStr = "";
+  } else {
+    var exactStr = "&exact=1";
+  }
+  fetch(
+    `https://boardgamegeek.com/xmlapi2/search?query=` +
+      game +
+      exactStr +
+      `&type=boardgame`
+  )
+    .then((response) => response.text())
+    .then((data) => {
+      console.log(data);
+      var xmlDoc = $.parseXML(data);
+      var $xml = $(xmlDoc);
+      var $items = $xml.find("items");
+      console.log("items: ", $items);
+      console.log($items.attr("total"));
+      if ($items.attr("total") == 0) {
+        if (typeof recur == "undefined") {
+          contextBGG(el, "The " + game, 1);
+        }
+        if (recur == 1) {
+          contextBGG(el, "A " + game.substr(4), 2);
+        }
+        if (recur == 2) {
+          contextBGG(el, "An " + game.substr(2), 3);
+        }
+        if (recur == 3) {
+          contextBGG(el, game.substr(3), 4, true);
+        }
+        if (recur == 4) {
+          return "";
+        }
+      } else {
+        var ret =
+          `https://boardgamegeek.com/boardgame/` +
+          $items.children("item").attr("id");
+        console.log(`url: `, ret);
+        console.log(el);
+        var html = $(el).html();
+        $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
+      }
+    });
+}
+
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {
     const $target = $(event.target);
@@ -2116,6 +2193,7 @@ function writeGameContext(contextObj) {
     `<div class="contextTitle">` +
     contextObj.name +
     `</div>` +
+    `<li class="bggLink">BoardGameGeek Link</li>` +
     `<li onclick="contextMove([` +
     co +
     `])">Move</li>` +

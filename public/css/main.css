@@ -563,7 +563,9 @@ input:checked + .slider:before {
 
 #errorAlert {
   color: var(--main-red);
+  z-index: 999;
 }
+
 
 /*****************/
 /*  Select View  */

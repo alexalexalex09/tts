@@ -1961,47 +1961,46 @@ function showRenameList(list) {
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameList(event, this, '` +
     list.id.substr(4) +
-    `') id="renameGameInput"></input>
+    `')" id="renameGameInput"></input>
     <input class="textInput" type="text" autocomplete="off"></input>
     <input class="textSubmit" type="submit" value="">`;
   $("body").append(el);
 }
 
 function renameList(event, caller, list) {
-  if (event.keyCode === 13) {
-    const rl_options = {
-      method: "POST",
-      body: JSON.stringify({
-        list: list,
-        newName: $(caller).val(),
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    startLoader();
-    fetch("/rename_list", rl_options).then(function (response) {
-      finishLoader();
-      return response.json().then((res) => {
-        if (res.err) {
-          console.log(res.err);
-          //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
-        } else {
-          console.log("renamed list");
-          //$("#" + game).text(res.status.newName);
-          $("#gamesContainer")
-            .children("#games" + list)
-            .children(".menuGamesContainer")
-            .children(".listName")
-            .text($(caller).val());
-          $(".subContextContainer").each(function () {
-            $(this).remove();
-          });
-          gulp();
-        }
-      });
+  const rl_options = {
+    method: "POST",
+    body: JSON.stringify({
+      list: list,
+      newName: $(caller).children('input[type="text"]').first().val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/rename_list", rl_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        showError(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        console.log("renamed list");
+        //$("#" + game).text(res.status.newName);
+        $("#gamesContainer")
+          .children("#games" + list)
+          .children(".menuGamesContainer")
+          .children(".listName")
+          .text($(caller).val());
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+        gulp();
+      }
     });
-  }
+  });
   return false;
 }
 
@@ -3241,16 +3240,19 @@ function finishLoader() {
 }
 
 function showError(err) {
+  console.log("Error: ", err);
   $el = $("#errorAlert");
   $el.html(err);
   $el.removeClass("off");
-  $el.css("opacity", 1);
   setTimeout(function () {
-    $el.css("opacity", 0);
+    $el.css("opacity", 1);
     setTimeout(function () {
-      $el.addClass("off");
-    }, 510);
-  }, 2000);
+      $el.css("opacity", 0);
+      setTimeout(function () {
+        $el.addClass("off");
+      }, 510);
+    }, 2000);
+  }, 10);
 }
 
 /*****************************/

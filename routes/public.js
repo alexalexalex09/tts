@@ -1203,27 +1203,63 @@ router.post("/copy_to_list", function (req, res) {
 router.post("/rename_game", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      var upsertOptions = { new: true, upsert: true };
-      Game.findOneAndUpdate(
-        { name: req.body.newName },
-        { name: req.body.newName },
-        upsertOptions,
-        function (err, game) {
-          game.save().then(function (curGame) {
-            //**Get the game meta info from the user (currently not there!)
-            //**var gameMeta = getGameMeta(curUser, req.body.game);
-            //
-            //Splice the new game in the user doc in place of the old game at all the right places
+      Game.findOne({ name: req.body.newName }).exec(function (err, curGame) {
+        if (curGame == null) {
+          console.log("CurGame is null: ", curGame);
+          Game.updateOne(
+            { name: req.body.newName },
+            { name: req.body.newName },
+            { upsert: true },
+            function (err, newGame) {
+              //Splice the new game in the user doc in place of the old game at all the right places
+              replaceInUserDoc(req.body.game, curUser, newGame._id.toString());
+              //The user now has a brand new game with a new name but everything else the exact same
+              //The advantage is that if the renamed game exists, the system can reference that game
+              //rather than having a game that references an object that doesn't share its name
+              curUser.save();
+              res.send({ status: "Success" });
+              //Save the user, the game has already been saved under pushToGamesDocAndSave
+            }
+          );
+        } else {
+          //Game already exists
+          console.log("req.body: ", req.body);
+          console.log("curGame: ", curGame);
+          //**Get the game meta info from the user (currently not there!)
+          //**var gameMeta = getGameMeta(curUser, req.body.game);
+          //
+          //Test the game to see if it's already in the user's lists anywhere.
+          //If so, don't allow the update because it will conflate two games
+          var repeat = false;
+          curUser.lists.allGames.some(function (e) {
+            if (e.toString() == curGame._id.toString()) {
+              repeat = true;
+              return repeat;
+            }
+          });
+          if (!repeat) {
+            curUser.lists.custom.forEach(function (e) {
+              e.games.some(function (f) {
+                console.log(f.toString(), curGame._id.toString());
+                if (f.toString() == curGame._id.toString()) {
+                  repeat = true;
+                  return repeat;
+                }
+              });
+            });
+          }
+          if (repeat) {
+            res.send({
+              err:
+                "Game " + req.body.newName + " is already in one of your lists",
+            });
+          } else {
             replaceInUserDoc(req.body.game, curUser, curGame._id.toString());
-            //The user now has a brand new game with a new name but everything else the exact same
-            //The advantage is that if the renamed game exists, the system can reference that game
-            //rather than having a game that references an object that doesn't share its name
             curUser.save();
             res.send({ status: "Success" });
-            //Save the user, the game has already been saved under pushToGamesDocAndSave
-          });
+          }
         }
-      );
+      });
     });
   } else {
     res.send(ERR_LOGIN);

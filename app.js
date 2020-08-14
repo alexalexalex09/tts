@@ -156,8 +156,10 @@ app.use((req, res, next) => {
   if (typeof req.user != "undefined") {
     if (typeof req.user.name.givenName != "undefined") {
       res.locals.username = req.user.name.givenName;
+      res.locals.email = req.user.emails[0].value;
     } else {
       res.locals.username = req.user.nickname;
+      res.locals.email = req.user.emails[0].value;
     }
   }
   next();

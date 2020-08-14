@@ -92,6 +92,51 @@ li.red {
   transform: translateY(0vh);
 }
 
+#accountContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, var(--vh5));
+  color: var(--main-white);
+  font-size: calc(var(--vh) * 2.5);
+}
+
+.title {
+  justify-self: end;
+  margin-right: 20px;
+}
+
+.field ion-icon {
+  cursor: pointer;
+}
+
+#faqContainer,
+#aboutContainer {
+  height: var(--vh60);
+  width: 80vw;
+  top: var(--vh15);
+  left: 10vw;
+  position: absolute;
+  color: var(--main-white);
+}
+
+#premiumContainer {
+  font-size: 2em;
+  color: var(--main-white);
+  text-align: center;
+}
+
+#faqList {
+  list-style: none;
+}
+#fq {
+  font-weight: 500;
+  font-size: 1.4em;
+}
+#fa {
+  margin-left: 10px;
+  margin-bottom: 1em;
+}
+
 #listIcon {
   position: absolute;
   cursor: pointer;
@@ -412,7 +457,7 @@ input:checked + .slider:before {
   background-color: rgba(0, 0, 0, 0);
   border-radius: 20px;
   transition: background-color 0.5s;
-  z-index: 2;
+  z-index: 3;
   cursor: pointer;
 }
 
@@ -995,13 +1040,11 @@ input[type="range"]:focus {
   z-index: 10;
 }
 
-#sessionsClose,
-#gamesClose {
+.pop .closeButton {
   color: var(--main-white);
 }
 
-#sessionsTitle,
-#gamesTitle {
+.pop .pageTitle {
   height: var(--vh10);
   color: var(--main-white);
 }
@@ -1202,10 +1245,6 @@ ion-icon#addListButton {
 
 #menu {
   background-color: var(--main-blue);
-}
-
-#accountView {
-  background-color: var(--main-green);
 }
 
 .menu {
@@ -1622,6 +1661,12 @@ subContextRemove {
   }
   #menuClose {
     display: none;
+  }
+  #faqContainer,
+  #aboutContainer,
+  #premiumContainer {
+    width: 96%;
+    left: 2%;
   }
   #copiedAlert,
   #loginAlert {

@@ -18,7 +18,7 @@ block content
         #menuItems.itemContainer
           ul
             li#sessionsItem
-              ion-icon(name='help-circle-outline')
+              ion-icon(name='color-filter-outline')
               | Sessions
             li#gamesItem
               ion-icon(name='library-outline')
@@ -124,6 +124,57 @@ block content
       #gamesContainer
       #gamesContextContainer.off
       #listContextContainer.off
+    
+    #accountView.pop.off
+      #accountClose.closeButton
+        ion-icon(name='close-outline')
+      #accountTitle.pageTitle Account 🐿️
+      #accountContainer
+        #accountUsernameTitle.title Username
+        #accountUsername.field #{username} 
+          ion-icon(name="create-outline")
+        #accountEmailTitle.title Email
+        #accountEmailField.field #{email}
+          ion-icon(name="create-outline")
+        #accountPwdResetTitle.title Password
+        #accountPwdResetField.field
+          button#pwdResetButton(onclick="pwdReset()") Reset Password
+
+
+
+    #faqView.pop.off
+      #faqClose.closeButton
+        ion-icon(name='close-outline')
+      #faqTitle.pageTitle FAQ 🐿️
+      #faqContainer
+        ul#faqList
+          li#fq What is a Session?
+          li#fa
+            | Let's say you and your friends want to get together to play games. It's always hard to pick a game, so you fire up a session, share the link, and start adding games to it. A session is the place where you list games to play when you get together, and then vote on them to create your playlist.
+          li#fq Where can I manage my lists?
+          li#fa
+            | In the menu (top left hand side on mobile), click "Games and Lists"
+          li#fq How do I know if someone else already added the game I want to the session?
+          li#fa
+            | When you're working on a session, a blue "list" button will appear on the left side of the screen. Click it to see the games that have already been added to the session.
+
+    #aboutView.pop.off
+      #aboutClose.closeButton
+        ion-icon(name='close-outline')
+      #aboutTitle.pageTitle About 🐿️
+      #aboutContainer
+        p It's always hard to pick a board game when you get together to play with friends. This app takes the pressure off. Create a session, share the link with your friends, and you all can start adding games together.
+        p Once you've picked your games, you'll be able to see who's still picking games and who's finished. Lock the list whenever you're ready.
+        p The app will give the creator a final chance to edit the list, highlighting any potential duplicates due to typos, etc. Then, start the voting!
+        p Once the creator has opened voting, everyone's screen will show the games and a slider to show how much (or how little) they're looking forward to playing each game. 
+        p When everyone's done voting, reveal the playlist! Our advanced algorithm (OK, it just adds up the votes) will create a specially designed playlist just for your group!
+        p For your convenience, this app includes list management and BoardGameGeek integration. Set up your collection however you want, and add whole groups of games with the click of a button!
+
+    #premiumView.pop.off
+      #premiumClose.closeButton
+        ion-icon(name='close-outline')
+      #premiumTitle.pageTitle Premium 🐿️
+      #premiumContainer Coming Soon!
 
 
 

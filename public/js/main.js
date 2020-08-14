@@ -318,13 +318,27 @@ window.addEventListener("load", function () {
   });
 
   /*****************************/
+  /*      Close Menu Items     */
+  /*****************************/
+
+  function closeAllMenus(open) {
+    console.log("Open: ", open);
+    $(".pop").each(function (i, e) {
+      if ("#" + $(e).attr("id") != open) {
+        console.log("Closing ", "#" + $(e).attr("id"));
+        closeMenuItem("#" + $(e).attr("id"));
+      }
+    });
+  }
+
+  /*****************************/
   /*    My Sessions Handler    */
   /*****************************/
 
   $("#sessionsItem").click(this, function (el) {
     if ($("#sessionsView").hasClass("off")) {
       closeMenu();
-      closeMenuItem("#gamesView");
+      closeAllMenus("#sessionsView");
       const gs_options = {
         method: "POST",
         body: "",
@@ -356,7 +370,7 @@ window.addEventListener("load", function () {
   $("#gamesItem").click(this, function (el) {
     if ($("#gamesView").hasClass("off")) {
       gulp();
-      closeMenuItem("#sessionsView");
+      closeAllMenus("#gamesView");
       closeMenu();
       window.setTimeout(showMenuItem("#gamesView"), 600);
     } else {
@@ -366,6 +380,94 @@ window.addEventListener("load", function () {
 
   $("#gamesClose").click(this, function (el) {
     closeMenuItem("#gamesView");
+  });
+
+  /*****************************/
+  /*  Account Handler Handler  */
+  /*****************************/
+  $("#accountItem").click(this, function (el) {
+    if ($("#accountView").hasClass("off")) {
+      closeAllMenus("#accountView");
+      closeMenu();
+      window.setTimeout(showMenuItem("#accountView"), 600);
+    } else {
+      closeMenuItem("#accountView");
+    }
+  });
+
+  $("#accountClose").click(this, function (el) {
+    closeMenuItem("#accountView");
+  });
+
+  $("#accountUsername ion-icon").click(this, function (el) {
+    showEditMenu("Username");
+  });
+
+  $("#accountEmail ion-icon").click(this, function (el) {
+    showEditMenu("Email");
+  });
+
+  function showEditMenu(type) {
+    setTimeout(function () {
+      hideOnClickOutside(
+        "#context_" + game.id,
+        "#context_" + game.id,
+        ".subContextContainer"
+      );
+      $("#contextShadow").removeClass("off");
+    }, 10);
+  }
+
+  /*****************************/
+  /*    FAQ Handler Handler    */
+  /*****************************/
+  $("#faqItem").click(this, function (el) {
+    if ($("#faqView").hasClass("off")) {
+      closeAllMenus("#faqView");
+      closeMenu();
+      window.setTimeout(showMenuItem("#faqView"), 600);
+    } else {
+      closeMenuItem("#faqView");
+    }
+  });
+
+  $("#faqClose").click(this, function (el) {
+    closeMenuItem("#faqView");
+  });
+
+  /*****************************/
+  /*    About Handler Handler  */
+  /*****************************/
+  $("#aboutItem").click(this, function (el) {
+    if ($("#aboutView").hasClass("off")) {
+      closeAllMenus("#aboutView");
+      closeMenu();
+      window.setTimeout(showMenuItem("#aboutView"), 600);
+    } else {
+      closeMenuItem("#aboutView");
+    }
+  });
+
+  $("#aboutClose").click(this, function (el) {
+    closeMenuItem("#aboutView");
+  });
+
+  /*****************************/
+  /*  Premium Handler Handler  */
+  /*****************************/
+
+  $("#premiumItem").click(this, function (el) {
+    if ($("#premiumView").hasClass("off")) {
+      closeAllMenus("#premiumView");
+      closeMenu();
+      window.setTimeout(showMenuItem("#premiumView"), 600);
+    } else {
+      closeMenuItem("#premiumView");
+    }
+  });
+
+  $("#premiumClose").click(this, function (el) {
+    closeMenuItem("#premiumView");
   });
 
   /*****************************/
@@ -1605,11 +1707,6 @@ function showGameContext(game) {
         .clone(true)
         .prop("id", "context_" + game.id)
         .appendTo($("body"));
-      console.log(
-        $("#context_stage_" + game.id + "[list=games" + game.list + "]"),
-        "SHOWGAMECONTEXT",
-        $(".contextActions.slideUp .contextTitle").first().text()
-      );
       contextBGG(
         ".contextActions.slideUp li.bggLink",
         $(
@@ -1804,49 +1901,52 @@ function contextRename(game) {
     `', '` +
     game.name +
     `')" id="renameGameInput"></input>
-    <input class="textSubmit" type="submit" value="">`;
+    <input class="textSubmit" type="submit" value="">` +
+    `<input class="textInput" type="text" autocomplete="off"></input>` +
+    `</form>`;
   $("body").append(el);
 }
 
 function renameGame(event, caller, game, oldGame) {
-  if (event.keyCode === 13) {
-    const rg_options = {
-      method: "POST",
-      body: JSON.stringify({
-        game: game,
-        newName: $(caller).val(),
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    startLoader();
-    fetch("/rename_game", rg_options).then(function (response) {
-      finishLoader();
-      return response.json().then((res) => {
-        if (res.err) {
-          console.log(res.err);
-          //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
-        } else {
-          console.log("renamed");
-          //$("#" + game).text(res.status.newName);
-          $("#gamesContainer")
-            .children()
-            .children(".listGames")
-            .children("li")
-            .each(function () {
-              if ($(this).text() == oldGame) {
-                $(this).text($(caller).val());
-              }
-            });
-          $(".subContextContainer").each(function () {
-            $(this).remove();
+  console.log($(caller), "Renaming ", game);
+  const rg_options = {
+    method: "POST",
+    body: JSON.stringify({
+      game: game,
+      newName: $(caller).children(".textInput").val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/rename_game", rg_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        console.log("renamed");
+        //$("#" + game).text(res.status.newName);
+        $("#gamesContainer")
+          .children()
+          .children(".listGames")
+          .children("li")
+          .each(function () {
+            if ($(this).text() == oldGame) {
+              $(this).text($(caller).val());
+              console.log("Renamed ", this);
+            }
           });
-          gulp();
-        }
-      });
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+        gulp();
+      }
     });
-  }
+  });
+  return false;
 }
 
 function showRenameList(list) {
@@ -1862,6 +1962,7 @@ function showRenameList(list) {
     <form onsubmit="return renameList(event, this, '` +
     list.id.substr(4) +
     `') id="renameGameInput"></input>
+    <input class="textInput" type="text" autocomplete="off"></input>
     <input class="textSubmit" type="submit" value="">`;
   $("body").append(el);
 }
@@ -1901,6 +2002,7 @@ function renameList(event, caller, list) {
       });
     });
   }
+  return false;
 }
 
 function showDeleteList(list) {

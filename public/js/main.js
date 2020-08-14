@@ -1925,7 +1925,7 @@ function renameGame(event, caller, game, oldGame) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
-        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+        showError(res.err);
       } else {
         console.log("renamed");
         //$("#" + game).text(res.status.newName);
@@ -3238,6 +3238,19 @@ function finishLoader() {
   console.trace();
   $(".preloader").fadeOut(200);
   //this should somehow resolve a promise since it's Async. Instead it's turning the loader off before start can turn it on.
+}
+
+function showError(err) {
+  $el = $("#errorAlert");
+  $el.html(err);
+  $el.removeClass("off");
+  $el.css("opacity", 1);
+  setTimeout(function () {
+    $el.css("opacity", 0);
+    setTimeout(function () {
+      $el.addClass("off");
+    }, 510);
+  }, 2000);
 }
 
 /*****************************/

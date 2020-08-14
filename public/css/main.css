@@ -546,8 +546,8 @@ input:checked + .slider:before {
 }
 
 #copiedAlert,
-#loginAlert {
-  opacity: 1;
+#loginAlert,
+#errorAlert {
   position: absolute;
   bottom: var(--vh20);
   width: 80vw;
@@ -559,6 +559,10 @@ input:checked + .slider:before {
   opacity: 0;
   background-color: var(--main-white);
   z-index: -1;
+}
+
+#errorAlert {
+  color: var(--main-red);
 }
 
 /*****************/

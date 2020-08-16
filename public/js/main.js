@@ -403,9 +403,9 @@ window.addEventListener("load", function () {
     showEditMenu("Username", "changeUsername");
   });
 
-  $("#accountEmailField ion-icon").click(this, function (el) {
+  /*$("#accountEmailField ion-icon").click(this, function (el) {
     showEditMenu("Email", "changeEmail");
-  });
+  });*/
 
   $("#accountPwdResetField button").click(this, function (el) {
     pwdReset();
@@ -3287,6 +3287,37 @@ function changeUsername() {
   });
   return false;
 }
+
+/*function changeEmail() {
+  const ce_options = {
+    method: "POST",
+    body: JSON.stringify({
+      newEmail: $("#accountInput input.textInput").val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/change_email", ce_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      console.log(res);
+      $("#accountEmailField").html(
+        res.name +
+          $("#accountEmailField")
+            .html()
+            .substr($("#accountEmailField").text().length)
+      );
+      $("#accountEmailField ion-icon").click(this, function (el) {
+        showEditMenu("Email", "changeEmail");
+      });
+      $(".subContextContainer").remove();
+    });
+  });
+  return false;
+}
+*/
 
 function pwdReset() {
   const pr_options = {

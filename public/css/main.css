@@ -1824,7 +1824,8 @@ subContextRemove {
   .subContext,
   .subContextRename,
   .subContextDelete,
-  .subContextRemove {
+  .subContextRemove,
+  .subContextAccount {
     left: 10px;
     width: 630px;
     padding: 15px;

@@ -246,29 +246,42 @@ router.post("/get_user_lists_populated", (req, res) => {
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        if (curUser) {
-          if (curUser.lists) {
-            getSessions(req.user.id, curUser.lists, res);
-          } else {
-            newUser = {
-              profile_id: req.user.id,
-              name: req.user.displayName,
-              lists: { allGames: [], custom: [] },
-            };
-            curUser = new User(newUser);
-            curUser.save();
-            getSessions(req.user.id, curUser.lists, res);
+        management.users.get({ id: req.user.user_id }, function (err, extUser) {
+          console.log("auth0 user:", extUser);
+          res.locals.user = req.user;
+          if (
+            extUser &&
+            extUser.user_metadata &&
+            extUser.user_metadata.userDefinedName != ""
+          ) {
+            var displayName =
+              extUser.user_metadata.userDefinedName || req.user.displayName;
+            console.log("DisplayName: ", displayName);
+            if (curUser) {
+              if (curUser.lists) {
+                getSessions(req.user.id, curUser.lists, res);
+              } else {
+                newUser = {
+                  profile_id: req.user.id,
+                  name: displayName, //TODO
+                  lists: { allGames: [], custom: [] },
+                };
+                curUser = new User(newUser);
+                curUser.save();
+                getSessions(req.user.id, curUser.lists, res);
+              }
+            } else {
+              newUser = {
+                profile_id: req.user.id,
+                name: displayName,
+                lists: { allGames: [], custom: [] },
+              };
+              curUser = new User(newUser);
+              curUser.save();
+              getSessions(req.user.id, curUser.lists, res);
+            }
           }
-        } else {
-          newUser = {
-            profile_id: req.user.id,
-            name: req.user.displayName,
-            lists: { allGames: [], custom: [] },
-          };
-          curUser = new User(newUser);
-          curUser.save();
-          getSessions(req.user.id, curUser.lists, res);
-        }
+        });
       });
   } else {
     res.send(ERR_LOGIN);
@@ -538,26 +551,52 @@ router.post("/join_session", function (req, res) {
           }
           console.log("newUser ", newUser);
           if (newUser) {
-            curSession.users.push({
-              user: req.user.id,
-              name: req.user.displayName,
-              done: false,
-              doneVoting: false,
+            var displayName = "";
+            management.users.get({ id: req.user.user_id }, function (
+              err,
+              extUser
+            ) {
+              console.log("auth0 user:", extUser);
+              res.locals.user = req.user;
+              if (
+                extUser &&
+                extUser.user_metadata &&
+                extUser.user_metadata.userDefinedName != ""
+              ) {
+                displayName =
+                  extUser.user_metadata.userDefinedName || req.user.displayName;
+                console.log("568DisplayName: ", displayName);
+                curSession.users.push({
+                  user: req.user.id,
+                  name: displayName,
+                  done: false,
+                  doneVoting: false,
+                });
+                curSession.save().then(function () {
+                  socketAPI.addGame({
+                    code: theCode,
+                  });
+                  res.send({
+                    owned: false,
+                    status: {
+                      code: curSession.code,
+                      lock: lock,
+                      games: sendGames,
+                    },
+                  });
+                });
+              }
             });
-            curSession.save().then(function () {
-              socketAPI.addGame({
-                code: theCode,
-              });
+          } else {
+            res.send({
+              owned: false,
+              status: {
+                code: curSession.code,
+                lock: lock,
+                games: sendGames,
+              },
             });
           }
-          res.send({
-            owned: false,
-            status: {
-              code: curSession.code,
-              lock: lock,
-              games: sendGames,
-            },
-          });
         }
       } else {
         //Joining as guest. Not added to users or voting array
@@ -595,29 +634,43 @@ router.post("/create_session", function (req, res) {
 
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
       var theCode = makeid(5);
-      var sessiondetail = {
-        owner: req.user.id,
-        code: theCode,
-        games: [],
-        users: [
-          {
-            user: req.user.id,
-            name: req.user.displayName,
-            done: false,
-          },
-        ],
-        lock: "#codeView",
-      };
-      var session = new Session(sessiondetail);
-      session.save().then(function (theSession) {
-        console.log("Session created...");
-        socketAPI.addGame({
-          code: theCode,
-        });
-        res.send({
-          owned: true,
-          status: { session: theSession, user: req.user.id },
-        });
+      var displayName = "";
+      management.users.get({ id: req.user.user_id }, function (err, extUser) {
+        console.log("auth0 user:", extUser);
+        res.locals.user = req.user;
+        if (
+          extUser &&
+          extUser.user_metadata &&
+          extUser.user_metadata.userDefinedName != ""
+        ) {
+          displayName =
+            extUser.user_metadata.userDefinedName || req.user.displayName;
+          console.log("648DisplayName: ", displayName);
+          var sessiondetail = {
+            owner: req.user.id,
+            code: theCode,
+            games: [],
+            users: [
+              {
+                user: req.user.id,
+                name: displayName,
+                done: false,
+              },
+            ],
+            lock: "#codeView",
+          };
+          var session = new Session(sessiondetail);
+          session.save().then(function (theSession) {
+            console.log("Session created...");
+            socketAPI.addGame({
+              code: theCode,
+            });
+            res.send({
+              owned: true,
+              status: { session: theSession, user: req.user.id },
+            });
+          });
+        }
       });
     });
   } else {
@@ -1432,14 +1485,18 @@ router.post("/change_username", function (req, res) {
   var metadata = { userDefinedName: req.body.newName };
   console.log("Changing username: ", params, metadata);
   management.users.updateUserMetadata(params, metadata, function (err, user) {
-    console.log("Username changed to ", req.body.newName);
-    if (err) {
-      // Handle error.
-      res.send({ err: "Username update error: ", err });
-    } else {
-      // Updated user.
-      res.send({ status: "Success", name: req.body.newName });
-    }
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      curUser.name = req.body.newName;
+      curUser.save();
+      console.log("Username changed to ", req.body.newName);
+      if (err) {
+        // Handle error.
+        res.send({ err: "Username update error: ", err });
+      } else {
+        // Updated user.
+        res.send({ status: "Success", name: req.body.newName });
+      }
+    });
   });
 });
 

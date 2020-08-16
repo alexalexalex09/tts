@@ -111,12 +111,13 @@ li.red {
 
 #faqContainer,
 #aboutContainer {
-  height: var(--vh60);
+  height: var(--vh70);
   width: 80vw;
   top: var(--vh15);
   left: 10vw;
   position: absolute;
   color: var(--main-white);
+  overflow-y: auto;
 }
 
 #premiumContainer {
@@ -1565,10 +1566,12 @@ subContextRemove {
 .spriteChecked {
   transform: rotateY(-180deg);
   position: absolute;
-  width: 100%;
+  width: 30px;
+  height: 30px;
   text-align: center;
   background-color: rgba(0, 0, 0, 0.5);
   transition: background-color 0.2s;
+  font-size: 25px;
 }
 .spriteUnchecked {
   background-color: rgba(0, 0, 0, 0);

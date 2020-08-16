@@ -302,6 +302,37 @@ window.addEventListener("load", function () {
   });*/
 
   /*****************************/
+  /*      Home Icon Click      */
+  /*****************************/
+  /*goBackfrom*/
+  $("#menuHomeIcon").on("click", function () {
+    closeMenu();
+    var from = "";
+    $(".main .view").each(function (i, e) {
+      if (!$(e).hasClass("off")) {
+        console.log($(e), "is the active window");
+        from = "#" + $(e).attr("id");
+        console.log(from);
+      }
+      return $(e).hasClass("off");
+    });
+    if (from != "#homeView" && from != "") {
+      window.hist = ["#homeView"];
+      $("#homeView").css({ transform: "translateX(-200vw)" });
+      $("#homeView").removeClass("off");
+      $("#backArrow").addClass("off");
+      window.setTimeout(function () {
+        $("#homeView").css({ transform: "translateX(0vw)" });
+        $(from).css({ transform: "translateX(200vw)" });
+      }, 100);
+      window.setTimeout(function () {
+        $(from).addClass("off");
+        catchDisplay();
+      }, 1000);
+    }
+  });
+
+  /*****************************/
   /*         Menu toggle       */
   /*****************************/
   //Close menu
@@ -627,6 +658,7 @@ window.addEventListener("load", function () {
   gulp();
   $("#selectButton").click(this, function () {
     //$("#backArrow").attr("data-gobackto", "code");
+    recheckGreenLists();
     goForwardFrom("#codeView", "#selectView");
   });
 
@@ -808,7 +840,7 @@ function goBackFrom(from, to) {
       window.hist.pop();
     }
   } else {
-    console.log("going back to ", to);
+    console.log("goBackFrom: going back from ", from, " to ", to);
     if (to == "#selectView" || to == "#postSelectView") {
       window.setTimeout(function () {
         $("#listIcon").removeClass("off"), 1000;

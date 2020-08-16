@@ -1268,6 +1268,17 @@ ion-icon#addListButton {
   color: var(--main-white) !important;
 }
 
+#menuHomeIcon {
+  cursor: pointer;
+  font-size: calc(var(--vh) * 4);
+  position: absolute;
+  top: 10px;
+  left: 2vw;
+  border: 2px solid white;
+  border-radius: 100px;
+  padding: calc(var(--vh) * 0.5);
+}
+
 .closeButton {
   position: absolute;
   right: 5px;

@@ -3269,6 +3269,7 @@ function changeUsername() {
   };
   startLoader();
   fetch("/change_username", cu_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       console.log(res);
       $("#hContainer .login .userNameContainer .userName span").text(res.name);
@@ -3284,6 +3285,7 @@ function changeUsername() {
       $(".subContextContainer").remove();
     });
   });
+  return false;
 }
 
 function pwdReset() {
@@ -3298,6 +3300,7 @@ function pwdReset() {
   };
   startLoader();
   fetch("/reset_password", pr_options).then(function (response) {
+    finishLoader();
     return response.json().then((res) => {
       if (res.status) {
         showError(res.status);

@@ -399,24 +399,17 @@ window.addEventListener("load", function () {
     closeMenuItem("#accountView");
   });
 
-  $("#accountUsername ion-icon").click(this, function (el) {
-    showEditMenu("Username");
+  $("#accountUsernameField ion-icon").click(this, function (el) {
+    showEditMenu("Username", "changeUsername");
   });
 
-  $("#accountEmail ion-icon").click(this, function (el) {
-    showEditMenu("Email");
+  $("#accountEmailField ion-icon").click(this, function (el) {
+    showEditMenu("Email", "changeEmail");
   });
 
-  function showEditMenu(type) {
-    setTimeout(function () {
-      hideOnClickOutside(
-        "#context_" + game.id,
-        "#context_" + game.id,
-        ".subContextContainer"
-      );
-      $("#contextShadow").removeClass("off");
-    }, 10);
-  }
+  $("#accountPwdResetField button").click(this, function (el) {
+    pwdReset();
+  });
 
   /*****************************/
   /*    FAQ Handler Handler    */
@@ -3237,6 +3230,80 @@ function finishLoader() {
   console.trace();
   $(".preloader").fadeOut(200);
   //this should somehow resolve a promise since it's Async. Instead it's turning the loader off before start can turn it on.
+}
+
+function showEditMenu(type, fn) {
+  var htmlString =
+    `` +
+    `<div class="subContextContainer">
+    <div class="subContextAccount" id="accountRename">
+      <div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()">
+        <ion-icon name="close-outline" role="img" class="md hydrated" aria-label="close outline"></ion-icon>
+      </div>
+      <div class="subContextTitle">Change ` +
+    type +
+    `</div>
+      <hr>
+      <div id="accountInputCont" class="textInputCont">
+        <form onsubmit="return ` +
+    fn +
+    `()" id="accountInput">
+          <input class="textSubmit" type="submit" value="">
+          <input class="textInput" type="text" autocomplete="off">
+        </form>
+      </div>
+    </div>
+  </div>`;
+  $("body").append(htmlString);
+}
+
+function changeUsername() {
+  const cu_options = {
+    method: "POST",
+    body: JSON.stringify({
+      newName: $("#accountInput input.textInput").val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/change_username", cu_options).then(function (response) {
+    return response.json().then((res) => {
+      console.log(res);
+      $("#hContainer .login .userNameContainer .userName span").text(res.name);
+      $("#accountUsernameField").html(
+        res.name +
+          $("#accountUsernameField")
+            .html()
+            .substr($("#accountUsernameField").text().length)
+      );
+      $("#accountUsernameField ion-icon").click(this, function (el) {
+        showEditMenu("Username", "changeUsername");
+      });
+      $(".subContextContainer").remove();
+    });
+  });
+}
+
+function pwdReset() {
+  const pr_options = {
+    method: "POST",
+    body: JSON.stringify({
+      email: $("#accountEmailField").text(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/reset_password", pr_options).then(function (response) {
+    return response.json().then((res) => {
+      if (res.status) {
+        showError(res.status);
+      }
+    });
+  });
 }
 
 function showError(err) {

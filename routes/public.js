@@ -1,7 +1,6 @@
 require("dotenv").config();
 const express = require("express");
 const router = express.Router();
-var cfenv = require("cfenv");
 var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 var User = require("../models/users.js");
@@ -12,18 +11,22 @@ var Fuse = require("fuse.js");
 const { response } = require("express");
 const https = require("https");
 const Resource = require("../models/resources.js");
+var ManagementClient = require("auth0").ManagementClient;
+var AuthenticationClient = require("auth0").AuthenticationClient;
+
+var management = new ManagementClient({
+  domain: process.env.AUTH0_DOMAIN,
+  clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
+  clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
+  scope: "read:users update:users",
+});
+
+var auth0 = new AuthenticationClient({
+  domain: process.env.AUTH0_DOMAIN,
+  clientId: process.env.AUTH0_CLIENT_ID,
+});
 
 const ERR_LOGIN = { err: "Log in first" };
-
-//CF variables
-var appEnv = cfenv.getAppEnv();
-
-var sURL = appEnv.getServiceURL("ad_16459ca7380ad71");
-if (appEnv.port == 6002) {
-  var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
-} else {
-  var baseURL = appEnv.url;
-}
 
 var mongoDB = process.env.mongo;
 console.log("Mongo: ", mongoDB);
@@ -184,9 +187,8 @@ function makeid(length) {
 }
 
 router.get("/j/:session", (req, res) => {
+  console.log("Join called*********************");
   res.render("index", {
-    appEnv: appEnv,
-    redirect_uri: baseURL + "/users/callback",
     sessionCode: req.params.session,
   });
 });
@@ -199,12 +201,11 @@ router.get("/", (req, res) => {
     req.session.userNonce = makeid(20);
   }
   if (typeof req.user != "undefined") {
+    console.log("app_metadata: ", req.user.app_metadata);
     console.log(req.user);
   }
   socketAPI.sendNotification("Reloading...");
   res.render("index", {
-    appEnv: appEnv,
-    redirect_uri: baseURL + "/users/callback",
     sessionCode: "none",
   });
 });
@@ -240,22 +241,18 @@ router.post("/get_session_post_select", (req, res) => {
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
   if (req.user) {
+    console.log("extUser: ", req.extUser);
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        if (typeof req.user.name.givenName != "undefined") {
-          var username = req.user.name.givenName;
-        } else {
-          var username = req.user.nickname;
-        }
         if (curUser) {
           if (curUser.lists) {
             getSessions(req.user.id, curUser.lists, res);
           } else {
             newUser = {
               profile_id: req.user.id,
-              name: username,
+              name: req.user.displayName,
               lists: { allGames: [], custom: [] },
             };
             curUser = new User(newUser);
@@ -265,7 +262,7 @@ router.post("/get_user_lists_populated", (req, res) => {
         } else {
           newUser = {
             profile_id: req.user.id,
-            name: username,
+            name: req.user.displayName,
             lists: { allGames: [], custom: [] },
           };
           curUser = new User(newUser);
@@ -541,14 +538,9 @@ router.post("/join_session", function (req, res) {
           }
           console.log("newUser ", newUser);
           if (newUser) {
-            if (typeof req.user.name.givenName != "undefined") {
-              var username = req.user.name.givenName;
-            } else {
-              var username = req.user.nickname;
-            }
             curSession.users.push({
               user: req.user.id,
-              name: username,
+              name: req.user.displayName,
               done: false,
               doneVoting: false,
             });
@@ -603,11 +595,6 @@ router.post("/create_session", function (req, res) {
 
     Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
       var theCode = makeid(5);
-      if (typeof req.user.name.givenName != "undefined") {
-        var username = req.user.name.givenName;
-      } else {
-        var username = req.user.nickname;
-      }
       var sessiondetail = {
         owner: req.user.id,
         code: theCode,
@@ -615,7 +602,7 @@ router.post("/create_session", function (req, res) {
         users: [
           {
             user: req.user.id,
-            name: username,
+            name: req.user.displayName,
             done: false,
           },
         ],
@@ -1411,6 +1398,49 @@ router.post("/list_add", function (req, res) {
       res.send({ err: "Cannot add empty list" });
     }
   }
+});
+
+router.post("/reset_password", function (req, res) {
+  console.log(req.user.emails[0].value);
+  if (req.user.emails[0].value) {
+    var data = {
+      email: req.user.emails[0].value,
+      connection: "Username-Password-Authentication",
+      client_id: process.env.AUTH0_CLIENT_ID,
+    };
+    console.log(data);
+    console.log(auth0.requestChangePasswordEmail);
+    auth0.requestChangePasswordEmail(data, function (err, message) {
+      if (err) {
+        console.log("PwdReset Error: ", err);
+      }
+
+      res.send({
+        status:
+          "If there is an account on file for " +
+          req.body.email +
+          ", a password reset email has been sent",
+      });
+    });
+  } else {
+    res.send({ err: "No email on file for user" });
+  }
+});
+
+router.post("/change_username", function (req, res) {
+  var params = { id: req.user.id };
+  var metadata = { userDefinedName: req.body.newName };
+  console.log("Changing username: ", params, metadata);
+  management.users.updateUserMetadata(params, metadata, function (err, user) {
+    console.log("Username changed to ", req.body.newName);
+    if (err) {
+      // Handle error.
+      res.send({ err: "Username update error: ", err });
+    } else {
+      // Updated user.
+      res.send({ status: "Success", name: req.body.newName });
+    }
+  });
 });
 
 router.post("/get_top_list", function (req, res) {

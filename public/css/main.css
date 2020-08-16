@@ -566,7 +566,6 @@ input:checked + .slider:before {
   z-index: 999;
 }
 
-
 /*****************/
 /*  Select View  */
 /*****************/
@@ -1402,7 +1401,8 @@ ion-icon#addListButton {
 .subContext,
 .subContextRename,
 .subContextDelete,
-.subContextRemove {
+.subContextRemove,
+.subContextAccount {
   margin-left: 0;
   background-color: white;
   position: absolute;

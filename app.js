@@ -9,6 +9,7 @@ var authRouter = require("./routes/auth");
 const session = require("express-session");
 const cfenv = require("cfenv");
 var socket_io = require("socket.io");
+var ManagementClient = require("auth0").ManagementClient;
 
 var app = express();
 
@@ -19,6 +20,13 @@ var sess = {
   resave: false,
   saveUninitialized: true,
 };
+
+var management = new ManagementClient({
+  domain: process.env.AUTH0_DOMAIN,
+  clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
+  clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
+  scope: "read:users update:users",
+});
 
 if (app.get("env") === "production") {
   // Use secure cookies in production (requires SSL/TLS)
@@ -31,10 +39,6 @@ if (app.get("env") === "production") {
 }
 app.use(session(sess));
 
-//CF variables
-
-var appEnv = cfenv.getAppEnv();
-console.log(appEnv);
 var envs = {
   orgUrl: process.env.oUrl,
   token: process.env.oToken,
@@ -43,12 +47,7 @@ var envs = {
   client_secret: process.env.oSecret,
   secret: process.env.sSecret,
 };
-console.log(envs);
-if (appEnv.isLocal) {
-  var baseURL = appEnv.url.slice(0, appEnv.url.length - 4) + 3000;
-} else {
-  var baseURL = appEnv.url;
-}
+//console.log(envs);
 
 // Load Passport
 var passport = require("passport");
@@ -152,17 +151,30 @@ app.use((req, res, next) => {
 */
 
 app.use((req, res, next) => {
-  res.locals.user = req.user;
-  if (typeof req.user != "undefined") {
-    if (typeof req.user.name.givenName != "undefined") {
-      res.locals.username = req.user.name.givenName;
+  console.log("custom middleware called*****************");
+  if (req.user) {
+    management.users.get({ id: req.user.user_id }, function (err, extUser) {
+      console.log("auth0 user:", extUser);
+      res.locals.user = req.user;
+      if (
+        extUser &&
+        extUser.user_metadata &&
+        extUser.user_metadata.userDefinedName != ""
+      ) {
+        res.locals.username = extUser.user_metadata.userDefinedName;
+        console.log(
+          "Assigning metadata username to locals: ",
+          res.locals.username
+        );
+      } else {
+        res.locals.username = req.user.displayName;
+      }
       res.locals.email = req.user.emails[0].value;
-    } else {
-      res.locals.username = req.user.nickname;
-      res.locals.email = req.user.emails[0].value;
-    }
+      next();
+    });
+  } else {
+    next();
   }
-  next();
 });
 
 //Routers

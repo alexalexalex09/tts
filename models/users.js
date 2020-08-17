@@ -16,6 +16,30 @@ var UserSchema = new Schema(
         },
       ],
     },
+    bgg: {
+      username: String,
+      collection: [
+        {
+          name: String,
+          id: Number,
+          image: String,
+          minplayers: Number,
+          maxplayers: Number,
+          minplaytime: Number,
+          maxplaytime: Number,
+          playingtime: Number,
+          rating: Number,
+          rank: Number,
+          family: String,
+          own: Number,
+          want: Number,
+          wanttoplay: Number,
+          wanttobuy: Number,
+          wishlist: Number,
+          plays: Number,
+        },
+      ],
+    },
   },
   { collection: "users" }
 );

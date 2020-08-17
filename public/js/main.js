@@ -431,15 +431,19 @@ window.addEventListener("load", function () {
   });
 
   $("#accountUsernameField ion-icon").click(this, function (el) {
-    showEditMenu("Username", "changeUsername");
+    showEditMenu("Change Username", "changeUsername");
   });
 
   /*$("#accountEmailField ion-icon").click(this, function (el) {
-    showEditMenu("Email", "changeEmail");
+    showEditMenu("Change Email", "changeEmail");
   });*/
 
   $("#accountPwdResetField button").click(this, function (el) {
     pwdReset();
+  });
+
+  $("#bggConnectButton").click(this, function (el) {
+    showEditMenu("Enter your BGG username", "connectBGG");
   });
 
   /*****************************/
@@ -639,10 +643,10 @@ window.addEventListener("load", function () {
     if (navigator.share) {
       navigator
         .share({
-          title: "Tidy Squirrel",
-          text: "Join my TidySquirrel session! ",
+          title: "SelectAGame",
+          text: "Join my SelectAGame session! ",
           url:
-            "https://tts.alexscottbecker.com/" +
+            "https://selectagame.alexscottbecker.com/" +
             document.getElementById("code").innerHTML,
         })
         .then(() => console.log("Successful share"))
@@ -717,6 +721,9 @@ window.addEventListener("load", function () {
 
   /* Set up autocomplete */
   getTopList();
+
+  /* Set up BGG account */
+  checkBGG();
 
   /*
    *
@@ -2267,6 +2274,32 @@ function contextBGG(el, game, recur, exact) {
     });
 }
 
+function connectBGG() {
+  const cb_options = {
+    method: "POST",
+    body: JSON.stringify({
+      username: $("#accountInputCont form .textInput").val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  console.log("connecting to bgg");
+  startLoader();
+  fetch("/connect_bgg", cb_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        $(".subContextContainer").remove();
+      }
+    });
+  });
+  return false;
+}
+
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {
     const $target = $(event.target);
@@ -3237,6 +3270,120 @@ function getTopList() {
   });
 }
 
+function checkBGG() {
+  const cb_options = {
+    method: "POST",
+    body: JSON.stringify({
+      code: document.getElementById("code").innerHTML,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/check_bgg", cb_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (res.success) {
+        var htmlString = `<div id="accountbggConnectTitle" class="title">BoardGameGeek Account</div>
+          <div id="accountbggConnectField" class="field">
+            <button id="bggConnectButton">Reconnect</button> 
+          </div>
+          <div id="accountbggCollImportTitle" class="title">BoardGameGeek Collection</div>
+          <div id="accountbggCollImportField" class="field">
+            <button id="bggCollImportButton">Import</button>
+          </div>
+          <div id="bggCollection" class="off">`;
+        res.success.forEach(function (e) {
+          htmlString += `<div class="bggGame">`;
+          $.each(e, function (i, el) {
+            htmlString += `<div class="` + i + `">` + el + `</div>`;
+          });
+          htmlString += `</div>`;
+        });
+        htmlString += `</div>`;
+        $("#accountbggConnectTitle").remove();
+        $("#accountbggConnectField").remove();
+        $("#accountContainer").html($("#accountContainer").html() + htmlString);
+        $("#bggConnectButton").on("click", function () {
+          connectBGG();
+        });
+        $("#bggCollImportButton").on("click", function () {
+          showBGGImport();
+        });
+      }
+    });
+  });
+}
+
+function showBGGImport() {
+  var htmlString = `<div class="bggImport">
+      <div class="closeButton" id="bggClose"><ion-icon name="close-outline"></ion-icon></div>
+      <div class="bggImportTitle">
+        <div class="bggImportTitleText">Select Games to Import</div>
+      </div>
+      <button class="bggFilterButton button greenBtn" id="bggFilterButton">Show Filters</button>
+      <div class="bggFilters off">
+        <div class="bggFilterLabel" id="bfMinP">Min players:</div>
+        <input class="bggFilterInput" type="number">
+        <div class="bggFilterLabel">Max players:</div>
+        <input class="bggFilterInput" id="bfMaxP" type="number">
+        <div class="bggFilterLabel">Min time:</div>
+        <input class="bggFilterInput" id="bfMinT" type="number">
+        <div class="bggFilterLabel">Max time:</div>
+        <input class="bggFilterInput" id="bfMaxT" type="number">
+        <div class="bggFilterLabel">Min plays:</div>
+        <input class="bggFilterInput" id="bfMinX" type="number">
+        <div class="bggFilterLabel">Max plays:</div>
+        <input class="bggFilterInput" id="bfMaxX" type="number">
+        <div class="bggFilterLabel">Min rank:</div>
+        <input class="bggFilterInput" id="bfRank" type="number">
+        <div class="bggFilterLabel">Owned:</div>
+        <select class="bggFilterInput" id="bfOwned">
+          <option value="b">Both</option>
+          <option value="y">Yes</option>
+          <option value="n">No</option>
+        </select>
+        <div class="bggFilterLabel">Wishlist:</div>
+        <select class="bggFilterInput" id="bfWish">
+          <option value="b">Both</option>
+          <option value="y">Yes</option>
+          <option value="n">No</option>
+        </select>
+        <div class="bggFilterLabel">Want to play:</div>
+        <select class="bggFilterInput" id="bfWtp">
+          <option value="b">Both</option>
+          <option value="y">Yes</option>
+          <option value="n">No</option>
+        </select>
+        <div class="bggFilterLabel">Want to buy:</div>
+        <select class="bggFilterInput" id="bfWtb">
+          <option value="b">Both</option>
+          <option value="y">Yes</option>
+          <option value="n">No</option>
+        </select>
+      </div>
+      <div class="bggImportList"></div>
+      <div class="bggListName">
+        <div class="bggListNameTitle">Import into:</div>
+        <select id="bggListSelect">`;
+  $("#gamesContainer>li").each(function (i, e) {
+    htmlString +=
+      `<option value="` +
+      i +
+      `">` +
+      $(e).children(".menuGamesContainer").children(".listName").first().text();
+    htmlString += `</option>`;
+  });
+  htmlString += `</select></div>
+      <button id="importBGG" class="button greenBtn">Import</button> 
+    </div>`;
+  $("body").append(htmlString);
+  $("#bggFilterButton").on("click", function () {
+    $(".bggFilters").toggleClass("off");
+  });
+}
+
 function showCurrentGames() {
   $("#currentGames").removeClass("off");
   $("#contextShadow").removeClass("off");
@@ -3264,7 +3411,7 @@ function finishLoader() {
   //this should somehow resolve a promise since it's Async. Instead it's turning the loader off before start can turn it on.
 }
 
-function showEditMenu(type, fn) {
+function showEditMenu(text, fn) {
   var htmlString =
     `` +
     `<div class="subContextContainer">
@@ -3272,8 +3419,8 @@ function showEditMenu(type, fn) {
       <div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()">
         <ion-icon name="close-outline" role="img" class="md hydrated" aria-label="close outline"></ion-icon>
       </div>
-      <div class="subContextTitle">Change ` +
-    type +
+      <div class="subContextTitle">` +
+    text +
     `</div>
       <hr>
       <div id="accountInputCont" class="textInputCont">
@@ -3312,7 +3459,7 @@ function changeUsername() {
             .substr($("#accountUsernameField").text().length)
       );
       $("#accountUsernameField ion-icon").click(this, function (el) {
-        showEditMenu("Username", "changeUsername");
+        showEditMenu("Change Username", "changeUsername");
       });
       $(".subContextContainer").remove();
     });

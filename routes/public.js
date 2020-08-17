@@ -13,6 +13,8 @@ const https = require("https");
 const Resource = require("../models/resources.js");
 var ManagementClient = require("auth0").ManagementClient;
 var AuthenticationClient = require("auth0").AuthenticationClient;
+var xml2js = require("xml2js");
+var parser = new xml2js.Parser();
 
 var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -246,6 +248,7 @@ router.post("/get_user_lists_populated", (req, res) => {
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
+        console.log("GULP curUser:", curUser);
         management.users.get({ id: req.user.user_id }, function (err, extUser) {
           console.log("auth0 user:", extUser);
           res.locals.user = req.user;
@@ -263,11 +266,12 @@ router.post("/get_user_lists_populated", (req, res) => {
               } else {
                 newUser = {
                   profile_id: req.user.id,
-                  name: displayName, //TODO
+                  name: displayName,
                   lists: { allGames: [], custom: [] },
+                  bgg: { username: "", collection: [] },
                 };
                 curUser = new User(newUser);
-                curUser.save();
+                curUser.save().then(bggUpdate(curUser));
                 getSessions(req.user.id, curUser.lists, res);
               }
             } else {
@@ -275,9 +279,10 @@ router.post("/get_user_lists_populated", (req, res) => {
                 profile_id: req.user.id,
                 name: displayName,
                 lists: { allGames: [], custom: [] },
+                bgg: { username: "", collection: [] },
               };
               curUser = new User(newUser);
-              curUser.save();
+              curUser.save().then(bggUpdate(curUser));
               getSessions(req.user.id, curUser.lists, res);
             }
           }
@@ -403,6 +408,7 @@ router.post("/game_add", function (req, res) {
                             "Error: game not added, maybe you checked too early.",
                         });
                       }
+                      bggUpdate(curUser);
                     });
                   });
                 }
@@ -1190,7 +1196,7 @@ router.post("/move_to_list", function (req, res) {
           errors++;
         }
       });
-      curUser.save();
+      curUser.save().then(bggUpdate(curUser));
       res.send({ status: curUser, errors: errors, ret: ret });
     });
   } else {
@@ -1231,7 +1237,7 @@ router.post("/copy_to_list", function (req, res) {
             errors++;
           }
         });
-        curUser.save();
+        curUser.save().then(bggUpdate(curUser));
         res.send({ status: curUser, errors: errors });
       }
     });
@@ -1262,7 +1268,7 @@ router.post("/rename_game", function (req, res) {
                 //The user now has a brand new game with a new name but everything else the exact same
                 //The advantage is that if the renamed game exists, the system can reference that game
                 //rather than having a game that references an object that doesn't share its name
-                curUser.save();
+                curUser.save().then(bggUpdate(curUser));
                 res.send({ status: "Success" });
                 //Save the user, the game has already been saved under pushToGamesDocAndSave
               }
@@ -1303,7 +1309,7 @@ router.post("/rename_game", function (req, res) {
               });
             } else {
               replaceInUserDoc(req.body.game, curUser, curGame._id.toString());
-              curUser.save();
+              curUser.save().then(bggUpdate(curUser));
               res.send({ status: "Success" });
             }
           }
@@ -1511,5 +1517,161 @@ router.post("/get_top_list", function (req, res) {
     }
   });
 });
+
+router.post("/connect_bgg", function (req, res) {
+  if (req.user) {
+    console.log("Connecting " + req.user.id);
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      if (curUser) {
+        curUser.bgg.username = req.body.username;
+        bggUpdate(curUser).then(
+          function (user) {
+            res.send({ status: "Got games for " + user.bgg.username });
+          },
+          function (err) {
+            res.send({ err: err });
+          }
+        );
+      } else {
+        res.send({ err: "No user" });
+      }
+    });
+  } else {
+    res.send({ err: "log in" });
+  }
+});
+
+router.post("/check_bgg", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      if (curUser.bgg.username == "") {
+        res.send({ err: "No BGG User" });
+      } else {
+        res.send({ success: curUser.bgg.collection });
+      }
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
+
+function bggUpdate(curUser) {
+  var promise = new Promise(function (resolve, reject) {
+    if (curUser.bgg.username != "") {
+      https.get(
+        "https://api.geekdo.com/xmlapi2/collection?username=" +
+          curUser.bgg.username +
+          "&stats=1",
+        (resp) => {
+          var data = "";
+
+          // A chunk of data has been recieved.
+          resp.on("data", (chunk) => {
+            data += chunk;
+          });
+
+          // The whole response has been received. Print out the result.
+          resp.on("end", () => {
+            data = data.toString();
+            parser.parseString(data, function (err, result) {
+              if (result.errors) {
+                reject(result.errors.error[0].message[0]);
+              } else {
+                var arr = [];
+                for (var i = 0; i < result["items"].$.totalitems; i++) {
+                  /*console.log(i, ": ", result["items"].item[i]);
+                console.log("name: ", result["items"].item[i].name);
+                console.log("stats: ", result["items"].item[i].stats);
+                console.log(
+                  "rating: ",
+                  result["items"].item[i].stats[0].rating
+                );
+                console.log(
+                  "Rating is " + typeof result["items"].item[i].stats[0].rating
+                );
+                if (result["items"].item[i].stats[0].rating) {
+                  console.log(
+                    "ranks: ",
+                    result["items"].item[i].stats[0].rating[0].ranks[0].rank
+                  );
+                }
+                console.log("status: ", result["items"].item[i].status);*/
+                  var g = result["items"].item[i];
+                  var s = g.stats[0];
+                  var toAdd = {};
+                  toAdd.name = g.name[0]._;
+                  toAdd.id = g.$.objectid;
+                  toAdd.image = g.thumbnail[0];
+                  if (s) {
+                    toAdd.minplayers = s.$.minplayers;
+                    toAdd.maxplayers = s.$.maxplayers;
+                    toAdd.minplaytime = s.$.minplaytime;
+                    toAdd.maxplaytime = s.$.maxplaytime;
+                    toAdd.playingtime = s.$.playingtime;
+                    if (s.rating && s.rating[0].rank) {
+                      console.log(Rank);
+                    }
+                    if (
+                      s.rating &&
+                      s.rating[0].ranks &&
+                      s.rating[0].ranks[0].rank[0] &&
+                      s.rating[0].ranks[0].rank[0].$ &&
+                      Number(s.rating[0].ranks[0].rank[0].$.value) ==
+                        Number(s.rating[0].ranks[0].rank[0].$.value)
+                    ) {
+                      toAdd.rank = s.rating[0].ranks[0].rank[0].$.value;
+                    }
+                    if (
+                      s.rating &&
+                      s.rating[0].ranks &&
+                      s.rating[0].ranks[0].rank[1] &&
+                      s.rating[0].ranks[0].rank[1].$ &&
+                      Number(s.rating[0].ranks[0].rank[1].$.name) ==
+                        Number(s.rating[0].ranks[0].rank[1].$.name)
+                    ) {
+                      toAdd.family = s.rating[0].ranks[0].rank[1].$.name;
+                    }
+                  }
+
+                  if (g.status[0]) {
+                    toAdd.own = g.status[0].$.own;
+                    toAdd.want = g.status[0].$.want;
+                    toAdd.wanttoplay = g.status[0].$.wanttoplay;
+                    toAdd.wanttobuy = g.status[0].$.wanttobuy;
+                    toAdd.wishlist = g.status[0].$.wishlist;
+                  }
+                  toAdd.plays = g.numplays[0];
+
+                  if (result["items"].item[i].stats.rating) {
+                    stats.rating = g.stats.rating.average;
+                  }
+                  arr.push(toAdd);
+                }
+                //console.log("The Array: ", arr);
+                User.findOne({ profile_id: curUser.profile_id }).exec(function (
+                  err,
+                  updatedUser
+                ) {
+                  if (updatedUser) {
+                    updatedUser = curUser;
+                    updatedUser.bgg.collection = arr;
+                    updatedUser.save();
+                    console.log("BGGUpdate Finished");
+                    resolve(updatedUser);
+                  } else {
+                    reject("Invalid user " + curUser.profile_id);
+                  }
+                });
+              }
+            });
+          });
+        }
+      );
+    } else {
+      reject("No username");
+    }
+  });
+  return promise;
+}
 
 module.exports = router;

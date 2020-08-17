@@ -2,7 +2,7 @@ extends layout
 
 block variables
   
-  - var title = "The Tidy Squirrel"
+  - var title = "SelectAGame"
 
 block content
   #mainView.main
@@ -53,7 +53,7 @@ block content
         else 
           a(href="/login") Login
     #homeView.view
-      .pageTitle The Tidy Squirrel 🐿️
+      .pageTitle SelectAGame 🐿️
       #joinButton.button.blueBtn Join
       #createButton.button.greyBtn Create
       #codeInputGroup.inputGroup.off
@@ -65,7 +65,7 @@ block content
         #codeError.errorText.off Wrong code. Please try again.
 
     #codeView.view.off
-      .pageTitle The Tidy Squirrel 🐿️
+      .pageTitle SelectAGame 🐿️
       #codeGroup
         #codeTitle Your Code:
         #code 
@@ -140,8 +140,9 @@ block content
           #accountPwdResetTitle.title Password
           #accountPwdResetField.field
             button#pwdResetButton Reset Password
-
-
+          #accountbggConnectTitle.title BoardGameGeek Account
+          #accountbggConnectField.field
+            button#bggConnectButton Connect
 
     #faqView.pop.off
       #faqClose.closeButton

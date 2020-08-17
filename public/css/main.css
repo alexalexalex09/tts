@@ -95,18 +95,110 @@ li.red {
 #accountContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: repeat(3, var(--vh5));
+  grid-template-rows: repeat(4, calc(var(--vh) * 7));
   color: var(--main-white);
   font-size: calc(var(--vh) * 2.5);
 }
 
+#accountContainer button {
+  border-radius: 5px;
+  border: none;
+  padding-top: 4px;
+  cursor: pointer;
+}
+
 .title {
   justify-self: end;
+  align-self: center;
   margin-right: 20px;
+  text-align: right;
+}
+
+.field {
+  align-self: center;
 }
 
 .field ion-icon {
   cursor: pointer;
+}
+
+.bggImport {
+  z-index: 999;
+  width: 100vw;
+  height: var(--vh100);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: var(--main-blue);
+  color: var(--main-white);
+}
+
+.bggImportTitle {
+  width: 80vw;
+  text-align: center;
+  left: 10vw;
+  top: var(--vh5);
+  position: absolute;
+  font-size: min(10 * (1vw + 1vh) / 2, 7vw);
+}
+
+button.bggFilterButton {
+  position: absolute;
+  top: var(--vh10);
+  margin: 0 auto;
+  width: 40vw;
+  font-size: 5vw;
+  left: 30vw;
+  border: 2px solid white;
+  height: calc(var(--vh, 1vh) * 5);
+}
+
+.bggListName {
+  position: absolute;
+  bottom: var(--vh15);
+  width: 50vw;
+  left: 25vw;
+  text-align: center;
+}
+
+select#bggListSelect {
+  width: 100%;
+  height: var(--vh5);
+}
+
+button#importBGG {
+  position: absolute;
+  bottom: var(--vh5);
+  border: 2px solid white;
+  width: 80vw;
+  left: 10vw;
+}
+
+.bggFilters {
+  height: var(--vh20);
+  top: var(--vh15);
+  position: absolute;
+  width: 98vw;
+  padding-top: var(--vh);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  left: 1vw;
+  overflow: auto;
+  border-top: 1px solid white;
+  margin-top: 5px;
+  border-bottom: 1px solid white;
+}
+
+input.bggFilterInput[type="number"] {
+  width: 3em;
+  height: 1em;
+  align-self: center;
+}
+
+select.bggFilterInput {
+  height: 1.3em;
+  max-width: 4em;
 }
 
 #faqContainer,
@@ -1894,6 +1986,35 @@ subContextRemove {
     left: 40px;
     top: var(--vh5);
     transform: translateY(-50%);
+  }
+
+  .bggImportTitle {
+    font-size: 30px;
+  }
+
+  .bggListName {
+    position: absolute;
+    bottom: var(--vh15);
+    width: 250px;
+    left: 50vw;
+    text-align: center;
+    transform: translateX(-50%);
+  }
+
+  button#importBGG {
+    left: 50vw;
+    transform: translateX(-50%);
+  }
+
+  button.bggFilterButton {
+    position: absolute;
+    top: calc(var(--vh) * 11);
+    font-size: 18px;
+    left: 50%;
+    border: 2px solid white;
+    height: calc(var(--vh, 1vh) * 4);
+    transform: translateX(-50%);
+    width: 125px;
   }
 
   .codeDisplay {

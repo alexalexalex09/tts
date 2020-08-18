@@ -2009,21 +2009,32 @@ subContextRemove {
     transform: translateY(-50%);
   }
 
+  .bggImport {
+    width: 651px;
+  }
+
   .bggImportTitle {
     font-size: 30px;
+    width: 80%;
+    left: 10%;
+  }
+
+  #bggImportList {
+    width: 50%;
+    left: 25%;
   }
 
   .bggListName {
     position: absolute;
     bottom: var(--vh15);
     width: 250px;
-    left: 50vw;
+    left: 50%;
     text-align: center;
     transform: translateX(-50%);
   }
 
   button#importBGG {
-    left: 50vw;
+    left: 50%;
     transform: translateX(-50%);
   }
 
@@ -2039,8 +2050,8 @@ subContextRemove {
   }
 
   .bggFilters {
-    width: 40vw;
-    left: 30vw;
+    width: 90%;
+    left: 5%;
   }
 
   .codeDisplay {

@@ -1133,6 +1133,7 @@ function guag() {
     return response.json().then((res) => {
       if (!res.err) {
         var htmlString = "";
+        res.lists.allGames.sort(lowerCaseNameSort());
         for (var i = 0; i < res.lists.allGames.length; i++) {
           htmlString +=
             `<li id="` +
@@ -1193,6 +1194,7 @@ function gulp(showAllGames = false) {
           false,
           false
         );
+        res.lists.allGames.sort(lowerCaseNameSort());
         for (var i = 0; i < res.lists.allGames.length; i++) {
           var curSession = document.getElementsByTagName("session")[0];
           var checked = "";
@@ -1301,6 +1303,7 @@ function gulp(showAllGames = false) {
             "showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})",
             "ellipsis-vertical"
           );
+          res.lists.custom[i].games.sort(lowerCaseNameSort());
           for (var j = 0; j < res.lists.custom[i].games.length; j++) {
             var htmlString =
               `
@@ -3875,4 +3878,10 @@ function autocomplete(inp, arr) {
   document.addEventListener("click", function (e) {
     closeAllLists(e.target);
   });
+}
+
+function lowerCaseNameSort() {
+  return function (a, b) {
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  };
 }

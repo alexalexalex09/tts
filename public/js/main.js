@@ -2291,8 +2291,8 @@ function connectBGG() {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
-        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
+        checkBGG();
         $(".subContextContainer").remove();
       }
     });
@@ -3304,9 +3304,9 @@ function checkBGG() {
         htmlString += `</div>`;
         $("#accountbggConnectTitle").remove();
         $("#accountbggConnectField").remove();
-        $("#accountContainer").html($("#accountContainer").html() + htmlString);
+        $("#bggConnected").html(htmlString);
         $("#bggConnectButton").on("click", function () {
-          connectBGG();
+          showEditMenu("Enter your BGG username", "connectBGG");
         });
         $("#bggCollImportButton").on("click", function () {
           showBGGImport();
@@ -3374,7 +3374,7 @@ function showBGGImport() {
     htmlString += `</option>`;
   });
   htmlString += `</select></div>
-      <button id="importBGG" class="button greenBtn">Import</button> 
+      <button id="importBGG" class="button greenBtn" onclick="importBGG()">Import</button> 
     </div>`;
   $("body").append(htmlString);
   $("#bggFilterButton").on("click", function () {
@@ -3384,6 +3384,9 @@ function showBGGImport() {
   $(".bggFilterInput").on("change", function () {
     updateFilters();
   });
+  $(".bggImport .closeButton").on("click", function () {
+    $(this).parent().remove();
+  });
 }
 
 function updateFilters() {
@@ -3391,8 +3394,6 @@ function updateFilters() {
   $("#bggCollection")
     .children(".bggGame")
     .each(function (i, e) {
-      console.log("TheWish: ");
-      console.log(compFlex("bfWish", e, "wishlist") == true);
       if (
         compBool(e, "bfNumP", "lt", "maxplayers") &&
         compBool(e, "bfNumP", "gt", "minplayers") &&
@@ -3406,7 +3407,6 @@ function updateFilters() {
         compFlex("bfWtp", e, "wanttoplay") &&
         compFlex("bfWtb", e, "wanttobuy")
       ) {
-        console.log(getGameVal(e, "name") + "is true");
         htmlString += `<li>` + getGameVal(e, "name") + `</li>`;
       }
     });
@@ -3417,15 +3417,6 @@ function compFlex(filterVal, e, gameVal) {
   var f = getFilterVal(filterVal);
   var g = getGameVal(e, gameVal);
   if (f != "" && typeof f != "undefined") {
-    console.log(
-      getGameVal(e, gameVal),
-      ": ",
-      filterVal,
-      f,
-      g,
-      f == "y",
-      g == true
-    );
     if (f == "b") {
       return true;
     }
@@ -3442,7 +3433,7 @@ function compFlex(filterVal, e, gameVal) {
 function compBool(e, filterVal, op, gameVal) {
   var f = Number(getFilterVal(filterVal));
   var g = Number(getGameVal(e, gameVal));
-  console.log(
+  /*console.log(
     getGameVal(e, "name"),
     ", ",
     filterVal,
@@ -3451,7 +3442,7 @@ function compBool(e, filterVal, op, gameVal) {
     f,
     "g: ",
     g
-  );
+  );*/
   if (f != "" && typeof f != "undefined") {
     if (op == "lt") {
       return f <= g;
@@ -3474,6 +3465,30 @@ function getGameVal(e, val) {
     .children("." + val)
     .first()
     .text();
+}
+
+function importBGG() {
+  var arr = [];
+  $("#bggImportList li").each(function (i, e) {
+    arr.push($(e).text());
+  });
+  const gab_options = {
+    method: "POST",
+    body: JSON.stringify({
+      games: arr,
+      list: $("#bggListSelect").val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/game_add_bulk", gab_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      console.log(res);
+    });
+  });
 }
 
 function showCurrentGames() {

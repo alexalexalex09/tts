@@ -347,6 +347,112 @@ router.post("/get_user_all_games", (req, res) => {
   }
 });
 
+router.post("/game_add_bulk", function (req, res) {
+  //req.body.games
+  //req.body.listNum
+  if (req.user) {
+    if (req.body.games) {
+      Game.find({ name: { $in: req.body.games } }).exec(function (
+        err,
+        curGames
+      ) {
+        console.log("Bulk add Games: ", curGames);
+        console.log(req.body.games);
+        var toAdd = [];
+        req.body.games.forEach(function (e, i) {
+          var index = curGames.findIndex((obj) => obj.name == e);
+          if (index == -1) {
+            toAdd.push({ name: req.body.games[i], rating: 0, owned: 0 });
+          }
+        });
+        if (toAdd.length > 0) {
+          toAdd.forEach(function (e) {
+            curGames.push(e);
+          });
+          console.log("CurGames: ", typeof curGames, ": ", curGames);
+          Game.insertMany(toAdd).then(function () {
+            //doesnt work becuase its a collection of objects, not an object
+            Game.find({ name: { $in: req.body.games } }).exec(function (
+              err,
+              curGames
+            ) {
+              User.findOne({ profile_id: req.user.id }).exec(function (
+                err,
+                curUser
+              ) {
+                curGames.forEach(function (e, i) {
+                  var index = curUser.lists.allGames.findIndex(
+                    (obj) => obj == curGames[i]._id
+                  );
+                  if (index == -1) {
+                    curUser.lists.allGames.push(
+                      mongoose.Types.ObjectId(curGames[i]._id)
+                    );
+                  }
+                });
+                if (req.body.list > 0) {
+                  var list = req.body.list - 1;
+                  curGames.forEach(function (e, i) {
+                    var index = curUser.lists.custom[list].findIndex(
+                      (obj) => obj == curGames[i]._id
+                    );
+                    if (index == -1) {
+                      curUser.lists.custom[list].games.push(
+                        mongoose.Types.ObjectId(curGames[i]._id)
+                      );
+                    }
+                  });
+                }
+                curUser.save();
+                res.send({ status: "Added bulk games: " + req.body.games });
+              });
+            });
+          });
+        } else {
+          //no Games to Add
+          User.findOne({ profile_id: req.user.id }).exec(function (
+            err,
+            curUser
+          ) {
+            curGames.forEach(function (e, i) {
+              var index = curUser.lists.allGames.findIndex(
+                (obj) => obj.toString() == curGames[i]._id.toString()
+              );
+              if (index == -1) {
+                curUser.lists.allGames.push(
+                  mongoose.Types.ObjectId(curGames[i]._id)
+                );
+              }
+            });
+            if (req.body.list > 0) {
+              var list = req.body.list - 1;
+              curGames.forEach(function (e, i) {
+                var index = curUser.lists.custom[list].games.findIndex(
+                  (obj) => obj.toString() == curGames[i]._id.toString()
+                );
+                if (index == -1) {
+                  curUser.lists.custom[list].games.push(
+                    mongoose.Types.ObjectId(curGames[i]._id)
+                  );
+                }
+              });
+            }
+            curUser.save();
+            console.log({ status: "Added bulk games: " + req.body.games });
+            res.send({ status: "Added bulk games: " + req.body.games });
+          });
+        }
+      });
+    } else {
+      console.log("No games submitted");
+      res.send("No games submitted");
+    }
+  } else {
+    console.log("Log in First");
+    res.send(ERR_LOGIN);
+  }
+});
+
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
   if (req.user) {

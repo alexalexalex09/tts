@@ -94,10 +94,14 @@ li.red {
 
 #accountContainer {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 50% 50%;
   grid-template-rows: repeat(4, calc(var(--vh) * 7));
   color: var(--main-white);
   font-size: calc(var(--vh) * 2.5);
+}
+
+#accountEmailField {
+  word-break: break-word;
 }
 
 #bggConnected {
@@ -661,7 +665,8 @@ input:checked + .slider:before {
 
 #copiedAlert,
 #loginAlert,
-#errorAlert {
+#errorAlert,
+.tempAlert {
   position: absolute;
   bottom: var(--vh20);
   width: 80vw;
@@ -1811,7 +1816,8 @@ subContextRemove {
     left: 2%;
   }
   #copiedAlert,
-  #loginAlert {
+  #loginAlert,
+  .tempAlert {
     width: 500px;
     left: calc(50% + 125px);
     transform: translateX(-50%);
@@ -1910,6 +1916,11 @@ subContextRemove {
     transform: translateX(calc(var(--vh100) * -1));
     width: 401px;
     left: 249px;
+  }
+
+  .preloader {
+    left: unset;
+    right: 50px;
   }
 
   .showMenuItem {

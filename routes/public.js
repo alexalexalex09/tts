@@ -259,21 +259,13 @@ router.post("/get_user_lists_populated", (req, res) => {
           ) {
             var displayName =
               extUser.user_metadata.userDefinedName || req.user.displayName;
-            console.log("DisplayName: ", displayName);
-            if (curUser) {
-              if (curUser.lists) {
-                getSessions(req.user.id, curUser.lists, res);
-              } else {
-                newUser = {
-                  profile_id: req.user.id,
-                  name: displayName,
-                  lists: { allGames: [], custom: [] },
-                  bgg: { username: "", collection: [] },
-                };
-                curUser = new User(newUser);
-                curUser.save().then(bggUpdate(curUser));
-                getSessions(req.user.id, curUser.lists, res);
-              }
+          } else {
+            displayName = req.user.displayName;
+          }
+          console.log("DisplayName: ", displayName);
+          if (curUser) {
+            if (curUser.lists) {
+              getSessions(req.user.id, curUser.lists, res);
             } else {
               newUser = {
                 profile_id: req.user.id,
@@ -285,6 +277,17 @@ router.post("/get_user_lists_populated", (req, res) => {
               curUser.save().then(bggUpdate(curUser));
               getSessions(req.user.id, curUser.lists, res);
             }
+          } else {
+            newUser = {
+              profile_id: req.user.id,
+              name: displayName,
+              lists: { allGames: [], custom: [] },
+              bgg: { username: "", collection: [] },
+            };
+            curUser = new User(newUser);
+            console.log("Creating New USER****");
+            curUser.save().then(bggUpdate(curUser));
+            getSessions(req.user.id, curUser.lists, res);
           }
         });
       });
@@ -757,32 +760,34 @@ router.post("/create_session", function (req, res) {
         ) {
           displayName =
             extUser.user_metadata.userDefinedName || req.user.displayName;
-          console.log("648DisplayName: ", displayName);
-          var sessiondetail = {
-            owner: req.user.id,
-            code: theCode,
-            games: [],
-            users: [
-              {
-                user: req.user.id,
-                name: displayName,
-                done: false,
-              },
-            ],
-            lock: "#codeView",
-          };
-          var session = new Session(sessiondetail);
-          session.save().then(function (theSession) {
-            console.log("Session created...");
-            socketAPI.addGame({
-              code: theCode,
-            });
-            res.send({
-              owned: true,
-              status: { session: theSession, user: req.user.id },
-            });
-          });
+        } else {
+          displayName = req.user.displayName;
         }
+        console.log("648DisplayName: ", displayName);
+        var sessiondetail = {
+          owner: req.user.id,
+          code: theCode,
+          games: [],
+          users: [
+            {
+              user: req.user.id,
+              name: displayName,
+              done: false,
+            },
+          ],
+          lock: "#codeView",
+        };
+        var session = new Session(sessiondetail);
+        session.save().then(function (theSession) {
+          console.log("Session created...");
+          socketAPI.addGame({
+            code: theCode,
+          });
+          res.send({
+            owned: true,
+            status: { session: theSession, user: req.user.id },
+          });
+        });
       });
     });
   } else {
@@ -1650,10 +1655,18 @@ router.post("/connect_bgg", function (req, res) {
 router.post("/check_bgg", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      if (curUser.bgg.username == "") {
-        res.send({ err: "No BGG User" });
+      if (curUser) {
+        if (
+          typeof curUser == "undefined" ||
+          typeof curUser.bgg == "undefined" ||
+          curUser.bgg.username == ""
+        ) {
+          res.send({ err: "No BGG User" });
+        } else {
+          res.send({ success: curUser.bgg.collection });
+        }
       } else {
-        res.send({ success: curUser.bgg.collection });
+        res.send({ err: "No user" });
       }
     });
   } else {
@@ -1684,90 +1697,93 @@ function bggUpdate(curUser) {
                 reject(result.errors.error[0].message[0]);
               } else {
                 var arr = [];
-                for (var i = 0; i < result["items"].$.totalitems; i++) {
-                  /*console.log(i, ": ", result["items"].item[i]);
-                console.log("name: ", result["items"].item[i].name);
-                console.log("stats: ", result["items"].item[i].stats);
-                console.log(
-                  "rating: ",
-                  result["items"].item[i].stats[0].rating
-                );
-                console.log(
-                  "Rating is " + typeof result["items"].item[i].stats[0].rating
-                );
-                if (result["items"].item[i].stats[0].rating) {
+                if (result["items"]) {
+                  for (var i = 0; i < result["items"].$.totalitems; i++) {
+                    /*console.log(i, ": ", result["items"].item[i]);
+                  console.log("name: ", result["items"].item[i].name);
+                  console.log("stats: ", result["items"].item[i].stats);
                   console.log(
-                    "ranks: ",
-                    result["items"].item[i].stats[0].rating[0].ranks[0].rank
+                    "rating: ",
+                    result["items"].item[i].stats[0].rating
                   );
-                }
-                console.log("status: ", result["items"].item[i].status);*/
-                  var g = result["items"].item[i];
-                  var s = g.stats[0];
-                  var toAdd = {};
-                  toAdd.name = g.name[0]._;
-                  toAdd.id = g.$.objectid;
-                  toAdd.image = g.thumbnail[0];
-                  if (s) {
-                    toAdd.minplayers = s.$.minplayers;
-                    toAdd.maxplayers = s.$.maxplayers;
-                    toAdd.minplaytime = s.$.minplaytime;
-                    toAdd.maxplaytime = s.$.maxplaytime;
-                    toAdd.playingtime = s.$.playingtime;
-                    if (s.rating && s.rating[0].rank) {
-                      console.log(Rank);
-                    }
-                    if (
-                      s.rating &&
-                      s.rating[0].ranks &&
-                      s.rating[0].ranks[0].rank[0] &&
-                      s.rating[0].ranks[0].rank[0].$ &&
-                      Number(s.rating[0].ranks[0].rank[0].$.value) ==
-                        Number(s.rating[0].ranks[0].rank[0].$.value)
-                    ) {
-                      toAdd.rank = s.rating[0].ranks[0].rank[0].$.value;
-                    }
-                    if (
-                      s.rating &&
-                      s.rating[0].ranks &&
-                      s.rating[0].ranks[0].rank[1] &&
-                      s.rating[0].ranks[0].rank[1].$ &&
-                      Number(s.rating[0].ranks[0].rank[1].$.name) ==
-                        Number(s.rating[0].ranks[0].rank[1].$.name)
-                    ) {
-                      toAdd.family = s.rating[0].ranks[0].rank[1].$.name;
-                    }
+                  console.log(
+                    "Rating is " + typeof result["items"].item[i].stats[0].rating
+                  );
+                  if (result["items"].item[i].stats[0].rating) {
+                    console.log(
+                      "ranks: ",
+                      result["items"].item[i].stats[0].rating[0].ranks[0].rank
+                    );
                   }
+                  console.log("status: ", result["items"].item[i].status);*/
+                    var g = result["items"].item[i];
+                    var s = g.stats[0];
+                    var toAdd = {};
+                    toAdd.name = g.name[0]._;
+                    toAdd.id = g.$.objectid;
+                    toAdd.image = g.thumbnail[0];
+                    if (s) {
+                      toAdd.minplayers = s.$.minplayers;
+                      toAdd.maxplayers = s.$.maxplayers;
+                      toAdd.minplaytime = s.$.minplaytime;
+                      toAdd.maxplaytime = s.$.maxplaytime;
+                      toAdd.playingtime = s.$.playingtime;
+                      if (s.rating && s.rating[0].rank) {
+                        console.log(Rank);
+                      }
+                      if (
+                        s.rating &&
+                        s.rating[0].ranks &&
+                        s.rating[0].ranks[0].rank[0] &&
+                        s.rating[0].ranks[0].rank[0].$ &&
+                        Number(s.rating[0].ranks[0].rank[0].$.value) ==
+                          Number(s.rating[0].ranks[0].rank[0].$.value)
+                      ) {
+                        toAdd.rank = s.rating[0].ranks[0].rank[0].$.value;
+                      }
+                      if (
+                        s.rating &&
+                        s.rating[0].ranks &&
+                        s.rating[0].ranks[0].rank[1] &&
+                        s.rating[0].ranks[0].rank[1].$ &&
+                        Number(s.rating[0].ranks[0].rank[1].$.name) ==
+                          Number(s.rating[0].ranks[0].rank[1].$.name)
+                      ) {
+                        toAdd.family = s.rating[0].ranks[0].rank[1].$.name;
+                      }
+                    }
 
-                  if (g.status[0]) {
-                    toAdd.own = g.status[0].$.own;
-                    toAdd.want = g.status[0].$.want;
-                    toAdd.wanttoplay = g.status[0].$.wanttoplay;
-                    toAdd.wanttobuy = g.status[0].$.wanttobuy;
-                    toAdd.wishlist = g.status[0].$.wishlist;
-                  }
-                  toAdd.plays = g.numplays[0];
+                    if (g.status[0]) {
+                      toAdd.own = g.status[0].$.own;
+                      toAdd.want = g.status[0].$.want;
+                      toAdd.wanttoplay = g.status[0].$.wanttoplay;
+                      toAdd.wanttobuy = g.status[0].$.wanttobuy;
+                      toAdd.wishlist = g.status[0].$.wishlist;
+                    }
+                    toAdd.plays = g.numplays[0];
 
-                  if (result["items"].item[i].stats.rating) {
-                    stats.rating = g.stats.rating.average;
+                    if (result["items"].item[i].stats.rating) {
+                      stats.rating = g.stats.rating.average;
+                    }
+                    arr.push(toAdd);
                   }
-                  arr.push(toAdd);
+                  //console.log("The Array: ", arr);
+                  User.findOne({ profile_id: curUser.profile_id }).exec(
+                    function (err, updatedUser) {
+                      if (updatedUser) {
+                        updatedUser = curUser;
+                        updatedUser.bgg.collection = arr;
+                        updatedUser.save();
+                        console.log("BGGUpdate Finished");
+                        resolve(updatedUser);
+                      } else {
+                        reject("Invalid user " + curUser.profile_id);
+                      }
+                    }
+                  );
+                } else {
+                  reject("No response", result);
                 }
-                //console.log("The Array: ", arr);
-                User.findOne({ profile_id: curUser.profile_id }).exec(function (
-                  err,
-                  updatedUser
-                ) {
-                  if (updatedUser) {
-                    updatedUser = curUser;
-                    updatedUser.bgg.collection = arr;
-                    updatedUser.save();
-                    console.log("BGGUpdate Finished");
-                    resolve(updatedUser);
-                  } else {
-                    reject("Invalid user " + curUser.profile_id);
-                  }
-                });
               }
             });
           });

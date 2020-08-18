@@ -3025,6 +3025,17 @@ function showAlert(alert) {
   }, 1000);
 }
 
+function createAndShowAlert(alert) {
+  $("body").append('<div id="tempAlert" class="tempAlert">' + alert + "</div>");
+  $("#tempAlert").css({ opacity: 1, "z-index": 11 });
+  setTimeout(function () {
+    $("#tempAlert").css({ opacity: 0 });
+    setTimeout(function () {
+      $("#tempAlert").remove();
+    }, 1000);
+  }, 1000);
+}
+
 function updateCurrentGames(curGames) {
   var htmlString = ``;
   curGames.forEach(function (e) {
@@ -3490,6 +3501,7 @@ function importBGG() {
     finishLoader();
     return response.json().then((res) => {
       console.log(res);
+      createAndShowAlert("Imported Games");
     });
   });
 }

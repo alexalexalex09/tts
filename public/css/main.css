@@ -188,6 +188,8 @@ button#importBGG {
   border-top: 1px solid white;
   margin-top: 5px;
   border-bottom: 1px solid white;
+  background-color: var(--main-blue);
+  z-index: 1;
 }
 
 input.bggFilterInput[type="number"] {
@@ -199,6 +201,17 @@ input.bggFilterInput[type="number"] {
 select.bggFilterInput {
   height: 1.3em;
   max-width: 4em;
+}
+
+#bggImportList {
+  list-style: none;
+  width: 80vw;
+  top: var(--vh20);
+  position: absolute;
+  left: 10vw;
+  font-size: 1.3em;
+  overflow: auto;
+  height: var(--vh50);
 }
 
 #faqContainer,
@@ -2015,6 +2028,11 @@ subContextRemove {
     height: calc(var(--vh, 1vh) * 4);
     transform: translateX(-50%);
     width: 125px;
+  }
+
+  .bggFilters {
+    width: 40vw;
+    left: 30vw;
   }
 
   .codeDisplay {

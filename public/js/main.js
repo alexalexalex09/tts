@@ -3324,10 +3324,10 @@ function showBGGImport() {
       </div>
       <button class="bggFilterButton button greenBtn" id="bggFilterButton">Show Filters</button>
       <div class="bggFilters off">
-        <div class="bggFilterLabel" id="bfMinP">Min players:</div>
-        <input class="bggFilterInput" type="number">
-        <div class="bggFilterLabel">Max players:</div>
-        <input class="bggFilterInput" id="bfMaxP" type="number">
+        <div class="bggFilterLabel">Num. players:</div>
+        <input class="bggFilterInput" id="bfNumP" type="number">
+        <div class="bggFilterLabel">Min rank:</div>
+        <input class="bggFilterInput" id="bfRank" type="number">
         <div class="bggFilterLabel">Min time:</div>
         <input class="bggFilterInput" id="bfMinT" type="number">
         <div class="bggFilterLabel">Max time:</div>
@@ -3336,8 +3336,6 @@ function showBGGImport() {
         <input class="bggFilterInput" id="bfMinX" type="number">
         <div class="bggFilterLabel">Max plays:</div>
         <input class="bggFilterInput" id="bfMaxX" type="number">
-        <div class="bggFilterLabel">Min rank:</div>
-        <input class="bggFilterInput" id="bfRank" type="number">
         <div class="bggFilterLabel">Owned:</div>
         <select class="bggFilterInput" id="bfOwned">
           <option value="b">Both</option>
@@ -3363,7 +3361,7 @@ function showBGGImport() {
           <option value="n">No</option>
         </select>
       </div>
-      <div class="bggImportList"></div>
+      <div id="bggImportList"></div>
       <div class="bggListName">
         <div class="bggListNameTitle">Import into:</div>
         <select id="bggListSelect">`;
@@ -3382,6 +3380,100 @@ function showBGGImport() {
   $("#bggFilterButton").on("click", function () {
     $(".bggFilters").toggleClass("off");
   });
+  updateFilters();
+  $(".bggFilterInput").on("change", function () {
+    updateFilters();
+  });
+}
+
+function updateFilters() {
+  var htmlString = ``;
+  $("#bggCollection")
+    .children(".bggGame")
+    .each(function (i, e) {
+      console.log("TheWish: ");
+      console.log(compFlex("bfWish", e, "wishlist") == true);
+      if (
+        compBool(e, "bfNumP", "lt", "maxplayers") &&
+        compBool(e, "bfNumP", "gt", "minplayers") &&
+        compBool(e, "bfRank", "gt", "rank") &&
+        compBool(e, "bfMinT", "lt", "playingtime") &&
+        compBool(e, "bfMaxT", "gt", "playingtime") &&
+        compBool(e, "bfMinX", "lt", "plays") &&
+        compBool(e, "bfMaxX", "gt", "plays") &&
+        compFlex("bfOwned", e, "own") &&
+        compFlex("bfWish", e, "wishlist") &&
+        compFlex("bfWtp", e, "wanttoplay") &&
+        compFlex("bfWtb", e, "wanttobuy")
+      ) {
+        console.log(getGameVal(e, "name") + "is true");
+        htmlString += `<li>` + getGameVal(e, "name") + `</li>`;
+      }
+    });
+  $("#bggImportList").html(htmlString);
+}
+
+function compFlex(filterVal, e, gameVal) {
+  var f = getFilterVal(filterVal);
+  var g = getGameVal(e, gameVal);
+  if (f != "" && typeof f != "undefined") {
+    console.log(
+      getGameVal(e, gameVal),
+      ": ",
+      filterVal,
+      f,
+      g,
+      f == "y",
+      g == true
+    );
+    if (f == "b") {
+      return true;
+    }
+    if (f == "y") {
+      return Number(g);
+    }
+    if (f == "n") {
+      return !Number(g);
+    }
+    return "Error: filterVal must equal b, y, or n";
+  }
+}
+
+function compBool(e, filterVal, op, gameVal) {
+  var f = Number(getFilterVal(filterVal));
+  var g = Number(getGameVal(e, gameVal));
+  console.log(
+    getGameVal(e, "name"),
+    ", ",
+    filterVal,
+    ", f: ",
+    f != "" && typeof f != "undefined",
+    f,
+    "g: ",
+    g
+  );
+  if (f != "" && typeof f != "undefined") {
+    if (op == "lt") {
+      return f <= g;
+    }
+    if (op == "gt") {
+      return f >= g;
+    }
+    return 'Error, op must be "lt" or "gt"';
+  } else {
+    return true;
+  }
+}
+
+function getFilterVal(val) {
+  return $("#" + val).val();
+}
+
+function getGameVal(e, val) {
+  return $(e)
+    .children("." + val)
+    .first()
+    .text();
 }
 
 function showCurrentGames() {

@@ -3648,8 +3648,10 @@ function showError(err) {
   $el.removeClass("off");
   setTimeout(function () {
     $el.css("opacity", 1);
+    $el.css("z-index", 999);
     setTimeout(function () {
       $el.css("opacity", 0);
+      $el.css("z-index", -1);
       setTimeout(function () {
         $el.addClass("off");
       }, 510);

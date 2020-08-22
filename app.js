@@ -153,6 +153,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   console.log("custom middleware called*****************");
   if (req.user) {
+    console.log("with user");
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
       console.log("auth0 user:", extUser);
       res.locals.user = req.user;
@@ -173,6 +174,7 @@ app.use((req, res, next) => {
       next();
     });
   } else {
+    console.log("No user");
     next();
   }
 });

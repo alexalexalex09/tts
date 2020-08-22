@@ -15,6 +15,7 @@ var ManagementClient = require("auth0").ManagementClient;
 var AuthenticationClient = require("auth0").AuthenticationClient;
 var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
+const Readable = require("readable-url");
 
 var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -265,7 +266,7 @@ router.post("/get_user_lists_populated", (req, res) => {
           console.log("DisplayName: ", displayName);
           if (curUser) {
             if (curUser.lists) {
-              getSessions(req.user.id, curUser.lists, res);
+              getOwnedSessions(req.user.id, curUser.lists, res);
             } else {
               newUser = {
                 profile_id: req.user.id,
@@ -275,7 +276,7 @@ router.post("/get_user_lists_populated", (req, res) => {
               };
               curUser = new User(newUser);
               curUser.save().then(bggUpdate(curUser));
-              getSessions(req.user.id, curUser.lists, res);
+              getOwnedSessions(req.user.id, curUser.lists, res);
             }
           } else {
             newUser = {
@@ -287,7 +288,7 @@ router.post("/get_user_lists_populated", (req, res) => {
             curUser = new User(newUser);
             console.log("Creating New USER****");
             curUser.save().then(bggUpdate(curUser));
-            getSessions(req.user.id, curUser.lists, res);
+            getOwnedSessions(req.user.id, curUser.lists, res);
           }
         });
       });
@@ -298,13 +299,17 @@ router.post("/get_user_lists_populated", (req, res) => {
 
 router.post("/get_sessions", (req, res) => {
   if (req.user) {
-    getSessions(req.user.id, "", res);
+    getOwnedSessions(req.user.id, "", res);
   } else {
     res.send(ERR_LOGIN);
   }
 });
 
-function getSessions(theId, lists, res) {
+function getParticipantSessions(theId, lists, res) {
+  //TODO: List all sessions a user is participating in
+}
+
+function getOwnedSessions(theId, lists, res) {
   Session.find({ owner: theId }).exec(function (err, curSessions) {
     var sessions = [];
     for (var i = 0; i < curSessions.length; i++) {
@@ -312,6 +317,7 @@ function getSessions(theId, lists, res) {
         code: curSessions[i].code,
         games: curSessions[i].games.length,
         users: curSessions[i].users.length,
+        note: curSessions[i].users[0].privateNote,
       });
     }
     res.send({ lists: lists, sessions: sessions });
@@ -625,20 +631,20 @@ router.post("/join_session", function (req, res) {
           var tosave = false;
           for (var i = 0; i < curSession.games.length; i++) {
             if (curSession.games[i].addedBy.length == 0) {
-              curSession.games[i].addedBy = curSession.owner;
-              tosave = true;
+              //No one claims this game anymore
+              curSession.games[i].addedBy = curSession.owner; //So make it so the owner claims it to avoid errors
+              tosave = true; //And set it to be saved
             }
-            console.log(curSession.games[i], tosave);
-            if (tosave) {
-              curSession.save();
-            }
+            //console.log(curSession.games[i], tosave);
           }
-          socketAPI.sendNotification("Session already created...");
+          if (tosave) {
+            curSession.save(); //Save the session if the flag has been set
+          }
           socketAPI.addGame({
-            code: curSession.code,
+            code: curSession.code, //Passing this with only a code notifies others that a user has joined
           });
           res.send({
-            owned: true,
+            owned: true, // because we checked that the owner is the current user
             status: {
               session: curSession,
               games: sendGames,
@@ -743,50 +749,52 @@ function checkIfAddedByUser(theSession, userId) {
 }
 
 router.post("/create_session", function (req, res) {
-  console.log(req.user);
   if (req.user) {
-    var theCode = makeid(6);
-
-    Session.findOne({ owner: req.user.id }).exec(function (err, curSession) {
-      var theCode = makeid(5);
-      var displayName = "";
-      management.users.get({ id: req.user.user_id }, function (err, extUser) {
-        console.log("auth0 user:", extUser);
-        res.locals.user = req.user;
-        if (
-          extUser &&
-          extUser.user_metadata &&
-          extUser.user_metadata.userDefinedName != ""
-        ) {
-          displayName =
-            extUser.user_metadata.userDefinedName || req.user.displayName;
-        } else {
-          displayName = req.user.displayName;
-        }
-        console.log("648DisplayName: ", displayName);
-        var sessiondetail = {
-          owner: req.user.id,
+    var theCode = makeid(5); // Make a new code for the session
+    var displayName = "";
+    management.users.get({ id: req.user.user_id }, function (err, extUser) {
+      // Get the user info from Auth0
+      console.log("auth0 user:", extUser);
+      res.locals.user = req.user; //Set correct displayName and user var for locals
+      if (
+        extUser &&
+        extUser.user_metadata &&
+        extUser.user_metadata.userDefinedName != ""
+      ) {
+        displayName =
+          extUser.user_metadata.userDefinedName || req.user.displayName;
+      } else {
+        displayName = req.user.displayName;
+      }
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, "0");
+      var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+      var yyyy = today.getFullYear();
+      var readableGen = new Readable(true, 2, "_");
+      today = mm + "." + dd + "." + yyyy + "_" + readableGen.generate();
+      var sessiondetail = {
+        owner: req.user.id,
+        phrase: today,
+        code: theCode,
+        games: [],
+        users: [
+          {
+            user: req.user.id,
+            name: displayName,
+            done: false,
+          },
+        ],
+        lock: "#codeView",
+      };
+      var session = new Session(sessiondetail); //Make a new session with the new code
+      session.save().then(function (theSession) {
+        console.log("Session created...");
+        socketAPI.addGame({
           code: theCode,
-          games: [],
-          users: [
-            {
-              user: req.user.id,
-              name: displayName,
-              done: false,
-            },
-          ],
-          lock: "#codeView",
-        };
-        var session = new Session(sessiondetail);
-        session.save().then(function (theSession) {
-          console.log("Session created...");
-          socketAPI.addGame({
-            code: theCode,
-          });
-          res.send({
-            owned: true,
-            status: { session: theSession, user: req.user.id },
-          });
+        });
+        res.send({
+          owned: true,
+          status: { session: theSession, user: req.user.id },
         });
       });
     });

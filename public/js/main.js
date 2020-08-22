@@ -33,6 +33,7 @@ window.addEventListener("load", function () {
     });
     $("#backArrow").removeClass("off");
     setCode(res.session.code);
+    setPhrase(res.session.phrase);
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
     console.log("dest", dest);
@@ -110,6 +111,7 @@ window.addEventListener("load", function () {
   joinSession = function (res) {
     $("#backArrow").removeClass("off"); //Show the back arrow
     setCode(res.code);
+    setPhrase(res.phrase);
     console.log(res.lock);
 
     var sessionGames = "<session>";
@@ -605,7 +607,6 @@ window.addEventListener("load", function () {
   /*   Create Button Handler   */
   /*****************************/
   $("#createButton").click(this, function () {
-    console.log("create");
     window.hist = ["#homeView"];
     clearLists();
     const cs_options = {
@@ -2418,8 +2419,13 @@ function writeSessions(res) {
   for (var i = 0; i < res.sessions.length; i++) {
     var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
     var gamesplural = setPlural(res.sessions[i].games, " game", " games");
+    if (typeof res.sessions[i].note == "undefined") {
+      res.sessions[i].note = "";
+    }
     htmlString +=
-      `<li id="` +
+      `<li><div id="` +
+      res.sessions[i].code +
+      `" class="` +
       res.sessions[i].code +
       `" onclick="menuSubmitCode(this, '` +
       res.sessions[i].code +
@@ -2430,7 +2436,17 @@ function writeSessions(res) {
       usersplural +
       res.sessions[i].games +
       gamesplural +
-      `</li>`;
+      `</div>;`;
+    /*+`<ion-icon class="` +
+      res.sessions[i].code +
+      `" name="document-text-outline" onclick="$('.` +
+      res.sessions[i].code +
+      `.sessionNote').toggleClass('off')"></ion-icon></li>` +
+      `<div class="` +
+      res.sessions[i].code +
+      ` sessionNote off">` +
+      res.sessions[i].note +
+      `</div>`;*/
   }
   $("#sessionsContainer").html(htmlString);
 }
@@ -2988,6 +3004,20 @@ function setCode(code) {
   $("#code").html(code);
   $(".codeDisplay").each(function () {
     $(this).html("Your Code: " + code);
+  });
+}
+
+/*****************************/
+/*       setPhrase(phrase)       */
+/*****************************/
+/*
+ * Desc: Display the session phrase in correct places
+ *
+ * @param {Array} select
+ */
+function setPhrase(phrase) {
+  $(".phraseDisplay").each(function () {
+    $(this).html(phrase);
   });
 }
 

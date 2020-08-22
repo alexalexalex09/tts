@@ -6,6 +6,7 @@ var Schema = mongoose.Schema;
 var SessionSchema = new Schema(
   {
     owner: String,
+    phrase: String,
     creation: {
       type: Date,
       expires: 2592000,
@@ -27,6 +28,7 @@ var SessionSchema = new Schema(
         name: String,
         done: { type: Boolean, default: false },
         doneVoting: { type: Boolean, default: false },
+        privateNote: { type: String, default: "" },
       },
     ],
     votes: [

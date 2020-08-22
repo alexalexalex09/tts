@@ -1203,6 +1203,13 @@ input[type="range"]:focus {
   overflow-y: auto;
 }
 
+.sessionNote {
+  color: var(--main-white);
+  margin-top: -1.3em;
+  margin-left: 7vw;
+  margin-bottom: 1.3em;
+}
+
 #sessionsContainer li,
 #gamesContainer > li,
 #gamesContainer .listGames {
@@ -1212,6 +1219,7 @@ input[type="range"]:focus {
   font-size: 1em;
   cursor: pointer;
   padding-bottom: calc(var(--vh) * 3);
+  display: flex;
 }
 
 #gamesContainer > li {

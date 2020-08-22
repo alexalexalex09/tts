@@ -2307,16 +2307,23 @@ function connectBGG() {
 function hideOnClickOutside(selector, toHide, extraSelector) {
   const outsideClickListener = (event) => {
     const $target = $(event.target);
-    console.log("clicked: ", $target);
-    console.log("extra: ", $(extraSelector));
+
+    console.log("clicked outside: ", $target);
+    console.log($target.attr("id"));
+    console.log($target.closest(selector));
+    console.log($target.closest(extraSelector).length);
+    console.log($(extraSelector).is(":visible"));
+    console.log($(selector).is(":hidden"));
+    //console.log("clicked: ", $target);
+    //console.log("extra: ", $(extraSelector));
     if (
       (!$target.closest(selector).length && $(selector).is(":visible")) ||
       (!$target.closest(extraSelector).length &&
-        $(extraSelector).is(":visible"))
+        $(extraSelector).is(":visible")) ||
+      !$(selector).is(":hidden")
     ) {
       $("#contextShadow").addClass("off");
       $(toHide).remove();
-      console.log("clicked outside: ", $target);
       removeClickListener();
     }
   };
@@ -2341,7 +2348,6 @@ function writeAdder(title) {
 }
 
 function writeGameContext(contextObj) {
-  console.log("dGC '", contextObj.list, "'");
   var co = createContextObjectString(
     contextObj.id,
     contextObj.name,
@@ -2409,6 +2415,34 @@ function writeListContext(contextObj) {
   return htmlString;
 }
 
+function writeSessionContext(code, name) {
+  if (typeof name == "undefined") {
+    name = code;
+  }
+  var htmlString =
+    `<div class="contextActions off" class="sessionContext ` +
+    code +
+    `" id="context_stage_` +
+    code +
+    `">` +
+    `<div class="contextTitle">` +
+    name +
+    `</div>` +
+    `<li onclick="menuSubmitCode(this, '` +
+    code +
+    `')">Open</li>` +
+    `<li onclick="renameSession('` +
+    name +
+    `', '` +
+    code +
+    `')">Rename</li>` +
+    `<li onclick="showDeleteSession(id: '` +
+    code +
+    `')">Delete</li>` +
+    `</div>`;
+  return htmlString;
+}
+
 /**
  * {Desc} Takes the sessions object from /get_sessions and fills #sessionsContainer
  *
@@ -2419,24 +2453,40 @@ function writeSessions(res) {
   for (var i = 0; i < res.sessions.length; i++) {
     var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
     var gamesplural = setPlural(res.sessions[i].games, " game", " games");
-    if (typeof res.sessions[i].note == "undefined") {
+    /*if (typeof res.sessions[i].note == "undefined") {
       res.sessions[i].note = "";
+    }*/
+    htmlString += `<li>`;
+    if (typeof res.sessions[i].phrase != "undefined") {
+      htmlString +=
+        `<div class="sessionTitle ` +
+        res.sessions[i].code +
+        `">` +
+        res.sessions[i].phrase +
+        `</div>`;
     }
     htmlString +=
-      `<li><div id="` +
+      `<div id="` +
       res.sessions[i].code +
-      `" class="` +
+      `" class="sessionCode ` +
       res.sessions[i].code +
       `" onclick="menuSubmitCode(this, '` +
       res.sessions[i].code +
-      `')">` +
+      `')">Code: ` +
       res.sessions[i].code +
-      `: ` +
+      `</div><div class="sessionDetails ` +
+      res.sessions[i].code +
+      `">` +
       res.sessions[i].users +
       usersplural +
       res.sessions[i].games +
       gamesplural +
-      `</div>;`;
+      `</div><div class="sessionEdit ` +
+      res.sessions[i].code +
+      `"><ion-icon name="ellipsis-vertical" onclick="showGameContext({id: '` +
+      res.sessions[i].code +
+      `'})"></ion-icon>` +
+      `</div></li>`;
     /*+`<ion-icon class="` +
       res.sessions[i].code +
       `" name="document-text-outline" onclick="$('.` +
@@ -2447,12 +2497,18 @@ function writeSessions(res) {
       ` sessionNote off">` +
       res.sessions[i].note +
       `</div>`;*/
+    htmlString += writeSessionContext(
+      res.sessions[i].code,
+      res.sessions[i].phrase
+    );
   }
   $("#sessionsContainer").html(htmlString);
 }
 
 function menuSubmitCode(el, code) {
   closeMenuItem("#sessionsView");
+  $("#contextShadow").addClass("off");
+  $(".contextActions.slideUp").remove();
   submitCode(el, code);
 }
 
@@ -2606,7 +2662,7 @@ function addList() {
               </div>
             </div>
             <div class="listExpand" onclick="showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})"> 
-              <ion-icon name="ellipsis-vertical" role="img" class="md hydrated" aria-label="ellipsis vertical"></ion-icon> 
+              <ion-icon name="ellipsis-vertical"></ion-icon> 
             </div>
             <div class="listGames off"></div>
         </li>`

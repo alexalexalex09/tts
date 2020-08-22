@@ -317,7 +317,7 @@ function getOwnedSessions(theId, lists, res) {
         code: curSessions[i].code,
         games: curSessions[i].games.length,
         users: curSessions[i].users.length,
-        note: curSessions[i].users[0].privateNote,
+        phrase: curSessions[i].phrase,
       });
     }
     res.send({ lists: lists, sessions: sessions });

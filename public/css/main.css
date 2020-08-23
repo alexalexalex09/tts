@@ -80,8 +80,19 @@ li.red {
   color: var(--main-red);
 }
 
+li.grey {
+  color: var(--main-light-grey);
+}
+
 .off {
   display: none !important;
+}
+
+#ver {
+  position: absolute;
+  bottom: 0px;
+  right: 10px;
+  font-size: 12px;
 }
 
 .menu.left {
@@ -481,12 +492,17 @@ input:checked + .slider:before {
 }
 
 .pageTitle {
-  grid-area: 1/1/3/11;
+  grid-area: 1/1/2/11;
   font-size: min(10 * (1vw + 1vh) / 2, 7vw);
   color: var(--main-grey);
   text-align: center;
   height: 100%;
   /*justify-content: center;*/
+}
+
+.phraseDisplay {
+  grid-area: 2/1/3/11;
+  justify-self: center;
 }
 
 #backAlert {

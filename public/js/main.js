@@ -10,7 +10,7 @@ window.addEventListener("load", function () {
   var socket = io();
 
   createSession = function (res) {
-    console.log(res);
+    console.log("createSession");
     socket.on(res.session.code + "owner", (data) => {
       console.log("received ", data);
       if (data.selectEvent) {
@@ -33,7 +33,11 @@ window.addEventListener("load", function () {
     });
     $("#backArrow").removeClass("off");
     setCode(res.session.code);
-    setPhrase(res.session.phrase);
+    if (typeof res.session.phrase == "undefined") {
+      setPhrase("👑");
+    } else {
+      setPhrase(res.session.phrase + "👑");
+    }
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
     console.log("dest", dest);
@@ -112,7 +116,7 @@ window.addEventListener("load", function () {
     $("#backArrow").removeClass("off"); //Show the back arrow
     setCode(res.code);
     setPhrase(res.phrase);
-    console.log(res.lock);
+    console.log("joinSession");
 
     var sessionGames = "<session>";
     for (var i = 0; i < res.games.length; i++) {
@@ -358,7 +362,7 @@ window.addEventListener("load", function () {
     console.log("Open: ", open);
     $(".pop").each(function (i, e) {
       if ("#" + $(e).attr("id") != open) {
-        console.log("Closing ", "#" + $(e).attr("id"));
+        //console.log("Closing ", "#" + $(e).attr("id"));
         closeMenuItem("#" + $(e).attr("id"));
       }
     });
@@ -600,7 +604,7 @@ window.addEventListener("load", function () {
   /*    Calls join_session     */
   /*****************************/
   $("#codeSubmit").click(this, function (e) {
-    submitCode(this, $("#codeInput input").val());
+    submitCode($("#codeInput input").val());
   });
 
   /*****************************/
@@ -717,7 +721,7 @@ window.addEventListener("load", function () {
   ) {
     joinClick();
     console.log("code: ", window.location.search.substr(3));
-    submitCode($("codeSubmit"), window.location.search.substr(3));
+    submitCode(window.location.search.substr(3));
   }
 
   /* Set up autocomplete */
@@ -2309,18 +2313,18 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
     const $target = $(event.target);
 
     console.log("clicked outside: ", $target);
+    console.log(selector);
+    console.log(extraSelector);
     console.log($target.attr("id"));
     console.log($target.closest(selector));
-    console.log($target.closest(extraSelector).length);
+    console.log($target.closest(extraSelector));
     console.log($(extraSelector).is(":visible"));
     console.log($(selector).is(":hidden"));
-    //console.log("clicked: ", $target);
-    //console.log("extra: ", $(extraSelector));
     if (
       (!$target.closest(selector).length && $(selector).is(":visible")) ||
       (!$target.closest(extraSelector).length &&
         $(extraSelector).is(":visible")) ||
-      !$(selector).is(":hidden")
+      !$(extraSelector).is(":hidden")
     ) {
       $("#contextShadow").addClass("off");
       $(toHide).remove();
@@ -2428,14 +2432,25 @@ function writeSessionContext(code, name) {
     `<div class="contextTitle">` +
     name +
     `</div>` +
-    `<li onclick="menuSubmitCode(this, '` +
+    `<li onclick="menuSubmitCode('` +
     code +
-    `')">Open</li>` +
-    `<li onclick="showRenameSession({name: '` +
-    name +
-    `', id:'0000` +
-    code +
-    `'})">Rename</li>` +
+    `')">Open</li><li `;
+  if (
+    $("#" + code)
+      .text()
+      .indexOf("👑") == -1
+  ) {
+    htmlString += `class="grey"`;
+  } else {
+    htmlString +=
+      `onclick="showRenameSession({name: '` +
+      name +
+      `', id:'0000` +
+      code +
+      `'})"`;
+  }
+  htmlString +=
+    `>Rename</li>` +
     `<li onclick="showDeleteSession({id: '` +
     code +
     `', name: '` +
@@ -2463,7 +2478,9 @@ function writeSessions(res) {
       htmlString +=
         `<div class="sessionTitle ` +
         res.sessions[i].code +
-        `">` +
+        `" onclick="menuSubmitCode('` +
+        res.sessions[i].code +
+        `')">` +
         res.sessions[i].phrase +
         `</div>`;
     }
@@ -2472,13 +2489,19 @@ function writeSessions(res) {
       res.sessions[i].code +
       `" class="sessionCode ` +
       res.sessions[i].code +
-      `" onclick="menuSubmitCode(this, '` +
+      `" onclick="menuSubmitCode('` +
       res.sessions[i].code +
       `')">Code: ` +
-      res.sessions[i].code +
+      res.sessions[i].code;
+    if (res.sessions[i].owned) {
+      htmlString += `👑`;
+    }
+    htmlString +=
       `</div><div class="sessionDetails ` +
       res.sessions[i].code +
-      `">` +
+      `" onclick="menuSubmitCode('` +
+      res.sessions[i].code +
+      `')">` +
       res.sessions[i].users +
       usersplural +
       res.sessions[i].games +
@@ -2615,15 +2638,14 @@ function deleteSession(code) {
   });
 }
 
-function menuSubmitCode(el, code) {
+function menuSubmitCode(code) {
   closeMenuItem("#sessionsView");
   $("#contextShadow").addClass("off");
   $(".contextActions.slideUp").remove();
-  submitCode(el, code);
+  submitCode(code);
 }
 
-function submitCode(el, code) {
-  console.log(el);
+function submitCode(code) {
   clearLists(); //Clear any lists in #selectView
   window.hist = ["#homeView"];
   $(".errorText").removeClass("shake"); //Stop shaking if started
@@ -2834,14 +2856,14 @@ function recheckGreenLists() {
 //by getting the list of games already added to the session
 //and checking to see if every game in a list has been added
 function initGreenLists() {
-  console.log("initGreenLists");
+  //console.log("initGreenLists");
   var sessionGames = [];
   $("session")
     .children()
     .each(function (i, e) {
       sessionGames.push($(e).attr("id"));
     });
-  console.log(sessionGames);
+  //console.log(sessionGames);
 
   $("#selectLists li").each(function (ind, ele) {
     var count = 0;
@@ -2853,7 +2875,7 @@ function initGreenLists() {
         var eID = $(e).children(".gameName").first().attr("game_id");
         if (sessionGames.findIndex((item) => item == eID) > -1) {
           count++;
-          console.log(count + " ," + $(e).parent().children().length);
+          //console.log(count + " ," + $(e).parent().children().length);
           var toggle = $(e)
             .children(".toggle")
             .children(".switch")
@@ -3174,7 +3196,7 @@ function setCode(code) {
 }
 
 /*****************************/
-/*       setPhrase(phrase)       */
+/*     setPhrase(phrase)     */
 /*****************************/
 /*
  * Desc: Display the session phrase in correct places
@@ -3183,7 +3205,11 @@ function setCode(code) {
  */
 function setPhrase(phrase) {
   $(".phraseDisplay").each(function () {
-    $(this).html(phrase);
+    if (typeof phrase == "undefined") {
+      $(this).html();
+    } else {
+      $(this).html("Session " + phrase);
+    }
   });
 }
 
@@ -3723,8 +3749,6 @@ function startLoader() {
 }
 
 function finishLoader() {
-  console.log("finishLoader");
-  console.trace();
   $(".preloader").fadeOut(200);
   //this should somehow resolve a promise since it's Async. Instead it's turning the loader off before start can turn it on.
 }

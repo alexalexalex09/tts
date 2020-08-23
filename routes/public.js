@@ -310,14 +310,23 @@ function getParticipantSessions(theId, lists, res) {
 }
 
 function getOwnedSessions(theId, lists, res) {
-  Session.find({ owner: theId }).exec(function (err, curSessions) {
+  Session.find({ users: { $elemMatch: { user: theId } } }).exec(function (
+    err,
+    curSessions
+  ) {
     var sessions = [];
+    var curOwned = false;
     for (var i = 0; i < curSessions.length; i++) {
+      curOwned = false;
+      if (curSessions[i].owner == theId) {
+        curOwned = true;
+      }
       sessions.push({
         code: curSessions[i].code,
         games: curSessions[i].games.length,
         users: curSessions[i].users.length,
         phrase: curSessions[i].phrase,
+        owned: curOwned,
       });
     }
     res.send({ lists: lists, sessions: sessions });

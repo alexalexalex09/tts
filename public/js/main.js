@@ -38,6 +38,13 @@ window.addEventListener("load", function () {
     } else {
       setPhrase(res.session.phrase + "👑");
     }
+
+    $(".phraseDisplay").on("click", function () {
+      showRenameSession({
+        name: $(".phraseDisplay").first().text().substr(8),
+        id: "0000" + $("#code").text(),
+      });
+    });
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
     console.log("dest", dest);
@@ -2419,7 +2426,7 @@ function writeListContext(contextObj) {
   return htmlString;
 }
 
-function writeSessionContext(code, name) {
+function writeSessionContext(code, name, owned) {
   if (typeof name == "undefined") {
     name = code;
   }
@@ -2438,16 +2445,17 @@ function writeSessionContext(code, name) {
   if (
     $("#" + code)
       .text()
-      .indexOf("👑") == -1
+      .indexOf("👑") != -1 ||
+    owned == true
   ) {
-    htmlString += `class="grey"`;
-  } else {
     htmlString +=
       `onclick="showRenameSession({name: '` +
       name +
       `', id:'0000` +
       code +
       `'})"`;
+  } else {
+    htmlString += `class="grey"`;
   }
   htmlString +=
     `>Rename</li>` +
@@ -2524,7 +2532,8 @@ function writeSessions(res) {
       `</div>`;*/
     htmlString += writeSessionContext(
       res.sessions[i].code,
-      res.sessions[i].phrase
+      res.sessions[i].phrase,
+      res.sessions[i].owned
     );
   }
   $("#sessionsContainer").html(htmlString);
@@ -2550,6 +2559,7 @@ function showRenameSession(session) {
 
 function renameSession(event, caller, code) {
   var newName = $(caller).children('input[type="text"]').first().val();
+  var oldName = $(".sessionTitle." + code).text();
   const rs_options = {
     method: "POST",
     body: JSON.stringify({
@@ -2569,7 +2579,12 @@ function renameSession(event, caller, code) {
         showError(res.err);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
-        console.log("renamed session");
+        if ($(".phraseDisplay").first().text().substr(8) == oldName + "👑") {
+          //Renaming the current session
+          $(".phraseDisplay").each(function () {
+            $(this).text("Session " + newName + "👑");
+          });
+        }
         if ($(".sessionTitle." + code).length == 0) {
           $("#" + code)
             .parent()

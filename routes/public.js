@@ -743,6 +743,7 @@ router.post("/join_session", function (req, res) {
                       code: curSession.code,
                       lock: lock,
                       games: sendGames,
+                      phrase: curSession.phrase,
                     },
                   });
                 });
@@ -755,6 +756,7 @@ router.post("/join_session", function (req, res) {
                 code: curSession.code,
                 lock: lock,
                 games: sendGames,
+                phrase: curSession.phrase,
               },
             });
           }
@@ -767,6 +769,7 @@ router.post("/join_session", function (req, res) {
             code: curSession.code,
             lock: lock,
             games: [],
+            phrase: curSession.phrase,
           },
         });
       }

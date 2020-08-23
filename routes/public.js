@@ -249,9 +249,9 @@ router.post("/get_user_lists_populated", (req, res) => {
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        console.log("GULP curUser:", curUser);
+        //console.log("GULP curUser:", curUser);
         management.users.get({ id: req.user.user_id }, function (err, extUser) {
-          console.log("auth0 user:", extUser);
+          //console.log("auth0 user:", extUser);
           res.locals.user = req.user;
           if (
             extUser &&
@@ -323,6 +323,37 @@ function getOwnedSessions(theId, lists, res) {
     res.send({ lists: lists, sessions: sessions });
   });
 }
+
+router.post("/rename_session", (req, res) => {
+  if (req.user) {
+    var code = req.body.code;
+    var newName = req.body.newName;
+    Session.findOne({ owner: req.user.id, code: code }).exec(function (
+      err,
+      curSession
+    ) {
+      if (curSession && newName) {
+        curSession.phrase = newName;
+        curSession.save();
+        res.send({ status: "Success" });
+      } else {
+        res.send({ err: "Could not find session with that code owned by you" });
+      }
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
+
+router.post("/delete_session", (req, res) => {
+  var code = req.body.code;
+  Session.deleteOne({ owner: req.user.id, code: req.body.code }).exec(function (
+    err,
+    curSession
+  ) {
+    res.send(curSession);
+  });
+});
 
 //Get current user's  lists
 router.post("/get_user_lists", (req, res) => {

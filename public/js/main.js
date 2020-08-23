@@ -2431,14 +2431,16 @@ function writeSessionContext(code, name) {
     `<li onclick="menuSubmitCode(this, '` +
     code +
     `')">Open</li>` +
-    `<li onclick="renameSession('` +
+    `<li onclick="showRenameSession({name: '` +
     name +
-    `', '` +
+    `', id:'0000` +
     code +
-    `')">Rename</li>` +
-    `<li onclick="showDeleteSession(id: '` +
+    `'})">Rename</li>` +
+    `<li onclick="showDeleteSession({id: '` +
     code +
-    `')">Delete</li>` +
+    `', name: '` +
+    name +
+    `'})">Delete</li>` +
     `</div>`;
   return htmlString;
 }
@@ -2503,6 +2505,114 @@ function writeSessions(res) {
     );
   }
   $("#sessionsContainer").html(htmlString);
+}
+
+function showRenameSession(session) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
+    session.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Renaming session "` +
+    session.name +
+    `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
+    <form onsubmit="return renameSession(event, this, '` +
+    session.id.substr(4) +
+    `')" id="renameGameInput"></input>
+    <input class="textInput" type="text" autocomplete="off"></input>
+    <input class="textSubmit" type="submit" value="">`;
+  $("body").append(el);
+}
+
+function renameSession(event, caller, code) {
+  var newName = $(caller).children('input[type="text"]').first().val();
+  const rs_options = {
+    method: "POST",
+    body: JSON.stringify({
+      code: code,
+      newName: $(caller).children('input[type="text"]').first().val(),
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/rename_session", rs_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        showError(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        console.log("renamed session");
+        if ($(".sessionTitle." + code).length == 0) {
+          $("#" + code)
+            .parent()
+            .prepend(
+              `<div class="sessionTitle ` + code + `">` + newName + `</div>`
+            );
+        } else {
+          $(".sessionTitle." + code).text(newName);
+        }
+      }
+    });
+  });
+  $(".subContextContainer").each(function () {
+    $(this).remove();
+  });
+  return false;
+}
+
+function showDeleteSession(session) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
+    session.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Really delete session "` +
+    session.name +
+    `"?</div><hr/>
+    <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+    <div class="button redBtn" id="deleteConfirm" onclick="deleteSession('` +
+    session.id +
+    `')">Delete</div>`;
+  $("body").append(el);
+}
+
+function deleteSession(code) {
+  const ds_options = {
+    method: "POST",
+    body: JSON.stringify({
+      code: code,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  startLoader();
+  fetch("/delete_session", ds_options).then(function (response) {
+    finishLoader();
+    return response.json().then((res) => {
+      if (res.err) {
+        console.log(res.err);
+        //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
+      } else {
+        console.log(code);
+        if (code) {
+          $("#" + code)
+            .parent()
+            .remove();
+        }
+        gulp();
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      }
+    });
+  });
 }
 
 function menuSubmitCode(el, code) {

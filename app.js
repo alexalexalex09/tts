@@ -155,7 +155,7 @@ app.use((req, res, next) => {
   if (req.user) {
     console.log("with user");
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
-      console.log("auth0 user:", extUser);
+      //console.log("auth0 user:", extUser);
       res.locals.user = req.user;
       if (
         extUser &&

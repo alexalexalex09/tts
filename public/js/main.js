@@ -2655,6 +2655,10 @@ function deleteSession(code) {
 
 function menuSubmitCode(code) {
   closeMenuItem("#sessionsView");
+  if ($("#homeView").hasClass("off") && window.hist) {
+    goBack(window.hist[window.hist.length - 1], "#homeView");
+    window.hist = ["#homeView"];
+  }
   $("#contextShadow").addClass("off");
   $(".contextActions.slideUp").remove();
   submitCode(code);

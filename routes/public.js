@@ -818,7 +818,7 @@ router.post("/create_session", function (req, res) {
       var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
       var yyyy = today.getFullYear();
       var readableGen = new Readable(true, 2, "_");
-      today = mm + "." + dd + "." + yyyy + "_" + readableGen.generate();
+      today = mm + "." + dd + "." + yyyy + " " + readableGen.generate();
       var sessiondetail = {
         owner: req.user.id,
         phrase: today,

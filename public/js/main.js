@@ -1,7 +1,6 @@
 //All DOM manipulation
 var createSession = function () {};
 var joinSession = function () {};
-//import Sprite from "./sprite.mjs";
 
 const ERR_LOGIN_SOFT = "No user";
 
@@ -18,6 +17,7 @@ window.addEventListener("load", function () {
       if (data.selectEvent) {
         //Rewrite #postSelectContainer in real time for owner
         showSelect(data.select, true);
+        data.curGames.sort(lowerCaseSort());
         updateCurrentGames(data.curGames);
       }
       if (data.startVoting) {
@@ -49,7 +49,7 @@ window.addEventListener("load", function () {
         name: $(".phraseDisplay")
           .first()
           .text()
-          .substr(8, $(".phraseDisplay").first().text().length - 10),
+          .substr(8, $(".phraseDisplay").first().text().length - 15),
         id: "0000" + $("#code").text(),
       });
     });
@@ -209,6 +209,7 @@ window.addEventListener("load", function () {
         console.log("SelectEvent: ", data);
         //Rewrite #postSelectContainer in real time for owner
         showSelect(data.select, false);
+        data.curGames.sort(lowerCaseNameSort());
         updateCurrentGames(data.curGames);
       }
       if (data.unlockBack && data.unlock) {
@@ -830,10 +831,7 @@ function goForwardFrom(from, to) {
         $("#listIcon").removeClass("off"), 1000;
       });
     }
-    if (
-      (from == "#selectView" && to != "#postSelectView") ||
-      (from == "#postSelectView" && to != "selectView")
-    ) {
+    if (to != "#postSelectView" && to != "#selectView") {
       window.setTimeout(function () {
         $("#listIcon").addClass("off"), 1000;
       });
@@ -995,6 +993,7 @@ function lockGames(code) {
         $("#postSelectContainer").html();
         $("#postSelectContainer").css("grid-area", "4/2/15/10");
         $("#postSelectContainer").html(lres.htmlString);
+        sortEditGames();
         $("#postSelectImg").remove();
         registerEGS();
         $("#postSelectView").css({ transition: "transform 0s" });
@@ -1082,11 +1081,19 @@ function addGroupGame() {
         }
       } else {
         $("#editGameList").append(res.status);
+        sortEditGames();
         registerEGS();
       }
     });
   });
   return false;
+}
+
+function sortEditGames() {
+  $("#editGameList")
+    .children()
+    .sort(lowerCaseDivSort(".editGame"))
+    .appendTo("#editGameList");
 }
 
 /********************************/
@@ -2610,7 +2617,7 @@ function renameSession(event, caller, code) {
         if ($(".phraseDisplay .owner").length > 0) {
           //Renaming the current session
           $(".phraseDisplay").each(function () {
-            $(this).text(
+            $(this).html(
               `Session ` +
                 newName +
                 `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
@@ -3074,6 +3081,7 @@ function toggleEdit(check) {
       </div></li>`;
         }
         $("#editGameList").html = htmlString;
+        sortEditGames();
         registerEGS();
       } else {
         console.log(res.err);
@@ -3266,9 +3274,9 @@ function setPhrase(phrase) {
     if (typeof phrase == "undefined") {
       $(this).html();
     } else {
-      $(this).html(
-        `Session ` + phrase + `<ion-icon name="create-outline"></ion-icon>`
-      );
+      htmlString =
+        `Session ` + phrase + `<ion-icon name="create-outline"></ion-icon>`;
+      $(this).html(htmlString);
     }
   });
 }
@@ -3400,6 +3408,7 @@ function fillVotes(games) {
   htmlString += `</ul><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
   //console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
+  sortVotes();
   $("#voteButton").on("click", function () {
     var theCode = $("#code").text();
     var voteArray = [];
@@ -3430,6 +3439,13 @@ function fillVotes(games) {
       });
     });
   });
+}
+
+function sortVotes() {
+  $("#voteContainer ul")
+    .children("li")
+    .sort(lowerCaseDivSort(".voteLabel", "label"))
+    .appendTo("#voteContainer ul");
 }
 
 /*****************************/
@@ -3803,10 +3819,14 @@ function importBGG() {
 }
 
 function showCurrentGames() {
-  $("#currentGames").removeClass("off");
-  $("#contextShadow").removeClass("off");
-  $("#contextShadow").addClass("desktopAlwaysOff");
-  $("#curGamesClose").removeClass("off");
+  if ($("#currentGames").hasClass("off")) {
+    $("#currentGames").removeClass("off");
+    $("#contextShadow").removeClass("off");
+    $("#contextShadow").addClass("desktopAlwaysOff");
+    $("#curGamesClose").removeClass("off");
+  } else {
+    closeCurrentGames();
+  }
 }
 
 function closeCurrentGames() {
@@ -4188,8 +4208,29 @@ function autocomplete(inp, arr) {
   });
 }
 
+function lowerCaseSort() {
+  return function (a, b) {
+    return a.toLowerCase().localeCompare(b.toLowerCase());
+  };
+}
+
 function lowerCaseNameSort() {
   return function (a, b) {
     return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  };
+}
+
+function lowerCaseDivSort() {
+  var arr = arguments;
+  return function (a, b) {
+    for (var i = 0; i < arr.length; i++) {
+      a = $(a).children(arr[i]);
+    }
+    a = $(a).first();
+    for (var i = 0; i < arr.length; i++) {
+      b = $(b).children(arr[i]);
+    }
+    b = $(b).first();
+    return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
   };
 }

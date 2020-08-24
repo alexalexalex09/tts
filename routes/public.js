@@ -721,7 +721,7 @@ router.post("/join_session", function (req, res) {
               err,
               extUser
             ) {
-              console.log("auth0 user:", extUser);
+              //console.log("auth0 user:", extUser);
               res.locals.user = req.user;
               if (
                 extUser &&
@@ -730,7 +730,7 @@ router.post("/join_session", function (req, res) {
               ) {
                 displayName =
                   extUser.user_metadata.userDefinedName || req.user.displayName;
-                console.log("568DisplayName: ", displayName);
+                //console.log("568DisplayName: ", displayName);
                 curSession.users.push({
                   user: req.user.id,
                   name: displayName,
@@ -754,6 +754,9 @@ router.post("/join_session", function (req, res) {
               }
             });
           } else {
+            socketAPI.addGame({
+              code: theCode,
+            });
             res.send({
               owned: false,
               status: {

@@ -333,7 +333,7 @@ select.bggFilterInput {
 
 #curGamesClose {
   z-index: 101;
-  top: var(--vh5);
+  top: calc(var(--vh5) + 10px);
   right: 10vw;
   color: var(--main-white);
 }

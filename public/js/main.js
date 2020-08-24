@@ -209,7 +209,7 @@ window.addEventListener("load", function () {
         console.log("SelectEvent: ", data);
         //Rewrite #postSelectContainer in real time for owner
         showSelect(data.select, false);
-        data.curGames.sort(lowerCaseNameSort());
+        data.curGames.sort(lowerCaseSort());
         updateCurrentGames(data.curGames);
       }
       if (data.unlockBack && data.unlock) {

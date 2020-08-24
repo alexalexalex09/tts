@@ -236,6 +236,7 @@ window.addEventListener("load", function () {
       }
     });
     catchDisplay();
+    triggerPostSelectEvent();
   };
 
   /*****************************/
@@ -950,6 +951,7 @@ function goBack(from, to) {
 }
 
 function triggerPostSelectEvent() {
+  console.log("triggered");
   const gsps_options = {
     method: "POST",
     body: JSON.stringify({ code: $("#code").text() }),

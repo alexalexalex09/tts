@@ -3,6 +3,8 @@ var createSession = function () {};
 var joinSession = function () {};
 //import Sprite from "./sprite.mjs";
 
+const ERR_LOGIN_SOFT = "No user";
+
 window.addEventListener("load", function () {
   /*****************************/
   /*      Socket.io logic      */
@@ -34,14 +36,20 @@ window.addEventListener("load", function () {
     $("#backArrow").removeClass("off");
     setCode(res.session.code);
     if (typeof res.session.phrase == "undefined") {
-      setPhrase("👑");
+      setPhrase(`<div class="owner">👑<div class="tooltip">Owner</div></div>`);
     } else {
-      setPhrase(res.session.phrase + "👑");
+      setPhrase(
+        res.session.phrase +
+          `<div class="owner">👑<div class="tooltip">Owner</div></div>`
+      );
     }
 
     $(".phraseDisplay").on("click", function () {
       showRenameSession({
-        name: $(".phraseDisplay").first().text().substr(8),
+        name: $(".phraseDisplay")
+          .first()
+          .text()
+          .substr(8, $(".phraseDisplay").first().text().length - 10),
         id: "0000" + $("#code").text(),
       });
     });
@@ -634,6 +642,8 @@ window.addEventListener("load", function () {
         console.log(!res.err, " create_session res: ", res);
         if (!res.err) {
           createSession(res.status);
+        } else {
+          createAndShowAlert(res.err, true);
         }
       });
     });
@@ -643,7 +653,13 @@ window.addEventListener("load", function () {
   /*   Copy the code to clipboard    */
   /***********************************/
   $("#copyButton").on("click", function () {
-    copyText(window.location.origin + "/" + $("#code").html());
+    copyText(
+      window.location.origin + "/" + $("#code").html(),
+      "Link copied to clipboard"
+    );
+  });
+  $("#codeGroup").on("click", function () {
+    copyText($("#code").html(), "Code copied to clipboard.");
   });
 
   /***********************************/
@@ -716,6 +732,10 @@ window.addEventListener("load", function () {
         console.log("submit res: ", res);
         //$("#backArrow").attr("data-gobackto", "select");
         goForwardFrom("#selectView", "#postSelectView");
+        if ($("#postSelectImg").length == 0) {
+          $("#postSelectView").append('<div id="postSelectImg"></div>');
+          $("#postSelectContainer").css("grid-area", "9/2/15/10");
+        }
       });
     });
   });
@@ -973,7 +993,9 @@ function lockGames(code) {
       window.setTimeout(function () {
         $("#postSelectTitle").html("Edit Games List 🐿️");
         $("#postSelectContainer").html();
+        $("#postSelectContainer").css("grid-area", "4/2/15/10");
         $("#postSelectContainer").html(lres.htmlString);
+        $("#postSelectImg").remove();
         registerEGS();
         $("#postSelectView").css({ transition: "transform 0s" });
         $("#postSelectView").css({
@@ -1055,6 +1077,8 @@ function addGroupGame() {
                 .css("color", "var(--main-black)");
             });
           }, 600);
+        } else {
+          createAndShowAlert(res.err, true);
         }
       } else {
         $("#editGameList").append(res.status);
@@ -1154,6 +1178,8 @@ function guag() {
             res.lists.allGames[i].name +
             `</li>`;
         }
+      } else {
+        createAndShowAlert(res.err, true);
       }
     });
   });
@@ -1386,6 +1412,7 @@ function gulp(showAllGames = false) {
         $("#listsContainer").html(htmlString);
         writeSessions(res);
       } else {
+        if (res.err != ERR_LOGIN_SOFT) createAndShowAlert(res.err, true);
         console.log(res.err);
       }
     });
@@ -1874,7 +1901,7 @@ function moveToList(options) {
     finishLoader();
     return response.json().then((res) => {
       if (res.err) {
-        alert(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling moving to a list already containing the game, as well as confirmation before moving
       } else {
         $(".subContextContainer").each(function () {
@@ -1916,7 +1943,7 @@ function copyToList(options) {
     finishLoader();
     return response.json().then((res) => {
       if (res.err) {
-        alert(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
         console.log("copied with " + res.errors + " errors");
@@ -1971,8 +1998,7 @@ function renameGame(event, caller, game, oldGame) {
     finishLoader();
     return response.json().then((res) => {
       if (res.err) {
-        console.log(res.err);
-        showError(res.err);
+        createAndShowAlert(res.err, true);
       } else {
         console.log("renamed");
         //$("#" + game).text(res.status.newName);
@@ -2030,8 +2056,7 @@ function renameList(event, caller, list) {
     finishLoader();
     return response.json().then((res) => {
       if (res.err) {
-        console.log(res.err);
-        showError(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
         console.log("renamed list");
@@ -2084,6 +2109,7 @@ function deleteList(list) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
         $("#gamesContainer")
@@ -2132,6 +2158,7 @@ function deleteGame(arr) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
         res.arr.forEach(function (e, i) {
@@ -2209,6 +2236,7 @@ function removeGame(arr) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
         res.arr.forEach(function (e) {
@@ -2306,6 +2334,7 @@ function connectBGG() {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
       } else {
         checkBGG();
         $(".subContextContainer").remove();
@@ -2442,12 +2471,7 @@ function writeSessionContext(code, name, owned) {
     `<li onclick="menuSubmitCode('` +
     code +
     `')">Open</li><li `;
-  if (
-    $("#" + code)
-      .text()
-      .indexOf("👑") != -1 ||
-    owned == true
-  ) {
+  if ($("#" + code + " .owner").length > 0 || owned == true) {
     htmlString +=
       `onclick="showRenameSession({name: '` +
       name +
@@ -2475,52 +2499,53 @@ function writeSessionContext(code, name, owned) {
  */
 function writeSessions(res) {
   var htmlString = "";
-  for (var i = 0; i < res.sessions.length; i++) {
-    var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
-    var gamesplural = setPlural(res.sessions[i].games, " game", " games");
-    /*if (typeof res.sessions[i].note == "undefined") {
+  if (res.sessions) {
+    for (var i = 0; i < res.sessions.length; i++) {
+      var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
+      var gamesplural = setPlural(res.sessions[i].games, " game", " games");
+      /*if (typeof res.sessions[i].note == "undefined") {
       res.sessions[i].note = "";
     }*/
-    htmlString += `<li>`;
-    if (typeof res.sessions[i].phrase != "undefined") {
+      htmlString += `<li>`;
+      if (typeof res.sessions[i].phrase != "undefined") {
+        htmlString +=
+          `<div class="sessionTitle ` +
+          res.sessions[i].code +
+          `" onclick="menuSubmitCode('` +
+          res.sessions[i].code +
+          `')">` +
+          res.sessions[i].phrase +
+          `</div>`;
+      }
       htmlString +=
-        `<div class="sessionTitle ` +
+        `<div id="` +
+        res.sessions[i].code +
+        `" class="sessionCode ` +
+        res.sessions[i].code +
+        `" onclick="menuSubmitCode('` +
+        res.sessions[i].code +
+        `')">Code: ` +
+        res.sessions[i].code;
+      if (res.sessions[i].owned) {
+        htmlString += `👑`;
+      }
+      htmlString +=
+        `</div><div class="sessionDetails ` +
         res.sessions[i].code +
         `" onclick="menuSubmitCode('` +
         res.sessions[i].code +
         `')">` +
-        res.sessions[i].phrase +
-        `</div>`;
-    }
-    htmlString +=
-      `<div id="` +
-      res.sessions[i].code +
-      `" class="sessionCode ` +
-      res.sessions[i].code +
-      `" onclick="menuSubmitCode('` +
-      res.sessions[i].code +
-      `')">Code: ` +
-      res.sessions[i].code;
-    if (res.sessions[i].owned) {
-      htmlString += `👑`;
-    }
-    htmlString +=
-      `</div><div class="sessionDetails ` +
-      res.sessions[i].code +
-      `" onclick="menuSubmitCode('` +
-      res.sessions[i].code +
-      `')">` +
-      res.sessions[i].users +
-      usersplural +
-      res.sessions[i].games +
-      gamesplural +
-      `</div><div class="sessionEdit ` +
-      res.sessions[i].code +
-      `"><ion-icon name="ellipsis-vertical" onclick="showGameContext({id: '` +
-      res.sessions[i].code +
-      `'})"></ion-icon>` +
-      `</div></li>`;
-    /*+`<ion-icon class="` +
+        res.sessions[i].users +
+        usersplural +
+        res.sessions[i].games +
+        gamesplural +
+        `</div><div class="sessionEdit ` +
+        res.sessions[i].code +
+        `"><ion-icon name="ellipsis-vertical" onclick="showGameContext({id: '` +
+        res.sessions[i].code +
+        `'})"></ion-icon>` +
+        `</div></li>`;
+      /*+`<ion-icon class="` +
       res.sessions[i].code +
       `" name="document-text-outline" onclick="$('.` +
       res.sessions[i].code +
@@ -2530,11 +2555,14 @@ function writeSessions(res) {
       ` sessionNote off">` +
       res.sessions[i].note +
       `</div>`;*/
-    htmlString += writeSessionContext(
-      res.sessions[i].code,
-      res.sessions[i].phrase,
-      res.sessions[i].owned
-    );
+      htmlString += writeSessionContext(
+        res.sessions[i].code,
+        res.sessions[i].phrase,
+        res.sessions[i].owned
+      );
+    }
+  } else {
+    createAndShowAlert("Log in to save sessions", true);
   }
   $("#sessionsContainer").html(htmlString);
 }
@@ -2576,13 +2604,17 @@ function renameSession(event, caller, code) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
-        showError(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
-        if ($(".phraseDisplay").first().text().substr(8) == oldName + "👑") {
+        if ($(".phraseDisplay .owner").length > 0) {
           //Renaming the current session
           $(".phraseDisplay").each(function () {
-            $(this).text("Session " + newName + "👑");
+            $(this).text(
+              `Session ` +
+                newName +
+                `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+            );
           });
         }
         if ($(".sessionTitle." + code).length == 0) {
@@ -2636,6 +2668,7 @@ function deleteSession(code) {
     return response.json().then((res) => {
       if (res.err) {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
         //TODO: Nice notification for handling copying to a list already containing the game, as well as confirmation before moving
       } else {
         console.log(code);
@@ -2767,7 +2800,9 @@ function addNewGame(el) {
       } else {
         console.log(res.err);
         if ((res.err = "Log in first")) {
-          showAlert("#loginAlert");
+          createAndShowAlert("Sign up or log in to use this feature", true);
+        } else {
+          createAndShowAlert(res.err, true);
         }
       }
     });
@@ -2799,7 +2834,8 @@ function addList() {
     finishLoader();
     return response.json().then((res) => {
       if (res.err) {
-        console.log(res);
+        console.log(res.err);
+        createAndShowAlert(res.err, true);
       } else {
         var gamesNum = $("#gamesView #gamesContainer").children("li").length;
         $("#gamesView #gamesContainer").append(
@@ -3041,6 +3077,7 @@ function toggleEdit(check) {
         registerEGS();
       } else {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
       }
     });
   });
@@ -3159,6 +3196,7 @@ function toggleFont(check) {
         console.log(res);
       } else {
         console.log(res.err);
+        createAndShowAlert(res.err, true);
       }
     });
   });
@@ -3224,10 +3262,13 @@ function setCode(code) {
  */
 function setPhrase(phrase) {
   $(".phraseDisplay").each(function () {
+    console.log("Phrase: ", phrase);
     if (typeof phrase == "undefined") {
       $(this).html();
     } else {
-      $(this).html("Session " + phrase);
+      $(this).html(
+        `Session ` + phrase + `<ion-icon name="create-outline"></ion-icon>`
+      );
     }
   });
 }
@@ -3240,9 +3281,8 @@ function setPhrase(phrase) {
  *
  * @param {*} codeArea
  */
-function copyText(copy) {
-  console.log("copying");
-  showAlert("#copiedAlert");
+function copyText(copy, text) {
+  createAndShowAlert(text);
   const el = document.createElement("textarea");
   el.value = copy;
   document.body.appendChild(el);
@@ -3266,8 +3306,14 @@ function showAlert(alert) {
   }, 1000);
 }
 
-function createAndShowAlert(alert) {
-  $("body").append('<div id="tempAlert" class="tempAlert">' + alert + "</div>");
+function createAndShowAlert(alert, error = false) {
+  var red = "";
+  if (error) {
+    red = " red";
+  }
+  $("body").append(
+    '<div id="tempAlert" class="tempAlert' + red + '">' + alert + "</div>"
+  );
   $("#tempAlert").css({ opacity: 1, "z-index": 11 });
   setTimeout(function () {
     $("#tempAlert").css({ opacity: 0 });
@@ -3491,8 +3537,10 @@ function editList(list) {
     finishLoader();
     return response.json().then((res) => {
       if (!res.err) {
+        //console.log("Success");
       } else {
         console.log(res);
+        createAndShowAlert(res.err, true);
       }
     });
   });
@@ -3519,6 +3567,7 @@ function getTopList() {
         }
         console.log("added Autocomplete");
       } else {
+        createAndShowAlert(res.err, true);
         console.log("Couldn't find topGames");
       }
     });
@@ -3566,6 +3615,12 @@ function checkBGG() {
         $("#bggCollImportButton").on("click", function () {
           showBGGImport();
         });
+      } else {
+        if (res.err) {
+          if (res.err != ERR_LOGIN_SOFT) {
+            createAndShowAlert(res.err, true);
+          }
+        }
       }
     });
   });

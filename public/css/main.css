@@ -76,7 +76,7 @@ a:active {
   bottom: var(--vh5);
 }
 
-li.red {
+.red {
   color: var(--main-red);
 }
 
@@ -97,6 +97,38 @@ li.grey {
 
 .menu.left {
   transform: translateX(-60vw);
+}
+
+.tooltip {
+  opacity: 0;
+  position: absolute;
+  background-color: var(--main-light-grey);
+  border-radius: 10px;
+  padding: 2px 5px;
+  left: 0;
+  transform: translateX(calc(-50% + 11px));
+  color: var(--main-white);
+  transition: opacity 1s cubic-bezier(1, 0, 0.8, -0.1);
+}
+
+.owner {
+  display: inline;
+  position: relative;
+}
+
+.owner:hover .tooltip {
+  opacity: 1;
+}
+
+.tooltip:after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent var(--main-light-grey) transparent;
 }
 
 .pop.showMenuItem {
@@ -302,7 +334,7 @@ select.bggFilterInput {
 #curGamesClose {
   z-index: 101;
   top: var(--vh5);
-  right: 5vw;
+  right: 10vw;
   color: var(--main-white);
 }
 
@@ -466,7 +498,7 @@ input:checked + .slider:before {
 }
 
 .logout {
-  flex-basis: min(14 * (1vw + 1vh) / 2, 25vw);
+  flex-basis: min(15 * (1vw + 1vh) / 2, 25vw);
   flex-grow: 0;
   white-space: nowrap;
   padding-left: 1vw;
@@ -497,7 +529,10 @@ input:checked + .slider:before {
   color: var(--main-grey);
   text-align: center;
   height: 100%;
-  /*justify-content: center;*/
+}
+
+#homeView .pageTitle {
+  grid-area: 7/1/8/11;
 }
 
 .phraseDisplay {
@@ -542,13 +577,33 @@ input:checked + .slider:before {
 /*   Home View   */
 /*****************/
 
+#mainImg {
+  background-image: url(/img/main.svg);
+  grid-area: 1/3/7/9;
+  width: 60vw;
+  height: var(--vh30);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.subTitle {
+  grid-area: 8/3/10/9;
+  text-align: center;
+  padding-top: 10px;
+}
+
+.subTitle p {
+  margin: 0px;
+}
+
 #joinButton {
-  grid-area: 6/3/8/9;
+  grid-area: 12/3/14/9;
   transition: opacity 0.5s, transform 0.5s;
 }
 
 #createButton {
-  grid-area: 8/3/10/9;
+  grid-area: 14/3/16/9;
   transition: opacity 0.5s, transform 0.5s;
 }
 
@@ -557,7 +612,7 @@ input:checked + .slider:before {
 }
 
 #codeInputGroup {
-  grid-area: 6/3/12/9;
+  grid-area: 13/3/16/9;
   align-self: start;
   transition: opacity 0.5s, transform 0.5s;
   opacity: 0%;
@@ -640,12 +695,24 @@ input:checked + .slider:before {
   grid-area: 15/2/18/10;
 }
 
+#codeImg {
+  background-image: url("/img/fox-select.svg");
+  grid-area: 4/2/12/10;
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+
 #codeGroup {
   grid-area: 5/2/8/10;
   text-align: center;
   width: 100%;
   height: 100%;
   align-self: start;
+  color: var(--main-white);
+  cursor: pointer;
 }
 
 #code {
@@ -657,13 +724,13 @@ input:checked + .slider:before {
 }
 
 #codeButtons {
-  grid-area: 9/3/11/9;
+  grid-area: 13/3/15/9;
   height: 100%;
   width: 100%;
 }
 
 #codeButtons ion-icon {
-  font-size: var(--vh10);
+  font-size: calc(var(--vh) * 7);
   color: var(--main-blue);
 }
 
@@ -814,11 +881,38 @@ input:checked + .slider:before {
 #postSelectContainer,
 #postVoteContainer {
   height: 100%;
-  grid-area: 4/2/15/10;
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
   font-size: min(2.4 * (1vw + 1vh) / 2, 20px);
+}
+
+#postSelectContainer {
+  grid-area: 9/2/15/10;
+}
+
+#postVoteContainer {
+  grid-area: 4/2/10/10;
+}
+
+#postVoteImg {
+  background-image: url(/img/post-vote.svg);
+  grid-area: 13/7/15/10;
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#postSelectImg {
+  grid-area: 4/2/9/10;
+  height: 100%;
+  width: 100%;
+  background-image: url(/img/post-select.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
 }
 
 #postSelectLoadingMessage {
@@ -1161,6 +1255,16 @@ input[type="range"]:focus {
   text-overflow: ellipsis;
 }
 
+#playImg {
+  background-image: url(/img/play.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  grid-area: 15/2/18/10;
+  width: 100%;
+  height: 100%;
+}
+
 /*****************/
 /* Sessions View */
 /*****************/
@@ -1429,21 +1533,27 @@ ion-icon#addListButton {
   color: var(--main-white) !important;
 }
 
-#menuHomeIcon {
+#menu #menuHomeIcon {
   cursor: pointer;
-  font-size: calc(var(--vh) * 4);
+  border: 2px solid white;
+  border-radius: 100px;
   position: absolute;
+}
+
+#menuHomeIcon {
+  font-size: calc(var(--vh) * 4);
   top: 10px;
   left: 2vw;
   width: calc(var(--vh) * 4);
   height: calc(var(--vh) * 4);
   padding: 11px;
-  border: 2px solid white;
-  border-radius: 100px;
-  background-image: url(/img/TTSquirrel.png);
+  background-image: url(/img/logo.svg);
   background-size: auto calc(var(--vh) * 5);
   background-repeat: no-repeat;
   background-position: center;
+  position: relative;
+  display: inline-block;
+  border: none;
 }
 
 .closeButton {
@@ -1457,6 +1567,17 @@ ion-icon#addListButton {
   width: 30px;
   --ionicon-stroke-width: 48px;
   cursor: pointer;
+}
+
+#menuImg {
+  background-image: url(/img/menu.svg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: bottom;
+  width: 60vw;
+  height: 60vw;
+  position: absolute;
+  bottom: 0px;
 }
 
 .itemContainer {

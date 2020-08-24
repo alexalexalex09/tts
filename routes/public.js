@@ -30,6 +30,7 @@ var auth0 = new AuthenticationClient({
 });
 
 const ERR_LOGIN = { err: "Log in first" };
+const ERR_LOGIN_SOFT = { err: "No user" };
 
 var mongoDB = process.env.mongo;
 console.log("Mongo: ", mongoDB);
@@ -238,6 +239,9 @@ router.post("/going_back", function (req, res) {
 router.post("/get_session_post_select", (req, res) => {
   if (req.body.code) {
     socketAPI.addGame({ code: req.body.code });
+    res.send({ status: "Success" });
+  } else {
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -293,7 +297,7 @@ router.post("/get_user_lists_populated", (req, res) => {
         });
       });
   } else {
-    res.send(ERR_LOGIN);
+    res.send(ERR_LOGIN_SOFT);
   }
 });
 
@@ -1721,7 +1725,7 @@ router.post("/check_bgg", function (req, res) {
       }
     });
   } else {
-    res.send(ERR_LOGIN);
+    res.send(ERR_LOGIN_SOFT);
   }
 });
 

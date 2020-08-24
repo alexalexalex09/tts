@@ -41,6 +41,7 @@ block content
                 ion-icon(name='log-out-outline')
                 a(href="/logout")
                   | Logout
+        #menuImg
       #menuCatch.clickCatcher.off
       .login
         
@@ -53,7 +54,11 @@ block content
         else 
           a(href="/login") Login
     #homeView.view
-      .pageTitle SelectAGame 🐿️
+      #mainImg
+      .pageTitle SelectAGame
+      .subTitle 
+        p Choosing a board game is hard.
+        p Why not have several woodland creatures help?
       #joinButton.button.blueBtn Join
       #createButton.button.greyBtn Create
       #codeInputGroup.inputGroup.off
@@ -65,8 +70,9 @@ block content
         #codeError.errorText.off Wrong code. Please try again.
 
     #codeView.view.off
-      .pageTitle SelectAGame 🐿️
+      .pageTitle SelectAGame
       .phraseDisplay
+      #codeImg
       #codeGroup
         #codeTitle Your Code:
         #code 
@@ -78,7 +84,8 @@ block content
       #selectButton.submitButton.button.greenBtn Select Games
 
     #selectView.view.off
-      #selectTitle.pageTitle Select Games 🐿️
+      #selectTitle.pageTitle Select Games
+        #menuHomeIcon
       .phraseDisplay
       #selectCodeDisplay.codeDisplay Your Code:
       
@@ -93,40 +100,46 @@ block content
         | Submit These Games
     
     #postSelectView.view.off
-      #postSelectTitle.pageTitle Waiting... 🐿️
+      #postSelectTitle.pageTitle Waiting...
+      #postSelectImg
       .phraseDisplay
       #postSelectContainer
       #postSelectCodeDisplay.codeDisplay Your Code:
 
     #voteView.view.off
-      #voteTitle.pageTitle Voting 🐿️
+      #voteTitle.pageTitle Voting
+        #menuHomeIcon
       .phraseDisplay
       #voteContainer
       #voteCodeDisplay.codeDisplay Your Code:
 
     #postVoteView.view.off
-      #postVoteTitle.pageTitle Waiting... 🐿️
+      #postVoteTitle.pageTitle Waiting...
       .phraseDisplay
       #postVoteContainer
       #postVoteCodeDisplay.codeDisplay Your Code:
+      #postVoteImg
     
     #playView.view.off
-      #playTitle.pageTitle Start Playing! 🐿️
+      #playTitle.pageTitle Start Playing!
       .phraseDisplay
       #playInfo Here are the games your group selected, beginning with the game you want to play most!
       #playContainer
       #playCodeDisplay.codeDisplay Your Code:
+      #playImg
 
     #sessionsView.pop.off
       #sessionsClose.closeButton
         ion-icon(name='close-outline')
-      #sessionsTitle.pageTitle My Sessions 🐿️
+      #sessionsTitle.pageTitle My Sessions
+        #menuHomeIcon
       #sessionsContainer
       
     #gamesView.pop.off
       #gamesClose.closeButton
         ion-icon(name='close-outline')
-      #gamesTitle.pageTitle Games and Lists 🐿️
+      #gamesTitle.pageTitle Games and Lists
+        #menuHomeIcon
       #gamesAdderTitle.off Add New
       ion-icon(name="add-circle-outline" onclick="toggleGamesAdder()")#addListButton
       #gamesContainer
@@ -136,7 +149,8 @@ block content
     #accountView.pop.off
       #accountClose.closeButton
         ion-icon(name='close-outline')
-      #accountTitle.pageTitle Account 🐿️
+      #accountTitle.pageTitle Account
+        #menuHomeIcon
       #accountContainer
         if user
           #accountUsernameTitle.title Username
@@ -155,7 +169,8 @@ block content
     #faqView.pop.off
       #faqClose.closeButton
         ion-icon(name='close-outline')
-      #faqTitle.pageTitle FAQ 🐿️
+      #faqTitle.pageTitle FAQ
+        #menuHomeIcon
       #faqContainer
         ul#faqList
           li#fq What is a Session?
@@ -171,7 +186,8 @@ block content
     #aboutView.pop.off
       #aboutClose.closeButton
         ion-icon(name='close-outline')
-      #aboutTitle.pageTitle About 🐿️
+      #aboutTitle.pageTitle About
+        #menuHomeIcon
       #aboutContainer
         p It's always hard to pick a board game when you get together to play with friends. This app takes the pressure off. Create a session, share the link with your friends, and you all can start adding games together.
         p Once you've picked your games, you'll be able to see who's still picking games and who's finished. Lock the list whenever you're ready.
@@ -210,7 +226,10 @@ block content
       circle(cx="50" cy="50" r="27.591" fill="none" stroke="#5699d2" stroke-width="2")
         animate(attributeName="r" calcMode="spline" values="0;40" keyTimes="0;1" dur="3" keySplines="0 0.2 0.8 1" begin="0s" repeatCount="indefinite")
         animate(attributeName="opacity" calcMode="spline" values="1;0" keyTimes="0;1" dur="3" keySplines="0.2 0 0.8 1" begin="0s" repeatCount="indefinite")
-  #ver Version 0.3.3
+  #ver 
+    | Version 0.3.3 | 
+    a(href="http://www.freepik.com") Images designed by Freepik
+    
     
 //-
   #report

@@ -548,7 +548,7 @@ window.addEventListener("load", function () {
         transform: "translateX(0px)",
       });
       $("#createButton").css({
-        transform: "translateY(12vh)",
+        transform: "translateY(calc(var(--vh) * 12)",
       });
       window.setTimeout(function () {
         console.log("wait 2");
@@ -2729,7 +2729,7 @@ function submitCode(code) {
         }, 5);
         //Move the create button out of the way of the error text:
         $("#createButton").css({
-          transform: "translateY(14vh)",
+          transform: "translateY(calc(var(--vh) * 14)",
         });
       } else {
         //If the session join was successful:

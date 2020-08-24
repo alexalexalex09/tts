@@ -1763,7 +1763,7 @@ subContextRemove {
 
 .listTitle {
   position: fixed;
-  transform: translateX(200vh);
+  transform: translateX(200vw);
   transition: transform 0.5s;
   width: 100%;
   left: 0px;
@@ -1778,7 +1778,7 @@ subContextRemove {
 
 .listTitle ion-icon {
   position: absolute;
-  top: 0.5vh;
+  top: calc(var(--vh) * 0.5);
   left: 7vw;
   cursor: pointer;
 }

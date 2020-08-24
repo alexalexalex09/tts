@@ -3322,7 +3322,7 @@ function createAndShowAlert(alert, error = false) {
   $("body").append(
     '<div id="tempAlert" class="tempAlert' + red + '">' + alert + "</div>"
   );
-  $("#tempAlert").css({ opacity: 1, "z-index": 11 });
+  $("#tempAlert").css({ opacity: 1, "z-index": 101 });
   setTimeout(function () {
     $("#tempAlert").css({ opacity: 0 });
     setTimeout(function () {

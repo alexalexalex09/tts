@@ -696,6 +696,7 @@ router.post("/join_session", function (req, res) {
           });
         } else {
           //Join as client
+          console.log("Joining as client");
           var newUser = true; //Initialize to true, set to false if user is found
           if (lock == "#codeView") {
             lock = "#selectView";
@@ -720,7 +721,10 @@ router.post("/join_session", function (req, res) {
               err,
               extUser
             ) {
-              //console.log("auth0 user:", extUser);
+              console.log("auth0 user:", extUser);
+              if (err) {
+                res.send({ err: err });
+              }
               res.locals.user = req.user;
               if (
                 extUser &&
@@ -729,28 +733,30 @@ router.post("/join_session", function (req, res) {
               ) {
                 displayName =
                   extUser.user_metadata.userDefinedName || req.user.displayName;
-                //console.log("568DisplayName: ", displayName);
-                curSession.users.push({
-                  user: req.user.id,
-                  name: displayName,
-                  done: false,
-                  doneVoting: false,
-                });
-                curSession.save().then(function () {
-                  socketAPI.addGame({
-                    code: theCode,
-                  });
-                  res.send({
-                    owned: false,
-                    status: {
-                      code: curSession.code,
-                      lock: lock,
-                      games: sendGames,
-                      phrase: curSession.phrase,
-                    },
-                  });
-                });
+              } else {
+                displayName = req.user.displayName || "Insert Name Here";
               }
+              //console.log("568DisplayName: ", displayName);
+              curSession.users.push({
+                user: req.user.id,
+                name: displayName,
+                done: false,
+                doneVoting: false,
+              });
+              curSession.save().then(function () {
+                socketAPI.addGame({
+                  code: theCode,
+                });
+                res.send({
+                  owned: false,
+                  status: {
+                    code: curSession.code,
+                    lock: lock,
+                    games: sendGames,
+                    phrase: curSession.phrase,
+                  },
+                });
+              });
             });
           } else {
             socketAPI.addGame({

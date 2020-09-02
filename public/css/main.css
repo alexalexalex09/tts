@@ -1063,7 +1063,7 @@ input:checked + .slider:before {
   width: 100%;
   text-align: center;
   height: var(--vh10);
-  font-size: max(1.5 * (1vw + 1vh) / 2, 15px);
+  font-size: max(1.5 * (1vw + 1vh) / 2, 14px);
 }
 
 .voteLabel {

@@ -2620,7 +2620,7 @@ function renameSession(event, caller, code) {
           //Renaming the current session
           $(".phraseDisplay").each(function () {
             $(this).html(
-              `Session ` +
+              `Session: ` +
                 newName +
                 `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
             );
@@ -2808,7 +2808,7 @@ function addNewGame(el) {
         recheckGreenLists();
       } else {
         console.log(res.err);
-        if ((res.err = "Log in first")) {
+        if (res.err == "Log in first") {
           createAndShowAlert("Sign up or log in to use this feature", true);
         } else {
           createAndShowAlert(res.err, true);
@@ -3277,7 +3277,7 @@ function setPhrase(phrase) {
       $(this).html();
     } else {
       htmlString =
-        `Session ` + phrase + `<ion-icon name="create-outline"></ion-icon>`;
+        `Session: ` + phrase + `<ion-icon name="create-outline"></ion-icon>`;
       $(this).html(htmlString);
     }
   });

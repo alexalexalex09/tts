@@ -33,7 +33,6 @@ const ERR_LOGIN = { err: "Log in first" };
 const ERR_LOGIN_SOFT = { err: "No user" };
 
 var mongoDB = process.env.mongo;
-console.log("Mongo: ", mongoDB);
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
   useFindAndModify: false,

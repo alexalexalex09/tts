@@ -269,6 +269,21 @@ select.bggFilterInput {
   height: var(--vh50);
 }
 
+#bggImportList label {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: baseline;
+}
+
+#bggSelectAll {
+  top: calc(var(--vh20) - 20px);
+  left: 10vw;
+  position: absolute;
+  border-bottom: 1px solid white;
+  width: 80vw;
+  height: 19px;
+}
+
 #faqContainer,
 #aboutContainer {
   height: var(--vh70);
@@ -1259,7 +1274,7 @@ input[type="range"]:focus {
 .playGame .weight {
   vertical-align: baseline;
   position: absolute;
-  transform: translateY(-25%);
+  transform: translateY(-15%);
   font-size: 0.7em;
   opacity: 0;
   transition: opacity 0.5s;

@@ -3708,6 +3708,7 @@ function showBGGImport() {
           <option value="n">No</option>
         </select>
       </div>
+      <div id="bggSelectAll"><label><input type="checkbox" onclick="bggSelectAll()"><div class="off">Select All</div></label></div>
       <div id="bggImportList"></div>
       <div class="bggListName">
         <div class="bggListNameTitle">Import into:</div>
@@ -3736,6 +3737,13 @@ function showBGGImport() {
   });
 }
 
+function bggSelectAll() {
+  var checked = $("#bggSelectAll label input").first().prop("checked");
+  $("#bggImportList li").each(function (i, e) {
+    $(e).parent().children("input").first().prop("checked", checked);
+  });
+}
+
 function updateFilters() {
   var htmlString = ``;
   $("#bggCollection")
@@ -3749,18 +3757,23 @@ function updateFilters() {
         compBool(e, "bfMaxT", "gt", "playingtime") &&
         compBool(e, "bfMinX", "lt", "plays") &&
         compBool(e, "bfMaxX", "gt", "plays") &&
-        compFlex("bfOwned", e, "own") &&
-        compFlex("bfWish", e, "wishlist") &&
-        compFlex("bfWtp", e, "wanttoplay") &&
-        compFlex("bfWtb", e, "wanttobuy")
+        compFlex(e, "bfOwned", "own") &&
+        compFlex(e, "bfWish", "wishlist") &&
+        compFlex(e, "bfWtp", "wanttoplay") &&
+        compFlex(e, "bfWtb", "wanttobuy")
       ) {
-        htmlString += `<li>` + getGameVal(e, "name") + `</li>`;
+        htmlString +=
+          `<label><input type="checkbox" id="bggImport` +
+          i +
+          `"></input><li>` +
+          getGameVal(e, "name") +
+          `</li></label>`;
       }
     });
   $("#bggImportList").html(htmlString);
 }
 
-function compFlex(filterVal, e, gameVal) {
+function compFlex(e, filterVal, gameVal) {
   var f = getFilterVal(filterVal);
   var g = getGameVal(e, gameVal);
   if (f != "" && typeof f != "undefined") {
@@ -3817,7 +3830,9 @@ function getGameVal(e, val) {
 function importBGG() {
   var arr = [];
   $("#bggImportList li").each(function (i, e) {
-    arr.push($(e).text());
+    if ($(e).parent().children("input").first().prop("checked")) {
+      arr.push($(e).text());
+    }
   });
   const gab_options = {
     method: "POST",

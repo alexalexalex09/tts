@@ -1315,12 +1315,13 @@ router.post("/end_vote", function (req, res) {
           games.push({ name: curSession.votes[i].name, votes: 0 });
           for (var j = 0; j < curSession.votes[i].voters.length; j++) {
             if (curSession.votes[i].voters[j].vote < 5) {
-              games[games.length].votes -= 500;
-              if (games[games.length].votes < 0) {
-                games[games.length].votes = 0;
+              games[games.length - 1].votes -= 500;
+              if (games[games.length - 1].votes < 0) {
+                games[games.length - 1].votes = 0;
               }
             } else {
-              games[games.length].votes += curSession.votes[i].voters[j].vote;
+              games[games.length - 1].votes +=
+                curSession.votes[i].voters[j].vote;
             }
           }
         }

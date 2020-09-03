@@ -178,7 +178,7 @@ li.grey {
 }
 
 .bggImport {
-  z-index: 999;
+  z-index: 100;
   width: 100vw;
   height: var(--vh100);
   position: absolute;

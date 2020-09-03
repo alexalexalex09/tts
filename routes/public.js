@@ -359,11 +359,25 @@ router.post("/rename_session", (req, res) => {
 
 router.post("/delete_session", (req, res) => {
   var code = req.body.code;
-  Session.deleteOne({ owner: req.user.id, code: req.body.code }).exec(function (
-    err,
-    curSession
-  ) {
-    res.send(curSession);
+  Session.findOne({ code: req.body.code }).exec(function (err, theSession) {
+    if (req.user.id == theSession.owner) {
+      Session.deleteOne({ owner: req.user.id, code: req.body.code }).exec(
+        function (err, curSession) {
+          res.send(curSession);
+        }
+      );
+    } else {
+      var index = theSession.users.findIndex(
+        (obj) => obj.user.toString() == req.user.id.toString()
+      );
+      if (index > -1) {
+        theSession.users.splice(index, 1);
+        theSession.save();
+        res.send(theSession);
+      } else {
+        res.send({ err: "Could not find user in session list" });
+      }
+    }
   });
 });
 
@@ -819,7 +833,7 @@ router.post("/create_session", function (req, res) {
         displayName =
           extUser.user_metadata.userDefinedName || req.user.displayName;
       } else {
-        displayName = req.user.displayName;
+        displayName = req.user.displayName || "Insert Name Here";
       }
       var today = new Date();
       var dd = String(today.getDate()).padStart(2, "0");
@@ -1297,10 +1311,17 @@ router.post("/end_vote", function (req, res) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       var games = [];
       for (var i = 0; i < curSession.votes.length; i++) {
-        if (curSession.votes[i].active) {
-          games[i] = { name: curSession.votes[i].name, votes: 0 };
+        if (curSession.votes[i].active == true) {
+          games.push({ name: curSession.votes[i].name, votes: 0 });
           for (var j = 0; j < curSession.votes[i].voters.length; j++) {
-            games[i].votes += curSession.votes[i].voters[j].vote;
+            if (curSession.votes[i].voters[j].vote < 5) {
+              games[games.length].votes -= 500;
+              if (games[games.length].votes < 0) {
+                games[games.length].votes = 0;
+              }
+            } else {
+              games[games.length].votes += curSession.votes[i].voters[j].vote;
+            }
           }
         }
       }
@@ -1724,7 +1745,7 @@ router.post("/check_bgg", function (req, res) {
           typeof curUser.bgg == "undefined" ||
           curUser.bgg.username == ""
         ) {
-          res.send({ err: "No BGG User" });
+          res.send({ notice: "No BGG User" });
         } else {
           res.send({ success: curUser.bgg.collection });
         }

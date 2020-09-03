@@ -3511,13 +3511,32 @@ function textSubmit(el) {
 
 function fillGames(games) {
   var htmlString = ``;
+  var bottom = games[games.length - 1].votes;
+  var top = games[0].votes - bottom;
+  for (var i = 0; i < games.length; i++) {
+    games[i].weight = ((games[i].votes - bottom) / top) * 100;
+    games[i].weight = games[i].weight.toString().substr(0, 4);
+  }
   for (var i = 0; i < games.length; i++) {
     if (!$.isEmptyObject(games[i])) {
-      htmlString += `<div class="playGame">` + games[i].name + `</div>`;
+      htmlString +=
+        `<div class="playGame" data-content = "(` +
+        games[i].weight +
+        `)" id="play` +
+        i +
+        `"><span onclick="showWeight(this)">` +
+        games[i].name +
+        `</span><div class="weight">(` +
+        games[i].weight +
+        `)</div></div>`;
     }
   }
   $("#playContainer").html(htmlString);
   console.log("fillgames");
+}
+
+function showWeight(e) {
+  $(e).parent().toggleClass("showWeight");
 }
 
 function showListSettings(el) {

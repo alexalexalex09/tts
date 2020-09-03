@@ -296,9 +296,18 @@ select.bggFilterInput {
 }
 
 #premiumContainer {
-  font-size: 2em;
+  font-size: 1em;
   color: var(--main-white);
   text-align: center;
+}
+
+#premiumContainer a {
+  color: var(--main-white) !important;
+}
+
+#premiumLink {
+  margin-top: 1em;
+  text-decoration: underline;
 }
 
 #faqList {

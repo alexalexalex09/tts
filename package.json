@@ -22,7 +22,6 @@
     "express-session": "^1.17.1",
     "fuse.js": "^6.4.1",
     "helmet": "^3.23.3",
-    "heroku": "^7.42.13",
     "http-errors": "~1.6.3",
     "kind-of": "^6.0.3",
     "mongoose": "^5.10.2",

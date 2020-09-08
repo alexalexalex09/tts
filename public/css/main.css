@@ -1282,12 +1282,12 @@ input[type="range"]:focus {
 
 .playGame .weight {
   vertical-align: baseline;
-  position: absolute;
-  transform: translateY(-15%);
+  position: relative;
+  transform: translateY(-35%);
   font-size: 0.7em;
   opacity: 0;
   transition: opacity 0.5s;
-  display: inline;
+  display: inline-block;
 }
 
 .playGame:hover .weight {

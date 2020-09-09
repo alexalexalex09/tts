@@ -3565,19 +3565,21 @@ function fillGames(games) {
         games[i].weight +
         `)" id="play` +
         i +
-        `"><div class="playGameTitle" onclick="showWeight(this)">` +
+        `"><div class="playGameTitle">` +
         games[i].name +
         `</div><div class="playGameToolTip">
           <ion-icon name="help-circle-outline"></ion-icon>
           <div class="weight"><li class="playSubTitle">` +
         games[i].name +
-        `</li><li class="relVotes">Relative votes: ` +
+        `</li><li class="relVotes">Relative vote: ` +
         games[i].weight +
         `</li><li class="BGGL">Board Game Geek Link</li></div></div></div>`;
     }
   }
   $("#playContainer").html(htmlString);
-
+  for (var i = 0; i < games.length; i++) {
+    contextBGG($(".BGGL")[i], games[i].name);
+  }
   console.log("fillgames");
 }
 

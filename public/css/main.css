@@ -1067,14 +1067,14 @@ input:checked + .slider:before {
   height: 100%;
 }
 
-#voteContainer ul {
+#voteContainer .voteList {
   margin: calc(var(--vh) * 3) 0 0 0;
   padding: 0;
   height: calc(var(--vh) * 44);
   overflow-y: auto;
 }
 
-#voteContainer ul li {
+#voteContainer .voteList .voteItem {
   list-style: none;
   width: 100%;
   height: var(--vh10);
@@ -1090,29 +1090,94 @@ input:checked + .slider:before {
   font-size: max(1.5 * (1vw + 1vh) / 2, 14px);
 }
 
-.voteLabel {
-  width: 100%;
-  text-align: center;
-  font-size: calc(var(--vh) * 3.5);
-  align-self: flex-end;
-  display: flex;
-  overflow: hidden;
-}
-
-.voteLabel label {
-  align-self: flex-end;
-  margin: 0 auto;
-  height: calc(var(--vh) * 4);
-  max-width: 80vw;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 #voteButton {
   position: absolute;
   bottom: 0;
   width: 80vw;
+}
+
+.voteToolTip {
+  display: inline-block;
+  font-size: 0.8em;
+  transform: translate(-5%, -35%);
+  position: relative;
+  z-index: 1;
+}
+
+.voteLabel label {
+  align-self: flex-end;
+  height: calc(var(--vh) * 4);
+  max-width: 65vw;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: inline-block;
+  margin-left: 1em;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.voteLabel {
+  width: 100%;
+  text-align: center;
+  font-size: calc(var(--vh) * 3.5);
+  position: relative;
+  z-index: 2;
+}
+
+.voteLabel:hover,
+.showVoteThumb {
+  z-index: 3;
+}
+
+.voteToolTip:hover .toolTipContainer,
+.showVoteThumb .toolTipContainer {
+  transition-delay: 0.5s;
+  transform: translate(-100%, 10px);
+  opacity: 1;
+}
+
+.toolTipContainer {
+  vertical-align: baseline;
+  position: absolute;
+  transform: translateX(-100vw);
+  font-size: 0.7em;
+  opacity: 0;
+  transition: opacity 0.5s;
+  display: inline-block;
+  list-style: none;
+  text-align: left;
+  border: 2px solid var(--main-black);
+  border-radius: 5px;
+  background-color: var(--main-white);
+  width: 10em;
+}
+
+.showVoteThumb .voteSubX {
+  display: block;
+}
+.voteSubX {
+  position: absolute;
+  right: 5px;
+  top: -1px;
+  cursor: pointer;
+  display: none;
+}
+
+.BGGThumb img {
+  max-width: 100%;
+  max-height: 50px;
+}
+
+.BGGThumb {
+  text-align: center;
+}
+
+.BGGDesc {
+  line-height: 0.9em;
+}
+
+.voteSubTitle {
+  border-bottom: 2px solid var(--main-black);
 }
 
 /***********************************************************************************/
@@ -1251,6 +1316,26 @@ input[type="range"] /deep/ #track:after {
 input[type="range"]:focus {
   outline: none;
 }
+input[type="range"]:before {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: white;
+  width: 5%;
+  height: 90%;
+  z-index: 99;
+}
+input[type="range"]:before {
+  content: " ";
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: white;
+  width: 5%;
+  height: 90%;
+  z-index: 99;
+}
 
 /******************/
 /*    PlayView    */
@@ -1274,7 +1359,6 @@ input[type="range"]:focus {
   font-size: calc(var(--vh, 1vh) * 3);
   width: 100%;
   text-align: center;
-  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: pointer;
@@ -1282,17 +1366,48 @@ input[type="range"]:focus {
 
 .playGame .weight {
   vertical-align: baseline;
-  position: relative;
-  transform: translateY(-35%);
+  position: absolute;
+  transform: translateX(-100vw);
   font-size: 0.7em;
   opacity: 0;
   transition: opacity 0.5s;
   display: inline-block;
+  list-style: none;
+  text-align: left;
+  border: 2px solid var(--main-black);
+  border-radius: 5px;
+  background-color: var(--main-white);
+  z-index: 2;
 }
 
-.playGame:hover .weight {
+.playGameTitle {
+  max-width: 90%;
+  overflow: hidden;
+  margin-left: 5%;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.playGameToolTip {
+  display: inline-block;
+  font-size: 0.8em;
+  transform: translate(-5%, -55%);
+  position: relative;
+  z-index: 1;
+}
+
+.playSubTitle {
+  border-bottom: 2px solid var(--main-black);
+}
+
+.playGameToolTip:hover .weight {
   opacity: 1;
   transition-delay: 0.5s;
+  transform: translate(-100%, 10px);
+}
+
+.playGameToolTip:hover {
+  z-index: 3;
 }
 
 .playGame.showWeight .weight {

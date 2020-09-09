@@ -1790,7 +1790,7 @@ function showGameContext(game) {
         .clone(true)
         .prop("id", "context_" + game.id)
         .appendTo($("body"));
-      contextBGG(
+      var bggLink = contextBGG(
         ".contextActions.slideUp li.bggLink",
         $(
           "#context_stage_" +
@@ -2268,22 +2268,34 @@ function removeGame(arr) {
   });
 }
 
-function contextBGG(el, game, recur, exact) {
-  console.log(
-    "el: ",
-    el,
-    " game: ",
-    game,
-    " recur: ",
-    recur,
-    " exact: ",
-    exact
-  );
+function parseBGGThing(id, field) {
+  return new Promise(function (resolve, reject) {
+    fetch(`https://boardgamegeek.com/xmlapi2/thing?id=` + id)
+      .then((response) => response.text())
+      .then((data) => {
+        var xmlDoc = $.parseXML(data);
+        var $xml = $(xmlDoc);
+        var $items = $xml.find("items");
+        if ($items.attr("total") == 0) {
+          reject("Error");
+        } else {
+          console.log(
+            "Items: ",
+            $items.children("item").children(field).first().html()
+          );
+          resolve($items.children("item").children(field).first().html());
+        }
+      });
+  });
+}
+
+function contextBGG(el, game, exact, recur) {
   if (exact) {
     var exactStr = "";
   } else {
     var exactStr = "&exact=1";
   }
+  game = game.replace("&", "%26");
   fetch(
     `https://boardgamegeek.com/xmlapi2/search?query=` +
       game +
@@ -2292,12 +2304,11 @@ function contextBGG(el, game, recur, exact) {
   )
     .then((response) => response.text())
     .then((data) => {
-      console.log(data);
       var xmlDoc = $.parseXML(data);
       var $xml = $(xmlDoc);
       var $items = $xml.find("items");
-      console.log("items: ", $items);
-      console.log($items.attr("total"));
+      //console.log("items: ", $items);
+      //console.log($items.attr("total"));
       if ($items.attr("total") == 0) {
         if (typeof recur == "undefined") {
           contextBGG(el, "The " + game, 1);
@@ -2318,8 +2329,6 @@ function contextBGG(el, game, recur, exact) {
         var ret =
           `https://boardgamegeek.com/boardgame/` +
           $items.children("item").attr("id");
-        console.log(`url: `, ret);
-        console.log(el);
         var html = $(el).html();
         $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
       }
@@ -3394,23 +3403,55 @@ function showSelect(data, isOwner) {
  * @param {Array} games
  */
 function fillVotes(games) {
-  var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><ul>`;
+  var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
     htmlString +=
-      `<li><div class="voteLabel"><label for="` +
+      `<div class="voteItem"><div class="voteLabel"><label for="` +
       games[i].game +
       `">` +
       games[i].name +
-      `</label></div>`;
+      `</label><div class="voteToolTip">
+          <ion-icon name="help-circle-outline"></ion-icon>
+          <div class="toolTipContainer"><div class="voteSubX">x</div><div class="voteSubTitle">` +
+      games[i].name +
+      `</div><div class="BGGL">Board Game Geek Link</div>
+        </div>
+      </div></div>`;
     htmlString +=
       `<input type='range' min='1' max='1000' value='500' step='1' id="` +
       games[i].game +
-      `"/></li>`;
+      `"/></div>`;
   }
-  htmlString += `</ul><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
+  htmlString += `</div><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
   //console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
   sortVotes();
+  for (var i = 0; i < games.length; i++) {
+    contextBGG($(".voteToolTip .BGGL")[i], games[i].name);
+  }
+  $(".voteSubX").on("click", function () {
+    $(this).parent().parent().parent().removeClass("showVoteThumb");
+  });
+  $(".toolTipContainer").mouseenter(function () {
+    console.log("Mouseover: ", $(this));
+    var $el = $(this);
+    if ($el.children(".BGGThumb").length == 0) {
+      var id = $el.children(".BGGL").children("a").attr("href");
+      id = id.substr(id.lastIndexOf("/") + 1);
+      parseBGGThing(id, "thumbnail").then(function (res) {
+        $el.append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
+      });
+      parseBGGThing(id, "description").then(function (res) {
+        if (res.length > 100) {
+          res = res.substr(0, 100) + "...";
+        }
+        $el.append(`<div class="BGGDesc">` + res + `</div>`);
+      });
+    }
+  });
+  $(".voteLabel label").on("click", function () {
+    $(this).parent().toggleClass("showVoteThumb");
+  });
   $("#voteButton").on("click", function () {
     var theCode = $("#code").text();
     var voteArray = [];
@@ -3524,14 +3565,19 @@ function fillGames(games) {
         games[i].weight +
         `)" id="play` +
         i +
-        `"><span onclick="showWeight(this)">` +
+        `"><div class="playGameTitle" onclick="showWeight(this)">` +
         games[i].name +
-        `</span><div class="weight">(` +
+        `</div><div class="playGameToolTip">
+          <ion-icon name="help-circle-outline"></ion-icon>
+          <div class="weight"><li class="playSubTitle">` +
+        games[i].name +
+        `</li><li class="relVotes">Relative votes: ` +
         games[i].weight +
-        `)</div></div>`;
+        `</li><li class="BGGL">Board Game Geek Link</li></div></div></div>`;
     }
   }
   $("#playContainer").html(htmlString);
+
   console.log("fillgames");
 }
 

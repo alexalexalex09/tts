@@ -90,7 +90,10 @@ block content
       #selectCodeDisplay.codeDisplay Your Code:
       
       #addGamesContainer
-        #addGamesTitle Add Games
+        #addGamesTitle 
+          .text Add Games:
+          ion-icon(name="information-circle-outline")
+          .tooltip Type the name of a game here to add it to the current session and your "All Games" list. Your "All Games" list contains every game you have added to your account. You may press the down arrow next to your All Games list to add and remove games from the current session. This feature is only available to logged in users.
         #addGamesInputCont.textInputCont
           form(onsubmit="return textSubmit('#addGamesInput')")
             input.textInput(type='text' autocomplete="off")#addGamesInput

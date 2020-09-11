@@ -2813,6 +2813,11 @@ function addNewGame(el) {
                 </div>
             </li>`;
         $("li#0").children(".listGames").first().append(htmlString);
+        if (el == "#addGamesInput") {
+          var toAdd = $('.listGames input[game_id="' + res.status._id + '"]');
+          toAdd.prop("checked", true);
+          toggleFont(toAdd);
+        }
         gulp(true);
         recheckGreenLists();
       } else {
@@ -3546,7 +3551,6 @@ function textSubmit(el) {
     $("#addGamesInputCont .textSubmit").first().removeClass("green");
   }, 1000);
   $(".subContextContainer").remove();
-  console.log("Toggled: ", $("#0").children(".listExpand")[0]);
   return false;
 }
 
@@ -3971,7 +3975,9 @@ function changeUsername() {
     finishLoader();
     return response.json().then((res) => {
       console.log(res);
-      $("#hContainer .login .userNameContainer .userName span").text(res.name);
+      $("#hContainer .login .userNameContainer .userName span").text(
+        "Hello, " + res.name
+      );
       $("#accountUsernameField").html(
         res.name +
           $("#accountUsernameField")

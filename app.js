@@ -155,20 +155,28 @@ app.use((req, res, next) => {
   if (req.user) {
     console.log("with user");
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
-      //console.log("auth0 user:", extUser);
+      console.log("auth0 user:", extUser);
       res.locals.user = req.user;
-      if (
-        extUser &&
-        extUser.user_metadata &&
-        extUser.user_metadata.userDefinedName != ""
-      ) {
-        res.locals.username = extUser.user_metadata.userDefinedName;
-        console.log(
-          "Assigning metadata username to locals: ",
-          res.locals.username
-        );
+      if (extUser) {
+        if (
+          extUser.user_metadata &&
+          extUser.user_metadata.userDefinedName &&
+          extUser.user_metadata.userDefinedName.length > 0
+        ) {
+          res.locals.username = extUser.user_metadata.userDefinedName;
+          console.log(
+            "Assigning metadata username to locals: ",
+            res.locals.username
+          );
+        } else {
+          if (extUser.username != "") {
+            res.locals.username = extUser.username;
+            console.log("Assigning auth0 username to locals");
+          }
+        }
       } else {
         res.locals.username = req.user.displayName;
+        console.log("Assigning displayname to locals");
       }
       res.locals.email = req.user.emails[0].value;
       next();

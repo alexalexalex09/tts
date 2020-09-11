@@ -203,10 +203,6 @@ router.get("/", (req, res) => {
   if (typeof req.session.userNonce == "undefined") {
     req.session.userNonce = makeid(20);
   }
-  if (typeof req.user != "undefined") {
-    console.log("app_metadata: ", req.user.app_metadata);
-    console.log(req.user);
-  }
   socketAPI.sendNotification("Reloading...");
   res.render("index", {
     sessionCode: "none",
@@ -256,17 +252,13 @@ router.post("/get_user_lists_populated", (req, res) => {
         management.users.get({ id: req.user.user_id }, function (err, extUser) {
           //console.log("auth0 user:", extUser);
           res.locals.user = req.user;
-          if (
-            extUser &&
-            extUser.user_metadata &&
-            extUser.user_metadata.userDefinedName != ""
-          ) {
-            var displayName =
-              extUser.user_metadata.userDefinedName || req.user.displayName;
+          if (extUser && extUser.username != "") {
+            var displayName = extUser.username || req.user.displayName;
           } else {
             displayName = req.user.displayName;
           }
           console.log("DisplayName: ", displayName);
+          console.log(extUser);
           if (curUser) {
             if (curUser.lists) {
               getOwnedSessions(req.user.id, curUser.lists, res);
@@ -735,18 +727,13 @@ router.post("/join_session", function (req, res) {
               err,
               extUser
             ) {
-              console.log("auth0 user:", extUser);
+              //console.log("auth0 user:", extUser);
               if (err) {
                 res.send({ err: err });
               }
               res.locals.user = req.user;
-              if (
-                extUser &&
-                extUser.user_metadata &&
-                extUser.user_metadata.userDefinedName != ""
-              ) {
-                displayName =
-                  extUser.user_metadata.userDefinedName || req.user.displayName;
+              if (extUser && extUser.username != "") {
+                displayName = extUser.username || req.user.displayName;
               } else {
                 displayName = req.user.displayName || "Insert Name Here";
               }
@@ -825,13 +812,8 @@ router.post("/create_session", function (req, res) {
       // Get the user info from Auth0
       console.log("auth0 user:", extUser);
       res.locals.user = req.user; //Set correct displayName and user var for locals
-      if (
-        extUser &&
-        extUser.user_metadata &&
-        extUser.user_metadata.userDefinedName != ""
-      ) {
-        displayName =
-          extUser.user_metadata.userDefinedName || req.user.displayName;
+      if (extUser && extUser.username != "") {
+        displayName = extUser.username || req.user.displayName;
       } else {
         displayName = req.user.displayName || "Insert Name Here";
       }
@@ -986,6 +968,7 @@ router.post("/add_game_to_session", function (req, res) {
               code: req.body.code,
               games: curSession.games,
             });
+            res.send({ status: "completed" });
           });
         }
       }

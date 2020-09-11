@@ -805,9 +805,31 @@ input:checked + .slider:before {
 
 #addGamesTitle {
   text-align: center;
-  align-self: end;
   height: var(--vh5);
   font-size: max(3 * (1vw + 1vh) / 2, 30px);
+}
+
+#addGamesTitle .text {
+  transform: translateX(10px);
+  display: inline-block;
+}
+
+#addGamesTitle ion-icon {
+  font-size: 20px;
+  transform: translate(10px, -50%);
+}
+
+#addGamesTitle ion-icon:hover + .tooltip {
+  transform: translate(calc(50vw + 50% + 79px), -19px);
+  opacity: 1;
+}
+
+#addGamesTitle .tooltip {
+  transform: translateX(-100vw);
+  z-index: 999;
+  font-size: max(1 * (1vw + 1vh), 16px);
+  max-width: min(50vw, 400px);
+  left: max(-50vw, -400px);
 }
 
 #selectLists {
@@ -2424,5 +2446,9 @@ subContextRemove {
   #curGamesClose {
     top: calc(var(--vh) * 2);
     left: 615px;
+  }
+
+  #addGamesTitle ion-icon:hover + .tooltip {
+    transform: translate(calc(50% + 457px), -19px);
   }
 }

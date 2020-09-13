@@ -164,6 +164,11 @@ block content
           #accountPwdResetTitle.title Password
           #accountPwdResetField.field
             button#pwdResetButton Reset Password
+          #accountImportListTitle.title Import List
+          #accountImportListField.field
+            form(onsubmit="return runListImport()")
+              input#listImport(type="text" autocomplete="off")
+              input#listImportSubmit(type='submit' value='')
           #accountbggConnectTitle.title BoardGameGeek Account
           #accountbggConnectField.field
             button#bggConnectButton Connect

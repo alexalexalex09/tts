@@ -31,6 +31,7 @@ var auth0 = new AuthenticationClient({
 
 const ERR_LOGIN = { err: "Log in first" };
 const ERR_LOGIN_SOFT = { err: "No user" };
+const ERR_CODE = { err: "Session not found" };
 
 var mongoDB = process.env.mongo;
 mongoose.connect(mongoDB, {
@@ -214,15 +215,21 @@ router.post("/going_back", function (req, res) {
   console.log(req.body);
   if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
-      curSession.users[index].done = false;
-      console.log(req.user.id, curSession.owner);
-      console.log("lock: ", curSession.lock);
-      curSession.lock = "#selectView";
-      curSession.save().then(function (err, status) {
-        socketAPI.addGame({ code: req.body.code });
-        res.send({ status: "User editing again" });
-      });
+      if (!curSession) {
+        res.send(ERR_CODE);
+      } else {
+        var index = curSession.users.findIndex(
+          (obj) => obj.user == req.user.id
+        );
+        curSession.users[index].done = false;
+        console.log(req.user.id, curSession.owner);
+        console.log("lock: ", curSession.lock);
+        curSession.lock = "#selectView";
+        curSession.save().then(function (err, status) {
+          socketAPI.addGame({ code: req.body.code });
+          res.send({ status: "User editing again" });
+        });
+      }
     });
   } else {
     res.send({
@@ -242,15 +249,16 @@ router.post("/get_session_post_select", (req, res) => {
 
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
+  console.log("gulp");
   if (req.user) {
     console.log("extUser: ", req.extUser);
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        //console.log("GULP curUser:", curUser);
+        console.log("GULP curUser:", curUser);
         management.users.get({ id: req.user.user_id }, function (err, extUser) {
-          //console.log("auth0 user:", extUser);
+          console.log("auth0 user:", extUser);
           res.locals.user = req.user;
           if (extUser && extUser.username != "") {
             var displayName = extUser.username || req.user.displayName;
@@ -336,12 +344,18 @@ router.post("/rename_session", (req, res) => {
       err,
       curSession
     ) {
-      if (curSession && newName) {
-        curSession.phrase = newName;
-        curSession.save();
-        res.send({ status: "Success" });
+      if (!curSession) {
+        res.send(ERR_CODE);
       } else {
-        res.send({ err: "Could not find session with that code owned by you" });
+        if (curSession && newName) {
+          curSession.phrase = newName;
+          curSession.save();
+          res.send({ status: "Success" });
+        } else {
+          res.send({
+            err: "Could not find session with that code owned by you",
+          });
+        }
       }
     });
   } else {
@@ -352,22 +366,26 @@ router.post("/rename_session", (req, res) => {
 router.post("/delete_session", (req, res) => {
   var code = req.body.code;
   Session.findOne({ code: req.body.code }).exec(function (err, theSession) {
-    if (req.user.id == theSession.owner) {
-      Session.deleteOne({ owner: req.user.id, code: req.body.code }).exec(
-        function (err, curSession) {
-          res.send(curSession);
-        }
-      );
+    if (!theSession) {
+      res.send(ERR_CODE);
     } else {
-      var index = theSession.users.findIndex(
-        (obj) => obj.user.toString() == req.user.id.toString()
-      );
-      if (index > -1) {
-        theSession.users.splice(index, 1);
-        theSession.save();
-        res.send(theSession);
+      if (req.user.id == theSession.owner) {
+        Session.deleteOne({ owner: req.user.id, code: req.body.code }).exec(
+          function (err, curSession) {
+            res.send(curSession);
+          }
+        );
       } else {
-        res.send({ err: "Could not find user in session list" });
+        var index = theSession.users.findIndex(
+          (obj) => obj.user.toString() == req.user.id.toString()
+        );
+        if (index > -1) {
+          theSession.users.splice(index, 1);
+          theSession.save();
+          res.send(theSession);
+        } else {
+          res.send({ err: "Could not find user in session list" });
+        }
       }
     }
   });
@@ -410,17 +428,15 @@ router.post("/game_add_bulk", function (req, res) {
   //req.body.listNum
   if (req.user) {
     if (req.body.games) {
-      Game.find({ name: { $in: req.body.games } }).exec(function (
-        err,
-        curGames
-      ) {
+      var games = req.body.games;
+      Game.find({ name: { $in: games } }).exec(function (err, curGames) {
         console.log("Bulk add Games: ", curGames);
-        console.log(req.body.games);
+        console.log(games);
         var toAdd = [];
-        req.body.games.forEach(function (e, i) {
+        games.forEach(function (e, i) {
           var index = curGames.findIndex((obj) => obj.name == e);
           if (index == -1) {
-            toAdd.push({ name: req.body.games[i], rating: 0, owned: 0 });
+            toAdd.push({ name: games[i], rating: 0, owned: 0 });
           }
         });
         if (toAdd.length > 0) {
@@ -430,10 +446,7 @@ router.post("/game_add_bulk", function (req, res) {
           console.log("CurGames: ", typeof curGames, ": ", curGames);
           Game.insertMany(toAdd).then(function () {
             //doesnt work becuase its a collection of objects, not an object
-            Game.find({ name: { $in: req.body.games } }).exec(function (
-              err,
-              curGames
-            ) {
+            Game.find({ name: { $in: games } }).exec(function (err, curGames) {
               User.findOne({ profile_id: req.user.id }).exec(function (
                 err,
                 curUser
@@ -510,6 +523,92 @@ router.post("/game_add_bulk", function (req, res) {
     res.send(ERR_LOGIN);
   }
 });
+
+function bulkGameAdder(games, listIndexPlusOne, res, req) {
+  games = games.map(function (e, i) {
+    return mongoose.Types.ObjectId(e);
+  });
+  Game.find({ _id: { $in: games } }).exec(function (err, curGames) {
+    var toAdd = [];
+    games.forEach(function (e, i) {
+      var index = curGames.findIndex((obj) => obj.name == e);
+      if (index == -1) {
+        toAdd.push({ name: games[i], rating: 0, owned: 0 });
+      }
+    });
+    if (toAdd.length > 0) {
+      toAdd.forEach(function (e) {
+        curGames.push(e);
+      });
+      Game.insertMany(toAdd).then(function () {
+        //doesnt work becuase its a collection of objects, not an object
+        Game.find({ _id: { $in: games } }).exec(function (err, curGames) {
+          User.findOne({ profile_id: req.user.id }).exec(function (
+            err,
+            curUser
+          ) {
+            curGames.forEach(function (e, i) {
+              var index = curUser.lists.allGames.findIndex(
+                (obj) => obj == curGames[i]._id
+              );
+              if (index == -1) {
+                curUser.lists.allGames.push(
+                  mongoose.Types.ObjectId(curGames[i]._id)
+                );
+              }
+            });
+            if (listIndexPlusOne > 0) {
+              var list = listIndexPlusOne - 1;
+              console.log("list: ", list);
+              curGames.forEach(function (e, i) {
+                var index = curUser.lists.custom[list].games.findIndex(
+                  (obj) => obj == curGames[i]._id
+                );
+                if (index == -1) {
+                  curUser.lists.custom[list].games.push(
+                    mongoose.Types.ObjectId(curGames[i]._id)
+                  );
+                }
+              });
+            }
+            curUser.save();
+            res.send({ status: "Added bulk games: " + games });
+          });
+        });
+      });
+    } else {
+      //no Games to Add
+      User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+        curGames.forEach(function (e, i) {
+          var index = curUser.lists.allGames.findIndex(
+            (obj) => obj.toString() == curGames[i]._id.toString()
+          );
+          if (index == -1) {
+            curUser.lists.allGames.push(
+              mongoose.Types.ObjectId(curGames[i]._id)
+            );
+          }
+        });
+        if (req.body.list > 0) {
+          var list = req.body.list - 1;
+          curGames.forEach(function (e, i) {
+            var index = curUser.lists.custom[list].games.findIndex(
+              (obj) => obj.toString() == curGames[i]._id.toString()
+            );
+            if (index == -1) {
+              curUser.lists.custom[list].games.push(
+                mongoose.Types.ObjectId(curGames[i]._id)
+              );
+            }
+          });
+        }
+        curUser.save();
+        console.log({ status: "Added bulk games: " + req.body.games });
+        res.send({ status: "Added bulk games: " + req.body.games });
+      });
+    }
+  });
+}
 
 //Add a game to a user's "All Games" list
 router.post("/game_add", function (req, res) {
@@ -611,32 +710,39 @@ router.post("/group_game_add", function (req, res) {
             err,
             curSession
           ) {
-            var index = curSession.games.findIndex(
-              (obj) => obj.game == game._id.toString()
-            );
-            if (index > -1) {
-              res.send({ err: "added", game: game._id.toString() });
+            if (!curSession) {
+              res.send(ERR_CODE);
             } else {
-              curSession.votes.push({
-                game: game._id,
-                name: req.body.game,
-                voters: [],
-              });
-              curSession.games.push({ game: game._id, addedBy: [req.user.id] });
-              htmlString =
-                `<li> <div class="editGame greenText">` +
-                game.name +
-                `</div>` +
-                `<div class='toggle'>
+              var index = curSession.games.findIndex(
+                (obj) => obj.game == game._id.toString()
+              );
+              if (index > -1) {
+                res.send({ err: "added", game: game._id.toString() });
+              } else {
+                curSession.votes.push({
+                  game: game._id,
+                  name: req.body.game,
+                  voters: [],
+                });
+                curSession.games.push({
+                  game: game._id,
+                  addedBy: [req.user.id],
+                });
+                htmlString =
+                  `<li> <div class="editGame greenText">` +
+                  game.name +
+                  `</div>` +
+                  `<div class='toggle'>
                       <label class="switch">
                         <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
-                game._id +
-                `">
+                  game._id +
+                  `">
                         <span class="slider round"></span>
                       </label>
               </div></li>`;
-              curSession.save();
-              res.send({ status: htmlString });
+                curSession.save();
+                res.send({ status: htmlString });
+              }
             }
           });
         });
@@ -857,119 +963,127 @@ router.post("/create_session", function (req, res) {
 router.post("/add_game_to_session", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      var results = [];
-
-      if (req.body.gamesToAdd.length > 0) {
-        for (var i = 0; i < req.body.gamesToAdd.length; i++) {
-          var numGames = 0;
-          //1. Has the game already been added to the session?
-          //2. Is the user's id already in the list of owners?
-          var id = mongoose.Types.ObjectId(req.body.gamesToAdd[i]);
-          var gameAdded = false;
-          var ownedBy = false;
-          var index = -1;
-          for (var j = 0; j < curSession.games.length; j++) {
-            if (curSession.games[j].game.toString() == req.body.gamesToAdd[i]) {
-              gameAdded = true;
-              index = j;
-              if (curSession.games[j].addedBy.includes(req.user.id)) {
-                ownedBy = true;
-                console.log(numGames);
-              }
-            }
-            if (curSession.games[j].addedBy.includes(req.user.id)) {
-              numGames++;
-            }
-          }
-          if (gameAdded) {
-            if (ownedBy) {
-              results.push({ err: "Already added by this user" });
-            } else {
-              console.log(numGames);
-              curSession.games[index].addedBy.push(req.user.id);
-              results.push({
-                status:
-                  "Added " +
-                  req.user.id +
-                  " to the list of owners for " +
-                  req.body.gamesToAdd[i],
-              });
-              socketAPI.sendNotification(
-                "A user added a game that someone else already added..." +
-                  numGames
-              );
-            }
-          } else {
-            curSession.games.push({ game: id, addedBy: [req.user.id] });
-            results.push({
-              status:
-                "Added " +
-                req.body.gamesToAdd[i] +
-                "to the list with owner " +
-                req.user.id,
-            });
-            socketAPI.sendNotification("A user added a new game..." + numGames);
-          }
-        }
-
-        curSession.save().then(function () {
-          socketAPI.addGame({
-            code: req.body.code,
-            games: curSession.games,
-          });
-        });
-        res.send(results);
+      if (!curSession) {
+        res.send(ERR_CODE);
       } else {
-        if (req.body.gamesToRemove.length > 0) {
-          console.log("gamesToRemove: ", req.body.gamesToRemove);
-          //Find the game to remove, then remove the owner from the addedBy array
-          for (var i = 0; i < req.body.gamesToRemove.length; i++) {
+        var results = [];
+
+        if (req.body.gamesToAdd.length > 0) {
+          for (var i = 0; i < req.body.gamesToAdd.length; i++) {
             var numGames = 0;
+            //1. Has the game already been added to the session?
+            //2. Is the user's id already in the list of owners?
+            var id = mongoose.Types.ObjectId(req.body.gamesToAdd[i]);
             var gameAdded = false;
             var ownedBy = false;
             var index = -1;
-            var game = curSession.games.findIndex(
-              (obj) => obj.game.toString() == req.body.gamesToRemove[i]
-            );
-            console.log("game: ", game);
-            if (game > -1) {
-              console.log(curSession.games[game]);
-              var toRemove = curSession.games[game].addedBy.findIndex(
-                (obj) => obj == req.user.id
-              );
-              //console.log("toRemove: ", toRemove);
-              if (toRemove > -1) {
-                curSession.games[game].addedBy.splice(toRemove, 1);
-                if (curSession.games[game].addedBy.length == 0) {
-                  curSession.games.splice(game, 1);
+            for (var j = 0; j < curSession.games.length; j++) {
+              if (
+                curSession.games[j].game.toString() == req.body.gamesToAdd[i]
+              ) {
+                gameAdded = true;
+                index = j;
+                if (curSession.games[j].addedBy.includes(req.user.id)) {
+                  ownedBy = true;
+                  console.log(numGames);
                 }
-                socketAPI.sendNotification("A user removed a game...");
+              }
+              if (curSession.games[j].addedBy.includes(req.user.id)) {
+                numGames++;
               }
             }
-          }
-          for (var i = 0; i < curSession.games.length; i++) {
-            console.log(
-              curSession.games[i].addedBy[0],
-              "|",
-              req.user.id.toString()
-            );
-            if (
-              curSession.games[i].addedBy.findIndex(
-                (obj) => obj == req.user.id.toString()
-              ) > -1
-            ) {
-              numGames++;
+            if (gameAdded) {
+              if (ownedBy) {
+                results.push({ err: "Already added by this user" });
+              } else {
+                console.log(numGames);
+                curSession.games[index].addedBy.push(req.user.id);
+                results.push({
+                  status:
+                    "Added " +
+                    req.user.id +
+                    " to the list of owners for " +
+                    req.body.gamesToAdd[i],
+                });
+                socketAPI.sendNotification(
+                  "A user added a game that someone else already added..." +
+                    numGames
+                );
+              }
+            } else {
+              curSession.games.push({ game: id, addedBy: [req.user.id] });
+              results.push({
+                status:
+                  "Added " +
+                  req.body.gamesToAdd[i] +
+                  "to the list with owner " +
+                  req.user.id,
+              });
+              socketAPI.sendNotification(
+                "A user added a new game..." + numGames
+              );
             }
           }
-          console.log("numGamestoRemove: ", numGames);
-          console.log(req.body.gamesToRemove);
+
           curSession.save().then(function () {
             socketAPI.addGame({
               code: req.body.code,
               games: curSession.games,
             });
-            res.send({ status: "completed" });
           });
+          res.send(results);
+        } else {
+          if (req.body.gamesToRemove.length > 0) {
+            console.log("gamesToRemove: ", req.body.gamesToRemove);
+            //Find the game to remove, then remove the owner from the addedBy array
+            for (var i = 0; i < req.body.gamesToRemove.length; i++) {
+              var numGames = 0;
+              var gameAdded = false;
+              var ownedBy = false;
+              var index = -1;
+              var game = curSession.games.findIndex(
+                (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+              );
+              console.log("game: ", game);
+              if (game > -1) {
+                console.log(curSession.games[game]);
+                var toRemove = curSession.games[game].addedBy.findIndex(
+                  (obj) => obj == req.user.id
+                );
+                //console.log("toRemove: ", toRemove);
+                if (toRemove > -1) {
+                  curSession.games[game].addedBy.splice(toRemove, 1);
+                  if (curSession.games[game].addedBy.length == 0) {
+                    curSession.games.splice(game, 1);
+                  }
+                  socketAPI.sendNotification("A user removed a game...");
+                }
+              }
+            }
+            for (var i = 0; i < curSession.games.length; i++) {
+              console.log(
+                curSession.games[i].addedBy[0],
+                "|",
+                req.user.id.toString()
+              );
+              if (
+                curSession.games[i].addedBy.findIndex(
+                  (obj) => obj == req.user.id.toString()
+                ) > -1
+              ) {
+                numGames++;
+              }
+            }
+            console.log("numGamestoRemove: ", numGames);
+            console.log(req.body.gamesToRemove);
+            curSession.save().then(function () {
+              socketAPI.addGame({
+                code: req.body.code,
+                games: curSession.games,
+              });
+              res.send({ status: "completed" });
+            });
+          }
         }
       }
     });
@@ -978,30 +1092,39 @@ router.post("/add_game_to_session", function (req, res) {
   }
 });
 
+function checkCode() {}
+
 router.post("/submit_games", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      socketAPI.sendNotification("A user finished adding games...");
-      var index = curSession.users.findIndex((obj) => obj.user == req.user.id);
-      curSession.users[index].done = true;
-      curSession.save().then(function () {
-        socketAPI.addGame({ code: req.body.code });
-      });
-      if (curSession.owner == req.user.id.toString()) {
-        var htmlString =
-          '<div id="postSelectLoadingMessage"><p>There are ' +
-          curSession.users.length +
-          " users connected:</p>";
-        for (var i = 0; i < curSession.users.length; i++) {
-          htmlString += "<p>" + curSession.users[i] + "</p>";
-        }
-        res.send({ status: htmlString });
+      if (!curSession) {
+        res.send(ERR_CODE);
       } else {
-        var htmlString = `
+        console.log("What?");
+        socketAPI.sendNotification("A user finished adding games...");
+        var index = curSession.users.findIndex(
+          (obj) => obj.user == req.user.id
+        );
+        curSession.users[index].done = true;
+        curSession.save().then(function () {
+          socketAPI.addGame({ code: req.body.code });
+        });
+        if (curSession.owner == req.user.id.toString()) {
+          var htmlString =
+            '<div id="postSelectLoadingMessage"><p>There are ' +
+            curSession.users.length +
+            " users connected:</p>";
+          for (var i = 0; i < curSession.users.length; i++) {
+            htmlString += "<p>" + curSession.users[i] + "</p>";
+          }
+          res.send({ status: htmlString });
+        } else {
+          var htmlString = `
         <img class="loader" src="/img/loading.gif">
         <div class="loadingMessage" id="postSelectLoadingMessage">Please wait...</div>
         `;
-        res.send({ status: htmlString });
+          res.send({ status: htmlString });
+        }
       }
     });
   } else {
@@ -1020,98 +1143,105 @@ router.post("/lock_games", function (req, res) {
   */
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      var namesList = [];
-      var votes = curSession.votes;
-      curSession.votes = [];
-      socketAPI.lockGames({ code: req.body.code });
-      //To set up, set every vote to inactive
-      for (var i = 0; i < votes.length; i++) {
-        votes[i].active = false;
-      }
-      console.log("votes:", votes);
-      //First, look through the list of games and see if any haven't been added to the vote array, add them to namesList[]
-      for (var i = 0; i < curSession.games.length; i++) {
-        //If the game has actually been added
-        console.log("game" + i, curSession.games[i].game);
-        if (curSession.games[i].addedBy.length > 0) {
-          var index = votes.findIndex(
-            (obj) => obj.game.toString() == curSession.games[i].game.toString()
-          );
-          if (index == -1) {
-            //If it's not in the votes array, get ready to add it
-            namesList.push(mongoose.Types.ObjectId(curSession.games[i].game));
-          } else {
-            //If it's both been added by at least one person and it's already in the votes array
-            votes[index].active = true;
+      if (!curSession) {
+        res.send(ERR_CODE);
+      } else {
+        var namesList = [];
+        var votes = curSession.votes;
+        curSession.votes = [];
+        socketAPI.lockGames({ code: req.body.code });
+        //To set up, set every vote to inactive
+        for (var i = 0; i < votes.length; i++) {
+          votes[i].active = false;
+        }
+        console.log("votes:", votes);
+        //First, look through the list of games and see if any haven't been added to the vote array, add them to namesList[]
+        for (var i = 0; i < curSession.games.length; i++) {
+          //If the game has actually been added
+          console.log("game" + i, curSession.games[i].game);
+          if (curSession.games[i].addedBy.length > 0) {
+            var index = votes.findIndex(
+              (obj) =>
+                obj.game.toString() == curSession.games[i].game.toString()
+            );
+            if (index == -1) {
+              //If it's not in the votes array, get ready to add it
+              namesList.push(mongoose.Types.ObjectId(curSession.games[i].game));
+            } else {
+              //If it's both been added by at least one person and it's already in the votes array
+              votes[index].active = true;
+            }
           }
         }
-      }
-      //Then, take all the namesList games and add their names and ids to the vote array
-      Game.find({ _id: { $in: namesList } }).exec(function (err, games) {
-        curSession.votes = votes;
-        //Right now, games is getting every game instead of just the ones that were newly added
-        for (var i = 0; i < games.length; i++) {
-          curSession.votes.push({
-            game: games[i]._id,
-            name: games[i].name,
-            voters: [],
-            active: true,
-          });
-        }
-        const options = { keys: ["name"], includeScore: true };
-        const fuse = new Fuse(curSession.votes, options);
-        var htmlString =
-          `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
-          `<div id="addGroupGamesContainer">` +
-          `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
-          `<div class="textInputCont" id="addGroupGamesInputCont">` +
-          `<form onsubmit='return addGroupGame()'>` +
-          `<input class="textInput" type="text" id="addGroupGamesInput">` +
-          `<input class="textSubmit" type="submit" value=""></input>` +
-          `</form>` +
-          `</div>` +
-          `</div>` +
-          `<div class="tip" id="dupTip">Potential duplicates are highlighted in gold</div>` +
-          `<div id="editGameList">`;
-        var checked = "";
-        var green = "";
-        for (var i = 0; i < curSession.votes.length; i++) {
-          curSession.votes[i].active ? (checked = " checked") : (checked = "");
-          curSession.votes[i].active ? (green = " greenText") : (green = "");
-          htmlString +=
-            `<li` +
-            dupeSearch(fuse, curSession.votes[i]) +
-            /*
-             *
-             *
-             * TODO: Green text overrides the dup yellow, and it probably shouldn't
-             *
-             *
-             *
-             */
-            `><div class="editGame` +
-            green +
-            `">` +
-            curSession.votes[i].name +
+        //Then, take all the namesList games and add their names and ids to the vote array
+        Game.find({ _id: { $in: namesList } }).exec(function (err, games) {
+          curSession.votes = votes;
+          //Right now, games is getting every game instead of just the ones that were newly added
+          for (var i = 0; i < games.length; i++) {
+            curSession.votes.push({
+              game: games[i]._id,
+              name: games[i].name,
+              voters: [],
+              active: true,
+            });
+          }
+          const options = { keys: ["name"], includeScore: true };
+          const fuse = new Fuse(curSession.votes, options);
+          var htmlString =
+            `<div class="button lightGreyBtn" id="gameUnlock" type="submit">Unlock Game List</div>` +
+            `<div id="addGroupGamesContainer">` +
+            `<div id="addGroupGamesTitle">Add Games to Session:</div>` +
+            `<div class="textInputCont" id="addGroupGamesInputCont">` +
+            `<form onsubmit='return addGroupGame()'>` +
+            `<input class="textInput" type="text" id="addGroupGamesInput">` +
+            `<input class="textSubmit" type="submit" value=""></input>` +
+            `</form>` +
             `</div>` +
-            `<div class='toggle'>
+            `</div>` +
+            `<div class="tip" id="dupTip">Potential duplicates are highlighted in gold</div>` +
+            `<div id="editGameList">`;
+          var checked = "";
+          var green = "";
+          for (var i = 0; i < curSession.votes.length; i++) {
+            curSession.votes[i].active
+              ? (checked = " checked")
+              : (checked = "");
+            curSession.votes[i].active ? (green = " greenText") : (green = "");
+            htmlString +=
+              `<li` +
+              dupeSearch(fuse, curSession.votes[i]) +
+              /*
+               *
+               *
+               * TODO: Green text overrides the dup yellow, and it probably shouldn't
+               *
+               *
+               *
+               */
+              `><div class="editGame` +
+              green +
+              `">` +
+              curSession.votes[i].name +
+              `</div>` +
+              `<div class='toggle'>
           <label class="switch">
               <input type="checkbox"` +
-            checked +
-            ` onclick="toggleEdit(this)" game_id="` +
-            curSession.votes[i].game +
-            `">
+              checked +
+              ` onclick="toggleEdit(this)" game_id="` +
+              curSession.votes[i].game +
+              `">
               <span class="slider round"></span>
           </label>
       </div></li>`;
-        }
+          }
 
-        htmlString +=
-          `</div>` +
-          `<div class="button greenBtn bottomBtn" id="editGameSubmit">Begin Voting</div>`;
-        curSession.save();
-        res.send({ status: "locked games", htmlString: htmlString });
-      });
+          htmlString +=
+            `</div>` +
+            `<div class="button greenBtn bottomBtn" id="editGameSubmit">Begin Voting</div>`;
+          curSession.save();
+          res.send({ status: "locked games", htmlString: htmlString });
+        });
+      }
     });
   } else {
     res.send(ERR_LOGIN);
@@ -1140,76 +1270,81 @@ router.post("/lock_games", function (req, res) {
 router.post("/modify_edit_list", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      if (typeof curSession.votes == "undefined") {
-        curSession.votes = [];
-      }
-      if (req.body.gamesToAdd.length > 0) {
-        for (var i = 0; i < req.body.gamesToAdd.length; i++) {
-          var index = curSession.games.findIndex(
-            (obj) => obj.game.toString() == req.body.gamesToAdd[i]
-          );
-          if (index > -1) {
-            var indexa = curSession.votes.findIndex(
+      if (!curSession) {
+        res.send(ERR_CODE);
+      } else {
+        if (typeof curSession.votes == "undefined") {
+          curSession.votes = [];
+        }
+        if (req.body.gamesToAdd.length > 0) {
+          for (var i = 0; i < req.body.gamesToAdd.length; i++) {
+            var index = curSession.games.findIndex(
               (obj) => obj.game.toString() == req.body.gamesToAdd[i]
             );
-            if (indexa == -1) {
-              //If the game has already been removed from voting array, add it back
-              curSession.votes.push({
-                game: mongoose.Types.ObjectId(req.body.gamesToAdd[i]),
-                voters: [],
-                active: true,
-              });
-            } else {
-              curSession.votes[indexa].active = true;
-            }
-          } else {
-            res.send({
-              err: "Couldn't find game to add: " + req.body.gamesToAdd[i],
-            });
-          }
-        }
-      } else {
-        if (req.body.gamesToRemove.length > 0) {
-          console.log("removing...", req.body.gamesToRemove);
-          for (var i = 0; i < req.body.gamesToRemove.length; i++) {
-            var index = curSession.games.findIndex(
-              (obj) => obj.game.toString() == req.body.gamesToRemove[i]
-            );
             if (index > -1) {
-              console.log("Game was in the games array");
               var indexa = curSession.votes.findIndex(
-                (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+                (obj) => obj.game.toString() == req.body.gamesToAdd[i]
               );
-              if (indexa > -1) {
-                console.log("Game was in the votes array");
-                curSession.votes[indexa].active = false; //Remove the item from voting consideration
+              if (indexa == -1) {
+                //If the game has already been removed from voting array, add it back
+                curSession.votes.push({
+                  game: mongoose.Types.ObjectId(req.body.gamesToAdd[i]),
+                  voters: [],
+                  active: true,
+                });
+              } else {
+                curSession.votes[indexa].active = true;
               }
-              console.log(indexa, " Removed: ", curSession.games[index]);
             } else {
               res.send({
-                err:
-                  "Couldn't find game to remove: " + req.body.gamesToRemove[i],
+                err: "Couldn't find game to add: " + req.body.gamesToAdd[i],
               });
             }
           }
         } else {
-          res.send({ err: "No games to add or remove passed" });
-        }
-      }
-      curSession.save().then(function (error, result, numRows) {
-        console.log("Error: ", error);
-        var gameList = [];
-        var ret = [];
-        for (var i = 0; i < curSession.games.length; i++) {
-          gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
-        }
-        Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
-          for (var i = 0; i < games.length; i++) {
-            ret[i] = { name: games[i].name, id: games[i]._id };
+          if (req.body.gamesToRemove.length > 0) {
+            console.log("removing...", req.body.gamesToRemove);
+            for (var i = 0; i < req.body.gamesToRemove.length; i++) {
+              var index = curSession.games.findIndex(
+                (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+              );
+              if (index > -1) {
+                console.log("Game was in the games array");
+                var indexa = curSession.votes.findIndex(
+                  (obj) => obj.game.toString() == req.body.gamesToRemove[i]
+                );
+                if (indexa > -1) {
+                  console.log("Game was in the votes array");
+                  curSession.votes[indexa].active = false; //Remove the item from voting consideration
+                }
+                console.log(indexa, " Removed: ", curSession.games[index]);
+              } else {
+                res.send({
+                  err:
+                    "Couldn't find game to remove: " +
+                    req.body.gamesToRemove[i],
+                });
+              }
+            }
+          } else {
+            res.send({ err: "No games to add or remove passed" });
           }
-          res.send({ status: ret });
+        }
+        curSession.save().then(function (error, result, numRows) {
+          console.log("Error: ", error);
+          var gameList = [];
+          var ret = [];
+          for (var i = 0; i < curSession.games.length; i++) {
+            gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
+          }
+          Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
+            for (var i = 0; i < games.length; i++) {
+              ret[i] = { name: games[i].name, id: games[i]._id };
+            }
+            res.send({ status: ret });
+          });
         });
-      });
+      }
     });
   } else {
     res.send(ERR_LOGIN);
@@ -1265,15 +1400,19 @@ router.post("/get_votes", function (req, res) {
   var games = [];
   console.log(req.body);
   Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-    for (var i = 0; i < curSession.votes.length; i++) {
-      if (curSession.votes[i].active) {
-        games.push({
-          game: curSession.votes[i].game,
-          name: curSession.votes[i].name,
-        });
+    if (!curSession) {
+      res.send(ERR_CODE);
+    } else {
+      for (var i = 0; i < curSession.votes.length; i++) {
+        if (curSession.votes[i].active) {
+          games.push({
+            game: curSession.votes[i].game,
+            name: curSession.votes[i].name,
+          });
+        }
       }
+      res.send({ games: games });
     }
-    res.send({ games: games });
   });
   //} else {
   //  res.send(ERR_LOGIN);
@@ -1292,30 +1431,34 @@ router.post("/end_vote", function (req, res) {
   if (req.user) {
     console.log(req.body.code);
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      var games = [];
-      for (var i = 0; i < curSession.votes.length; i++) {
-        if (curSession.votes[i].active == true) {
-          games.push({ name: curSession.votes[i].name, votes: 0 });
-          for (var j = 0; j < curSession.votes[i].voters.length; j++) {
-            if (curSession.votes[i].voters[j].vote < 5) {
-              games[games.length - 1].votes -= 500;
-              if (games[games.length - 1].votes < 0) {
-                games[games.length - 1].votes = 0;
+      if (!curSession) {
+        res.send(ERR_CODE);
+      } else {
+        var games = [];
+        for (var i = 0; i < curSession.votes.length; i++) {
+          if (curSession.votes[i].active == true) {
+            games.push({ name: curSession.votes[i].name, votes: 0 });
+            for (var j = 0; j < curSession.votes[i].voters.length; j++) {
+              if (curSession.votes[i].voters[j].vote < 5) {
+                games[games.length - 1].votes -= 500;
+                if (games[games.length - 1].votes < 0) {
+                  games[games.length - 1].votes = 0;
+                }
+              } else {
+                games[games.length - 1].votes +=
+                  curSession.votes[i].voters[j].vote;
               }
-            } else {
-              games[games.length - 1].votes +=
-                curSession.votes[i].voters[j].vote;
             }
           }
         }
+        console.log("games unsorted:", games);
+        games = sortDescByKey(games, "votes");
+        console.log("games:", games);
+        socketAPI.endVote({ games: games, code: req.body.code });
+        curSession.lock = "#playView";
+        curSession.save();
+        res.send({ status: "Vote ended for " + req.body.code });
       }
-      console.log("games unsorted:", games);
-      games = sortDescByKey(games, "votes");
-      console.log("games:", games);
-      socketAPI.endVote({ games: games, code: req.body.code });
-      curSession.lock = "#playView";
-      curSession.save();
-      res.send({ status: "Vote ended for " + req.body.code });
     });
   } else {
     res.send(ERR_LOGIN);
@@ -1325,19 +1468,23 @@ router.post("/end_vote", function (req, res) {
 router.post("/get_games", function (req, res) {
   //if (req.user) {
   Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-    var games = [];
-    for (var i = 0; i < curSession.votes.length; i++) {
-      games[i] = { name: curSession.votes[i].name, votes: 0 };
-      for (var j = 0; j < curSession.votes[i].voters.length; j++) {
-        games[i].votes += curSession.votes[i].voters[j].vote;
+    if (!curSession) {
+      res.send(ERR_CODE);
+    } else {
+      var games = [];
+      for (var i = 0; i < curSession.votes.length; i++) {
+        games[i] = { name: curSession.votes[i].name, votes: 0 };
+        for (var j = 0; j < curSession.votes[i].voters.length; j++) {
+          games[i].votes += curSession.votes[i].voters[j].vote;
+        }
       }
+      games.sort(function (a, b) {
+        var x = a.votes;
+        var y = b.votes;
+        return x < y ? 1 : x > y ? -1 : 0;
+      });
+      res.send({ games: games });
     }
-    games.sort(function (a, b) {
-      var x = a.votes;
-      var y = b.votes;
-      return x < y ? 1 : x > y ? -1 : 0;
-    });
-    res.send({ games: games });
   });
   //} else {
   //res.send(ERR_LOGIN);
@@ -1625,7 +1772,11 @@ router.post("/list_add", function (req, res) {
           (obj) => obj.name == req.body.list
         );
         if (index == -1) {
-          curUser.lists.custom.push({ name: req.body.list, games: [] });
+          curUser.lists.custom.push({
+            name: req.body.list,
+            games: [],
+            listcode: makeid(6),
+          });
           curUser.save();
           res.send({ status: "Success" });
         } else {
@@ -1637,6 +1788,24 @@ router.post("/list_add", function (req, res) {
     }
   }
 });
+
+function listAdder(list, res, req) {
+  var promise = new Promise(function (resolve, reject) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var index = curUser.lists.custom.findIndex((obj) => obj.name == list);
+      if (index == -1) {
+        curUser.lists.custom.push({ name: list, games: [] });
+        curUser.save();
+        resolve({ status: "Success", len: curUser.lists.custom.length });
+      } else {
+        console.log("Already added");
+        resolve({ err: "Already added a list with this name" });
+      }
+    });
+  });
+
+  return promise;
+}
 
 router.post("/reset_password", function (req, res) {
   console.log(req.user.emails[0].value);
@@ -1864,4 +2033,41 @@ function bggUpdate(curUser) {
   return promise;
 }
 
+router.post("/get_list_from_code", function (req, res) {
+  if (req.user) {
+    User.findOne({
+      "lists.custom": { $elemMatch: { listcode: req.body.code } },
+    }).exec(function (err, curUser) {
+      if (curUser) {
+        var index = curUser.lists.custom.findIndex(
+          (obj) => obj.listcode == req.body.code
+        );
+        console.log(index);
+        if (index > -1) {
+          var theList = curUser.lists.custom[index];
+          listAdder(theList.name, res, req).then((list) => {
+            console.log("ListAdder Returned");
+            if (typeof theList.games != "undefined" && list.len) {
+              console.log(theList.games);
+              bulkGameAdder(theList.games, list.len, res, req);
+            } else {
+              res.send(list);
+            }
+          });
+        } else {
+          res.send({
+            err: "No such list found in matched user",
+            user: curUser,
+            index: index,
+            code: req.body.code,
+          });
+        }
+      } else {
+        res.send({ err: "Did not find a list with that code" });
+      }
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
 module.exports = router;

@@ -13,7 +13,7 @@ var UserSchema = new Schema(
         {
           name: String,
           games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
-          listcode: String,
+          listCode: String,
         },
       ],
     },

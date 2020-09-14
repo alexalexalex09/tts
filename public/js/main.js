@@ -712,15 +712,23 @@ window.addEventListener("load", function () {
     });
   }); */
 
-  console.log("code: ", window.location.search.substr(2));
-  console.log(/^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3)));
+  /*******************************************/
+  /* Check if url contains param and execute */
+  /*******************************************/
+
   if (
     window.location.search.substr(1, 2) == "s=" &&
     /^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3))
   ) {
     joinClick();
-    console.log("code: ", window.location.search.substr(3));
     submitCode(window.location.search.substr(3));
+  }
+
+  if (
+    window.location.search.substr(1, 2) == "l=" &&
+    /^([a-zA-Z0-9]{6})$/.test(window.location.search.substr(3))
+  ) {
+    runListImport(window.location.search.substr(3));
   }
 
   /* Set up autocomplete */
@@ -1436,6 +1444,7 @@ function gulp(showAllGames = false) {
           writeListContext({
             id: "list" + curId,
             name: res.lists.custom[i].name,
+            listCode: res.lists.custom[i].listCode,
           })
         );
       }
@@ -2118,6 +2127,41 @@ function deleteList(list) {
   );
 }
 
+function showShareList(list) {
+  var el =
+    `<div class="subContextContainer"><div class="subContextDelete" id="subContext_` +
+    list.id +
+    `" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Share this code: ` +
+    list.listCode +
+    `</div><hr/>
+    <div id="shareListButton"><ion-icon name="share-outline"></ion-icon></div>
+    <div id="copyListButton"><ion-icon name="copy-outline"></ion-icon></div>`;
+  $("body").append(el);
+  document
+    .getElementById("shareListButton")
+    .addEventListener("click", async () => {
+      if (navigator.share) {
+        navigator
+          .share({
+            title: list.name,
+            text: 'Link for game list "' + list.name + '"on selectagame: ',
+            url: "https://selectagame.alexscottbecker.com/" + list.listCode,
+          })
+          .then(() => console.log("Successful share"))
+          .catch((error) => console.log("Error sharing", error));
+      }
+    });
+  $("#copyListButton").on("click", function () {
+    copyText(
+      window.location.origin + "/" + list.listCode,
+      "Link copied to clipboard"
+    );
+  });
+}
+
 function showDeleteGame(arr, string) {
   var el = `<div class="subContextContainer"><div class="subContextDelete">`;
   el +=
@@ -2396,6 +2440,19 @@ function createContextObjectString(id, name, list) {
  * @returns
  */
 function writeListContext(contextObj) {
+  console.log("wLC: ", contextObj);
+  if (contextObj.listCode) {
+    var shareable =
+      `<li onclick="showShareList({id: '` +
+      contextObj.id +
+      `', name: '` +
+      contextObj.name +
+      `', listCode: '` +
+      contextObj.listCode +
+      `'})">Share</li>`;
+  } else {
+    var shareable = "";
+  }
   var htmlString =
     `<div class="contextActions off" list="` +
     contextObj.id +
@@ -2405,6 +2462,7 @@ function writeListContext(contextObj) {
     `<div class="contextTitle">` +
     contextObj.name +
     `</div>` +
+    shareable +
     `<li onclick="showRenameList({id: '` +
     contextObj.id +
     `', name: '` +
@@ -2744,6 +2802,7 @@ function addList() {
       writeListContext({
         id: "list" + gamesNum,
         name: list,
+        listCode: res.listCode,
       })
     );
     $(".subContextContainer").remove();
@@ -3181,6 +3240,7 @@ function updateCurrentGames(curGames) {
     htmlString += `<div class="curGameItem">` + e + `</div>`;
   });
   $("#currentGames").html(htmlString);
+  $("#listNotify").html("<span>" + curGames.length + "</span>");
 }
 
 /*****************************/
@@ -3815,11 +3875,8 @@ function showError(err) {
   }, 10);
 }
 
-function runListImport() {
-  console.log($("#listImport").val());
-  ttsFetch("/get_list_from_code", { code: $("#listImport").val() }, (res) => {
-    console.log("runListImport", res);
-  });
+function runListImport(code) {
+  ttsFetch("/get_list_from_code", { code: code }, (res) => {});
   return false;
 }
 

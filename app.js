@@ -208,7 +208,14 @@ app.use(function (req, res, next) {
   ) {
     res.redirect("/?s=" + req.originalUrl.substr(1));
   } else {
-    res.redirect("/?err=404");
+    if (
+      req.originalUrl.substr(1).length == 6 &&
+      /^([a-zA-Z0-9]{6})$/.test(req.originalUrl.substr(1))
+    ) {
+      res.redirect("/?l=" + req.originalUrl.substr(1));
+    } else {
+      res.redirect("/?err=404");
+    }
   }
 });
 

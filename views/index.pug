@@ -166,7 +166,7 @@ block content
             button#pwdResetButton Reset Password
           #accountImportListTitle.title Import List
           #accountImportListField.field
-            form(onsubmit="return runListImport()")
+            form(onsubmit="return runListImport($('#listImport').val())")
               input#listImport(type="text" autocomplete="off")
               input#listImportSubmit(type='submit' value='')
           #accountbggConnectTitle.title BoardGameGeek Account
@@ -225,7 +225,10 @@ block content
   #sessionContainer
   #contextShadow.off
   #listPopup
-    ion-icon(name="reader-outline" onclick="showCurrentGames()")#listIcon.off
+    #listIcon.off
+      ion-icon(name="reader-outline" onclick="showCurrentGames()")
+      #listNotify
+        span 0
     #currentGames.off
     #curGamesClose.closeButton.off(onclick="closeCurrentGames()")
       ion-icon(name="close-outline")

@@ -179,14 +179,22 @@ TopGame.findOne({ name: "topGames" }).exec(function (err, gameList) {
   gameList.update();
 });
 */
-function makeid(length) {
+function makeid(length, checkList) {
   //TODO: Filter out bad words
   var result = "";
   var characters = "ABCEGHJKLMNPQRTUVWXYZ0123456789";
   var charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
+  var dup = true;
+  do {
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    if (checkList) {
+      dup = checkList.findIndex((obj) => obj == result) > -1;
+    } else {
+      dup = false;
+    }
+  } while (dup);
   return result;
 }
 
@@ -194,6 +202,12 @@ router.get("/j/:session", (req, res) => {
   console.log("Join called*********************");
   res.render("index", {
     sessionCode: req.params.session,
+  });
+});
+
+router.get("/l/:listCode", (req, res) => {
+  res.render("index", {
+    listCode: req.params.listCode,
   });
 });
 
@@ -258,18 +272,61 @@ router.post("/get_user_lists_populated", (req, res) => {
       .exec(function (err, curUser) {
         console.log("GULP curUser:", curUser);
         management.users.get({ id: req.user.user_id }, function (err, extUser) {
-          console.log("auth0 user:", extUser);
-          res.locals.user = req.user;
-          if (extUser && extUser.username != "") {
-            var displayName = extUser.username || req.user.displayName;
-          } else {
-            displayName = req.user.displayName;
-          }
-          console.log("DisplayName: ", displayName);
-          console.log(extUser);
-          if (curUser) {
-            if (curUser.lists) {
-              getOwnedSessions(req.user.id, curUser.lists, res);
+          Session.find({}, "code").exec(function (err, codeList) {
+            console.log("auth0 user:", extUser);
+            res.locals.user = req.user;
+            if (extUser && extUser.username != "") {
+              var displayName = extUser.username || req.user.displayName;
+            } else {
+              displayName = req.user.displayName;
+            }
+            console.log("DisplayName: ", displayName);
+            console.log(extUser);
+            if (curUser) {
+              if (curUser.lists) {
+                var modified = false;
+                for (var i = 0; i < curUser.lists.custom.length; i++) {
+                  if (
+                    typeof curUser.lists.custom[i].listCode == "undefined" ||
+                    curUser.lists.custom[i].listCode.length == 0
+                  ) {
+                    curUser.lists.custom[i].listCode = makeid(
+                      6,
+                      codeList.map((e) => e.code)
+                    );
+                    modified = true;
+                    console.log(
+                      "Made new id for list " +
+                        curUser.lists.custom[i].name +
+                        ": " +
+                        curUser.lists.custom[i].listCode
+                    );
+                  }
+                }
+                if (modified) {
+                  console.log("Saving curUser");
+                  curUser.save();
+                }
+                getOwnedSessions(req.user.id, curUser.lists, res).then(
+                  (result) => {
+                    res.send(result);
+                  }
+                );
+              } else {
+                newUser = {
+                  profile_id: req.user.id,
+                  name: displayName,
+                  lists: { allGames: [], custom: [] },
+                  bgg: { username: "", collection: [] },
+                };
+                curUser = new User(newUser);
+                curUser.save().then(bggUpdate(curUser));
+                getOwnedSessions(req.user.id, curUser.lists, res).then(
+                  (result) => {
+                    res.send(result);
+                  }
+                );
+              }
             } else {
               newUser = {
                 profile_id: req.user.id,
@@ -278,21 +335,15 @@ router.post("/get_user_lists_populated", (req, res) => {
                 bgg: { username: "", collection: [] },
               };
               curUser = new User(newUser);
+              console.log("Creating New USER****");
               curUser.save().then(bggUpdate(curUser));
-              getOwnedSessions(req.user.id, curUser.lists, res);
+              getOwnedSessions(req.user.id, curUser.lists, res).then(
+                (result) => {
+                  res.send(result);
+                }
+              );
             }
-          } else {
-            newUser = {
-              profile_id: req.user.id,
-              name: displayName,
-              lists: { allGames: [], custom: [] },
-              bgg: { username: "", collection: [] },
-            };
-            curUser = new User(newUser);
-            console.log("Creating New USER****");
-            curUser.save().then(bggUpdate(curUser));
-            getOwnedSessions(req.user.id, curUser.lists, res);
-          }
+          });
         });
       });
   } else {
@@ -302,38 +353,39 @@ router.post("/get_user_lists_populated", (req, res) => {
 
 router.post("/get_sessions", (req, res) => {
   if (req.user) {
-    getOwnedSessions(req.user.id, "", res);
+    getOwnedSessions(req.user.id, "", res).then((result) => {
+      res.send(result);
+    });
   } else {
     res.send(ERR_LOGIN);
   }
 });
 
-function getParticipantSessions(theId, lists, res) {
-  //TODO: List all sessions a user is participating in
-}
-
 function getOwnedSessions(theId, lists, res) {
-  Session.find({ users: { $elemMatch: { user: theId } } }).exec(function (
-    err,
-    curSessions
-  ) {
-    var sessions = [];
-    var curOwned = false;
-    for (var i = 0; i < curSessions.length; i++) {
-      curOwned = false;
-      if (curSessions[i].owner == theId) {
-        curOwned = true;
+  var promise = new Promise(function (resolve, reject) {
+    Session.find({ users: { $elemMatch: { user: theId } } }).exec(function (
+      err,
+      curSessions
+    ) {
+      var sessions = [];
+      var curOwned = false;
+      for (var i = 0; i < curSessions.length; i++) {
+        curOwned = false;
+        if (curSessions[i].owner == theId) {
+          curOwned = true;
+        }
+        sessions.push({
+          code: curSessions[i].code,
+          games: curSessions[i].games.length,
+          users: curSessions[i].users.length,
+          phrase: curSessions[i].phrase,
+          owned: curOwned,
+        });
       }
-      sessions.push({
-        code: curSessions[i].code,
-        games: curSessions[i].games.length,
-        users: curSessions[i].users.length,
-        phrase: curSessions[i].phrase,
-        owned: curOwned,
-      });
-    }
-    res.send({ lists: lists, sessions: sessions });
+      resolve({ lists: lists, sessions: sessions });
+    });
   });
+  return promise;
 }
 
 router.post("/rename_session", (req, res) => {
@@ -912,46 +964,54 @@ function checkIfAddedByUser(theSession, userId) {
 
 router.post("/create_session", function (req, res) {
   if (req.user) {
-    var theCode = makeid(5); // Make a new code for the session
-    var displayName = "";
-    management.users.get({ id: req.user.user_id }, function (err, extUser) {
-      // Get the user info from Auth0
-      console.log("auth0 user:", extUser);
-      res.locals.user = req.user; //Set correct displayName and user var for locals
-      if (extUser && extUser.username != "") {
-        displayName = extUser.username || req.user.displayName;
-      } else {
-        displayName = req.user.displayName || "Insert Name Here";
-      }
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, "0");
-      var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
-      var yyyy = today.getFullYear();
-      var readableGen = new Readable(true, 2, "_");
-      today = mm + "." + dd + "." + yyyy + " " + readableGen.generate();
-      var sessiondetail = {
-        owner: req.user.id,
-        phrase: today,
-        code: theCode,
-        games: [],
-        users: [
-          {
-            user: req.user.id,
-            name: displayName,
-            done: false,
-          },
-        ],
-        lock: "#codeView",
-      };
-      var session = new Session(sessiondetail); //Make a new session with the new code
-      session.save().then(function (theSession) {
-        console.log("Session created...");
-        socketAPI.addGame({
+    Session.find({}, "code").exec(function (err, codeList) {
+      console.log(codeList);
+      var dup = true;
+      var theCode = "";
+      theCode = makeid(
+        5,
+        codeList.map((e) => e.code)
+      ); // Make a new code for the session
+      var displayName = "";
+      management.users.get({ id: req.user.user_id }, function (err, extUser) {
+        // Get the user info from Auth0
+        console.log("auth0 user:", extUser);
+        res.locals.user = req.user; //Set correct displayName and user var for locals
+        if (extUser && extUser.username != "") {
+          displayName = extUser.username || req.user.displayName;
+        } else {
+          displayName = req.user.displayName || "Insert Name Here";
+        }
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, "0");
+        var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+        var yyyy = today.getFullYear();
+        var readableGen = new Readable(true, 2, "_");
+        today = mm + "." + dd + "." + yyyy + " " + readableGen.generate();
+        var sessiondetail = {
+          owner: req.user.id,
+          phrase: today,
           code: theCode,
-        });
-        res.send({
-          owned: true,
-          status: { session: theSession, user: req.user.id },
+          games: [],
+          users: [
+            {
+              user: req.user.id,
+              name: displayName,
+              done: false,
+            },
+          ],
+          lock: "#codeView",
+        };
+        var session = new Session(sessiondetail); //Make a new session with the new code
+        session.save().then(function (theSession) {
+          console.log("Session created...");
+          socketAPI.addGame({
+            code: theCode,
+          });
+          res.send({
+            owned: true,
+            status: { session: theSession, user: req.user.id },
+          });
         });
       });
     });
@@ -1083,6 +1143,8 @@ router.post("/add_game_to_session", function (req, res) {
               });
               res.send({ status: "completed" });
             });
+          } else {
+            res.send({ err: "Nothing to add" });
           }
         }
       }
@@ -1764,24 +1826,57 @@ router.post("/remove_game", function (req, res) {
   }
 });
 
+function getListCodes() {
+  var promise = new Promise(function (resolve, reject) {
+    User.aggregate([
+      {
+        $project: {
+          listCodes: {
+            $map: {
+              input: "$lists.custom",
+              as: "list",
+              in: { listCode: "$$list.listCode" },
+            },
+          },
+        },
+      },
+    ]).exec(function (err, listCodes) {
+      if (err) {
+        reject({ err: "Error" });
+      }
+      var listCodeArray = [];
+      listCodes.forEach((e) => {
+        if (Array.isArray(e)) {
+          e.forEach((el) => listCodeArray.push(el.listCode));
+        }
+      });
+      resolve(listCodeArray);
+    });
+  });
+  return promise;
+}
+
 router.post("/list_add", function (req, res) {
   if (req.user) {
     if (req.body.list) {
       User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-        var index = curUser.lists.custom.findIndex(
-          (obj) => obj.name == req.body.list
-        );
-        if (index == -1) {
-          curUser.lists.custom.push({
-            name: req.body.list,
-            games: [],
-            listcode: makeid(6),
-          });
-          curUser.save();
-          res.send({ status: "Success" });
-        } else {
-          res.send({ err: "Already added a list with this name" });
-        }
+        getListCodes().then(function (listCodeArray) {
+          var index = curUser.lists.custom.findIndex(
+            (obj) => obj.name == req.body.list
+          );
+          if (index == -1) {
+            var listCode = makeid(6, listCodeArray);
+            curUser.lists.custom.push({
+              name: req.body.list,
+              games: [],
+              listCode: listCode,
+            });
+            curUser.save();
+            res.send({ status: "Success", listCode: listCode });
+          } else {
+            res.send({ err: "Already added a list with this name" });
+          }
+        });
       });
     } else {
       res.send({ err: "Cannot add empty list" });
@@ -2036,11 +2131,11 @@ function bggUpdate(curUser) {
 router.post("/get_list_from_code", function (req, res) {
   if (req.user) {
     User.findOne({
-      "lists.custom": { $elemMatch: { listcode: req.body.code } },
+      "lists.custom": { $elemMatch: { listCode: req.body.code } },
     }).exec(function (err, curUser) {
       if (curUser) {
         var index = curUser.lists.custom.findIndex(
-          (obj) => obj.listcode == req.body.code
+          (obj) => obj.listCode == req.body.code
         );
         console.log(index);
         if (index > -1) {
@@ -2063,7 +2158,7 @@ router.post("/get_list_from_code", function (req, res) {
           });
         }
       } else {
-        res.send({ err: "Did not find a list with that code" });
+        res.send({ err: "Did not find a list with code " + req.body.code });
       }
     });
   } else {

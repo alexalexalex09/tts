@@ -342,6 +342,7 @@ select.bggFilterInput {
   top: var(--vh20);
   left: 2vw;
   box-shadow: 3px 3px 6px var(--main-light-grey);
+  height: 1em;
 }
 
 #currentGames {
@@ -358,6 +359,29 @@ select.bggFilterInput {
   color: var(--main-white);
   font-size: calc(var(--vh, 1vh) * 3);
   overflow-y: auto;
+}
+
+#listNotify {
+  background-color: var(--main-green);
+  border-radius: 15px;
+  color: var(--main-white);
+  position: absolute;
+  height: calc(var(--vh) * 3);
+  min-width: calc(var(--vh) * 3);
+  font-size: calc(var(--vh) * 2);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  top: calc(var(--vh) * -1.7);
+  right: calc(var(--vh) * -1.9);
+  width: auto;
+  padding: 2px;
+}
+
+#listNotify span {
+  align-self: center;
+  margin-top: 2px;
+  padding: 1px;
 }
 
 .curGameItem {

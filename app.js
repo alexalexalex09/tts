@@ -169,9 +169,18 @@ app.use((req, res, next) => {
             res.locals.username
           );
         } else {
-          if (extUser.username != "") {
+          if (
+            extUser.username != "" &&
+            typeof extUser.username != "undefined"
+          ) {
             res.locals.username = extUser.username;
-            console.log("Assigning auth0 username to locals");
+            console.log(
+              "Assigning auth0 username to locals: ",
+              extUser.username
+            );
+          } else {
+            res.locals.username = extUser.name;
+            console.log("Assigning auth0 Name to locals: ", extUser.name);
           }
         }
       } else {

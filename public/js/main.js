@@ -306,7 +306,7 @@ window.addEventListener("load", function () {
   /*      Home Icon Click      */
   /*****************************/
   /*goBackfrom*/
-  $("#menuHomeIcon").on("click", function () {
+  $(".menuHomeIcon").on("click", function () {
     closeMenu();
     var from = "";
     $(".main .view").each(function (i, e) {
@@ -720,7 +720,7 @@ window.addEventListener("load", function () {
     window.location.search.substr(1, 2) == "s=" &&
     /^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3))
   ) {
-    joinClick();
+    joinClick(); //calls joinSession and therefore join_session
     submitCode(window.location.search.substr(3));
   }
 
@@ -1812,16 +1812,18 @@ function showAdderMenu() {
   $("#menuAdder").addClass("slideUp");
 }
 
-function showAdder(item, theId, func, funcArg) {
-  funcArg = `'` + funcArg + `'`;
+function showAdder(item, theId, func, funcArg, prompt) {
+  if (funcArg) {
+    funcArg = `'` + funcArg + `'`;
+  }
   var el =
     `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
     item +
     `" >`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-    `<div class="subContextTitle">Add new ` +
-    item +
+    `<div class="subContextTitle">` +
+    prompt +
     `</div><hr/><div id="renameGameInputCont" class="textInputCont">
   <form onsubmit="return ` +
     func.substr(0, func.length - 1) +
@@ -2137,8 +2139,9 @@ function showShareList(list) {
     `<div class="subContextTitle">Share this code: ` +
     list.listCode +
     `</div><hr/>
-    <div id="shareListButton"><ion-icon name="share-outline"></ion-icon></div>
-    <div id="copyListButton"><ion-icon name="copy-outline"></ion-icon></div>`;
+    <div id="listButtonContainer">
+    <div id="shareListButton" class="button greenBtn">Share <ion-icon name="share-outline"></ion-icon></div>
+    <div id="copyListButton" class="button greenBtn">Copy <ion-icon name="copy-outline"></ion-icon></div></div>`;
   $("body").append(el);
   document
     .getElementById("shareListButton")
@@ -2384,13 +2387,16 @@ function hideOnClickOutside(selector, toHide, extraSelector) {
 }
 
 function writeAdder(title) {
+  //TODO: This whole workflow is ugly.
+  var escapeStr = "$(\\&#39;#subContext_import input.textInput\\&#39;).val()";
   var htmlString =
     `<div class="contextActions off" list="menuAdder" id="menuAdder">` +
     `<div class="contextTitle">` +
     title +
     `</div>` +
-    `<li onclick="showAdder('list', 'menuAddListInput', 'addList()', '')">Add List</li>` +
-    `<li onclick="showAdder('game', 'menuAddGamesInput', 'textSubmit()', '#menuAddGamesInput')">Add Game</li>` +
+    `<li onclick="showAdder('import', 'showImportMenu', 'runListImport($(\\&#39;#subContext_import input.textInput\\&#39;).val())', '', 'Import a list')">Import List</li>` +
+    `<li onclick="showAdder('list', 'menuAddListInput', 'addList()', '', 'Add new list')">Add List</li>` +
+    `<li onclick="showAdder('game', 'menuAddGamesInput', 'textSubmit()', '#menuAddGamesInput', 'Add new game')">Add Game</li>` +
     `</div>`;
   return htmlString;
 }
@@ -3876,8 +3882,34 @@ function showError(err) {
 }
 
 function runListImport(code) {
-  ttsFetch("/get_list_from_code", { code: code }, (res) => {});
+  ttsFetch("/get_list_code_info", { code: code }, (res) => {
+    var el =
+      `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
+      res.id +
+      `" >`;
+    el +=
+      `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+      `<div class="subContextTitle">Import list "` +
+      res.name +
+      `" with ` +
+      res.games.length +
+      ` games?</div><hr/>
+  <div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+  <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
+      res.listCode +
+      `')">Import</div>`;
+    $("body").append(el);
+  });
   return false;
+}
+
+function performListImport(code) {
+  ttsFetch("/get_list_from_code", { code: code }, (res) => {
+    gulp();
+  });
+  $(".subContextContainer").each(function () {
+    $(this).remove();
+  });
 }
 
 /*****************************/

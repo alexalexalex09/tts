@@ -2128,37 +2128,50 @@ function bggUpdate(curUser) {
   return promise;
 }
 
-router.post("/get_list_from_code", function (req, res) {
-  if (req.user) {
+function getCodeInfo(code) {
+  var promise = new Promise(function (resolve, reject) {
     User.findOne({
-      "lists.custom": { $elemMatch: { listCode: req.body.code } },
+      "lists.custom": { $elemMatch: { listCode: code } },
     }).exec(function (err, curUser) {
       if (curUser) {
         var index = curUser.lists.custom.findIndex(
-          (obj) => obj.listCode == req.body.code
+          (obj) => obj.listCode == code
         );
         console.log(index);
         if (index > -1) {
-          var theList = curUser.lists.custom[index];
-          listAdder(theList.name, res, req).then((list) => {
-            console.log("ListAdder Returned");
-            if (typeof theList.games != "undefined" && list.len) {
-              console.log(theList.games);
-              bulkGameAdder(theList.games, list.len, res, req);
-            } else {
-              res.send(list);
-            }
-          });
+          resolve(curUser.lists.custom[index]);
         } else {
-          res.send({
-            err: "No such list found in matched user",
-            user: curUser,
-            index: index,
-            code: req.body.code,
-          });
+          resolve({ err: "No such list found in matched user" });
         }
       } else {
-        res.send({ err: "Did not find a list with code " + req.body.code });
+        resolve({ err: "Could not find anyone with this list" });
+      }
+    });
+  });
+  return promise;
+}
+
+router.post("/get_list_code_info", function (req, res) {
+  getCodeInfo(req.body.code).then(function (theList) {
+    res.send(theList);
+  });
+});
+
+router.post("/get_list_from_code", function (req, res) {
+  if (req.user) {
+    getCodeInfo(req.body.code).then(function (theList) {
+      if (theList.err) {
+        res.send(theList);
+      } else {
+        listAdder(theList.name, res, req).then((list) => {
+          console.log("ListAdder Returned");
+          if (typeof theList.games != "undefined" && list.len) {
+            console.log(theList.games);
+            bulkGameAdder(theList.games, list.len, res, req);
+          } else {
+            res.send(list);
+          }
+        });
       }
     });
   } else {

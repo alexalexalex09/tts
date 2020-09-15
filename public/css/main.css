@@ -138,7 +138,7 @@ li.grey {
 #accountContainer {
   display: grid;
   grid-template-columns: 50% 50%;
-  grid-template-rows: repeat(5, calc(var(--vh) * 7));
+  grid-template-rows: repeat(4, calc(var(--vh) * 7));
   color: var(--main-white);
   font-size: calc(var(--vh) * 2.5);
 }
@@ -149,7 +149,7 @@ li.grey {
 
 #bggConnected {
   grid-column: 1/3;
-  grid-row: 5/6;
+  grid-row: 4/5;
   display: grid;
   grid-template-rows: repeat(3, calc(var(--vh) * 7));
   grid-template-columns: 1fr 1fr;
@@ -322,11 +322,11 @@ select.bggFilterInput {
 #faqList {
   list-style: none;
 }
-#fq {
+.fq {
   font-weight: 500;
   font-size: 1.4em;
 }
-#fa {
+.fa {
   margin-left: 10px;
   margin-bottom: 1em;
 }
@@ -717,8 +717,8 @@ input#listImportSubmit.green {
 .textSubmit,
 .textClear,
 #listImportSubmit {
-  height: calc(var(--vh, 1vh) * 4);
-  width: calc(var(--vh, 1vh) * 4);
+  height: calc(calc(var(--vh, 1vh) * 4) - 4px);
+  width: calc(calc(var(--vh, 1vh) * 4) - 4px);
   background-size: contain;
   right: 3px;
   position: absolute;
@@ -729,6 +729,13 @@ input#listImportSubmit.green {
 .textSubmit,
 #listImportSubmit {
   background-image: url(../img/checkmark-circle-outline.svg);
+}
+
+#shareListButton ion-icon {
+  margin-bottom: 3px;
+}
+#listButtonContainer .button {
+  font-size: max(3.5 * (1vw + 1vh) / 2, 25px);
 }
 
 .textClear {
@@ -1751,7 +1758,7 @@ ion-icon#addListButton {
   color: var(--main-white) !important;
 }
 
-#menu #menuHomeIcon {
+#menu .menuHomeIcon {
   cursor: pointer;
   border: 2px solid white;
   border-radius: 100px;
@@ -1760,7 +1767,7 @@ ion-icon#addListButton {
   background-size: auto calc(var(--vh) * 5);
 }
 
-#menuHomeIcon {
+.menuHomeIcon {
   font-size: calc(var(--vh) * 4);
   top: 10px;
   left: 2vw;
@@ -1921,7 +1928,8 @@ ion-icon#addListButton {
 .subContextRename,
 .subContextDelete,
 .subContextRemove,
-.subContextAccount {
+.subContextAccount,
+.subContextImport {
   margin-left: 0;
   background-color: white;
   position: absolute;
@@ -1940,14 +1948,16 @@ ion-icon#addListButton {
 
 .subContextRename,
 .subContextDelete,
-subContextRemove {
+.subContextRemove,
+.subContextImport {
   height: auto;
   padding-bottom: calc(var(--vh) * 2);
   border: solid 2px var(--main-blue);
 }
 
 .subContextDelete .button,
-.subContextRemove .button {
+.subContextRemove .button,
+.subContextImport .button {
   width: 40%;
   margin: 0.4em 5% 0px;
   float: left;
@@ -2191,7 +2201,7 @@ subContextRemove {
   #menuClose {
     display: none;
   }
-  #menuHomeIcon {
+  .menuHomeIcon {
     left: 25px;
   }
   #menuImg {
@@ -2340,14 +2350,16 @@ subContextRemove {
   .subContextRename,
   .subContextDelete,
   .subContextRemove,
-  .subContextAccount {
+  .subContextAccount,
+  .subContextImport {
     left: 10px;
     width: 630px;
     padding: 15px;
   }
 
   .subContextDelete .button,
-  .subContextRemove .button {
+  .subContextRemove .button,
+  .subContextImport .button {
     padding: 6px 0px;
   }
 

@@ -882,7 +882,7 @@ input#listImportSubmit.green {
   width: max(35%, 100px);
   text-align: center;
   height: 70%;
-  font-size: max(3 * (1vw) / 2, 20px);
+  font-size: max(1 * (1vw + 1vh) / 2, 20px);
 }
 
 #selectLists {

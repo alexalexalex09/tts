@@ -624,11 +624,18 @@ window.addEventListener("load", function () {
           title: "SelectAGame",
           text: "Join my SelectAGame session! ",
           url:
-            "https://selectagame.alexscottbecker.com/" +
+            "https://selectagame.herokuapp.com/" +
             document.getElementById("code").innerHTML,
         })
         .then(() => console.log("Successful share"))
         .catch((error) => console.log("Error sharing", error));
+    } else {
+      window.open(
+        "mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to join my session on SelectAGame%0D%0A%0D%0A https://selectagame.herokuapp.com/" +
+          document.getElementById("code").innerHTML +
+          ' %0D%0A%0D%0AIf the above link doesn%27t work, click "Join Game" on the home page and enter this code: ' +
+          document.getElementById("code").innerHTML
+      );
     }
   });
 
@@ -2151,10 +2158,19 @@ function showShareList(list) {
           .share({
             title: list.name,
             text: 'Link for game list "' + list.name + '"on selectagame: ',
-            url: "https://selectagame.alexscottbecker.com/" + list.listCode,
+            url: "https://selectagame.herokuapp.com/" + list.listCode,
           })
           .then(() => console.log("Successful share"))
           .catch((error) => console.log("Error sharing", error));
+      } else {
+        window.open(
+          'mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to import my the list "' +
+            list.name +
+            '" on SelectAGame.%0D%0A%0D%0A https://selectagame.herokuapp.com/' +
+            list.listCode +
+            ' %0D%0A%0D%0AIf the above link doesn%27t work, go the Games and Lists menu and click the "Plus" button to Import a list, and use this code: ' +
+            list.listCode
+        );
       }
     });
   $("#copyListButton").on("click", function () {
@@ -3450,13 +3466,7 @@ function fillGames(games) {
         i +
         `"><div class="playGameTitle">` +
         games[i].name +
-        `</div><div class="playGameToolTip">
-          <ion-icon name="help-circle-outline"></ion-icon>
-          <div class="weight"><li class="playSubTitle">` +
-        games[i].name +
-        `</li><li class="relVotes">Relative vote: ` +
-        games[i].weight +
-        `</li><li class="BGGL">Board Game Geek Link</li></div></div></div>`;
+        `</div></div>`;
     }
   }
   $("#playContainer").html(htmlString);

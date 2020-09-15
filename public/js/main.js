@@ -2119,7 +2119,7 @@ function deleteList(list) {
     },
     (res) => {
       $("#gamesContainer")
-        .children("#games" + list.substr(5))
+        .children("#games" + list.substr(4))
         .remove();
       gulp();
       $(".subContextContainer").each(function () {
@@ -2763,7 +2763,7 @@ function addNewGame(el) {
                 </div>
             </li>`;
     $("li#0").children(".listGames").first().append(htmlString);
-    if (el == "#addGamesInput") {
+    if (el == "#addGamesInput" || el == "#hitMeGame") {
       var toAdd = $('.listGames input[game_id="' + res.status._id + '"]');
       toAdd.prop("checked", true);
       toggleFont(toAdd);
@@ -3510,8 +3510,34 @@ function getTopList() {
     if (document.getElementById("addGamesInput") != null) {
       autocomplete(document.getElementById("addGamesInput"), res.games);
     }
+    var htmlString = `<div id="topList" class="off">`;
+    res.games.forEach(function (e, i) {
+      htmlString += `<li>` + e + `</li>`;
+    });
+    $("body").append(htmlString + `</div>`);
     console.log("added Autocomplete");
   });
+}
+
+function hitMe() {
+  var max = $("#topList").children().length;
+  var game = $($("#topList li")[Math.floor(Math.random() * max)]).text();
+  console.log(max, game);
+  $("body").append(
+    `<input id="hitMeGame" value="` + game + `" class="off"></input>`
+  );
+  /*if (
+    $("#0 .gameName").filter(function () {
+      return $(this).text().toLowerCase().trim() == game.toLowerCase();
+    }) == 0
+  ) {*/
+  addNewGame("#hitMeGame");
+  $("#tempAlert").remove();
+  createAndShowAlert("Added " + game);
+  $("#hitMeGame").remove();
+  /*} else {
+  //Add game to session
+  }*/
 }
 
 function checkBGG() {

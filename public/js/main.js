@@ -2551,7 +2551,7 @@ function writeSessions(res) {
       /*if (typeof res.sessions[i].note == "undefined") {
       res.sessions[i].note = "";
     }*/
-      htmlString += `<li>`;
+      htmlString += `<li><div class="sessionsCheck"><input type="checkbox"></div>`;
       if (typeof res.sessions[i].phrase != "undefined") {
         htmlString +=
           `<div class="sessionTitle ` +
@@ -2610,6 +2610,84 @@ function writeSessions(res) {
     createAndShowAlert("Log in to save sessions", true);
   }
   $("#sessionsContainer").html(htmlString);
+  $('.sessionsCheck input[type="checkbox"]').on("click",checkSessionBoxes());
+  $('.sessionsCheck').on("click", function() {
+    console.log($(this));
+    if ($(this).children('input[type="checkbox"]').first().prop("checked")) {
+      $(this).children('input[type="checkbox"]').first().prop("checked", false);
+    } else {
+      $(this).children('input[type="checkbox"]').first().prop("checked", true);
+    }
+    checkSessionBoxes();
+  })
+}
+
+
+
+function checkSessionBoxes() {
+  if ($('.sessionsCheck input[type="checkbox"]:checked').length > 0) {
+    $("#sessionsContainer").removeClass("slideUp");
+    if (
+      $('.sessionsCheck input[type="checkbox"]:checked').length ==
+      $('.sessionsCheck input[type="checkbox"]').length
+    ) {
+      selectAllSessions();
+    }
+  } else {
+    closeBulkSessions();
+  }
+}
+
+function selectAllSessions() {
+  $('.sessionsCheck input[type="checkbox"]').prop("checked", true);
+  $('ion-icon[name="square-outline"]').addClass("off");
+  $('ion-icon[name="checkbox-outline"]').removeClass("off");
+}
+
+function closeBulkSessions() {
+  $('.sessionsCheck input[type="checkbox"]').prop("checked", false);
+  $('ion-icon[name="square-outline"]').removeClass("off");
+  $('ion-icon[name="checkbox-outline"]').addClass("off");
+  $("#sessionsContainer").addClass("slideUp");
+}
+
+function showBulkDeleteSessions() {
+  var sessionsCount = $('.sessionsCheck input[type="checkbox"]:checked').length;
+  var plural = "";
+  if (sessionsCount > 1) {
+    plural = "s";
+  }
+  var el = `<div class="subContextContainer"><div class="subContextDelete" id="subContext_bulkSessions" >`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Really delete ` +
+    sessionsCount +
+    ` session` +
+    plural +
+    `?</div><hr/>
+    <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+    <div class="button redBtn" id="deleteConfirm" onclick="bulkDeleteSessions()">Delete</div>`;
+  $("body").append(el);
+}
+
+function bulkDeleteSessions() {
+  var arr = [];
+  $('.sessionsCheck input[type="checkbox"]:checked').each(function (i, e) {
+    if (
+      //$(e).parent().parent().children(".sessionCode").text().substr(-2) == "👑"
+      true
+    ) {
+      arr.push(
+        $(e).parent().parent().children(".sessionCode").text().substr(6, 5)
+      );
+      $(e).parent().parent().remove();
+    }
+  });
+  ttsFetch("/delete_bulk_sessions", { sessions: arr }, (res) => {
+    $(".subContextContainer").each(function () {
+      $(this).remove();
+    });
+  });
 }
 
 function showRenameSession(session) {

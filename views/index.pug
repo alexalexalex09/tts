@@ -138,7 +138,13 @@ block content
         ion-icon(name='close-outline')
       #sessionsTitle.pageTitle My Sessions
         .menuHomeIcon
-      #sessionsContainer
+      .bulkSelect
+        ion-icon(name="square-outline" onclick="selectAllSessions()")
+        ion-icon(name="checkbox-outline" onclick="closeBulkSessions()").off
+        .nothing
+        ion-icon(name="trash-outline" onclick="showBulkDeleteSessions()")
+        ion-icon(name="close-outline" onclick="closeBulkSessions()")
+      #sessionsContainer.slideUp
       
     #gamesView.pop.off
       #gamesClose.closeButton

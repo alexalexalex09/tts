@@ -111,7 +111,7 @@ function getNames(profiles, numGames, curSession, data) {
               );
 
               //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
-              numGames[index].num++;
+              if (index > -1 ) {numGames[index].num++;}
             }
           }
         }

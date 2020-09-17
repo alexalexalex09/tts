@@ -415,6 +415,62 @@ router.post("/rename_session", (req, res) => {
   }
 });
 
+router.post("/delete_bulk_sessions", (req, res) => {
+  var codes = req.body.sessions;
+  Session.find({ code: { $in: codes } }).exec(function (err, theSessions) {
+    if (!theSessions) {
+      res.send(ERR_CODE);
+    } else {
+      console.log("The Sessions: ", theSessions);
+      var toDelete = [];
+      var toRemove = [];
+      theSessions.forEach(function (e) {
+        if (req.user.id == e.owner) {
+          toDelete.push(e.code);
+        } else {
+          toRemove.push(e.code);
+        }
+      });
+      console.log(toDelete);
+      console.log(toRemove);
+      var query = [];
+      toDelete.forEach(function (e) {
+        query.push({ deleteOne: { filter: { code: e, owner: req.user.id } } });
+      });
+      toRemove.forEach(function (e) {
+        query.push({
+          updateOne: {
+            filter: {
+              code: e,
+              "users.user": req.user.id,
+            },
+            update: {
+              $unset: {
+                "users.$": "",
+              },
+            },
+          },
+        });
+        query.push({
+          updateOne: {
+              "filter": { "users": null },
+              "update": {
+                "$pull": { "users": null }
+              }
+          },
+        });
+      });
+      console.log("Bulkwrite");
+      console.log(JSON.stringify(query));
+      Session.bulkWrite(query).then(function (result) {
+        console.log(result);
+
+        res.send({ result });
+      });
+    }
+  });
+});
+
 router.post("/delete_session", (req, res) => {
   var code = req.body.code;
   Session.findOne({ code: req.body.code }).exec(function (err, theSession) {

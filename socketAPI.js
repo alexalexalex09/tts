@@ -277,6 +277,7 @@ socketAPI.initVotes = function (data) {
 
 socketAPI.submitVotes = function (data) {
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    console.log(data)
     var index = curSession.users.findIndex(
       (obj) => obj.user.toString() == data.user.toString()
     );

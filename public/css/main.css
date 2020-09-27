@@ -1182,7 +1182,7 @@ input#listImportSubmit.green {
 .voteLabel label {
   align-self: flex-end;
   height: calc(var(--vh) * 4);
-  max-width: 65vw;
+  max-width: calc(60vw - 1em);
   white-space: nowrap;
   text-overflow: ellipsis;
   display: inline-block;
@@ -1994,6 +1994,14 @@ ion-icon#addListButton {
   margin: 0.4em 5% 0px;
   float: left;
   height: var(--vh5);
+}
+
+#importOverwrite, #importRename {
+  width: 40%;
+  margin: 0.4em 4.6% 0px;
+  display: inline-block;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .subContextContainer hr {

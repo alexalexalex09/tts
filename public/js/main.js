@@ -22,6 +22,7 @@ window.addEventListener("load", function () {
       }
       if (data.startVoting) {
         //Parse the voting data and output
+        console.log(data);
         fillVotes(data.games);
       }
       if (data.voteSubmit) {
@@ -2612,12 +2613,8 @@ function writeSessions(res) {
   $("#sessionsContainer").html(htmlString);
   $('.sessionsCheck input[type="checkbox"]').on("click",checkSessionBoxes());
   $('.sessionsCheck').on("click", function() {
-    console.log($(this));
-    if ($(this).children('input[type="checkbox"]').first().prop("checked")) {
-      $(this).children('input[type="checkbox"]').first().prop("checked", false);
-    } else {
-      $(this).children('input[type="checkbox"]').first().prop("checked", true);
-    }
+    var $el = $(this).children('input[type="checkbox"]').first();
+    $el.prop("checked", !$el.prop("checked"))
     checkSessionBoxes();
   })
 }
@@ -3396,6 +3393,7 @@ function showSelect(data, isOwner) {
  * @param {Array} games
  */
 function fillVotes(games) {
+  console.log(games);
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
     htmlString +=
@@ -3425,7 +3423,7 @@ function fillVotes(games) {
   $(".voteSubX").on("click", function () {
     $(this).parent().parent().parent().removeClass("showVoteThumb");
   });
-  $(".toolTipContainer").mouseenter(function () {
+  $(".toolTipContainer").click(function () {
     console.log("Mouseover: ", $(this));
     var $el = $(this);
     if ($el.children(".BGGThumb").length == 0) {
@@ -3448,13 +3446,9 @@ function fillVotes(games) {
   $("#voteButton").on("click", function () {
     var theCode = $("#code").text();
     var voteArray = [];
-    var theVotes = $("#voteContainer ul").children();
-    for (var i = 0; i < theVotes.length; i++) {
-      voteArray.push({
-        game: $(theVotes[i]).children("input").first().attr("id"),
-        vote: $(theVotes[i]).children("input").first().val(),
-      });
-    }
+    $(".voteItem").each((i,e)=> {
+      voteArray.push({game: $(e).children('input')[0].id, vote: $(e).children('input').val()})
+    })
     console.log("voteArray", voteArray);
     ttsFetch(
       "/submit_votes",
@@ -3471,10 +3465,13 @@ function fillVotes(games) {
 }
 
 function sortVotes() {
-  $("#voteContainer ul")
-    .children("li")
+  console.log("sorting")
+  console.log($("#voteContainer .voteList").first()
+  .children(".voteItem"))
+  $("#voteContainer .voteList").first()
+    .children(".voteItem")
     .sort(lowerCaseDivSort(".voteLabel", "label"))
-    .appendTo("#voteContainer ul");
+    .appendTo("#voteContainer .voteList").first();
 }
 
 /*****************************/
@@ -3997,20 +3994,30 @@ function showError(err) {
 
 function runListImport(code) {
   ttsFetch("/get_list_code_info", { code: code }, (res) => {
+    if (!res.overwrite) {
+      var overwrite = ' class="off"'; 
+    } else {
+      var overwrite = '';
+    }
+    console.log("Overwrite: ", overwrite);
     var el =
       `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
-      res.id +
+      res.list.id +
       `" >`;
     el +=
       `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
       `<div class="subContextTitle">Import list "` +
-      res.name +
+      res.list.name +
       `" with ` +
-      res.games.length +
+      res.list.games.length +
       ` games?</div><hr/>
-  <div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+      <div id="importDuplicate"`+overwrite+`>
+      <div id="importOverwrite"><input type="checkbox" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
+      <div id="importRename"><input type="checkbox" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
+      </div>
+      <div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
-      res.listCode +
+      res.list.listCode +
       `')">Import</div>`;
     $("body").append(el);
   });
@@ -4284,6 +4291,7 @@ function lowerCaseDivSort() {
       b = $(b).children(arr[i]);
     }
     b = $(b).first();
+    console.log("Comparing: ", a, b);
     return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
   };
 }

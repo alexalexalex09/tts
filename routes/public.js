@@ -2159,9 +2159,19 @@ function getCodeInfo(code) {
 }
 
 router.post("/get_list_code_info", function (req, res) {
+  if (req.user) {
   getCodeInfo(req.body.code).then(function (theList) {
-    res.send(theList);
+    console.log(req.user.id);
+    User.findOne({profile_id: req.user.id}).exec(function(err, curUser) {
+      console.log(curUser)
+      var overwrite = curUser.lists.custom.findIndex((obj) => {console.log(obj.name); return obj.name == theList.name;}) > -1;
+      console.log(overwrite)
+      res.send({list: theList, overwrite: overwrite});
+    })
   });
+} else {
+  res.send({err: "Log in to import lists!"})
+}
 });
 
 router.post("/get_list_from_code", function (req, res) {

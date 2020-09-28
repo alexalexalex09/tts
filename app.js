@@ -151,11 +151,11 @@ app.use((req, res, next) => {
 */
 
 app.use((req, res, next) => {
-  console.log("custom middleware called*****************");
+  //console.log("custom middleware called*****************");
   if (req.user) {
     console.log("with user");
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
-      console.log("auth0 user:", extUser);
+      //console.log("auth0 user:", extUser);
       res.locals.user = req.user;
       if (extUser) {
         if (
@@ -211,21 +211,22 @@ app.use("/", authRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  if (
+  /*if (
     req.originalUrl.substr(1).length == 5 &&
     /^([a-zA-Z0-9]{5})$/.test(req.originalUrl.substr(1))
   ) {
-    res.redirect("/?s=" + req.originalUrl.substr(1));
+    //res.redirect("/?s=" + req.originalUrl.substr(1));
   } else {
     if (
       req.originalUrl.substr(1).length == 6 &&
       /^([a-zA-Z0-9]{6})$/.test(req.originalUrl.substr(1))
     ) {
-      res.redirect("/?l=" + req.originalUrl.substr(1));
-    } else {
+      //res.redirect("/?l=" + req.originalUrl.substr(1));
+    } else {*/
+      console.log("404: ", req.originalUrl)
       res.redirect("/?err=404");
-    }
-  }
+    /*}
+  }*/
 });
 
 // error handler

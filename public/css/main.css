@@ -849,22 +849,22 @@ input#listImportSubmit.green {
 
 #addGamesTitle {
   text-align: center;
-  height: var(--vh5);
-  font-size: max(3 * (1vw + 1vh) / 2, 30px);
+  height: auto;
+  font-size: max(2 * (1vw + 1vh) / 2, 20px);
 }
 
 #addGamesTitle .text {
-  transform: translateX(10px);
+  transform: translateX(5px);
   display: inline-block;
 }
 
 #addGamesTitle ion-icon {
-  font-size: 20px;
-  transform: translate(10px, -50%);
+  font-size: 15px;
+  transform: translate(5px, -50%);
 }
 
 #addGamesTitle ion-icon:hover + .tooltip {
-  transform: translate(calc(50vw + 50% + 79px), -19px);
+  transform: translate(calc(50vw + 50% + 54px), -14px);
   opacity: 1;
 }
 
@@ -1179,6 +1179,10 @@ input#listImportSubmit.green {
   z-index: 1;
 }
 
+.voteToolTip ion-icon {
+  cursor: pointer;
+}
+
 .voteLabel label {
   align-self: flex-end;
   height: calc(var(--vh) * 4);
@@ -1186,7 +1190,7 @@ input#listImportSubmit.green {
   white-space: nowrap;
   text-overflow: ellipsis;
   display: inline-block;
-  margin-left: 1em;
+  margin-left: .8em;
   overflow: hidden;
   cursor: pointer;
 }
@@ -1204,10 +1208,12 @@ input#listImportSubmit.green {
   z-index: 3;
 }
 
-.voteToolTip:hover .toolTipContainer,
+/*.voteToolTip:hover .toolTipContainer,*/
 .showVoteThumb .toolTipContainer {
-  transition-delay: 0.5s;
   transform: translate(-100%, 10px);
+}
+
+.toolTipContainer.showToolTip {
   opacity: 1;
 }
 
@@ -1217,7 +1223,7 @@ input#listImportSubmit.green {
   transform: translateX(-100vw);
   font-size: 0.7em;
   opacity: 0;
-  transition: opacity 0.5s;
+  transition: opacity 0.25s;
   display: inline-block;
   list-style: none;
   text-align: left;
@@ -1252,7 +1258,8 @@ input#listImportSubmit.green {
 }
 
 .voteSubTitle {
-  border-bottom: 2px solid var(--main-black);
+  border-bottom: 2px solid var(--main-black);  
+  width: calc(100% - 16px);
 }
 
 /***********************************************************************************/
@@ -1458,7 +1465,6 @@ input[type="range"]:before {
 .playGameTitle {
   max-width: 90%;
   overflow: hidden;
-  margin-left: 5%;
   text-overflow: ellipsis;
   display: inline-block;
 }
@@ -1497,6 +1503,40 @@ input[type="range"]:before {
   grid-area: 15/2/18/10;
   width: 100%;
   height: 100%;
+}
+
+.playBGGLink.showBGGLink {
+  height: calc(1em + 8px);
+}
+
+.playBGGLink.showBGGLink a {
+  color: var(--main-white);
+  margin-top: 2px;
+  display: inline-block;
+}
+
+.playBGGLink {
+  display: block;
+  transition: height .5s;
+  height: 0px;
+  overflow: hidden;
+  color: var(--main-black);
+  font-size: .9em;
+  width: 8em;
+  margin: -0.7em 0px 0.7em calc(50% - 4em);
+}
+
+.playGame:hover .voteWeight {
+  opacity: 1;
+}
+
+.voteWeight {
+  position: absolute;
+  display: inline-block;
+  font-size: 0.7em;
+  transform: translateY(-0.2em);
+  transition: opacity .25s;
+  opacity: 0;
 }
 
 /*****************/
@@ -1609,6 +1649,8 @@ input[type="range"]:before {
 #sessionsContainer > li {
   display: grid;
   grid-template-columns: 5% 90% 5%;
+  width: 99%;
+  box-sizing: border-box;
 }
 
 .sessionsCheck {

@@ -721,22 +721,24 @@ window.addEventListener("load", function () {
   }); */
 
   /*******************************************/
-  /* Check if url contains param and execute */
+  /* Check if url matches a code and execute */
   /*******************************************/
 
+  console.log(window.location.pathname.substr(1));
+  console.log(/^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)))
+  console.log(/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1)))
   if (
-    window.location.search.substr(1, 2) == "s=" &&
-    /^([a-zA-Z0-9]{5})$/.test(window.location.search.substr(3))
+    /^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)) && 
+    !/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))
   ) {
     joinClick(); //calls joinSession and therefore join_session
-    submitCode(window.location.search.substr(3));
+    submitCode(window.location.pathname.substr(1));
   }
 
   if (
-    window.location.search.substr(1, 2) == "l=" &&
-    /^([a-zA-Z0-9]{6})$/.test(window.location.search.substr(3))
+    /^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))
   ) {
-    runListImport(window.location.search.substr(3));
+    runListImport(window.location.pathname.substr(1));
   }
 
   /* Set up autocomplete */
@@ -2312,8 +2314,8 @@ function parseBGGThing(id, field) {
   });
 }
 
-function contextBGG(el, game, exact, recur) {
-  if (exact) {
+function contextBGG(el, game, inexact, recur) {
+  if (inexact) {
     var exactStr = "";
   } else {
     var exactStr = "&exact=1";
@@ -2614,7 +2616,7 @@ function writeSessions(res) {
   $('.sessionsCheck input[type="checkbox"]').on("click",checkSessionBoxes());
   $('.sessionsCheck').on("click", function() {
     var $el = $(this).children('input[type="checkbox"]').first();
-    $el.prop("checked", !$el.prop("checked"))
+    //$el.prop("checked", !$el.prop("checked"))
     checkSessionBoxes();
   })
 }
@@ -3327,8 +3329,8 @@ function createAndShowAlert(alert, error = false) {
     $("#tempAlert").css({ opacity: 0 });
     setTimeout(function () {
       $("#tempAlert").remove();
-    }, 1000);
-  }, 1000);
+    }, 3000);
+  }, 3000);
 }
 
 function updateCurrentGames(curGames) {
@@ -3384,6 +3386,54 @@ function showSelect(data, isOwner) {
   });
 }
 
+
+/*****************************/
+/*      showVoteThumb()     */
+/*****************************/
+
+/**
+ *
+ *
+ * @param {*} thumb jQuery element to toggle class showVoteThumb on
+ * @param {*} container jQuery element (toolTipContainer) to call function showVoteThumb on
+ */
+function showToolTip(thumb, container) {
+  if ($(".toolTipContainer.showToolTip").length === 0) {
+    $(thumb).toggleClass("showVoteThumb");
+    showVoteThumb(container);
+    setTimeout(function() {
+      $(container).toggleClass("showToolTip");
+    }, 10)
+  }
+}
+
+/*****************************/
+/*      showVoteThumb()     */
+/*****************************/
+/*
+ * Desc: Get the game thumbnail and description from BGG
+ *
+ * @param {*} el Tooltip Container
+ */
+function showVoteThumb(el){
+  console.log("Mouseover: ", $(el));
+  var $el = $(el);
+  if ($el.children(".BGGThumb").length == 0) {
+    var id = $el.children(".BGGL").children("a").attr("href");
+    id = id.substr(id.lastIndexOf("/") + 1);
+    parseBGGThing(id, "thumbnail").then(function (res) {
+      $el.append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
+    });
+    parseBGGThing(id, "description").then(function (res) {
+      if (res.length > 100) {
+        res = res.substr(0, 100) + "...";
+      }
+      $el.append(`<div class="BGGDesc">` + res + `</div>`);
+    });
+  }
+}
+
+
 /*****************************/
 /*      fillVotes(games)     */
 /*****************************/
@@ -3392,6 +3442,7 @@ function showSelect(data, isOwner) {
  *
  * @param {Array} games
  */
+
 function fillVotes(games) {
   console.log(games);
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
@@ -3421,27 +3472,18 @@ function fillVotes(games) {
     contextBGG($(".voteToolTip .BGGL")[i], games[i].name);
   }
   $(".voteSubX").on("click", function () {
-    $(this).parent().parent().parent().removeClass("showVoteThumb");
-  });
-  $(".toolTipContainer").click(function () {
-    console.log("Mouseover: ", $(this));
-    var $el = $(this);
-    if ($el.children(".BGGThumb").length == 0) {
-      var id = $el.children(".BGGL").children("a").attr("href");
-      id = id.substr(id.lastIndexOf("/") + 1);
-      parseBGGThing(id, "thumbnail").then(function (res) {
-        $el.append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
-      });
-      parseBGGThing(id, "description").then(function (res) {
-        if (res.length > 100) {
-          res = res.substr(0, 100) + "...";
-        }
-        $el.append(`<div class="BGGDesc">` + res + `</div>`);
-      });
-    }
+    var el = this;
+    $(el).parent().removeClass("showToolTip");
+    setTimeout(function() {
+      console.log($(el));
+      $(el).parent().parent().parent().removeClass("showVoteThumb");
+    },251)
   });
   $(".voteLabel label").on("click", function () {
-    $(this).parent().toggleClass("showVoteThumb");
+    showToolTip($(this).parent(), $(this).parent().children(".voteToolTip").children(".toolTipContainer"))
+  });
+  $(".voteToolTip>ion-icon").on("click", function () {
+    showToolTip($(this).parent().parent(), $(this).parent().children(".toolTipContainer"))
   });
   $("#voteButton").on("click", function () {
     var theCode = $("#code").text();
@@ -3524,6 +3566,14 @@ function textSubmit(el) {
   return false;
 }
 
+function toggleWeight(el) { 
+  if ($(el).parent().children(".voteWeight").length>0) {
+    $(el).parent().children(".voteWeight").remove();
+  } else {
+    $(el).parent().append("<div class='voteWeight'>" + $(el).parent().attr("data-content") + "</div>" )
+  }
+}
+
 function fillGames(games) {
   var htmlString = ``;
   var bottom = games[games.length - 1].votes;
@@ -3535,25 +3585,29 @@ function fillGames(games) {
   for (var i = 0; i < games.length; i++) {
     if (!$.isEmptyObject(games[i])) {
       htmlString +=
-        `<div class="playGame" data-content = "(` +
-        games[i].weight +
-        `)" id="play` +
+        `<div class="playGame"` +
+        ` id="play` +
         i +
         `"><div class="playGameTitle">` +
         games[i].name +
-        `</div></div>`;
+        `</div><div class="voteWeight">(` +
+        games[i].weight + 
+         `)</div><div class="playBGGLink button greenBtn">View on BGG</div></div>`;
     }
   }
   $("#playContainer").html(htmlString);
+  $(".playGameTitle").click(function(){$(this).parent().children(".playBGGLink").toggleClass("showBGGLink")});
+  $(".playGameTitle").each(function(i,e) {
+    contextBGG($(e).parent().children(".playBGGLink"),$(e).text());
+    console.log($(e).parent().children(".playBGGLink"),$(e).text());
+  })
   for (var i = 0; i < games.length; i++) {
     contextBGG($(".BGGL")[i], games[i].name);
   }
   console.log("fillgames");
 }
 
-function showWeight(e) {
-  $(e).parent().toggleClass("showWeight");
-}
+
 
 function showListSettings(el) {
   console.log(el);
@@ -3994,6 +4048,10 @@ function showError(err) {
 
 function runListImport(code) {
   ttsFetch("/get_list_code_info", { code: code }, (res) => {
+    if (res.list.err) {
+        createAndShowAlert(res.list.err)
+      } else {
+    console.log(res);
     if (!res.overwrite) {
       var overwrite = ' class="off"'; 
     } else {
@@ -4020,6 +4078,7 @@ function runListImport(code) {
       res.list.listCode +
       `')">Import</div>`;
     $("body").append(el);
+  } 
   });
   return false;
 }

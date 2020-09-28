@@ -13,13 +13,17 @@ dotenv.config();
 // Perform the login, after login Auth0 will redirect to callback
 router.get(
   "/login",
+  
+  function (req, res, next) {
+    //set req.session.returnTo here? Yes.
+    console.log("login:: ", req.originalUrl)
+    req.session.returnTo = req.session.previousURL;
+    next();
+  },
   passport.authenticate("auth0", {
     scope: "openid email profile",
   }),
-  function (req, res) {
-    //set req.session.returnTo here? Yes.
-    res.redirect("/");
-  }
+  
 );
 
 // Perform the final stage of authentication and redirect to previously requested URL or '/user'
@@ -35,9 +39,10 @@ router.get("/callback", function (req, res, next) {
       if (err) {
         return next(err);
       }
+      console.log("CallBack:: ", req.originalURL, req.session)
       const returnTo = req.session.returnTo;
       delete req.session.returnTo;
-      res.redirect(returnTo || "/");
+      res.redirect(returnTo || "/andthen");
     });
   })(req, res, next);
 });

@@ -198,23 +198,47 @@ function makeid(length, checkList) {
   return result;
 }
 
+
+
+router.get("/*", function(req,res, next) {
+  req.session.previousURL = req.session.currentURL;
+  req.session.currentURL = req.originalUrl
+  next();
+});
+
 router.get("/j/:session", (req, res) => {
   console.log("Join called*********************");
+  console.log("Listcode: ", req.params.listCode)
   res.render("index", {
     sessionCode: req.params.session,
   });
 });
 
 router.get("/l/:listCode", (req, res) => {
+  console.log("Listcode: ", req.params.listCode)
   res.render("index", {
     listCode: req.params.listCode,
   });
 });
 
+router.get(/^\/([A-Z0-9]{5})$/, (req, res) => {
+  console.log("Listcode: ", req.originalUrl.substr(1))
+  res.render("index", {
+    sessionCode: req.originalUrl.substr(1),
+  });
+});
+router.get(/^\/([A-Z0-9]{6})$/, (req, res) => {
+  console.log("Listcode: ", req.originalUrl.substr(1))
+  console.log(req.session.previousURL, req.session.currentURL)
+  res.render("index", {
+    listCode: req.originalUrl.substr(1),
+  });
+});
+
 // Home page
 router.get("/", (req, res) => {
-  console.log("query: ", req.query);
-  console.log("req.session: ", req.session);
+  //console.log("query: ", req.query);
+  //console.log("req.session: ", req.session);
   if (typeof req.session.userNonce == "undefined") {
     req.session.userNonce = makeid(20);
   }
@@ -270,18 +294,18 @@ router.post("/get_user_lists_populated", (req, res) => {
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        console.log("GULP curUser:", curUser);
+        //console.log("GULP curUser:", curUser);
         management.users.get({ id: req.user.user_id }, function (err, extUser) {
           Session.find({}, "code").exec(function (err, codeList) {
-            console.log("auth0 user:", extUser);
+            //console.log("auth0 user:", extUser);
             res.locals.user = req.user;
             if (extUser && extUser.username != "") {
               var displayName = extUser.username || req.user.displayName;
             } else {
               displayName = req.user.displayName;
             }
-            console.log("DisplayName: ", displayName);
-            console.log(extUser);
+            //console.log("DisplayName: ", displayName);
+            //console.log(extUser);
             if (curUser) {
               if (curUser.lists) {
                 var modified = false;
@@ -972,7 +996,7 @@ function checkIfAddedByUser(theSession, userId) {
 router.post("/create_session", function (req, res) {
   if (req.user) {
     Session.find({}, "code").exec(function (err, codeList) {
-      console.log(codeList);
+      //`console.log(codeList);
       var dup = true;
       var theCode = "";
       theCode = makeid(
@@ -982,7 +1006,7 @@ router.post("/create_session", function (req, res) {
       var displayName = "";
       management.users.get({ id: req.user.user_id }, function (err, extUser) {
         // Get the user info from Auth0
-        console.log("auth0 user:", extUser);
+        //console.log("auth0 user:", extUser);
         res.locals.user = req.user; //Set correct displayName and user var for locals
         if (extUser && extUser.username != "") {
           displayName = extUser.username || req.user.displayName;

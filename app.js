@@ -10,8 +10,11 @@ const session = require("express-session");
 const cfenv = require("cfenv");
 var socket_io = require("socket.io");
 var ManagementClient = require("auth0").ManagementClient;
+//const requireHTTPS = require("./middleware/requireHTTPS")
 
 var app = express();
+
+//app.use(requireHTTPS);
 
 //Auth0 vars
 var sess = {

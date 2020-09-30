@@ -2,8 +2,6 @@
 var createSession = function () {};
 var joinSession = function () {};
 
-const ERR_LOGIN_SOFT = "No user";
-
 window.addEventListener("load", function () {
   /*****************************/
   /*      Socket.io logic      */
@@ -37,11 +35,13 @@ window.addEventListener("load", function () {
     $("#backArrow").removeClass("off");
     setCode(res.session.code);
     if (typeof res.session.phrase == "undefined") {
-      setPhrase(`<div class="owner">👑<div class="tooltip">Owner</div></div>`);
+      setPhrase(
+        `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+      );
     } else {
       setPhrase(
         res.session.phrase +
-          `<div class="owner">👑<div class="tooltip">Owner</div></div>`
+          `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
       );
     }
 
@@ -165,6 +165,13 @@ window.addEventListener("load", function () {
           fillGames(res.games);
           goForwardFrom("#homeView", "#playView");
         });
+        break;
+      case "#codeView":
+        if ($(".userName").length > 0) {
+          goForwardFrom("#homeView", "#selectView");
+        } else {
+          goForwardFrom("#homeView", "#postSelectView");
+        }
         break;
       default:
         goForwardFrom("#homeView", res.lock);
@@ -725,19 +732,17 @@ window.addEventListener("load", function () {
   /*******************************************/
 
   console.log(window.location.pathname.substr(1));
-  console.log(/^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)))
-  console.log(/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1)))
+  console.log(/^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)));
+  console.log(/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1)));
   if (
-    /^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)) && 
+    /^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)) &&
     !/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))
   ) {
     joinClick(); //calls joinSession and therefore join_session
     submitCode(window.location.pathname.substr(1));
   }
 
-  if (
-    /^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))
-  ) {
+  if (/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
     runListImport(window.location.pathname.substr(1));
   }
 
@@ -856,6 +861,7 @@ function ttsFetch(req, body, handler, errorHandler) {
  * @param {String} to
  */
 function goForwardFrom(from, to) {
+  console.trace();
   if (from != to) {
     if (to == "#selectView" || to == "#postSelectView") {
       window.setTimeout(function () {
@@ -874,6 +880,9 @@ function goForwardFrom(from, to) {
     console.log(window.hist);
     if (typeof window.hist == "undefined") {
       window.hist = [from];
+    }
+    if (from == "#postSelectView" && to == "#voteView") {
+      window.hist = ["#homeView"];
     }
     window.hist.push(to);
     $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
@@ -995,7 +1004,9 @@ function lockGames(code) {
       transform: "translateX(-200vw)",
     });
     window.setTimeout(function () {
-      $("#postSelectTitle").html("Edit Games List 🐿️");
+      $("#postSelectTitle").html(
+        "Edit Games List <div class='menuHomeIcon'></div>"
+      );
       $("#postSelectContainer").html();
       $("#postSelectContainer").css("grid-area", "4/2/15/10");
       $("#postSelectContainer").html(res.htmlString);
@@ -1026,7 +1037,7 @@ function lockGames(code) {
             "/unlock_games",
             {
               code: $("#code").text(),
-              unlock: "selectView",
+              unlock: "#selectView",
               unlockBack: true,
             },
             (res) => {
@@ -1815,7 +1826,7 @@ function closeMenuItem(view) {
 function showAdderMenu() {
   $("body").append(writeAdder("Add a list or game"));
   setTimeout(function () {
-    hideOnClickOutside("#menuAdder", "#menuAdder", ".subContextContainer");
+    OnClickOutside("#menuAdder", "#menuAdder", ".subContextContainer");
     $("#contextShadow").removeClass("off");
   }, 10);
   $("#menuAdder").removeClass("off");
@@ -1875,7 +1886,7 @@ function showGameContext(game) {
         .appendTo($("body"));
     }
     setTimeout(function () {
-      hideOnClickOutside(
+      OnClickOutside(
         "#context_" + game.id,
         "#context_" + game.id,
         ".subContextContainer"
@@ -2314,7 +2325,7 @@ function parseBGGThing(id, field) {
   });
 }
 
-function contextBGG(el, game, inexact, recur) {
+function contextBGG(el, game, recur, inexact) {
   if (inexact) {
     var exactStr = "";
   } else {
@@ -2351,6 +2362,7 @@ function contextBGG(el, game, inexact, recur) {
           return "";
         }
       } else {
+        console.log("Found");
         var ret =
           `https://boardgamegeek.com/boardgame/` +
           $items.children("item").attr("id");
@@ -2374,27 +2386,33 @@ function connectBGG() {
   return false;
 }
 
-function hideOnClickOutside(selector, toHide, extraSelector) {
+function OnClickOutside(selector, toHide, extraSelector, hideInstead, hideFn) {
   const outsideClickListener = (event) => {
     const $target = $(event.target);
 
-    console.log("clicked outside: ", $target);
+    /*console.log("clicked outside: ", $target);
     console.log(selector);
     console.log(extraSelector);
     console.log($target.attr("id"));
-    console.log($target.closest(selector));
     console.log($target.closest(extraSelector));
     console.log($(extraSelector).is(":visible"));
-    console.log($(selector).is(":hidden"));
+    console.log($target.closest(selector));
+    console.log($(selector).is(":visible"));
+    console.log((!$target.closest(selector).length && $(selector).is(":visible")));*/
     if (
       (!$target.closest(selector).length && $(selector).is(":visible")) ||
-      (!$target.closest(extraSelector).length &&
+      (extraSelector &&
+        !$target.closest(extraSelector).length &&
         $(extraSelector).is(":visible")) ||
-      !$(extraSelector).is(":hidden")
+      (extraSelector && !$(extraSelector).is(":hidden"))
     ) {
-      $("#contextShadow").addClass("off");
-      $(toHide).remove();
       removeClickListener();
+      $("#contextShadow").addClass("off");
+      if (hideInstead) {
+        hideFn($(selector));
+      } else {
+        $(toHide).remove();
+      }
     }
   };
 
@@ -2613,15 +2631,13 @@ function writeSessions(res) {
     createAndShowAlert("Log in to save sessions", true);
   }
   $("#sessionsContainer").html(htmlString);
-  $('.sessionsCheck input[type="checkbox"]').on("click",checkSessionBoxes());
-  $('.sessionsCheck').on("click", function() {
+  $('.sessionsCheck input[type="checkbox"]').on("click", checkSessionBoxes());
+  $(".sessionsCheck").on("click", function () {
     var $el = $(this).children('input[type="checkbox"]').first();
     //$el.prop("checked", !$el.prop("checked"))
     checkSessionBoxes();
-  })
+  });
 }
-
-
 
 function checkSessionBoxes() {
   if ($('.sessionsCheck input[type="checkbox"]:checked').length > 0) {
@@ -3092,21 +3108,26 @@ function toggleEdit(check) {
     },
     (res) => {
       var htmlString = "";
+      var isChecked = "";
+      console.log("modify res:", res);
       for (var i = 0; i < res.status.length; i++) {
+        res.status[i].active ? (isChecked = " checked") : (isChecked = " ");
         htmlString +=
           `<li><div class="editGame">` +
           res.status[i].name +
           `</div>` +
           `<div class='toggle'>
           <label class="switch">
-              <input type="checkbox" checked onclick="toggleEdit(this)" game_id="` +
+              <input type="checkbox"` +
+          isChecked +
+          ` onclick="toggleEdit(this)" game_id="` +
           res.status[i].id +
           `">
               <span class="slider round"></span>
           </label>
       </div></li>`;
       }
-      $("#editGameList").html = htmlString;
+      $("#editGameList").html(htmlString);
       sortEditGames();
       registerEGS();
     }
@@ -3115,7 +3136,8 @@ function toggleEdit(check) {
 
 function registerEGS() {
   console.log("egs");
-  $("#editGameSubmit").click(this, function () {
+  $("#editGameSubmit").off();
+  $("#editGameSubmit").on("click", function () {
     console.log("egs fired");
     ttsFetch(
       "/start_voting",
@@ -3257,8 +3279,19 @@ function listToggle(el) {
  */
 function setCode(code) {
   $("#code").html(code);
+  history.pushState(
+    {},
+    "SelectAGame",
+    window.location.origin + "/" + $("#code").html()
+  );
   $(".codeDisplay").each(function () {
     $(this).html("Your Code: " + code);
+  });
+  $(".codeDisplay").click(function () {
+    copyText(
+      window.location.origin + "/" + $("#code").html(),
+      "Link copied to clipboard"
+    );
   });
 }
 
@@ -3276,8 +3309,7 @@ function setPhrase(phrase) {
     if (typeof phrase == "undefined") {
       $(this).html();
     } else {
-      htmlString =
-        `Session: ` + phrase + `<ion-icon name="create-outline"></ion-icon>`;
+      htmlString = `Session: ` + phrase;
       $(this).html(htmlString);
     }
   });
@@ -3386,9 +3418,8 @@ function showSelect(data, isOwner) {
   });
 }
 
-
 /*****************************/
-/*      showVoteThumb()     */
+/*      showToolTip()     */
 /*****************************/
 
 /**
@@ -3401,10 +3432,38 @@ function showToolTip(thumb, container) {
   if ($(".toolTipContainer.showToolTip").length === 0) {
     $(thumb).toggleClass("showVoteThumb");
     showVoteThumb(container);
-    setTimeout(function() {
+    setTimeout(function () {
       $(container).toggleClass("showToolTip");
-    }, 10)
+      OnClickOutside(
+        ".showToolTip",
+        ".showToolTip",
+        undefined,
+        true,
+        closeToolTipClickOutside
+      );
+    }, 10);
   }
+}
+
+function closeToolTipClickOutside(el) {
+  closeToolTip($(el).children().first());
+}
+
+/*****************************/
+/*      closeToolTip()     */
+/*****************************/
+/*
+ * Desc: Close the game tooltip
+ *
+ * @param {*} el Tooltip Container
+ */
+function closeToolTip(el) {
+  console.log(el);
+  $(el).parent().removeClass("showToolTip");
+  setTimeout(function () {
+    console.log($(el));
+    $(el).parent().parent().parent().removeClass("showVoteThumb");
+  }, 251);
 }
 
 /*****************************/
@@ -3415,24 +3474,74 @@ function showToolTip(thumb, container) {
  *
  * @param {*} el Tooltip Container
  */
-function showVoteThumb(el){
+function showVoteThumb(el) {
   console.log("Mouseover: ", $(el));
   var $el = $(el);
-  if ($el.children(".BGGThumb").length == 0) {
-    var id = $el.children(".BGGL").children("a").attr("href");
+  if ($el.children(".BGGDesc").length == 0) {
+    $el.append(`<div class="BGGDesc"></div>`);
+    var id = $el.children(".voteSubTitle").children("a").attr("href");
     id = id.substr(id.lastIndexOf("/") + 1);
     parseBGGThing(id, "thumbnail").then(function (res) {
-      $el.append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
+      $el
+        .children(".BGGDesc")
+        .append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
     });
     parseBGGThing(id, "description").then(function (res) {
-      if (res.length > 100) {
-        res = res.substr(0, 100) + "...";
+      res = htmlDecode(res);
+      console.log(res.substr(0, 200));
+      if (res.length > 200) {
+        res = reduceUntilNextWordEnd(res.substr(0, 200));
+        res =
+          res +
+          `...<a target="_blank" href="` +
+          $el.children(".voteSubTitle").children("a").attr("href") +
+          `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
       }
-      $el.append(`<div class="BGGDesc">` + res + `</div>`);
+      console.log(res);
+      $el
+        .children(".BGGDesc")
+        .append(`<div class="BGGDescText">` + res + `</div>`);
     });
   }
 }
 
+function reduceUntilNextWordEnd(input, found = false) {
+  var end = input.substr(-1);
+  console.log(end, ": ", input);
+  if (end.search(/[a-zA-Z0-9]/) > -1) {
+    //Last character is a letter or number
+    if (found) {
+      //Last character is a letter or number and the previously removed character was not
+      console.log(input);
+      return input;
+    } else {
+      return reduceUntilNextWordEnd(input.substr(0, input.length - 1));
+    }
+  } else {
+    //Found the potential end, unless there's still a space or punctuation to discover
+    //
+    return reduceUntilNextWordEnd(input.substr(0, input.length - 1), true);
+  }
+}
+
+function htmlDecode(input) {
+  return $("<div />").html(input).text();
+}
+
+/*******************************/
+/* sortObjectArray(obj, field) */
+/*******************************/
+/**
+ *
+ *
+ * @param {Array} arr Array of objects to sort
+ * @param {String} field Field to sort by
+ * @returns {Array} sorted array
+ */
+function sortObjectArray(arr, field) {
+  arr.sort(lowerCaseFieldSort(field));
+  return arr;
+}
 
 /*****************************/
 /*      fillVotes(games)     */
@@ -3444,7 +3553,7 @@ function showVoteThumb(el){
  */
 
 function fillVotes(games) {
-  console.log(games);
+  games = games.sort(lowerCaseFieldSort("name"));
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
     htmlString +=
@@ -3454,9 +3563,9 @@ function fillVotes(games) {
       games[i].name +
       `</label><div class="voteToolTip">
           <ion-icon name="help-circle-outline"></ion-icon>
-          <div class="toolTipContainer"><div class="voteSubX">x</div><div class="voteSubTitle">` +
+          <div class="toolTipContainer"><div class="voteSubTitle">` +
       games[i].name +
-      `</div><div class="BGGL">Board Game Geek Link</div>
+      `</div>
         </div>
       </div></div>`;
     htmlString +=
@@ -3467,30 +3576,33 @@ function fillVotes(games) {
   htmlString += `</div><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
   //console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
-  sortVotes();
+  //sortVotes();
   for (var i = 0; i < games.length; i++) {
-    contextBGG($(".voteToolTip .BGGL")[i], games[i].name);
+    contextBGG($(".voteToolTip .voteSubTitle")[i], games[i].name);
+    console.log("context for " + games[i].name);
   }
-  $(".voteSubX").on("click", function () {
-    var el = this;
-    $(el).parent().removeClass("showToolTip");
-    setTimeout(function() {
-      console.log($(el));
-      $(el).parent().parent().parent().removeClass("showVoteThumb");
-    },251)
-  });
+  //$(".voteSubX").on("click", function() {closeToolTip(this)});
   $(".voteLabel label").on("click", function () {
-    showToolTip($(this).parent(), $(this).parent().children(".voteToolTip").children(".toolTipContainer"))
+    showToolTip(
+      $(this).parent(),
+      $(this).parent().children(".voteToolTip").children(".toolTipContainer")
+    );
   });
   $(".voteToolTip>ion-icon").on("click", function () {
-    showToolTip($(this).parent().parent(), $(this).parent().children(".toolTipContainer"))
+    showToolTip(
+      $(this).parent().parent(),
+      $(this).parent().children(".toolTipContainer")
+    );
   });
   $("#voteButton").on("click", function () {
     var theCode = $("#code").text();
     var voteArray = [];
-    $(".voteItem").each((i,e)=> {
-      voteArray.push({game: $(e).children('input')[0].id, vote: $(e).children('input').val()})
-    })
+    $(".voteItem").each((i, e) => {
+      voteArray.push({
+        game: $(e).children("input")[0].id,
+        vote: $(e).children("input").val(),
+      });
+    });
     console.log("voteArray", voteArray);
     ttsFetch(
       "/submit_votes",
@@ -3507,13 +3619,14 @@ function fillVotes(games) {
 }
 
 function sortVotes() {
-  console.log("sorting")
-  console.log($("#voteContainer .voteList").first()
-  .children(".voteItem"))
-  $("#voteContainer .voteList").first()
+  console.log("sorting");
+  console.log($("#voteContainer .voteList").first().children(".voteItem"));
+  $("#voteContainer .voteList")
+    .first()
     .children(".voteItem")
     .sort(lowerCaseDivSort(".voteLabel", "label"))
-    .appendTo("#voteContainer .voteList").first();
+    .appendTo("#voteContainer .voteList")
+    .first();
 }
 
 /*****************************/
@@ -3566,11 +3679,17 @@ function textSubmit(el) {
   return false;
 }
 
-function toggleWeight(el) { 
-  if ($(el).parent().children(".voteWeight").length>0) {
+function toggleWeight(el) {
+  if ($(el).parent().children(".voteWeight").length > 0) {
     $(el).parent().children(".voteWeight").remove();
   } else {
-    $(el).parent().append("<div class='voteWeight'>" + $(el).parent().attr("data-content") + "</div>" )
+    $(el)
+      .parent()
+      .append(
+        "<div class='voteWeight'>" +
+          $(el).parent().attr("data-content") +
+          "</div>"
+      );
   }
 }
 
@@ -3591,23 +3710,23 @@ function fillGames(games) {
         `"><div class="playGameTitle">` +
         games[i].name +
         `</div><div class="voteWeight">(` +
-        games[i].weight + 
-         `)</div><div class="playBGGLink button greenBtn">View on BGG</div></div>`;
+        games[i].weight +
+        `)</div><div class="playBGGLink button greenBtn">View on BGG</div></div>`;
     }
   }
   $("#playContainer").html(htmlString);
-  $(".playGameTitle").click(function(){$(this).parent().children(".playBGGLink").toggleClass("showBGGLink")});
-  $(".playGameTitle").each(function(i,e) {
-    contextBGG($(e).parent().children(".playBGGLink"),$(e).text());
-    console.log($(e).parent().children(".playBGGLink"),$(e).text());
-  })
+  $(".playGameTitle").click(function () {
+    $(this).parent().children(".playBGGLink").toggleClass("showBGGLink");
+  });
+  $(".playGameTitle").each(function (i, e) {
+    contextBGG($(e).parent().children(".playBGGLink"), $(e).text());
+    console.log($(e).parent().children(".playBGGLink"), $(e).text());
+  });
   for (var i = 0; i < games.length; i++) {
-    contextBGG($(".BGGL")[i], games[i].name);
+    contextBGG($(".voteSubTitle")[i], games[i].name);
   }
   console.log("fillgames");
 }
-
-
 
 function showListSettings(el) {
   console.log(el);
@@ -4049,36 +4168,38 @@ function showError(err) {
 function runListImport(code) {
   ttsFetch("/get_list_code_info", { code: code }, (res) => {
     if (res.list.err) {
-        createAndShowAlert(res.list.err)
-      } else {
-    console.log(res);
-    if (!res.overwrite) {
-      var overwrite = ' class="off"'; 
+      createAndShowAlert(res.list.err);
     } else {
-      var overwrite = '';
-    }
-    console.log("Overwrite: ", overwrite);
-    var el =
-      `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
-      res.list.id +
-      `" >`;
-    el +=
-      `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-      `<div class="subContextTitle">Import list "` +
-      res.list.name +
-      `" with ` +
-      res.list.games.length +
-      ` games?</div><hr/>
-      <div id="importDuplicate"`+overwrite+`>
+      console.log(res);
+      if (!res.overwrite) {
+        var overwrite = ' class="off"';
+      } else {
+        var overwrite = "";
+      }
+      console.log("Overwrite: ", overwrite);
+      var el =
+        `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
+        res.list.id +
+        `" >`;
+      el +=
+        `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+        `<div class="subContextTitle">Import list "` +
+        res.list.name +
+        `" with ` +
+        res.list.games.length +
+        ` games?</div><hr/>
+      <div id="importDuplicate"` +
+        overwrite +
+        `>
       <div id="importOverwrite"><input type="checkbox" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
       <div id="importRename"><input type="checkbox" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
       </div>
       <div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
-      res.list.listCode +
-      `')">Import</div>`;
-    $("body").append(el);
-  } 
+        res.list.listCode +
+        `')">Import</div>`;
+      $("body").append(el);
+    }
   });
   return false;
 }
@@ -4339,6 +4460,12 @@ function lowerCaseNameSort() {
   };
 }
 
+function lowerCaseFieldSort(field) {
+  return function (a, b) {
+    return a[field].toLowerCase().localeCompare(b[field].toLowerCase());
+  };
+}
+
 function lowerCaseDivSort() {
   var arr = arguments;
   return function (a, b) {
@@ -4350,7 +4477,7 @@ function lowerCaseDivSort() {
       b = $(b).children(arr[i]);
     }
     b = $(b).first();
-    console.log("Comparing: ", a, b);
+    //console.log("Comparing: ", a, b);
     return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
   };
 }

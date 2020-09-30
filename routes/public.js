@@ -198,38 +198,36 @@ function makeid(length, checkList) {
   return result;
 }
 
-
-
-router.get("/*", function(req,res, next) {
+router.get("/*", function (req, res, next) {
   req.session.previousURL = req.session.currentURL;
-  req.session.currentURL = req.originalUrl
+  req.session.currentURL = req.originalUrl;
   next();
 });
 
 router.get("/j/:session", (req, res) => {
   console.log("Join called*********************");
-  console.log("Listcode: ", req.params.listCode)
+  console.log("Listcode: ", req.params.listCode);
   res.render("index", {
     sessionCode: req.params.session,
   });
 });
 
 router.get("/l/:listCode", (req, res) => {
-  console.log("Listcode: ", req.params.listCode)
+  console.log("Listcode: ", req.params.listCode);
   res.render("index", {
     listCode: req.params.listCode,
   });
 });
 
 router.get(/^\/([A-Z0-9]{5})$/, (req, res) => {
-  console.log("Listcode: ", req.originalUrl.substr(1))
+  console.log("Listcode: ", req.originalUrl.substr(1));
   res.render("index", {
     sessionCode: req.originalUrl.substr(1),
   });
 });
 router.get(/^\/([A-Z0-9]{6})$/, (req, res) => {
-  console.log("Listcode: ", req.originalUrl.substr(1))
-  console.log(req.session.previousURL, req.session.currentURL)
+  console.log("Listcode: ", req.originalUrl.substr(1));
+  console.log(req.session.previousURL, req.session.currentURL);
   res.render("index", {
     listCode: req.originalUrl.substr(1),
   });
@@ -477,10 +475,10 @@ router.post("/delete_bulk_sessions", (req, res) => {
         });
         query.push({
           updateOne: {
-              "filter": { "users": null },
-              "update": {
-                "$pull": { "users": null }
-              }
+            filter: { users: null },
+            update: {
+              $pull: { users: null },
+            },
           },
         });
       });
@@ -857,7 +855,7 @@ router.post("/join_session", function (req, res) {
   theCode = theCode.replace("O", "0");
   Session.findOne({ code: theCode }).exec(function (err, curSession) {
     if (!curSession) {
-      console.log("Error: ", err);
+      console.log("Error: ");
       console.log("Session: ", curSession);
       res.send({ err: "No such session" });
     } else {
@@ -1424,15 +1422,22 @@ router.post("/modify_edit_list", function (req, res) {
           }
         }
         curSession.save().then(function (error, result, numRows) {
-          console.log("Error: ", error);
+          //console.log("Error: ", error);
           var gameList = [];
+          var activeList = [];
           var ret = [];
           for (var i = 0; i < curSession.games.length; i++) {
             gameList.push(mongoose.Types.ObjectId(curSession.games[i].game));
+            activeList.push(curSession.votes[i].active);
           }
+          //console.log(activeList)
           Game.find({ _id: { $in: gameList } }).exec(function (err, games) {
             for (var i = 0; i < games.length; i++) {
-              ret[i] = { name: games[i].name, id: games[i]._id };
+              ret[i] = {
+                name: games[i].name,
+                id: games[i]._id,
+                active: activeList[i],
+              };
             }
             res.send({ status: ret });
           });
@@ -2184,18 +2189,22 @@ function getCodeInfo(code) {
 
 router.post("/get_list_code_info", function (req, res) {
   if (req.user) {
-  getCodeInfo(req.body.code).then(function (theList) {
-    console.log(req.user.id);
-    User.findOne({profile_id: req.user.id}).exec(function(err, curUser) {
-      console.log(curUser)
-      var overwrite = curUser.lists.custom.findIndex((obj) => {console.log(obj.name); return obj.name == theList.name;}) > -1;
-      console.log(overwrite)
-      res.send({list: theList, overwrite: overwrite});
-    })
-  });
-} else {
-  res.send({err: "Log in to import lists!"})
-}
+    getCodeInfo(req.body.code).then(function (theList) {
+      console.log(req.user.id);
+      User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+        console.log(curUser);
+        var overwrite =
+          curUser.lists.custom.findIndex((obj) => {
+            console.log(obj.name);
+            return obj.name == theList.name;
+          }) > -1;
+        console.log(overwrite);
+        res.send({ list: theList, overwrite: overwrite });
+      });
+    });
+  } else {
+    res.send({ err: "Log in to import lists!" });
+  }
 });
 
 router.post("/get_list_from_code", function (req, res) {

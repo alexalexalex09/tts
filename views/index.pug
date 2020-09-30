@@ -71,7 +71,8 @@ block content
 
     #codeView.view.off
       .pageTitle SelectAGame
-      .phraseDisplay
+      .sessionInfoDisplay 
+        .phraseDisplay
       #codeImg
       #codeGroup
         #codeTitle Your Code:
@@ -86,8 +87,9 @@ block content
     #selectView.view.off
       #selectTitle.pageTitle Select Games
         .menuHomeIcon
-      .phraseDisplay
-      #selectCodeDisplay.codeDisplay Your Code:
+      .sessionInfoDisplay  
+        .phraseDisplay
+        #selectCodeDisplay.codeDisplay Your Code:
       
       #addGamesContainer
         #addGamesTitle 
@@ -107,30 +109,37 @@ block content
     #postSelectView.view.off
       #postSelectTitle.pageTitle Waiting...
       #postSelectImg
-      .phraseDisplay
+      .sessionInfoDisplay 
+        .phraseDisplay
+        #postSelectCodeDisplay.codeDisplay Your Code:
       #postSelectContainer
-      #postSelectCodeDisplay.codeDisplay Your Code:
+      if !user
+        #postSelectIntro 
+          | Welcome to SelectAGame! Other users are currently adding games to this session. When they've finished you will vote to see which of those games your group will play first. If you'd like to add games also, click the Login button above.
 
     #voteView.view.off
       #voteTitle.pageTitle Voting
         .menuHomeIcon
-      .phraseDisplay
+      .sessionInfoDisplay 
+        .phraseDisplay
+        #voteCodeDisplay.codeDisplay Your Code:
       #voteContainer
-      #voteCodeDisplay.codeDisplay Your Code:
 
     #postVoteView.view.off
       #postVoteTitle.pageTitle Waiting...
-      .phraseDisplay
+      .sessionInfoDisplay 
+        .phraseDisplay
+        #postVoteCodeDisplay.codeDisplay Your Code:
       #postVoteContainer
-      #postVoteCodeDisplay.codeDisplay Your Code:
       #postVoteImg
     
     #playView.view.off
       #playTitle.pageTitle Start Playing!
-      .phraseDisplay
+      .sessionInfoDisplay
+        .phraseDisplay  
+        #playCodeDisplay.codeDisplay Your Code:
       #playInfo Here are the games your group selected, beginning with the game you want to play most!
       #playContainer
-      #playCodeDisplay.codeDisplay Your Code:
       #playImg
 
     #sessionsView.pop.off

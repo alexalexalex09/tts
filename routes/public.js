@@ -45,6 +45,12 @@ mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
+Game.find({ name: /'/ }).exec(function (err, curGames) {
+  curGames.forEach(function (e, i) {
+    curGames[i].name = e.name.replace(/([^\\])'/g, `$1\\'`);
+    curGames[i].save();
+  });
+});
 function getBGGPage(pageNum) {
   var promise = new Promise(function (resolve, reject) {
     https.get(
@@ -791,6 +797,7 @@ router.post("/group_game_add", function (req, res) {
             err,
             curSession
           ) {
+            console.log(curSession);
             if (!curSession) {
               res.send(ERR_CODE);
             } else {
@@ -822,6 +829,7 @@ router.post("/group_game_add", function (req, res) {
                       </label>
               </div></li>`;
                 curSession.save();
+                console.log(htmlString);
                 res.send({ status: htmlString });
               }
             }
@@ -829,6 +837,8 @@ router.post("/group_game_add", function (req, res) {
         });
       }
     );
+  } else {
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -1312,7 +1322,7 @@ router.post("/lock_games", function (req, res) {
               `><div class="editGame` +
               green +
               `">` +
-              curSession.votes[i].name +
+              curSession.votes[i].name.replace(/\\/, "") +
               `</div>` +
               `<div class='toggle'>
           <label class="switch">

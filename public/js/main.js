@@ -98,7 +98,10 @@ window.addEventListener("load", function () {
     if (dest == "#playView") {
       var games = [];
       for (var i = 0; i < res.session.votes.length; i++) {
-        games[i] = { name: res.session.votes[i].name, votes: 0 };
+        games[i] = {
+          name: res.session.votes[i].name,
+          votes: 0,
+        };
         for (var j = 0; j < res.session.votes[i].voters.length; j++) {
           games[i].votes += res.session.votes[i].voters[j].vote;
         }
@@ -593,7 +596,13 @@ window.addEventListener("load", function () {
   /*    Calls join_session     */
   /*****************************/
   $("#codeSubmit").click(this, function (e) {
-    submitCode($("#codeInput input").val());
+    submitCode(
+      $("#codeInput input")
+        .val()
+        .replace(/&/, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "\\'")
+    );
   });
 
   /*****************************/
@@ -1064,9 +1073,12 @@ function lockGames(code) {
 }
 
 //This doesn't appear to be called anymore
-/* function addGroupGame() {
+function addGroupGame() {
   console.log("submitting new group game");
-  var game = addGroupGamesInput.value;
+  var game = addGroupGamesInput.value
+    .replace(/&/, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "\\'");
   ttsFetch(
     "/group_game_add",
     { game: game, code: $("#code").text() },
@@ -1097,7 +1109,9 @@ function lockGames(code) {
         createAndShowAlert(res.err, true);
       }
     }
-  ); */
+  );
+  return false;
+}
 //The above doesn't appear to be called anymore
 
 /* const gga_options = {
@@ -1177,16 +1191,16 @@ function addListDisplay(
       `<div class="listName" onclick="` +
       titleFunc +
       `">` +
-      name +
+      name.replace(/\\/, "") +
       `
     </div></div>`;
   } else {
-    console.log(dest, name);
+    console.log(dest, name.replace(/\\/, ""));
     listString +=
       `<div class="listName" onclick="` +
       titleFunc +
       `">` +
-      name +
+      name.replace(/\\/, "") +
       `
     </div>`;
   }
@@ -1317,7 +1331,7 @@ function gulp(showAllGames = false) {
           `" game_id="` +
           res.lists.allGames[i]._id +
           `">` +
-          res.lists.allGames[i].name +
+          res.lists.allGames[i].name.replace(/\\/, "") +
           `
                 </div>
                 <div class='toggle'>
@@ -1339,7 +1353,7 @@ function gulp(showAllGames = false) {
           `', name: '` +
           res.lists.allGames[i].name +
           `', list: '0'})">` +
-          res.lists.allGames[i].name +
+          res.lists.allGames[i].name.replace(/\\/, "") +
           `</li>`;
         //Append the "All Games" list to the first <li>
         $("li#0").children(".listGames").first().append(htmlString);
@@ -1352,7 +1366,7 @@ function gulp(showAllGames = false) {
             res.lists.allGames[i]._id +
             `">` +
             `<div class="contextTitle">` +
-            res.lists.allGames[i].name +
+            res.lists.allGames[i].name.replace(/\\/, "") +
             `</div>` +
             `<li class="bggLink">BoardGameGeek Link</li>` +
             `<li onclick="contextCopy([{id: '` +
@@ -1415,7 +1429,7 @@ function gulp(showAllGames = false) {
             `" game_id="` +
             res.lists.custom[i].games[j]._id +
             `">` +
-            res.lists.custom[i].games[j].name +
+            res.lists.custom[i].games[j].name.replace(/\\/, "") +
             `
               </div>
               <div class='toggle'>
@@ -1440,7 +1454,7 @@ function gulp(showAllGames = false) {
             `', list: '` +
             listNum +
             `'})">` +
-            res.lists.custom[i].games[j].name +
+            res.lists.custom[i].games[j].name.replace(/\\/, "") +
             `</li>`;
 
           //Append each custom list the the corresponding li
@@ -1590,7 +1604,7 @@ function getListGames(list) {
     .first()
     .children()
     .each(function (ind, el) {
-      console.log("gLg: ", $(el)[0].outerHTML);
+      //console.log("gLg: ", $(el)[0].outerHTML);
       arr.push(
         hashToColor($(el).attr("id").substr(10)) +
           $(el)[0].outerHTML.replace(`id="`, `id="display_`) +
@@ -1962,7 +1976,12 @@ function displaySubContext(text, games, items, fname, fromList) {
       el += `'` + e.id + `',`;
     });
     el = el.substr(0, el.length - 1);
-    el += `], fromList: '` + fromList + `'})">` + items[i].name + `</li>`;
+    el +=
+      `], fromList: '` +
+      fromList +
+      `'})">` +
+      items[i].name.replace(/\\/, "") +
+      `</li>`;
   }
   el += `</div></div>`;
   $("body").append(el);
@@ -2030,7 +2049,7 @@ function contextRename(game) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Renaming "` +
-    game.name +
+    game.name.replace(/\\/, "") +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameGame(event, this, '` +
     game.id.substr(5 + game.length) +
@@ -2081,7 +2100,7 @@ function showRenameList(list) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Renaming list "` +
-    list.name +
+    list.name.replace(/\\/, "") +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameList(event, this, '` +
     list.id.substr(4) +
@@ -2123,7 +2142,7 @@ function showDeleteList(list) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Really delete list "` +
-    list.name +
+    list.name.replace(/\\/, "") +
     `"?</div><hr/>
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button redBtn" id="deleteConfirm" onclick="deleteList('` +
@@ -2171,7 +2190,10 @@ function showShareList(list) {
         navigator
           .share({
             title: list.name,
-            text: 'Link for game list "' + list.name + '"on selectagame: ',
+            text:
+              'Link for game list "' +
+              list.name.replace(/\\/, "") +
+              '"on selectagame: ',
             url: "https://selectagame.herokuapp.com/" + list.listCode,
           })
           .then(() => console.log("Successful share"))
@@ -2179,7 +2201,7 @@ function showShareList(list) {
       } else {
         window.open(
           'mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to import my the list "' +
-            list.name +
+            list.name.replace(/\\/, "") +
             '" on SelectAGame.%0D%0A%0D%0A https://selectagame.herokuapp.com/' +
             list.listCode +
             ' %0D%0A%0D%0AIf the above link doesn%27t work, go the Games and Lists menu and click the "Plus" button to Import a list, and use this code: ' +
@@ -2331,7 +2353,7 @@ function contextBGG(el, game, recur, inexact) {
   } else {
     var exactStr = "&exact=1";
   }
-  game = game.replace("&", "%26");
+  game = game.replace("&", "%26").replace(/\\/, "");
   fetch(
     `https://boardgamegeek.com/xmlapi2/search?query=` +
       game +
@@ -2356,7 +2378,8 @@ function contextBGG(el, game, recur, inexact) {
           contextBGG(el, "An " + game.substr(2), 3);
         }
         if (recur == 3) {
-          contextBGG(el, game.substr(3), 4, true);
+          //contextBGG(el, game.substr(3), 4, true);
+          return "";
         }
         if (recur == 4) {
           return "";
@@ -2451,7 +2474,7 @@ function writeGameContext(contextObj) {
     contextObj.id +
     `">` +
     `<div class="contextTitle">` +
-    contextObj.name +
+    contextObj.name.replace(/\\/, "") +
     `</div>` +
     `<li class="bggLink">BoardGameGeek Link</li>` +
     `<li onclick="contextMove([` +
@@ -2503,7 +2526,7 @@ function writeListContext(contextObj) {
     contextObj.id +
     `">` +
     `<div class="contextTitle">` +
-    contextObj.name +
+    contextObj.name.replace(/\\/, "") +
     `</div>` +
     shareable +
     `<li onclick="showRenameList({id: '` +
@@ -2713,7 +2736,7 @@ function showRenameSession(session) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Renaming session "` +
-    session.name +
+    session.name.replace(/\\/, "") +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameSession(event, this, '` +
     session.id.substr(4) +
@@ -2769,7 +2792,7 @@ function showDeleteSession(session) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Really delete session "` +
-    session.name +
+    session.name.replace(/\\/, "") +
     `"?</div><hr/>
     <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
     <div class="button redBtn" id="deleteConfirm" onclick="deleteSession('` +
@@ -2845,8 +2868,18 @@ function setPlural(countable, singular, plural) {
  */
 function addNewGame(el) {
   console.log("submitting new game ", $(el));
-  console.log($(el).val());
-  var game = $(el).val();
+  console.log(
+    $(el)
+      .val()
+      .replace(/&/, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "\\'")
+  );
+  var game = $(el)
+    .val()
+    .replace(/&/, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "\\'");
   $(el).val("");
   ttsFetch("/game_add", { game: game }, (res) => {
     console.log(res);
@@ -2859,7 +2892,7 @@ function addNewGame(el) {
       `" class="gameName" game_id="` +
       res.status._id +
       `">` +
-      res.status.name +
+      res.status.name.replace(/\\/, "") +
       `
                 </div>
                 <div class='toggle'>
@@ -2894,7 +2927,10 @@ function addList() {
   //if (event.keyCode === 13) {
   console.log("submitting new game");
   //event.preventDefault();
-  var list = menuAddListInput.value;
+  var list = menuAddListInput.value
+    .replace(/&/, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "\\'");
   ttsFetch("/list_add", { list: list }, (res) => {
     var gamesNum = $("#gamesView #gamesContainer").children("li").length;
     $("#gamesView #gamesContainer").append(
@@ -2903,7 +2939,7 @@ function addList() {
         `">` +
         `<div class="menuGamesContainer">
               <div class="listName" onclick="openList($(this).parent().parent().attr('id'))">` +
-        list +
+        list.replace(/\\/, "") +
         `
               </div>
             </div>
@@ -3114,7 +3150,7 @@ function toggleEdit(check) {
         res.status[i].active ? (isChecked = " checked") : (isChecked = " ");
         htmlString +=
           `<li><div class="editGame">` +
-          res.status[i].name +
+          res.status[i].name.replace(/\\/, "") +
           `</div>` +
           `<div class='toggle'>
           <label class="switch">
@@ -3368,7 +3404,7 @@ function createAndShowAlert(alert, error = false) {
 function updateCurrentGames(curGames) {
   var htmlString = ``;
   curGames.forEach(function (e) {
-    htmlString += `<div class="curGameItem">` + e + `</div>`;
+    htmlString += `<div class="curGameItem">` + e.replace(/\\/, "") + `</div>`;
   });
   $("#currentGames").html(htmlString);
   $("#listNotify").html("<span>" + curGames.length + "</span>");
@@ -3480,39 +3516,41 @@ function showVoteThumb(el) {
   if ($el.children(".BGGDesc").length == 0) {
     $el.append(`<div class="BGGDesc"></div>`);
     var id = $el.children(".voteSubTitle").children("a").attr("href");
-    id = id.substr(id.lastIndexOf("/") + 1);
-    parseBGGThing(id, "thumbnail").then(function (res) {
-      $el
-        .children(".BGGDesc")
-        .append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
-    });
-    parseBGGThing(id, "description").then(function (res) {
-      res = htmlDecode(res);
-      console.log(res.substr(0, 200));
-      if (res.length > 200) {
-        res = reduceUntilNextWordEnd(res.substr(0, 200));
-        res =
-          res +
-          `...<a target="_blank" href="` +
-          $el.children(".voteSubTitle").children("a").attr("href") +
-          `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
-      }
-      console.log(res);
-      $el
-        .children(".BGGDesc")
-        .append(`<div class="BGGDescText">` + res + `</div>`);
-    });
+    if (id) {
+      id = id.substr(id.lastIndexOf("/") + 1);
+      parseBGGThing(id, "thumbnail").then(function (res) {
+        $el
+          .children(".BGGDesc")
+          .append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
+      });
+      parseBGGThing(id, "description").then(function (res) {
+        res = htmlDecode(res);
+        console.log(res.substr(0, 200));
+        if (res.length > 200) {
+          res = reduceUntilNextWordEnd(res.substr(0, 200));
+          res =
+            res +
+            `...<a target="_blank" href="` +
+            $el.children(".voteSubTitle").children("a").attr("href") +
+            `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
+        }
+        console.log(res);
+        $el
+          .children(".BGGDesc")
+          .append(`<div class="BGGDescText">` + res + `</div>`);
+      });
+    }
   }
 }
 
 function reduceUntilNextWordEnd(input, found = false) {
   var end = input.substr(-1);
-  console.log(end, ": ", input);
+  //console.log(end, ": ", input);
   if (end.search(/[a-zA-Z0-9]/) > -1) {
     //Last character is a letter or number
     if (found) {
       //Last character is a letter or number and the previously removed character was not
-      console.log(input);
+      //console.log(input);
       return input;
     } else {
       return reduceUntilNextWordEnd(input.substr(0, input.length - 1));
@@ -3560,11 +3598,11 @@ function fillVotes(games) {
       `<div class="voteItem"><div class="voteLabel"><label for="` +
       games[i].game +
       `">` +
-      games[i].name +
+      games[i].name.replace(/\\/, "") +
       `</label><div class="voteToolTip">
           <ion-icon name="help-circle-outline"></ion-icon>
           <div class="toolTipContainer"><div class="voteSubTitle">` +
-      games[i].name +
+      games[i].name.replace(/\\/, "") +
       `</div>
         </div>
       </div></div>`;
@@ -3579,7 +3617,7 @@ function fillVotes(games) {
   //sortVotes();
   for (var i = 0; i < games.length; i++) {
     contextBGG($(".voteToolTip .voteSubTitle")[i], games[i].name);
-    console.log("context for " + games[i].name);
+    console.log("context for " + games[i].name.replace(/\\/, ""));
   }
   //$(".voteSubX").on("click", function() {closeToolTip(this)});
   $(".voteLabel label").on("click", function () {
@@ -3708,7 +3746,7 @@ function fillGames(games) {
         ` id="play` +
         i +
         `"><div class="playGameTitle">` +
-        games[i].name +
+        games[i].name.replace(/\\/, "") +
         `</div><div class="voteWeight">(` +
         games[i].weight +
         `)</div><div class="playBGGLink button greenBtn">View on BGG</div></div>`;
@@ -4080,7 +4118,11 @@ function changeUsername() {
   ttsFetch(
     "/change_username",
     {
-      newName: $("#accountInput input.textInput").val(),
+      newName: $("#accountInput input.textInput")
+        .val()
+        .replace(/&/, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "\\'"),
     },
     (res) => {
       console.log(res);
@@ -4184,7 +4226,7 @@ function runListImport(code) {
       el +=
         `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
         `<div class="subContextTitle">Import list "` +
-        res.list.name +
+        res.list.name.replace(/\\/, "") +
         `" with ` +
         res.list.games.length +
         ` games?</div><hr/>
@@ -4456,7 +4498,10 @@ function lowerCaseSort() {
 
 function lowerCaseNameSort() {
   return function (a, b) {
-    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    return a.name
+      .replace(/\\/, "")
+      .toLowerCase()
+      .localeCompare(b.name.toLowerCase());
   };
 }
 

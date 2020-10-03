@@ -2882,6 +2882,7 @@ function addNewGame(el) {
     .replace(/'/g, "\\'");
   $(el).val("");
   ttsFetch("/game_add", { game: game }, (res) => {
+    //TODO: This doesn't get called at all in the event of an error?
     console.log(res);
     var htmlString =
       `<li>
@@ -2972,10 +2973,10 @@ function recheckGreenLists() {
       .each(function (i, e) {
         if ($(e).children(".gameName").first().hasClass("greenText")) {
           count++;
-          console.log(
+          /*console.log(
             count,
             $(ele).children(".listGames").first().children("li").length
-          );
+          );*/
         }
       });
     var theCount = $(ele).children(".listGames").first().children("li").length;
@@ -3189,7 +3190,10 @@ function registerEGS() {
 }
 
 function toggleFont(check) {
+  console.log("toggleFont");
   var el = $(check).parent().parent().parent().children(".gameName").first();
+  console.log(check);
+  console.log(el);
   var gamesToAdd = [];
   var gamesToRemove = [];
   if (el.length > 0) {
@@ -3816,21 +3820,37 @@ function getTopList() {
 }
 
 function hitMe() {
-  var max = $("#topList").children().length;
-  var game = $($("#topList li")[Math.floor(Math.random() * max)]).text();
-  console.log(max, game);
-  $("body").append(
+  var arr = [];
+  for (var i = 0; i < $("#games0 .listGames").children().length; i++) {
+    if (
+      !$(
+        "#0 .listGames input[game_id='" +
+          $($("#games0 .listGames").children()[i]).attr("id") +
+          "']"
+      ).prop("checked")
+    ) {
+      arr.push($($("#games0 .listGames").children()[i]).attr("id"));
+    }
+  }
+  var num = Math.floor(Math.random() * arr.length);
+  var game = arr[num];
+  console.log(arr.length, num, game, arr);
+  /*$("body").append(
     `<input id="hitMeGame" value="` + game + `" class="off"></input>`
-  );
+  );*/
   /*if (
     $("#0 .gameName").filter(function () {
       return $(this).text().toLowerCase().trim() == game.toLowerCase();
     }) == 0
   ) {*/
-  addNewGame("#hitMeGame");
+  var el = ".listGames li .toggle .switch input[game_id='" + game + "']";
+  $(el).attr("checked", true);
+  console.log($(el).prop("checked"));
+  //debugger;
+  toggleFont(el);
   $("#tempAlert").remove();
-  createAndShowAlert("Added " + game);
-  $("#hitMeGame").remove();
+  createAndShowAlert("Added " + $("#" + game).text());
+  //$("#hitMeGame").remove();
   /*} else {
   //Add game to session
   }*/

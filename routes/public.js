@@ -51,6 +51,7 @@ Game.find({ name: /'/ }).exec(function (err, curGames) {
     curGames[i].save();
   });
 });
+
 function getBGGPage(pageNum) {
   var promise = new Promise(function (resolve, reject) {
     https.get(
@@ -739,7 +740,11 @@ router.post("/game_add", function (req, res) {
                   Game.findById(theGame, "name", function (err, gameToReport) {
                     console.log("Game name: " + gameToReport.name);
                   });
-                  res.send({ err: req.body.game + " has already been added" });
+                  res.send({
+                    err:
+                      req.body.game.replace(/\\/, "") +
+                      " has already been added",
+                  });
                 } else {
                   //if it's not, push it to the array and save the user
                   curUser.lists.allGames.push(game._id);

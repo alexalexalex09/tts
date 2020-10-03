@@ -3844,7 +3844,7 @@ function hitMe() {
     }) == 0
   ) {*/
   var el = ".listGames li .toggle .switch input[game_id='" + game + "']";
-  $(el).attr("checked", true);
+  $(el).prop("checked", true);
   console.log($(el).prop("checked"));
   //debugger;
   toggleFont(el);

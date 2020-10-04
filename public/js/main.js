@@ -3832,24 +3832,28 @@ function hitMe() {
       arr.push($($("#games0 .listGames").children()[i]).attr("id"));
     }
   }
-  var num = Math.floor(Math.random() * arr.length);
-  var game = arr[num];
-  console.log(arr.length, num, game, arr);
-  /*$("body").append(
+  if (arr.length > 0) {
+    var num = Math.floor(Math.random() * arr.length);
+    var game = arr[num];
+    console.log(arr.length, num, game, arr);
+    /*$("body").append(
     `<input id="hitMeGame" value="` + game + `" class="off"></input>`
   );*/
-  /*if (
+    /*if (
     $("#0 .gameName").filter(function () {
       return $(this).text().toLowerCase().trim() == game.toLowerCase();
     }) == 0
   ) {*/
-  var el = ".listGames li .toggle .switch input[game_id='" + game + "']";
-  $(el).prop("checked", true);
-  console.log($(el).prop("checked"));
-  //debugger;
-  toggleFont(el);
-  $("#tempAlert").remove();
-  createAndShowAlert("Added " + $("#" + game).text());
+    var el = ".listGames li .toggle .switch input[game_id='" + game + "']";
+    $(el).prop("checked", true);
+    console.log($(el).prop("checked"));
+    //debugger;
+    toggleFont(el);
+    $("#tempAlert").remove();
+    createAndShowAlert("Added " + $("#" + game).text());
+  } else {
+    createAndShowAlert("No games to add! Add more games first.");
+  }
   //$("#hitMeGame").remove();
   /*} else {
   //Add game to session

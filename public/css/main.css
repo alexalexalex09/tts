@@ -599,10 +599,16 @@ input:checked + .slider:before {
 }
 
 .phraseDisplay {
-  /*grid-area: 2/1/3/11;*/
-  justify-self: center;
   cursor: pointer;
   text-align: center;
+  max-width: 90vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 1.5em;
+  margin-left: 5vw;
+  max-height: 1.5em;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 #backAlert {
@@ -1222,11 +1228,27 @@ input#listImportSubmit.green {
 
 /*.voteToolTip:hover .toolTipContainer,*/
 .showVoteThumb .toolTipContainer {
-  transform: translate(calc(-100% + 1.5em), -39px);
+  transform: translate(calc(-95% + 1.5em), 0px);
+}
+
+.toolTipContainer.showToolTip:before {
+  width: 10px;
+  height: 10px;
+  content: "";
+  position: absolute;
+  bottom: calc(100% - 6px);
+  left: 53%;
+  margin-left: 71px;
+  border-width: 2px;
+  border-style: solid;
+  border-color: black black transparent transparent;
+  transform: rotate(-45deg);
+  background-color: white;
 }
 
 .toolTipContainer.showToolTip {
   opacity: 1;
+  box-shadow: 3px 3px 6px var(--main-light-grey);
 }
 
 .toolTipContainer {

@@ -255,7 +255,7 @@ router.get("/", (req, res) => {
 
 // Get notified when the user is navigating back
 router.post("/going_back", function (req, res) {
-  console.log(req.body);
+  console.log(req.body, req.user);
   if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
       if (!curSession) {

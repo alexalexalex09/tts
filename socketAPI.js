@@ -111,7 +111,9 @@ function getNames(profiles, numGames, curSession, data) {
               );
 
               //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
-              if (index > -1 ) {numGames[index].num++;}
+              if (index > -1) {
+                numGames[index].num++;
+              }
             }
           }
         }
@@ -231,7 +233,7 @@ socketAPI.unlockGames = function (data) {
   console.log("unlock: ", data);
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     var ret = {};
-    curSession.lock = "postSelectView";
+    curSession.lock = "#postSelectView";
     ret.unlockBack = true;
     ret.unlock = "selectView";
     /*for (var i = 0; i < curSession.games.length; i++) {
@@ -277,7 +279,7 @@ socketAPI.initVotes = function (data) {
 
 socketAPI.submitVotes = function (data) {
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
-    console.log(data)
+    console.log(data);
     var index = curSession.users.findIndex(
       (obj) => obj.user.toString() == data.user.toString()
     );

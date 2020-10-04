@@ -601,11 +601,11 @@ input:checked + .slider:before {
 .phraseDisplay {
   cursor: pointer;
   text-align: center;
-  max-width: 90vw;
+  width: 90%;
   overflow: hidden;
   text-overflow: ellipsis;
   height: 1.5em;
-  margin-left: 5vw;
+  margin-left: 5%;
   max-height: 1.5em;
   white-space: nowrap;
   display: inline-block;
@@ -1254,7 +1254,7 @@ input#listImportSubmit.green {
 .toolTipContainer {
   vertical-align: baseline;
   position: absolute;
-  transform: translateX(-100vw);
+  transform: translateX(-100vw) scaleY(0);
   font-size: 0.7em;
   opacity: 0;
   transition: opacity 0.25s;

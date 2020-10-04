@@ -12,11 +12,14 @@ window.addEventListener("load", function () {
     console.log("createSession");
     socket.on(res.session.code + "owner", (data) => {
       console.log("received ", data);
-      if (data.selectEvent) {
-        //Rewrite #postSelectContainer in real time for owner
-        showSelect(data.select, true);
-        data.curGames.sort(lowerCaseSort());
-        updateCurrentGames(data.curGames);
+      if (data.selectEvent /*&& res.session.lock != "#postPostSelectView"*/) {
+        //Rewrite #postSelectContainer in real time for owner if this is an owner initated event
+        console.log($("#gameUnlock").length);
+        if ($("#gameUnlock").length == 0) {
+          showSelect(data.select, true);
+          data.curGames.sort(lowerCaseSort());
+          updateCurrentGames(data.curGames);
+        }
       }
       if (data.startVoting) {
         //Parse the voting data and output
@@ -68,10 +71,13 @@ window.addEventListener("load", function () {
     }
     if (dest == "#postSelectView") {
       goForwardFrom("#homeView", "#postSelectView");
-      window.hist = ["#homeView", "#selectView", "#postSelectView"];
+      window.hist = ["#homeView", "#selectView"];
     }
     if (dest == "#selectView") {
       dest = "#codeView";
+    }
+    if (dest == "#voteView" && res.session.users[index].doneVoting) {
+      dest = "#postVoteView";
     }
     if (dest == "#voteView") {
       var games = [];
@@ -135,7 +141,7 @@ window.addEventListener("load", function () {
     $("#backArrow").removeClass("off"); //Show the back arrow
     setCode(res.code);
     setPhrase(res.phrase);
-    console.log("joinSession");
+    console.log("joinSession: ", res.lock);
 
     var sessionGames = "<session>";
     for (var i = 0; i < res.games.length; i++) {
@@ -1195,7 +1201,7 @@ function addListDisplay(
       `
     </div></div>`;
   } else {
-    console.log(dest, name.replace(/\\/, ""));
+    //console.log(dest, name.replace(/\\/, ""));
     listString +=
       `<div class="listName" onclick="` +
       titleFunc +
@@ -2506,7 +2512,7 @@ function createContextObjectString(id, name, list) {
  * @returns
  */
 function writeListContext(contextObj) {
-  console.log("wLC: ", contextObj);
+  //console.log("wLC: ", contextObj);
   if (contextObj.listCode) {
     var shareable =
       `<li onclick="showShareList({id: '` +
@@ -3525,7 +3531,7 @@ function showVoteThumb(el) {
       parseBGGThing(id, "thumbnail").then(function (res) {
         $el
           .children(".BGGDesc")
-          .append(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
+          .prepend(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
       });
       parseBGGThing(id, "description").then(function (res) {
         res = htmlDecode(res);

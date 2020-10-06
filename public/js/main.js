@@ -73,8 +73,8 @@ window.addEventListener("load", function () {
       goForwardFrom("#homeView", "#postSelectView");
       window.hist = ["#homeView", "#selectView"];
     }
-    if (dest == "#selectView") {
-      dest = "#codeView";
+    if (dest == "#codeView") {
+      dest = "#selectView";
     }
     if (dest == "#voteView" && res.session.users[index].doneVoting) {
       dest = "#postVoteView";

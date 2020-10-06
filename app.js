@@ -10,12 +10,19 @@ const session = require("express-session");
 const cfenv = require("cfenv");
 var socket_io = require("socket.io");
 var ManagementClient = require("auth0").ManagementClient;
-const requireHTTPS = require("./middleware/requireHTTPS");
+//const requireHTTPS = require("./middleware/requireHTTPS");
 
 var app = express();
 
-app.use(requireHTTPS);
-
+//app.use(requireHTTPS);
+app.get("*", function (req, res, next) {
+  console.log(req.headers.host);
+  if (req.headers.host.indexOf(":3000") == -1) {
+    res.redirect("https://" + req.headers.host + req.url);
+  } else {
+    next();
+  }
+});
 //Auth0 vars
 var sess = {
   secret: process.env.oaSecret,

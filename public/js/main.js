@@ -647,14 +647,14 @@ window.addEventListener("load", function () {
           title: "SelectAGame",
           text: "Join my SelectAGame session! ",
           url:
-            "https://selectagame.herokuapp.com/" +
+            "https://selectagame.net/" +
             document.getElementById("code").innerHTML,
         })
         .then(() => console.log("Successful share"))
         .catch((error) => console.log("Error sharing", error));
     } else {
       window.open(
-        "mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to join my session on SelectAGame%0D%0A%0D%0A https://selectagame.herokuapp.com/" +
+        "mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to join my session on SelectAGame%0D%0A%0D%0A https://selectagame.net/" +
           document.getElementById("code").innerHTML +
           ' %0D%0A%0D%0AIf the above link doesn%27t work, click "Join Game" on the home page and enter this code: ' +
           document.getElementById("code").innerHTML
@@ -2200,7 +2200,7 @@ function showShareList(list) {
               'Link for game list "' +
               list.name.replace(/\\/, "") +
               '"on selectagame: ',
-            url: "https://selectagame.herokuapp.com/" + list.listCode,
+            url: "https://selectagame.net/" + list.listCode,
           })
           .then(() => console.log("Successful share"))
           .catch((error) => console.log("Error sharing", error));
@@ -2208,7 +2208,7 @@ function showShareList(list) {
         window.open(
           'mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to import my the list "' +
             list.name.replace(/\\/, "") +
-            '" on SelectAGame.%0D%0A%0D%0A https://selectagame.herokuapp.com/' +
+            '" on SelectAGame.%0D%0A%0D%0A https://selectagame.net/' +
             list.listCode +
             ' %0D%0A%0D%0AIf the above link doesn%27t work, go the Games and Lists menu and click the "Plus" button to Import a list, and use this code: ' +
             list.listCode

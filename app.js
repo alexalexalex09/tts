@@ -10,11 +10,11 @@ const session = require("express-session");
 const cfenv = require("cfenv");
 var socket_io = require("socket.io");
 var ManagementClient = require("auth0").ManagementClient;
-//const requireHTTPS = require("./middleware/requireHTTPS")
+const requireHTTPS = require("./middleware/requireHTTPS");
 
 var app = express();
 
-//app.use(requireHTTPS);
+app.use(requireHTTPS);
 
 //Auth0 vars
 var sess = {
@@ -226,9 +226,9 @@ app.use(function (req, res, next) {
     ) {
       //res.redirect("/?l=" + req.originalUrl.substr(1));
     } else {*/
-      console.log("404: ", req.originalUrl)
-      res.redirect("/?err=404");
-    /*}
+  console.log("404: ", req.originalUrl);
+  res.redirect("/?err=404");
+  /*}
   }*/
 });
 

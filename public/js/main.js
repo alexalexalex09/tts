@@ -59,6 +59,7 @@ window.addEventListener("load", function () {
     });
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
+    console.log(res.session.users[index].done);
     console.log("dest", dest);
     if (res.session.users[index].done == false && dest == "#postSelectView") {
       dest = "#selectView";
@@ -73,8 +74,8 @@ window.addEventListener("load", function () {
       goForwardFrom("#homeView", "#postSelectView");
       window.hist = ["#homeView", "#selectView"];
     }
-    if (dest == "#codeView") {
-      dest = "#selectView";
+    if (dest == "#selectView") {
+      dest = "#codeView";
     }
     if (dest == "#voteView" && res.session.users[index].doneVoting) {
       dest = "#postVoteView";

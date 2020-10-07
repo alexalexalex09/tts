@@ -1511,6 +1511,7 @@ input[type="range"]:before {
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: pointer;
+  position: relative;
 }
 
 .playGame .weight {

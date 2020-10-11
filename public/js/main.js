@@ -37,6 +37,21 @@ window.addEventListener("load", function () {
     });
     $("#backArrow").removeClass("off");
     setCode(res.session.code);
+    setTimeout(function () {
+      $("#joinButton").css({
+        opacity: "0%",
+        transform: "translateX(100vw)",
+      });
+      $("#codeInputGroup").css({
+        opacity: "100%",
+        transform: "translateX(0px)",
+      });
+      $("#createButton").css({
+        transform: "translateY(calc(var(--vh) * 10))",
+      });
+      $("#joinButton").addClass("off");
+      $("#codeInputGroup").removeClass("off");
+    }, 500);
     if (typeof res.session.phrase == "undefined") {
       setPhrase(
         `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
@@ -533,7 +548,7 @@ window.addEventListener("load", function () {
         transform: "translateX(0px)",
       });
       $("#createButton").css({
-        transform: "translateY(calc(var(--vh) * 12)",
+        transform: "translateY(calc(var(--vh) * 10)",
       });
       window.setTimeout(function () {
         console.log("wait 2");
@@ -621,6 +636,7 @@ window.addEventListener("load", function () {
     ttsFetch("/create_session", {}, (res) => {
       createSession(res.status);
     });
+    $("#codeInput .textInput").first().val(window.location.pathname.substr(1));
   });
 
   /***********************************/
@@ -2354,7 +2370,7 @@ function parseBGGThing(id, field) {
   });
 }
 
-function contextBGG(el, game, recur, inexact) {
+async function contextBGG(el, game, recur, inexact) {
   if (inexact) {
     var exactStr = "";
   } else {
@@ -2372,8 +2388,8 @@ function contextBGG(el, game, recur, inexact) {
       var xmlDoc = $.parseXML(data);
       var $xml = $(xmlDoc);
       var $items = $xml.find("items");
-      //console.log("items: ", $items);
-      //console.log($items.attr("total"));
+      console.log("items: ", $items);
+      console.log($items.attr("total"));
       if ($items.attr("total") == 0) {
         if (typeof recur == "undefined") {
           contextBGG(el, "The " + game, 1);
@@ -2393,6 +2409,24 @@ function contextBGG(el, game, recur, inexact) {
         }
       } else {
         console.log("Found");
+        /*if ($items.attr("total") > 1) {
+          var ratings = [];
+          var newRating = '';
+          for (var i = 0; i < $items.attr("total") - 1; i++) {
+            newRating = await fetchRating($($items.children("item")[i]).attr("id"));
+            ratings.push(newRating);
+          }
+          console.log("ratings: ", ratings);
+        }
+        function fetchRating(id) {
+          return new Promise((resolve) => {
+            fetch(
+              `https://boardgamegeek.com/xmlapi2/thing?id=` + id + `&stats=1`
+            )
+              .then((response) => response.text())
+              .then((data) => resolve(data));
+          });
+        }*/
         var ret =
           `https://boardgamegeek.com/boardgame/` +
           $items.children("item").attr("id");
@@ -2851,6 +2885,7 @@ function submitCode(code) {
       joinSession(res.status);
     }
   });
+  $("#codeInput .textInput").first().val(window.location.pathname.substr(1));
 }
 
 /** setPlural(countable, singular, plural)
@@ -3340,6 +3375,7 @@ function setCode(code) {
       "Link copied to clipboard"
     );
   });
+  $("#codeInput .textInput").first().val(code);
 }
 
 /*****************************/

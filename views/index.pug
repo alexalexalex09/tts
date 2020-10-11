@@ -57,16 +57,22 @@ block content
       #mainImg
       .pageTitle SelectAGame
       .subTitle 
-        p Choosing a board game is hard.
-        p Why not have several woodland creatures help?
-      #joinButton.button.blueBtn Join
-      #createButton.button.greyBtn Create
+        p 
+          | Choosing a board 
+          br.softBreak#boardgame
+          | game is hard.
+        p 
+          | Why not have several 
+          br.softBreak#woodland
+          | woodland creatures help?
+      button#joinButton.button.blueBtn Join
+      button#createButton.button.greyBtn Create
       #codeInputGroup.inputGroup.off
         #codeInputLabel.inputLabel Enter Code:
         #codeInput.textInputCont
           input.textInput(type='text')
           .textClear
-        #codeSubmit.submitButton.button.blueBtn Submit
+        button#codeSubmit.submitButton.button.blueBtn Submit
         #codeError.errorText.off Wrong code. Please try again.
 
     #codeView.view.off
@@ -78,11 +84,11 @@ block content
         #codeTitle Your Code:
         #code 
       #codeButtons
-        #shareButton.clickable
+        button#shareButton.clickable
           ion-icon(name="share-outline")
-        #copyButton.clickable
+        button#copyButton.clickable
           ion-icon(name="copy-outline")
-      #selectButton.submitButton.button.greenBtn Select Games
+      button#selectButton.submitButton.button.greenBtn Select Games
 
     #selectView.view.off
       #selectTitle.pageTitle Select Games
@@ -100,10 +106,10 @@ block content
           form(onsubmit="return textSubmit('#addGamesInput')")
             input.textInput(type='text' autocomplete="off")#addGamesInput
             input.textSubmit(type='submit' value='')
-      #hitMe.button.greenBtn(onclick='hitMe()')
+      button#hitMe.button.greenBtn(onclick='hitMe()')
         | Hit Me! 🎲
       #selectLists
-      #gameSubmit.button.greenBtn(type='submit' value='')
+      button#gameSubmit.button.greenBtn(type='submit' value='')
         | Submit These Games
     
     #postSelectView.view.off
@@ -143,7 +149,7 @@ block content
       #playImg
 
     #sessionsView.pop.off
-      #sessionsClose.closeButton
+      button#sessionsClose.closeButton
         ion-icon(name='close-outline')
       #sessionsTitle.pageTitle My Sessions
         .menuHomeIcon
@@ -156,7 +162,7 @@ block content
       #sessionsContainer.slideUp
       
     #gamesView.pop.off
-      #gamesClose.closeButton
+      button#gamesClose.closeButton
         ion-icon(name='close-outline')
       #gamesTitle.pageTitle Games and Lists
         .menuHomeIcon
@@ -167,7 +173,7 @@ block content
       #listContextContainer.off
     
     #accountView.pop.off
-      #accountClose.closeButton
+      button#accountClose.closeButton
         ion-icon(name='close-outline')
       #accountTitle.pageTitle Account
         .menuHomeIcon
@@ -187,7 +193,7 @@ block content
           #bggConnected
 
     #faqView.pop.off
-      #faqClose.closeButton
+      button#faqClose.closeButton
         ion-icon(name='close-outline')
       #faqTitle.pageTitle FAQ
         .menuHomeIcon
@@ -204,7 +210,7 @@ block content
             | When you're working on a session, a blue "list" button will appear on the left side of the screen. Click it to see the games that have already been added to the session.
 
     #aboutView.pop.off
-      #aboutClose.closeButton
+      button#aboutClose.closeButton
         ion-icon(name='close-outline')
       #aboutTitle.pageTitle About
         .menuHomeIcon
@@ -224,6 +230,9 @@ block content
         a(href="https://paypal.me/sweatysheep") I mean, sure, send me some money. You won't get any features for it, but I'm not going to stop you.
         #premiumLink
           a(href="https://paypal.me/sweatysheep") Click Here
+    #ver 
+      | Version 0.5.0 | 
+      a(href="http://www.freepik.com") Images designed by Freepik
 
 
 
@@ -252,9 +261,7 @@ block content
       circle(cx="50" cy="50" r="27.591" fill="none" stroke="#5699d2" stroke-width="2")
         animate(attributeName="r" calcMode="spline" values="0;40" keyTimes="0;1" dur="3" keySplines="0 0.2 0.8 1" begin="0s" repeatCount="indefinite")
         animate(attributeName="opacity" calcMode="spline" values="1;0" keyTimes="0;1" dur="3" keySplines="0.2 0 0.8 1" begin="0s" repeatCount="indefinite")
-  #ver 
-    | Version 0.5.0 | 
-    a(href="http://www.freepik.com") Images designed by Freepik
+  
     
     
 //-

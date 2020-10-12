@@ -51,7 +51,7 @@ button {
   border-radius: 5px;
   color: var(--main-white);
   cursor: pointer;
-  font-size: min(28px, calc(var(--vh) * 6));
+  font-size: min(28px, calc(var(--vh) * 6), 7.5vw);
 }
 
 .blueBtn {
@@ -601,20 +601,22 @@ input:checked + .slider:before {
   grid-area: 2/1/4/11;
   height: 100%;
   justify-items: center;
+  font-size: min(calc(var(--vh5) - 5px), 20px);
 }
 
 .phraseDisplay {
   cursor: pointer;
   text-align: center;
   width: 100%;
-  height: 1.5em;
-  max-height: 1.5em;
+  height: 1em;
+  max-height: 1em;
   white-space: nowrap;
   display: block;
+  padding: 2.5px;
 }
 
 .phraseDisplay ion-icon {
-  isplay: inline-block;
+  display: inline-block;
   transform: translateY(-0.5em);
 }
 
@@ -654,9 +656,10 @@ input:checked + .slider:before {
 }
 
 .codeDisplay {
-  grid-area: 3/1/4/11;
+  height: 1em;
   text-align: center;
   cursor: pointer;
+  padding: 2.5px;
 }
 
 /*****************/
@@ -700,7 +703,7 @@ input:checked + .slider:before {
 }
 
 #codeInputGroup {
-  grid-area: 11/3/14/9;
+  grid-area: 11/3/15/9;
   align-self: start;
   transition: opacity 0.5s, transform 0.5s;
   opacity: 0%;
@@ -708,13 +711,12 @@ input:checked + .slider:before {
 }
 
 #codeInput {
-  grid-area: 3/1/5/2;
 }
 
 #codeInputLabel {
-  grid-area: 1/1/3/2;
   text-align: center;
   align-self: end;
+  height: calc(1em + 5px);
 }
 
 .textInput {
@@ -728,6 +730,7 @@ input:checked + .slider:before {
   width: 100%;
   padding: 0px 50px 0px 5px;
   z-index: 2;
+  font-size: 80%;
 }
 
 .textInputCont input.textSubmit,
@@ -781,9 +784,7 @@ input#listImportSubmit.green {
 }
 
 #codeSubmit {
-  grid-area: 6/1/10/2;
-  text-align: center;
-  margin-top: calc(var(--vh, 1vh) * 2.5);
+  margin-top: calc(calc(var(--vh) * 7.5) - 1em - 5px);
 }
 
 /*****************/
@@ -882,7 +883,7 @@ input#listImportSubmit.green {
 #addGamesTitle {
   text-align: center;
   height: auto;
-  font-size: max(2 * (1vw + 1vh) / 2, 20px);
+  font-size: min(calc(var(--vh5) - 5px), 5vw);
 }
 
 #addGamesTitle .text {
@@ -894,11 +895,12 @@ input#listImportSubmit.green {
   margin-left: 5px;
   transform: translateY(-5px);
   position: relative;
-  z-index: 3;
+  z-index: 4;
 }
 
 #addGamesTitle ion-icon {
-  font-size: 15px;
+  font-size: min(20px, calc(var(--vh5) - 6px));
+  vertical-align: top;
 }
 
 #addGamesTitle ion-icon:hover + .tooltip {
@@ -931,6 +933,7 @@ input#listImportSubmit.green {
 #hitMeContainer #hitMeToolTip {
   display: inline-block;
   text-align: center;
+  font-size: min(15px, calc(var(--vh5) - 5px));
 }
 
 #hitMeToolTip .tooltip {
@@ -1225,7 +1228,7 @@ input#listImportSubmit.green {
   width: 100%;
   text-align: center;
   height: var(--vh10);
-  font-size: max(1.5 * (1vw + 1vh) / 2, 14px);
+  font-size: min(2.5 * (1vw + 1vh) / 2, 18px);
 }
 
 #voteButton {
@@ -1281,8 +1284,7 @@ input#listImportSubmit.green {
   content: "";
   position: absolute;
   bottom: calc(100% - 6px);
-  left: 53%;
-  margin-left: 71px;
+  right: calc(5% + 0.5em - 4px);
   border-width: 2px;
   border-style: solid;
   border-color: black black transparent transparent;
@@ -1340,7 +1342,7 @@ input#listImportSubmit.green {
   width: 5em;
   height: 5em;
   float: left;
-  margin: -5px 5px;
+  margin: -5px 5px 5px 5px;
   display: block;
 }
 
@@ -1365,7 +1367,7 @@ input#listImportSubmit.green {
 .BGGDescText {
   height: 100%;
   position: relative;
-  line-height: 1.4em;
+  line-height: 1.2em;
 }
 
 .BGGDescText a {
@@ -1536,7 +1538,7 @@ input[type="range"]:before {
 
 #playInfo {
   text-align: center;
-  font-size: max(1.5 * (1vw + 1vh) / 2, 20px);
+  font-size: min(3 * (1vw + 1vh) / 2, 20px);
   grid-area: 4/2/18/10;
   height: 100%;
 }
@@ -1995,7 +1997,7 @@ ion-icon#addListButton {
 }
 
 .itemContainer {
-  margin-top: calc(var(--vh, 1vh) * 10);
+  margin-top: calc(calc(var(--vh) * 4) + 36px);
   font-size: 1.3em;
 }
 
@@ -2005,7 +2007,6 @@ ion-icon#addListButton {
 }
 
 .itemContainer ul li {
-  margin-top: calc(var(--vh, 1vh) * 2);
   cursor: pointer;
   text-shadow: -1px 1px 0 var(--main-blue), 1px 1px 0 var(--main-blue),
     1px -1px 0 var(--main-blue), -1px -1px 0 var(--main-blue),
@@ -2029,6 +2030,9 @@ ion-icon#addListButton {
   height: 20px;
   margin-right: 10px;
   transform: translateY(4px);
+  background: var(--main-blue);
+  border-radius: 20px;
+  padding: 3px;
 }
 
 .i-faq svg * {
@@ -2040,7 +2044,7 @@ ion-icon#addListButton {
   width: 40vw;
   height: calc(var(--vh, 1vh) * 100);
   position: absolute;
-  left: 60vw;
+  right: 0;
   z-index: 999;
 }
 
@@ -2393,12 +2397,30 @@ ion-icon#addListButton {
   }
 }
 
+@media (max-width: 351px) {
+  .menu {
+    width: 100vw;
+  }
+  .clickCatcher {
+    display: none;
+  }
+  .menu.left {
+    transform: translateX(-100vw);
+  }
+}
+
 /*****************************/
 /*        Landscape CSS      */
 /*****************************/
 @media (max-height: 450px) and (min-width: 450px) {
   .menu {
     width: 250px;
+  }
+  .clickCatcher {
+    width: calc(100vw - 250px);
+  }
+  .menu.left {
+    transform: translateX(-250px);
   }
 }
 

@@ -555,7 +555,7 @@ window.addEventListener("load", function () {
         transform: "translateX(0px)",
       });
       $("#createButton").css({
-        transform: "translateY(calc(var(--vh) * 10)",
+        transform: "translateY(calc(var(--vh) * 10))",
       });
       window.setTimeout(function () {
         console.log("wait 2");

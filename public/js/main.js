@@ -54,12 +54,13 @@ window.addEventListener("load", function () {
     }, 500);
     if (typeof res.session.phrase == "undefined") {
       setPhrase(
-        `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+        `<div class="phraseText"></div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
       );
     } else {
       setPhrase(
-        res.session.phrase +
-          `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+        `<div class="phraseText">Phrase: ` +
+          res.session.phrase +
+          `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
       );
     }
 
@@ -67,8 +68,14 @@ window.addEventListener("load", function () {
       showRenameSession({
         name: $(".phraseDisplay")
           .first()
+          .children(".phraseText")
+          .first()
           .text()
-          .substr(8, $(".phraseDisplay").first().text().length - 15),
+          .substr(
+            8,
+            $(".phraseDisplay").first().children(".phraseText").first().text()
+              .length - 15
+          ),
         id: "0000" + $("#code").text(),
       });
     });
@@ -156,7 +163,7 @@ window.addEventListener("load", function () {
   joinSession = function (res) {
     $("#backArrow").removeClass("off"); //Show the back arrow
     setCode(res.code);
-    setPhrase(res.phrase);
+    setPhrase(`<div class="phraseText">Session: ` + res.phrase + `</div>`);
     console.log("joinSession: ", res.lock);
 
     var sessionGames = "<session>";
@@ -2409,6 +2416,70 @@ async function contextBGG(el, game, recur, inexact) {
         }
       } else {
         console.log("Found");
+        getHighestRatedItem($items).then((id) => {
+          var ret = `https://boardgamegeek.com/boardgame/` + id;
+          var html = $(el).html();
+          $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
+        });
+        async function getHighestRatedItem($items) {
+          return new Promise((resolve) => {
+            if ($items.attr("total") < 1) {
+              resolve("Error - no items found");
+            } else {
+              if ($items.attr("total") == 1) {
+                resolve($($items.children("item")[0]).attr("id"));
+              } else {
+                var ratings = [];
+                const fetchRating = function (id) {
+                  return new Promise((resolve) => {
+                    fetch(
+                      `https://boardgamegeek.com/xmlapi2/thing?id=` +
+                        id +
+                        `&stats=1`
+                    )
+                      .then((response) => response.text())
+                      .then((data) => resolve(data));
+                  });
+                };
+                const getHighestRatingID = async function () {
+                  console.log(Number($items.attr("total")) - 1);
+                  for (var i = 0; i < Number($items.attr("total")); i++) {
+                    console.log(i + ": ");
+                    var rating = await fetchRating(
+                      $($items.children()[i]).attr("id")
+                    );
+                    var theRating = $(rating)
+                      .children("item")
+                      .children("statistics")
+                      .children("ratings")
+                      .children("ranks")
+                      .children("rank[name='boardgame']")
+                      .attr("value");
+                    if (theRating == "Not Ranked") {
+                      theRating = Number.MAX_SAFE_INTEGER;
+                    } else {
+                      theRating = Number(theRating);
+                    }
+                    ratings.push({
+                      id: $(rating).children("item").attr("id"),
+                      rank: theRating,
+                    });
+                  }
+                  ratings.sort(function (a, b) {
+                    return a.rank - b.rank;
+                  });
+                  console.log($items.children()[0]);
+                  console.log($items.children()[1]);
+                  console.log(ratings);
+                  resolve(ratings[0].id);
+                };
+                getHighestRatingID().then((id) => {
+                  resolve(id);
+                });
+              }
+            }
+          });
+        }
         /*if ($items.attr("total") > 1) {
           var ratings = [];
           var newRating = '';
@@ -2418,20 +2489,8 @@ async function contextBGG(el, game, recur, inexact) {
           }
           console.log("ratings: ", ratings);
         }
-        function fetchRating(id) {
-          return new Promise((resolve) => {
-            fetch(
-              `https://boardgamegeek.com/xmlapi2/thing?id=` + id + `&stats=1`
-            )
-              .then((response) => response.text())
-              .then((data) => resolve(data));
-          });
+        
         }*/
-        var ret =
-          `https://boardgamegeek.com/boardgame/` +
-          $items.children("item").attr("id");
-        var html = $(el).html();
-        $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
       }
     });
 }
@@ -2801,9 +2860,9 @@ function renameSession(event, caller, code) {
         //Renaming the current session
         $(".phraseDisplay").each(function () {
           $(this).html(
-            `Session: ` +
+            `<div class="phraseText">Session: ` +
               newName +
-              `<div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+              `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
           );
         });
       }
@@ -3392,8 +3451,7 @@ function setPhrase(phrase) {
     if (typeof phrase == "undefined") {
       $(this).html();
     } else {
-      htmlString = `Session: ` + phrase;
-      $(this).html(htmlString);
+      $(this).html(phrase);
     }
   });
 }

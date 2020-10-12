@@ -109,15 +109,16 @@ li.grey {
   background-color: var(--main-light-grey);
   border-radius: 10px;
   padding: 2px 5px;
-  left: 0;
-  transform: translateX(calc(-50% + 11px));
+  transform: translateX(-31%);
   color: var(--main-white);
   transition: opacity 1s cubic-bezier(1, 0, 0.8, -0.1);
 }
 
 .owner {
-  display: inline;
-  position: relative;
+  display: inline-block;
+  transform: translateY(-0.5em);
+  text-align: center;
+  width: auto;
 }
 
 .owner:hover .tooltip {
@@ -605,14 +606,24 @@ input:checked + .slider:before {
 .phraseDisplay {
   cursor: pointer;
   text-align: center;
-  width: 90%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 100%;
   height: 1.5em;
-  margin-left: 5%;
   max-height: 1.5em;
   white-space: nowrap;
+  display: block;
+}
+
+.phraseDisplay ion-icon {
+  isplay: inline-block;
+  transform: translateY(-0.5em);
+}
+
+.phraseText {
+  overflow: hidden;
+  text-overflow: ellipsis;
   display: inline-block;
+  max-width: 50%;
+  text-align: center;
 }
 
 #backAlert {
@@ -878,14 +889,20 @@ input#listImportSubmit.green {
   transform: translateX(5px);
   display: inline-block;
 }
+#addGamesTitle #addGamesTooltipContainer {
+  display: inline-block;
+  margin-left: 5px;
+  transform: translateY(-5px);
+  position: relative;
+  z-index: 3;
+}
 
 #addGamesTitle ion-icon {
   font-size: 15px;
-  transform: translate(5px, -50%);
 }
 
 #addGamesTitle ion-icon:hover + .tooltip {
-  transform: translate(calc(50vw + 50% + 54px), -14px);
+  transform: translateX(calc(50% - 2.5px));
   opacity: 1;
 }
 
@@ -897,14 +914,33 @@ input#listImportSubmit.green {
   left: max(-50vw, -400px);
 }
 
-#hitMe {
+#hitMeContainer {
   grid-area: 6/2/7/10;
-  justify-self: center;
-  width: calc(var(--vh) * 20);
+  display: block;
   text-align: center;
+}
+
+#hitMeContainer #hitMe {
+  width: calc(var(--vh) * 20);
   height: 70%;
-  font-size: min(calc(var(--vh) * 2.5), 15px);
+  font-size: min(calc(var(--vh) * 2.5), 20px);
   padding-top: 1px;
+  display: inline-block;
+}
+
+#hitMeContainer #hitMeToolTip {
+  display: inline-block;
+  text-align: center;
+}
+
+#hitMeToolTip .tooltip {
+  transform: translateX(-100vw);
+  z-index: 999;
+}
+
+#hitMeToolTip:hover .tooltip {
+  transform: translateX(calc(-50% + 7.5px));
+  opacity: 1;
 }
 
 #selectLists {
@@ -2664,10 +2700,6 @@ ion-icon#addListButton {
   #curGamesClose {
     top: calc(var(--vh) * 2);
     left: 615px;
-  }
-
-  #addGamesTitle ion-icon:hover + .tooltip {
-    transform: translate(calc(50% + 457px), -19px);
   }
 
   .voteLabel label {

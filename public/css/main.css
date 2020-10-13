@@ -655,6 +655,15 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
+#backHome {
+  transform: translate(32px, -2px);
+  position: absolute;
+}
+
+#backHome ion-icon:first-child {
+  transform: translate(-32px, calc(-50% + 2px));
+}
+
 .codeDisplay {
   height: 1em;
   text-align: center;
@@ -981,7 +990,7 @@ input#listImportSubmit.green {
 #hitMeContainer #hitMeToolTip {
   display: inline-block;
   text-align: center;
-  font-size: min(15px, calc(var(--vh5) - 5px));
+  font-size: min(20px, calc(var(--vh5) - 5px));
 }
 
 #hitMeToolTip .tooltip {
@@ -2699,6 +2708,26 @@ ion-icon#addListButton {
     left: 40px;
     top: var(--vh5);
     transform: translateY(-50%);
+  }
+
+  #backHome {
+    transform: translate(0px, 0px);
+  }
+
+  #backHome ion-icon:after {
+    content: "Home";
+    position: absolute;
+    font-size: 32px;
+    height: 38px;
+    width: 168px;
+    color: var(--main-blue);
+    left: 40px;
+    top: var(--vh5);
+    transform: translateY(-50%);
+  }
+
+  #backHome ion-icon:first-child {
+    display: none;
   }
 
   .bggImport {

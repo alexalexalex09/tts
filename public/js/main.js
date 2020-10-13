@@ -14,9 +14,10 @@ window.addEventListener("load", function () {
       console.log("received ", data);
       if (data.selectEvent /*&& res.session.lock != "#postPostSelectView"*/) {
         //Rewrite #postSelectContainer in real time for owner if this is an owner initated event
-        console.log($("#gameUnlock").length);
         if ($("#gameUnlock").length == 0) {
           showSelect(data.select, true);
+        }
+        if (data.curGames) {
           data.curGames.sort(lowerCaseSort());
           updateCurrentGames(data.curGames);
         }
@@ -95,6 +96,7 @@ window.addEventListener("load", function () {
     if (dest == "#postSelectView") {
       goForwardFrom("#homeView", "#postSelectView");
       window.hist = ["#homeView", "#selectView"];
+      setBackHome();
     }
     if (dest == "#selectView") {
       dest = "#codeView";
@@ -181,6 +183,7 @@ window.addEventListener("load", function () {
       case "#postSelectView":
         goForwardFrom("#homeView", "#postSelectView");
         window.hist = ["#homeView", "#selectView", "#postSelectView"];
+        setBackNormal();
       case "#postPostSelectView":
         goForwardFrom("#homeView", "#postSelectView");
         //lockback();
@@ -234,11 +237,12 @@ window.addEventListener("load", function () {
         console.log(data);
         if (data.unlock == "selectView") {
           window.hist = ["#homeView", "#selectView", "#postSelectView"];
+          setBackNormal();
         }
-        goBackFrom(
+        /*goBackFrom(
           window.hist[window.hist.length - 1],
           window.hist[window.hist.length - 2]
-        );
+        );*/
       }
       if (data.startVoting) {
         console.log("this isn't done yet!");
@@ -246,11 +250,13 @@ window.addEventListener("load", function () {
         fillVotes(data.games);
         goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
         window.hist = ["#homeView", "#voteView"];
+        setBackHome();
       }
       if (data.play) {
         fillGames(data.games);
         goForwardFrom(window.hist[window.hist.length - 1], "#playView");
         window.hist = ["#homeView", "#playView"];
+        setBackHome();
       }
     });
     catchDisplay();
@@ -348,6 +354,7 @@ window.addEventListener("load", function () {
   /*goBackfrom*/
   $(".menuHomeIcon").on("click", function () {
     closeMenu();
+    $("#listIcon").addClass("off");
     var from = "";
     $(".main .view").each(function (i, e) {
       if (!$(e).hasClass("off")) {
@@ -359,6 +366,7 @@ window.addEventListener("load", function () {
     });
     if (from != "#homeView" && from != "") {
       window.hist = ["#homeView"];
+      setBackNormal();
       $("#homeView").css({ transform: "translateX(-200vw)" });
       $("#homeView").removeClass("off");
       $("#backArrow").addClass("off");
@@ -639,6 +647,7 @@ window.addEventListener("load", function () {
   /*****************************/
   $("#createButton").click(this, function () {
     window.hist = ["#homeView"];
+    setBackHome();
     clearLists();
     ttsFetch("/create_session", {}, (res) => {
       createSession(res.status);
@@ -694,6 +703,7 @@ window.addEventListener("load", function () {
   gulp();
   $("#selectButton").click(this, function () {
     //$("#backArrow").attr("data-gobackto", "code");
+
     recheckGreenLists();
     goForwardFrom("#codeView", "#selectView");
   });
@@ -729,7 +739,7 @@ window.addEventListener("load", function () {
         console.log("submit res: ", res);
         //$("#backArrow").attr("data-gobackto", "select");
         goForwardFrom("#selectView", "#postSelectView");
-        if ($("#postSelectImg").length == 0) {
+        if ($("#postSelectImg").length == 0 && $("#gameUnlock").length == 0) {
           $("#postSelectView").append('<div id="postSelectImg"></div>');
           $("#postSelectContainer").css("grid-area", "9/2/15/10");
         }
@@ -844,6 +854,7 @@ function closeMenu() {
 /*****************************/
 function lockBack() {
   window.hist = [window.hist[0], window.hist[window.hist.length - 1]];
+  setBackHome();
   $("#backArrow").attr("data-gobackto", window.hist[0]);
 }
 
@@ -925,6 +936,11 @@ function goForwardFrom(from, to) {
     }
     window.hist.push(to);
     $("#backArrow").attr("data-gobackto", window.hist[window.hist.length - 2]);
+    if (window.hist.length == 2) {
+      setBackHome();
+    } else {
+      setBackNormal();
+    }
     $(to).css({ transform: "translateX(200vw)" });
     $(to).removeClass("off");
 
@@ -1010,6 +1026,11 @@ function goBack(from, to) {
   if (to == "#homeView") {
     $("#backArrow").addClass("off");
   }
+  if (window.hist.length == 2) {
+    setBackHome();
+  } else {
+    setBackNormal();
+  }
   console.log("...Going back to " + to + " from " + from);
   window.setTimeout(function () {
     $(to).css({ transform: "translateX(0vw)" });
@@ -1026,6 +1047,16 @@ function triggerPostSelectEvent() {
   ttsFetch("/get_session_post_select", { code: $("#code").text() }, (res) => {
     console.log("triggered socket event for gsps");
   });
+}
+
+function setBackHome() {
+  $("#backArrow>ion-icon").first().addClass("off");
+  $("#backHome").removeClass("off");
+}
+
+function setBackNormal() {
+  $("#backArrow>ion-icon").first().removeClass("off");
+  $("#backHome").addClass("off");
 }
 
 /*****************************/
@@ -1061,7 +1092,7 @@ function lockGames(code) {
         $("#postSelectView").css({
           transform: "translateX(-0vw)",
         });
-        $("#backArrow").removeClass("off");
+        //$("#backArrow").removeClass("off");
         /*$("#addGroupGamesInput").on("keyup", function (event) {
           // Number 13 is the "Enter" key on the keyboard
           if (event.keyCode === 13) {
@@ -1082,6 +1113,9 @@ function lockGames(code) {
             (res) => {
               $("#backArrow").removeClass("off");
               goBackFrom("#postSelectView", "#selectView");
+              setTimeout(function () {
+                $("#postSelectContainer").html("");
+              }, 1000);
             }
           );
         });
@@ -2927,6 +2961,7 @@ function menuSubmitCode(code) {
   if ($("#homeView").hasClass("off") && window.hist) {
     goBack(window.hist[window.hist.length - 1], "#homeView");
     window.hist = ["#homeView"];
+    setBackHome();
   }
   $("#contextShadow").addClass("off");
   $(".contextActions.slideUp").remove();
@@ -2936,6 +2971,7 @@ function menuSubmitCode(code) {
 function submitCode(code) {
   clearLists(); //Clear any lists in #selectView
   window.hist = ["#homeView"];
+  setBackHome();
   $(".errorText").removeClass("shake"); //Stop shaking if started
   ttsFetch("/join_session", { code: code }, (res) => {
     if (res.owned) {
@@ -3756,6 +3792,7 @@ function fillVotes(games) {
       (res) => {
         goForwardFrom("#voteView", "#postVoteView");
         window.hist = ["#homeView", "#postVoteView"];
+        setBackHome();
       }
     );
   });

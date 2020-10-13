@@ -682,6 +682,7 @@ input:checked + .slider:before {
   text-align: center;
   padding-top: 25px;
   line-height: 1.1em;
+  font-size: min(18px, 5vw);
 }
 
 .subTitle p {
@@ -785,6 +786,53 @@ input#listImportSubmit.green {
 
 #codeSubmit {
   margin-top: calc(calc(var(--vh) * 7.5) - 1em - 5px);
+}
+
+.listImportError {
+  width: min(90%, 250px);
+  left: 50%;
+  top: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px solid black;
+  padding: 5px;
+  background: var(--main-white);
+  border-radius: 6px;
+}
+
+.listImportErrorMsg {
+  height: var(--vh20);
+  padding: calc(var(--vh) * 2);
+  text-align: center;
+  vertical-align: middle;
+  display: table-cell;
+  width: min(90vw, 250px);
+  font-size: min(10vw, 20px);
+}
+
+.listImportCatch {
+  width: 100vw;
+  height: 100vh;
+  backdrop-filter: blur(3px);
+}
+
+#importDuplicate {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.importContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.subContextImport .importContainer .button {
+  width: 180px;
+  margin: 0.4em 5% 0px;
+  height: var(--vh5);
+  padding: 4px 0px 2px 0px;
 }
 
 /*****************/
@@ -1044,7 +1092,7 @@ input#listImportSubmit.green {
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
-  font-size: min(2.4 * (1vw + 1vh) / 2, 20px);
+  font-size: min(3 * (1vw + 1vh) / 2, 20px);
 }
 
 #postSelectContainer {
@@ -1052,7 +1100,7 @@ input#listImportSubmit.green {
 }
 
 #postSelectIntro {
-  grid-area: 15/2/19/10;
+  grid-area: 11/2/19/10;
   height: 100%;
 }
 
@@ -1367,7 +1415,7 @@ input#listImportSubmit.green {
 .BGGDescText {
   height: 100%;
   position: relative;
-  line-height: 1.2em;
+  line-height: 1.2git cem;
 }
 
 .BGGDescText a {
@@ -2160,7 +2208,7 @@ ion-icon#addListButton {
 
 #importOverwrite,
 #importRename {
-  width: 40%;
+  width: 180px;
   margin: 0.4em 4.6% 0px;
   display: inline-block;
   box-sizing: border-box;

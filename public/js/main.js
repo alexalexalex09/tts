@@ -4333,51 +4333,112 @@ function showError(err) {
 }
 
 function runListImport(code) {
-  ttsFetch("/get_list_code_info", { code: code }, (res) => {
-    if (res.list.err) {
-      createAndShowAlert(res.list.err);
-    } else {
-      console.log(res);
-      if (!res.overwrite) {
-        var overwrite = ' class="off"';
+  ttsFetch(
+    "/get_list_code_info",
+    { code: code },
+    (res) => {
+      if (res.list.err) {
+        createAndShowAlert(res.list.err);
       } else {
-        var overwrite = "";
-      }
-      console.log("Overwrite: ", overwrite);
-      var el =
-        `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
-        res.list.id +
-        `" >`;
-      el +=
-        `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-        `<div class="subContextTitle">Import list "` +
-        res.list.name.replace(/\\/, "") +
-        `" with ` +
-        res.list.games.length +
-        ` games?</div><hr/>
+        console.log(res);
+        if (!res.overwrite) {
+          var overwrite = ' class="off"';
+        } else {
+          var overwrite = "";
+        }
+        console.log("Overwrite: ", overwrite);
+        var el =
+          `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
+          res.list.id +
+          `" >`;
+        el +=
+          `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+          `<div class="subContextTitle">Import list "` +
+          res.list.name.replace(/\\/, "") +
+          `" with ` +
+          res.list.games.length +
+          ` games?</div><hr/>
       <div id="importDuplicate"` +
-        overwrite +
-        `>
-      <div id="importOverwrite"><input type="checkbox" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
-      <div id="importRename"><input type="checkbox" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
+          overwrite +
+          `>
+      <div id="importOverwrite"><input type="radio" name="duplicate" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
+      <div id="importRename"><input type="radio" name="duplicate" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
       </div>
-      <div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+      <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
-        res.list.listCode +
-        `')">Import</div>`;
-      $("body").append(el);
+          res.list.listCode +
+          `')">Import</div></div>`;
+        $("body").append(el);
+      }
+    },
+    (res) => {
+      $("body").append(
+        `<div class="listImportCatch" onclick="$(this).next().remove(); $(this).remove();"></div>
+    <div class="listImportError"><div class="closeButton" onclick="$(this).parent().prev().remove(); $(this).parent().remove();">
+    <ion-icon name="close-outline"></ion-icon></div><div class="listImportErrorMsg">` +
+          res.err +
+          `</div><div class="listImportLogin"><button class="button blueBtn" onclick="window.location.href='/login';">Login/Sign Up</div></div>
+    `
+      );
     }
-  });
+  );
   return false;
 }
 
 function performListImport(code) {
-  ttsFetch("/get_list_from_code", { code: code }, (res) => {
-    gulp();
-  });
+  if ($("#importRename input").prop("checked")) {
+    var rename = $("#importRenameCheckbox").prop("checked");
+    var oldListName = $(".subContextTitle")
+      .text()
+      .substring(13, $(".subContextTitle").text().lastIndexOf('"'));
+    $(".subContextImport").first().remove();
+    $(".subContextContainer")
+      .first()
+      .append(
+        `<div class="subContextRename" id="renameImportList" >` +
+          `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+          `<div class="subContextTitle">Renaming "` +
+          oldListName +
+          `"</div><hr/><div id="renameImportInputCont" class="textInputCont">
+    <form onsubmit="return renameAndImportList({code: '` +
+          code +
+          `', name: $('#renameImportInputCont .textInput').first().val()})" id="renameImportListInput">
+    <input class="textSubmit" type="submit" value="">` +
+          `<input class="textInput" type="text" autocomplete="off"></input>` +
+          `</form>` +
+          `</div></div>`
+      );
+  } else {
+    if ($("#importOverWriteCheckbox").prop("checked")) {
+      ttsFetch("/get_list_from_code", { code: code }, (res) => {
+        gulp();
+        createAndShowAlert("List successfully added!");
+      });
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+    } else {
+      createAndShowAlert(
+        "List already exists. Select overwrite or rename to add."
+      );
+    }
+  }
+}
+
+function renameAndImportList(data) {
+  console.log(data);
+  ttsFetch(
+    "/get_list_from_code",
+    { code: data.code, name: data.name },
+    (res) => {
+      gulp();
+      createAndShowAlert("List successfully added!");
+    }
+  );
   $(".subContextContainer").each(function () {
     $(this).remove();
   });
+  return false;
 }
 
 /*****************************/

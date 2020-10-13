@@ -2218,7 +2218,10 @@ router.post("/get_list_code_info", function (req, res) {
       });
     });
   } else {
-    res.send({ err: "Log in to import lists!" });
+    res.send({
+      err:
+        "Welcome to SelectAGame!<br/></br> This link leads to a list of games; if you'd like to save it to your profile, click the button below to login or sign up!",
+    });
   }
 });
 
@@ -2228,7 +2231,8 @@ router.post("/get_list_from_code", function (req, res) {
       if (theList.err) {
         res.send(theList);
       } else {
-        listAdder(theList.name, res, req).then((list) => {
+        var name = req.body.name || theList.name;
+        listAdder(name, res, req).then((list) => {
           console.log("ListAdder Returned");
           if (typeof theList.games != "undefined" && list.len) {
             console.log(theList.games);
@@ -2243,4 +2247,5 @@ router.post("/get_list_from_code", function (req, res) {
     res.send(ERR_LOGIN);
   }
 });
+
 module.exports = router;

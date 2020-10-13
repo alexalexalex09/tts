@@ -1956,6 +1956,7 @@ ion-icon#addListButton {
   cursor: pointer;
   flex-grow: 20;
   padding-left: 20px;
+  text-overflow: ellipsis;
 }
 
 /*****************/
@@ -2273,6 +2274,11 @@ ion-icon#addListButton {
 
 .listTitleText {
   cursor: pointer;
+  max-width: calc(100% - 2em);
+  float: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 0.5em;
 }
 
 .listContents {
@@ -2549,6 +2555,7 @@ ion-icon#addListButton {
   #gamesContainer > li,
   #gamesContainer .listGames {
     padding-left: 0px;
+    grid-template-columns: 360px 40px;
   }
 
   #sessionsContainer li {
@@ -2557,7 +2564,7 @@ ion-icon#addListButton {
 
   #gamesContainer li,
   #sessionsContainer li {
-    font-size: 20px;
+    font-size: 36px;
   }
   #codeButtons {
     height: 100%;
@@ -2596,7 +2603,7 @@ ion-icon#addListButton {
   }
 
   .pageTitle {
-    font-size: 4vh;
+    font-size: min(2.4vw, 4vh, 35px);
   }
 
   .pop {

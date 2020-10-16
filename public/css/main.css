@@ -51,7 +51,7 @@ button {
   border-radius: 5px;
   color: var(--main-white);
   cursor: pointer;
-  font-size: min(28px, calc(var(--vh) * 6), 7.5vw);
+  font-size: min(28px, calc(var(--vh) * 5), 7.5vw);
 }
 
 .blueBtn {
@@ -613,6 +613,7 @@ input:checked + .slider:before {
   white-space: nowrap;
   display: block;
   padding: 2.5px;
+  box-sizing: border-box;
 }
 
 .phraseDisplay ion-icon {
@@ -624,7 +625,7 @@ input:checked + .slider:before {
   overflow: hidden;
   text-overflow: ellipsis;
   display: inline-block;
-  max-width: 50%;
+  max-width: calc(100% - 4em);
   text-align: center;
 }
 
@@ -691,7 +692,7 @@ input:checked + .slider:before {
   text-align: center;
   padding-top: 25px;
   line-height: 1.1em;
-  font-size: min(18px, 5vw);
+  font-size: min(20px, 5vw);
 }
 
 .subTitle p {
@@ -720,9 +721,6 @@ input:checked + .slider:before {
   transform: translateX(-100vw);
 }
 
-#codeInput {
-}
-
 #codeInputLabel {
   text-align: center;
   align-self: end;
@@ -740,7 +738,7 @@ input:checked + .slider:before {
   width: 100%;
   padding: 0px 50px 0px 5px;
   z-index: 2;
-  font-size: 80%;
+  font-size: 1.5em;
 }
 
 .textInputCont input.textSubmit,
@@ -1128,7 +1126,7 @@ input#listImportSubmit.green {
 }
 
 #postSelectImg {
-  grid-area: 4/2/9/10;
+  grid-area: 4/2/8/10;
   height: 100%;
   width: 100%;
   background-image: url(/img/post-select.svg);
@@ -1596,12 +1594,12 @@ input[type="range"]:before {
 #playInfo {
   text-align: center;
   font-size: min(3 * (1vw + 1vh) / 2, 20px);
-  grid-area: 4/2/18/10;
+  grid-area: 4/2/6/10;
   height: 100%;
 }
 
 #playContainer {
-  grid-area: 7/2/15/10;
+  grid-area: 7/2/14/10;
   height: 100%;
   overflow-y: auto;
 }
@@ -1609,12 +1607,13 @@ input[type="range"]:before {
 .playGame {
   min-height: var(--vh5);
   font-size: calc(var(--vh, 1vh) * 3);
-  width: 100%;
+  width: calc(100% - 4.8em);
   text-align: center;
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: pointer;
   position: relative;
+  left: 2.4em;
 }
 
 .playGame .weight {
@@ -1664,6 +1663,14 @@ input[type="range"]:before {
 
 .playGame.showWeight .weight {
   opacity: 1;
+}
+
+#playShare {
+  grid-area: 14/2/14/10;
+  height: min(31px, calc(var(--vh) * 6), 100%);
+  width: 5em;
+  margin: 0 auto;
+  padding: 0px 2vw;
 }
 
 #playImg {
@@ -1826,6 +1833,11 @@ input[type="range"]:before {
 
 .sessionsCheck {
   grid-area: 1/1/4/2;
+}
+
+.sessionTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sessionCode,
@@ -1998,6 +2010,7 @@ ion-icon#addListButton {
   color: var(--main-white);
   transform: translateX(0vw);
   transition: transform 0.5s;
+  font-size: min(calc(3 * (1vw + 1vh)), 2.5vw);
 }
 
 .menu a {
@@ -2274,11 +2287,12 @@ ion-icon#addListButton {
 
 .listTitleText {
   cursor: pointer;
-  max-width: calc(100% - 2em);
+  width: calc(100% - 2em);
   float: right;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-right: 0.5em;
+  white-space: nowrap;
 }
 
 .listContents {
@@ -2463,12 +2477,19 @@ ion-icon#addListButton {
 @media (max-width: 351px) {
   .menu {
     width: 100vw;
+    font-size: min(calc(3 * (1vw + 1vh)), 6.5vw);
   }
   .clickCatcher {
     display: none;
   }
   .menu.left {
     transform: translateX(-100vw);
+  }
+}
+
+@media (max-width: 650px) {
+  #backHome {
+    display: none;
   }
 }
 
@@ -2564,7 +2585,7 @@ ion-icon#addListButton {
 
   #gamesContainer li,
   #sessionsContainer li {
-    font-size: 36px;
+    font-size: 26px;
   }
   #codeButtons {
     height: 100%;
@@ -2598,12 +2619,24 @@ ion-icon#addListButton {
     font-size: 24px;
   }
 
+  .itemContainer ul li {
+    margin-bottom: 0.25em;
+  }
+
   .pageTitle#playTitle {
     font-size: max(3 * (1vw + 1vh) / 2, 30px);
   }
 
   .pageTitle {
     font-size: min(2.4vw, 4vh, 35px);
+  }
+
+  #playInfo {
+    grid-area: 3/2/5/10;
+  }
+
+  #playContainer {
+    grid-area: 5/2/13/10;
   }
 
   .pop {
@@ -2630,9 +2663,9 @@ ion-icon#addListButton {
     padding: 10px 10px 31px 10px;
     width: 380px;
     left: 260px;
-    font-size: 20px;
+    font-size: 26px;
     top: 4%;
-    height: 200px;
+    height: fit-content;
     border-radius: 15px;
   }
 
@@ -2647,8 +2680,11 @@ ion-icon#addListButton {
   .subContextAccount,
   .subContextImport {
     left: 10px;
+    top: 4%;
     width: 630px;
     padding: 15px;
+    height: fit-content;
+    font-size: 26px;
   }
 
   .subContextDelete .button,

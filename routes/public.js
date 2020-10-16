@@ -1508,6 +1508,35 @@ router.post("/submit_votes", function (req, res) {
   }
 });
 
+router.post("/save_votes", function (req, res) {
+  if (req.user) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      if (!curSession) {
+        res.send(ERR_CODE);
+      } else {
+        var index = curSession.users.findIndex((obj) => {
+          return obj.user.toString() == req.user.id.toString();
+        });
+        if (index > -1) {
+          if (req.body.incrementer < curSession.users[index].voteIncrementer) {
+            res.send({ err: "Received save event out of order" });
+          } else {
+            curSession.users[index].votes = req.body.votes;
+            curSession.users[index].voteIncrementer = req.body.incrementer;
+            console.log(req.body.incrementer);
+            curSession.save();
+            console.log(curSession);
+            res.send({ status: "Success" });
+          }
+        } else {
+          res.send({ err: "No user found" });
+        }
+      }
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
 router.post("/get_votes", function (req, res) {
   //if (req.user) {
   var games = [];
@@ -1652,32 +1681,36 @@ router.post("/copy_to_list", function (req, res) {
         res.send({ err: "Can't copy to your All Games list" });
       } else {
         var errors = 0;
-        req.body.games.forEach(function (e, i) {
-          console.log("current item: ", e);
-          if (fromList == -1) {
-            var index = curUser.lists.allGames.findIndex(
-              (obj) => obj.toString() == e
-            );
-            var gameToCopy = curUser.lists.allGames[index];
-          } else {
-            var index = curUser.lists.custom[fromList].games.findIndex(
-              (obj) => obj.toString() == e
-            );
-            var gameToCopy = curUser.lists.custom[fromList].games[index];
-          }
-          console.log(curUser.lists.custom[toList].games, gameToCopy);
-          if (
-            curUser.lists.custom[toList].games.findIndex(
-              (obj) => obj == gameToCopy.toString()
-            ) == -1
-          ) {
-            curUser.lists.custom[toList].games.push(gameToCopy);
-          } else {
-            errors++;
-          }
-        });
-        curUser.save().then(bggUpdate(curUser));
-        res.send({ status: curUser, errors: errors });
+        if (req.body.games) {
+          req.body.games.forEach(function (e, i) {
+            console.log("current item: ", e);
+            if (fromList == -1) {
+              var index = curUser.lists.allGames.findIndex(
+                (obj) => obj.toString() == e
+              );
+              var gameToCopy = curUser.lists.allGames[index];
+            } else {
+              var index = curUser.lists.custom[fromList].games.findIndex(
+                (obj) => obj.toString() == e
+              );
+              var gameToCopy = curUser.lists.custom[fromList].games[index];
+            }
+            console.log(curUser.lists.custom[toList].games, gameToCopy);
+            if (
+              curUser.lists.custom[toList].games.findIndex(
+                (obj) => obj == gameToCopy.toString()
+              ) == -1
+            ) {
+              curUser.lists.custom[toList].games.push(gameToCopy);
+            } else {
+              errors++;
+            }
+          });
+          curUser.save().then(bggUpdate(curUser));
+          res.send({ status: curUser, errors: errors });
+        } else {
+          res.send({ err: "Error: No Games Copied" });
+        }
       }
     });
   } else {
@@ -1765,16 +1798,27 @@ router.post("/rename_game", function (req, res) {
 router.post("/rename_list", function (req, res) {
   if (req.user) {
     if (req.body.newName) {
-      User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      if (typeof req.body.list != "undefined") {
         var listNum = Number(req.body.list) - 1;
         if (listNum == -1) {
           res.send({ err: "Can't rename All Games" });
         } else {
-          curUser.lists.custom[listNum].name = req.body.newName;
-          curUser.save();
-          res.send({ status: "Success" });
+          User.findOne({ profile_id: req.user.id }).exec(function (
+            err,
+            curUser
+          ) {
+            if (curUser.lists.custom[listNum]) {
+              curUser.lists.custom[listNum].name = req.body.newName;
+              curUser.save();
+              res.send({ status: "Success" });
+            } else {
+              res.send({ err: "Error: List not found" });
+            }
+          });
         }
-      });
+      } else {
+        res.send({ err: "Error: No list sent" });
+      }
     } else {
       res.send({ err: "Blank game name is not allowed" });
     }

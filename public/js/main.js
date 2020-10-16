@@ -65,21 +65,22 @@ window.addEventListener("load", function () {
       );
     }
 
-    $(".phraseDisplay").on("click", function () {
+    $(".phraseDisplay ion-icon").on("click", function () {
       showRenameSession({
         name: $(".phraseDisplay")
           .first()
           .children(".phraseText")
           .first()
           .text()
-          .substr(
-            8,
-            $(".phraseDisplay").first().children(".phraseText").first().text()
-              .length - 15
-          ),
+          .substr(8),
         id: "0000" + $("#code").text(),
       });
     });
+
+    $(".phraseText").on("click", function () {
+      createAndShowAlert($(".phraseText").first().text().substr(8));
+    });
+
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
     console.log(res.session.users[index].done);
@@ -106,11 +107,16 @@ window.addEventListener("load", function () {
     }
     if (dest == "#voteView") {
       var games = [];
+      var votes = res.session.users[index].votes;
       for (var i = 0; i < res.session.votes.length; i++) {
         if (res.session.votes[i].active) {
           games.push({
             game: res.session.votes[i].game,
             name: res.session.votes[i].name,
+            votes:
+              votes[
+                votes.findIndex((obj) => obj.id == res.session.votes[i].game)
+              ].vote,
           });
         }
       }
@@ -1255,16 +1261,16 @@ function addListDisplay(
       `<div class="listName" onclick="` +
       titleFunc +
       `">` +
-      name.replace(/\\/, "") +
+      name.replace(/\\/g, "") +
       `
     </div></div>`;
   } else {
-    //console.log(dest, name.replace(/\\/, ""));
+    //console.log(dest, name.replace(/\\/g, ""));
     listString +=
       `<div class="listName" onclick="` +
       titleFunc +
       `">` +
-      name.replace(/\\/, "") +
+      name.replace(/\\/g, "") +
       `
     </div>`;
   }
@@ -1395,7 +1401,7 @@ function gulp(showAllGames = false) {
           `" game_id="` +
           res.lists.allGames[i]._id +
           `">` +
-          res.lists.allGames[i].name.replace(/\\/, "") +
+          res.lists.allGames[i].name.replace(/\\/g, "") +
           `
                 </div>
                 <div class='toggle'>
@@ -1417,7 +1423,7 @@ function gulp(showAllGames = false) {
           `', name: '` +
           res.lists.allGames[i].name +
           `', list: '0'})">` +
-          res.lists.allGames[i].name.replace(/\\/, "") +
+          res.lists.allGames[i].name.replace(/\\/g, "") +
           `</li>`;
         //Append the "All Games" list to the first <li>
         $("li#0").children(".listGames").first().append(htmlString);
@@ -1430,7 +1436,7 @@ function gulp(showAllGames = false) {
             res.lists.allGames[i]._id +
             `">` +
             `<div class="contextTitle">` +
-            res.lists.allGames[i].name.replace(/\\/, "") +
+            res.lists.allGames[i].name.replace(/\\/g, "") +
             `</div>` +
             `<li class="bggLink">BoardGameGeek Link</li>` +
             `<li onclick="contextCopy([{id: '` +
@@ -1461,9 +1467,13 @@ function gulp(showAllGames = false) {
       );
       for (var i = 0; i < res.lists.custom.length; i++) {
         var curId = i + 1;
+        var curName = res.lists.custom[i].name
+          .replace(/&/g, "&amp;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "\\'");
         addListDisplay(
           curId,
-          res.lists.custom[i].name,
+          curName,
           "#selectLists",
           true,
           "listToggle(this.nextElementSibling)",
@@ -1472,7 +1482,7 @@ function gulp(showAllGames = false) {
         );
         addListDisplay(
           "games" + curId,
-          res.lists.custom[i].name,
+          curName,
           "#gamesContainer",
           false,
           "openList($(this).parent().parent().attr('id'))",
@@ -1493,7 +1503,7 @@ function gulp(showAllGames = false) {
             `" game_id="` +
             res.lists.custom[i].games[j]._id +
             `">` +
-            res.lists.custom[i].games[j].name.replace(/\\/, "") +
+            res.lists.custom[i].games[j].name.replace(/\\/g, "") +
             `
               </div>
               <div class='toggle'>
@@ -1518,7 +1528,7 @@ function gulp(showAllGames = false) {
             `', list: '` +
             listNum +
             `'})">` +
-            res.lists.custom[i].games[j].name.replace(/\\/, "") +
+            res.lists.custom[i].games[j].name.replace(/\\/g, "") +
             `</li>`;
 
           //Append each custom list the the corresponding li
@@ -1539,10 +1549,11 @@ function gulp(showAllGames = false) {
             })
           );
         }
+        console.log("Writing context: ", res.lists.custom[i].name);
         $("#listContextContainer").append(
           writeListContext({
             id: "list" + curId,
-            name: res.lists.custom[i].name,
+            name: curName,
             listCode: res.lists.custom[i].listCode,
           })
         );
@@ -2044,7 +2055,7 @@ function displaySubContext(text, games, items, fname, fromList) {
       `], fromList: '` +
       fromList +
       `'})">` +
-      items[i].name.replace(/\\/, "") +
+      items[i].name.replace(/\\/g, "") +
       `</li>`;
   }
   el += `</div></div>`;
@@ -2113,7 +2124,7 @@ function contextRename(game) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Renaming "` +
-    game.name.replace(/\\/, "") +
+    game.name.replace(/\\/g, "") +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameGame(event, this, '` +
     game.id.substr(5 + game.length) +
@@ -2164,7 +2175,7 @@ function showRenameList(list) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Renaming list "` +
-    list.name.replace(/\\/, "") +
+    list.name.replace(/\\/g, "") +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameList(event, this, '` +
     list.id.substr(4) +
@@ -2206,7 +2217,7 @@ function showDeleteList(list) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Really delete list "` +
-    list.name.replace(/\\/, "") +
+    list.name.replace(/\\/g, "") +
     `"?</div><hr/>
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button redBtn" id="deleteConfirm" onclick="deleteList('` +
@@ -2256,7 +2267,7 @@ function showShareList(list) {
             title: list.name,
             text:
               'Link for game list "' +
-              list.name.replace(/\\/, "") +
+              list.name.replace(/\\/g, "") +
               '"on selectagame: ',
             url: "https://selectagame.net/" + list.listCode,
           })
@@ -2265,7 +2276,7 @@ function showShareList(list) {
       } else {
         window.open(
           'mailto:?Subject=Import%20my%20list%20on%20SelectAGame&body=Click this link to import my the list "' +
-            list.name.replace(/\\/, "") +
+            list.name.replace(/\\/g, "") +
             '" on SelectAGame.%0D%0A%0D%0A https://selectagame.net/' +
             list.listCode +
             ' %0D%0A%0D%0AIf the above link doesn%27t work, go the Games and Lists menu and click the "Plus" button to Import a list, and use this code: ' +
@@ -2417,7 +2428,7 @@ async function contextBGG(el, game, recur, inexact) {
   } else {
     var exactStr = "&exact=1";
   }
-  game = game.replace("&", "%26").replace(/\\/, "");
+  game = game.replace("&", "%26").replace(/\\/g, "");
   fetch(
     `https://boardgamegeek.com/xmlapi2/search?query=` +
       game +
@@ -2601,6 +2612,7 @@ function writeGameContext(contextObj) {
     contextObj.name,
     contextObj.list
   );
+  console.log("contextObj ", contextObj);
   var htmlString =
     `<div class="contextActions off" list="games` +
     contextObj.list +
@@ -2608,7 +2620,7 @@ function writeGameContext(contextObj) {
     contextObj.id +
     `">` +
     `<div class="contextTitle">` +
-    contextObj.name.replace(/\\/, "") +
+    contextObj.name.replace(/\\/g, "") +
     `</div>` +
     `<li class="bggLink">BoardGameGeek Link</li>` +
     `<li onclick="contextMove([` +
@@ -2640,7 +2652,7 @@ function createContextObjectString(id, name, list) {
  * @returns
  */
 function writeListContext(contextObj) {
-  //console.log("wLC: ", contextObj);
+  console.log("wLC: ", contextObj);
   if (contextObj.listCode) {
     var shareable =
       `<li onclick="showShareList({id: '` +
@@ -2660,7 +2672,7 @@ function writeListContext(contextObj) {
     contextObj.id +
     `">` +
     `<div class="contextTitle">` +
-    contextObj.name.replace(/\\/, "") +
+    contextObj.name.replace(/\\/g, "") +
     `</div>` +
     shareable +
     `<li onclick="showRenameList({id: '` +
@@ -2870,7 +2882,7 @@ function showRenameSession(session) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Renaming session "` +
-    session.name.replace(/\\/, "") +
+    session.name.replace(/\\/g, "") +
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameSession(event, this, '` +
     session.id.substr(4) +
@@ -2926,7 +2938,7 @@ function showDeleteSession(session) {
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Really delete session "` +
-    session.name.replace(/\\/, "") +
+    session.name.replace(/\\/g, "") +
     `"?</div><hr/>
     <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
     <div class="button redBtn" id="deleteConfirm" onclick="deleteSession('` +
@@ -3008,7 +3020,7 @@ function addNewGame(el) {
   console.log(
     $(el)
       .val()
-      .replace(/&/, "&amp;")
+      .replace(/&/g, "&amp;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "\\'")
   );
@@ -3030,7 +3042,7 @@ function addNewGame(el) {
       `" class="gameName" game_id="` +
       res.status._id +
       `">` +
-      res.status.name.replace(/\\/, "") +
+      res.status.name.replace(/\\/g, "") +
       `
                 </div>
                 <div class='toggle'>
@@ -3077,7 +3089,7 @@ function addList() {
         `">` +
         `<div class="menuGamesContainer">
               <div class="listName" onclick="openList($(this).parent().parent().attr('id'))">` +
-        list.replace(/\\/, "") +
+        list.replace(/\\/g, "") +
         `
               </div>
             </div>
@@ -3288,7 +3300,7 @@ function toggleEdit(check) {
         res.status[i].active ? (isChecked = " checked") : (isChecked = " ");
         htmlString +=
           `<li><div class="editGame">` +
-          res.status[i].name.replace(/\\/, "") +
+          res.status[i].name.replace(/\\/g, "") +
           `</div>` +
           `<div class='toggle'>
           <label class="switch">
@@ -3545,7 +3557,7 @@ function createAndShowAlert(alert, error = false) {
 function updateCurrentGames(curGames) {
   var htmlString = ``;
   curGames.forEach(function (e) {
-    htmlString += `<div class="curGameItem">` + e.replace(/\\/, "") + `</div>`;
+    htmlString += `<div class="curGameItem">` + e.replace(/\\/g, "") + `</div>`;
   });
   $("#currentGames").html(htmlString);
   $("#listNotify").html("<span>" + curGames.length + "</span>");
@@ -3733,32 +3745,51 @@ function sortObjectArray(arr, field) {
 
 function fillVotes(games) {
   games = games.sort(lowerCaseFieldSort("name"));
+  console.log("FillVotes: ", games);
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
+    if (typeof games[i].votes == "undefined") {
+      games[i].votes = 500;
+    }
     htmlString +=
       `<div class="voteItem"><div class="voteLabel"><label for="` +
       games[i].game +
       `">` +
-      games[i].name.replace(/\\/, "") +
+      games[i].name.replace(/\\/g, "") +
       `</label><div class="voteToolTip">
           <ion-icon name="help-circle-outline"></ion-icon>
           <div class="toolTipContainer"><div class="voteSubTitle">` +
-      games[i].name.replace(/\\/, "") +
+      games[i].name.replace(/\\/g, "") +
       `</div>
         </div>
       </div></div>`;
     htmlString +=
-      `<input type='range' min='1' max='1000' value='500' step='1' id="` +
+      `<input type='range' min='1' max='1000' value='` +
+      games[i].votes +
+      `' step='1' id="` +
       games[i].game +
       `"/></div>`;
   }
   htmlString += `</div><div class="submitButton button greenBtn bottomBtn" id="voteButton">Submit Votes</div>`;
   //console.log("The string: ", htmlString);
   $("#voteContainer").html(htmlString);
+  var voteIncrementer = 0;
+  $("input[type=range]").on("change", function () {
+    var arr = [];
+    voteIncrementer++;
+    $("input[type=range").each(function (i, e) {
+      arr.push({ id: $(e).prop("id"), vote: $(e).val() });
+    });
+    ttsFetch(
+      "save_votes",
+      { votes: arr, incrementer: voteIncrementer, code: $("#code").text() },
+      () => {}
+    );
+  });
   //sortVotes();
   for (var i = 0; i < games.length; i++) {
     contextBGG($(".voteToolTip .voteSubTitle")[i], games[i].name);
-    console.log("context for " + games[i].name.replace(/\\/, ""));
+    console.log("context for " + games[i].name.replace(/\\/g, ""));
   }
   //$(".voteSubX").on("click", function() {closeToolTip(this)});
   $(".voteLabel label").on("click", function () {
@@ -3888,7 +3919,7 @@ function fillGames(games) {
         ` id="play` +
         i +
         `"><div class="playGameTitle">` +
-        games[i].name.replace(/\\/, "") +
+        games[i].name.replace(/\\/g, "") +
         `</div><div class="voteWeight">(` +
         games[i].weight +
         `)</div><div class="playBGGLink button greenBtn">View on BGG</div></div>`;
@@ -4391,7 +4422,7 @@ function runListImport(code) {
         el +=
           `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
           `<div class="subContextTitle">Import list "` +
-          res.list.name.replace(/\\/, "") +
+          res.list.name.replace(/\\/g, "") +
           `" with ` +
           res.list.games.length +
           ` games?</div><hr/>
@@ -4722,7 +4753,7 @@ function lowerCaseSort() {
 function lowerCaseNameSort() {
   return function (a, b) {
     return a.name
-      .replace(/\\/, "")
+      .replace(/\\/g, "")
       .toLowerCase()
       .localeCompare(b.name.toLowerCase());
   };

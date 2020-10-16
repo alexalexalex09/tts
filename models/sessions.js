@@ -29,6 +29,8 @@ var SessionSchema = new Schema(
         done: { type: Boolean, default: false },
         doneVoting: { type: Boolean, default: false },
         privateNote: { type: String, default: "" },
+        votes: [{ id: String, vote: Number }],
+        voteIncrementer: Number,
       },
     ],
     votes: [

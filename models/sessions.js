@@ -20,6 +20,8 @@ var SessionSchema = new Schema(
       {
         game: { type: Schema.Types.ObjectId, ref: "Game" },
         addedBy: [String],
+        minPlayers: Number,
+        maxPlayers: Number,
       },
     ],
     users: [

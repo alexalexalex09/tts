@@ -113,6 +113,8 @@ block content
         #hitMeToolTip
           ion-icon(name="information-circle-outline")
           .tooltip Add a random game from your collection
+      #selectFilter(players=0)
+        ion-icon(name="filter" onclick="showSelectFilter()")
       #selectLists
       button#gameSubmit.button.greenBtn(type='submit' value='')
         | Submit These Games

@@ -52,6 +52,7 @@ Game.find({ name: /'/ }).exec(function (err, curGames) {
   });
 });
 
+/* Async BGG Function Definitions */
 function getBGGPage(pageNum) {
   var promise = new Promise(function (resolve, reject) {
     https.get(
@@ -68,38 +69,28 @@ function getBGGPage(pageNum) {
         resp.on("end", () => {
           data = data.toString();
           console.log(pageNum);
-          var regexq = /(?<=boardgame.*?>)(.*?)(?=<)/g;
-          var matches = data.match(regexq);
+          var regexName = /(?<=\<a.*?boardgame\/)(.*?)(?:\/.*?class=\'primary\'[ ]*?\>)(.*?)(?=<)/g;
+          var matches = data.match(regexName);
+          //console.log("Matches: ", matches);
+          var I;
           var start = false;
           var ret = [];
           matches.forEach(function (e, i) {
-            if (
-              e != "" &&
-              e != "Shop" &&
-              start == true &&
-              e.indexOf("&nbsp;") == -1 &&
-              Number(e) != e &&
-              !(e.substr(0, 1) == "[" && e.substr(e.length - 1, 1) == "]") &&
-              e.indexOf("&laquo;") == -1 &&
-              e.indexOf("&raquo;") == -1
-            ) {
-              if (e.indexOf("The") == 0) {
-                ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
-                e = e.substr(4);
-              }
-              if (e.indexOf("A") == 0) {
-                ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
-                e = e.substr(2);
-              }
-              if (e.indexOf("An") == 0) {
-                ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
-                e = e.substr(3);
-              }
-              ret.push({ name: e, rank: (pageNum - 1) * 50 + i });
+            var id = Number(e.match(/([0-9]*)(?=\/)/g)[0]);
+            var name = e.substr(e.indexOf(">") + 1);
+            if (name.indexOf("The ") == 0) {
+              ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
+              name = name.substr(4);
             }
-            if (e == "Num Voters") {
-              start = true;
+            if (name.indexOf("A ") == 0) {
+              ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
+              name = name.substr(2);
             }
+            if (name.indexOf("An ") == 0) {
+              ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
+              name = name.substr(3);
+            }
+            ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
           });
           resolve(ret);
         });
@@ -108,59 +99,89 @@ function getBGGPage(pageNum) {
   });
   return promise;
 }
-var topGames = [];
-getBGGPage(1)
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(2);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(3);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(4);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(5);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(6);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(7);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(8);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(9);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    return getBGGPage(10);
-  })
-  .then((ret) => {
-    topGames.push(ret);
-    var count = 0;
-    var newData = [];
-    topGames.forEach(function (e) {
-      count += e.length;
-      e.forEach(function (el) {
-        newData.push(el);
-      });
+
+async function getBGGPages(numPages) {
+  var arr = [];
+  for (var i = 1; i < numPages + 1; i++) {
+    var ret = await getBGGPage(i);
+    arr.push(ret);
+  }
+  return arr;
+}
+
+async function getBGGMetaDatas(topGames) {
+  var newData = [];
+  for (var i = 0; i < topGames.length; i++) {
+    var e = topGames[i];
+    //count += e.length;
+    var ids = "";
+    var toAdd = [];
+    e.forEach(function (el) {
+      toAdd.push(el);
+      ids += el.bggID + ",";
     });
-    console.log("length: ", count);
+    ids = ids.substr(0, ids.length - 1);
+    console.log(
+      "getBGGMetaData " + Math.floor((i / topGames.length) * 100) + "%"
+    );
+    toAdd = await getBGGMetaData(ids, toAdd);
+    toAdd.forEach(function (ele) {
+      newData.push(ele);
+    });
+  }
+  return newData;
+}
+
+function getBGGMetaData(ids, toAdd) {
+  var promise = new Promise(function (resolve, reject) {
+    https.get(
+      "https://www.boardgamegeek.com/xmlapi2/thing?id=" + ids,
+      (resp) => {
+        var data = "";
+
+        // A chunk of data has been recieved.
+        resp.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on("end", () => {
+          data = data.toString();
+          parser.parseString(data, function (err, result) {
+            //console.log(result);
+            if (result.errors) {
+              reject({ err: result.errors });
+            } else {
+              var arr = [];
+              if (result.items.item) {
+                for (var i = 0; i < result.items.item.length; i++) {
+                  toAdd[i].minplayers =
+                    result.items.item[i].minplayers[0].$.value;
+                  toAdd[i].maxplayers =
+                    result.items.item[i].maxplayers[0].$.value;
+                }
+                resolve(toAdd);
+              } else {
+                reject({ err: "Nothing returned" });
+              }
+            }
+          });
+        });
+      }
+    );
+  });
+  return promise;
+}
+
+/*Use Async BGG Functions to get top list of games with metadata */
+getBGGPages(20).then((topGames) => {
+  getBGGMetaDatas(topGames).then((newData) => {
     Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
       if (curResource) {
         curResource.data = { games: newData };
-        curResource.save();
+        curResource.save().then(function () {
+          console.log("saved");
+        });
       } else {
         var newResource = new Resource({
           name: "topGames",
@@ -170,6 +191,14 @@ getBGGPage(1)
       }
     });
   });
+});
+function parseBGGThing($BGGItems, field, attr) {
+  if (attr) {
+    return $BGGItems.children("item").children(field).first().attr(attr);
+  } else {
+    return $BGGItems.children("item").children(field).first().html();
+  }
+}
 
 /*
 TopGame.findOne({ name: "topGames" }).exec(function (err, gameList) {
@@ -186,7 +215,7 @@ TopGame.findOne({ name: "topGames" }).exec(function (err, gameList) {
   gameList.update();
 });
 */
-function makeid(length, checkList) {
+function makeid(length = 5, checkList = []) {
   //TODO: Filter out bad words
   var result = "";
   var characters = "ABCEGHJKLMNPQRTUVWXYZ0123456789";
@@ -2049,7 +2078,7 @@ router.post("/get_top_list", function (req, res) {
     if (curResource) {
       var ret = [];
       curResource.data.games.forEach(function (e) {
-        ret.push(e.name);
+        ret.push(e);
       });
       res.send({ games: ret });
     }

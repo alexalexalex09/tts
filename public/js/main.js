@@ -4018,7 +4018,21 @@ function getTopList() {
     }
     var htmlString = `<div id="topList" class="off">`;
     res.games.forEach(function (e, i) {
-      htmlString += `<li>` + e + `</li>`;
+      e.bggID = e.bggID || "";
+      e.minplayers = e.minplayers || "";
+      e.maxplayers = e.maxplayers || "";
+      htmlString +=
+        `<li bggID = "` +
+        e.bggID +
+        `"minPlayers="` +
+        e.minplayers +
+        `" maxPlayers="` +
+        e.maxplayers +
+        `" name="` +
+        e.name +
+        `">` +
+        e.name +
+        `</li>`;
     });
     $("body").append(htmlString + `</div>`);
     console.log("added Autocomplete");
@@ -4064,6 +4078,52 @@ function hitMe() {
   /*} else {
   //Add game to session
   }*/
+}
+
+function showSelectFilter() {
+  if ($("#selectFilterList").length == 0) {
+    $("body").append(`
+  <div id="selectFilterListContainer" onclick="$('#selectFilterListContainer').remove(); $('#selectFilterItems').remove();"></div>
+  <div id="selectFilterItems">
+    <form id="selectFilterList" onsubmit="return submitSelectFilter()">
+      <label for="selectNumPlayers"> Filter by number of players: </label>
+      <input type="number" name="selectNumPlayers" id="selectNumPlayers" />
+      <input class="textSubmit" type='submit' value=''/>
+    </form>
+  </div>
+  `);
+  }
+}
+
+function submitSelectFilter() {
+  var players = $("#selectNumPlayers").val();
+  $("#selectFilter").attr("players", players);
+  $("#selectLists .listGames li").each(function (i, e) {
+    if (players <= 0) {
+      $(e).removeClass("off");
+      $("#selectFilter").removeClass("filterActive");
+    } else {
+      $("#selectFilter").addClass("filterActive");
+      var match = $(
+        '#topList li[name="' +
+          $(e).children(".gameName").first().text().trim() +
+          '"]'
+      );
+      if (match.length > 0) {
+        if (
+          players > Number($(match).attr("maxplayers")) ||
+          players < Number($(match).attr("minplayers"))
+        ) {
+          $(e).addClass("off");
+        } else {
+          $(e).removeClass("off");
+        }
+      }
+    }
+  });
+  $("#selectFilterListContainer").remove();
+  $("#selectFilterItems").remove();
+  return false;
 }
 
 function checkBGG() {

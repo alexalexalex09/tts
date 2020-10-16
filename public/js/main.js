@@ -81,6 +81,8 @@ window.addEventListener("load", function () {
       createAndShowAlert($(".phraseText").first().text().substr(8));
     });
 
+    $("#postSelectContainer").html("");
+
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
     console.log(res.session.users[index].done);
@@ -3937,6 +3939,41 @@ function fillGames(games) {
     contextBGG($(".voteSubTitle")[i], games[i].name);
   }
   console.log("fillgames");
+}
+
+function playShare() {
+  if (navigator.share) {
+    navigator
+      .share({
+        title: "SelectAGame",
+        text: "View our SelectAGame playlist at ",
+        url:
+          "https://selectagame.net/" +
+          document.getElementById("code").innerHTML,
+      })
+      .then(() => console.log("Successful share"))
+      .catch((error) => console.log("Error sharing", error));
+  } else {
+    var games = "";
+    $(".playGame").each(function (i, e) {
+      games +=
+        i +
+        1 +
+        ": " +
+        $(e).children(".playGameTitle").first().text() +
+        "%0D%0A";
+    });
+    window.open(
+      "mailto:?Subject=SelectAGame%20Playlist%20" +
+        document.getElementById("code").innerHTML +
+        "&body=Click this link to view our playlist on SelectAGame%0D%0A%0D%0Ahttps://selectagame.net/" +
+        document.getElementById("code").innerHTML +
+        '%0D%0A%0D%0AIf the above link doesn%27t work, click "Join Game" on the home page and enter this code: ' +
+        document.getElementById("code").innerHTML +
+        "%0D%0A%0D%0AHere%27s our playlist: %0D%0A%0D%0A" +
+        games
+    );
+  }
 }
 
 function showListSettings(el) {

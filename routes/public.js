@@ -415,7 +415,7 @@ router.post("/get_sessions", (req, res) => {
       res.send(result);
     });
   } else {
-    res.send(ERR_LOGIN);
+    res.send({ err: "Log in first to view your sessions" });
   }
 });
 

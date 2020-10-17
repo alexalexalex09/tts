@@ -121,14 +121,14 @@ block content
     
     #postSelectView.view.off
       #postSelectTitle.pageTitle Waiting...
-      #postSelectImg
       .sessionInfoDisplay 
         .phraseDisplay
         #postSelectCodeDisplay.codeDisplay Your Code:
+      #postSelectImg
       #postSelectContainer
-      if !user
-        #postSelectIntro 
-          | Welcome to SelectAGame! Other users are currently adding games to this session. When they've finished you will vote to see which of those games your group will play first. If you'd like to add games also, click the Login button above.
+        if !user
+          #postSelectIntro 
+            | Welcome to SelectAGame! Other users are currently adding games to this session. When they've finished you will vote to see which of those games your group will play first. If you'd like to add games also, click the Login button above.
 
     #voteView.view.off
       #voteTitle.pageTitle Voting
@@ -207,14 +207,14 @@ block content
         .menuHomeIcon
       #faqContainer
         ul#faqList
-          li.fq What is a Session?
-          li.fa
+          li.faqq What is a Session?
+          li.faqa
             | Let's say you and your friends want to get together to play games. It's always hard to pick a game, so you fire up a session, share the link, and start adding games to it. A session is the place where you list games to play when you get together, and then vote on them to create your playlist.
-          li.fq Where can I manage my lists?
-          li.fa
+          li.faqq Where can I manage my lists?
+          li.faqa
             | In the menu (top left hand side on mobile), click "Games and Lists"
-          li.fq How do I know if someone else already added the game I want to the session?
-          li.fa
+          li.faqq How do I know if someone else already added the game I want to the session?
+          li.faqa
             | When you're working on a session, a blue "list" button will appear on the left side of the screen. Click it to see the games that have already been added to the session.
 
     #aboutView.pop.off

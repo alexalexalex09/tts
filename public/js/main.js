@@ -215,6 +215,7 @@ window.addEventListener("load", function () {
         if ($(".userName").length > 0) {
           goForwardFrom("#homeView", "#selectView");
         } else {
+          firstSessionMsg();
           goForwardFrom("#homeView", "#postSelectView");
         }
         break;
@@ -560,7 +561,11 @@ window.addEventListener("load", function () {
       socket.off(oldCode + "select");
     }
     $("#code").html("");
-    $("#postSelectContainer").html("");
+    if ($("#postSelectIntro").length > 0) {
+      $("#postSelectContainer").html($("#postSelectIntro")[0].outerHTML);
+    } else {
+      $("#postSelectContainer").html("");
+    }
     $("#codeInputGroup").removeClass("off");
     window.setTimeout(function () {
       console.log("wait 1");
@@ -1087,8 +1092,7 @@ function lockGames(code) {
       $("#postSelectTitle").html(
         "Edit Games List <div class='menuHomeIcon'></div>"
       );
-      $("#postSelectContainer").html();
-      $("#postSelectContainer").css("grid-area", "4/2/15/10");
+      $("#postSelectContainer").css("grid-area", "4/2/18/10");
       $("#postSelectContainer").html(res.htmlString);
       sortEditGames();
       $("#postSelectImg").remove();
@@ -1132,18 +1136,6 @@ function lockGames(code) {
       }, 10);
     }, 300);
   });
-  /*   const lg_options = {
-    method: "POST",
-    body: JSON.stringify({ code: code }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  startLoader();
-  fetch("/lock_games", lg_options).then(function (lresponse) {
-    finishLoader();
-    return lresponse.json().then((lres) => {});
-  }); */
 }
 
 //This doesn't appear to be called anymore
@@ -1186,50 +1178,6 @@ function addGroupGame() {
   );
   return false;
 }
-//The above doesn't appear to be called anymore
-
-/* const gga_options = {
-    method: "POST",
-    body: JSON.stringify({ game: game, code: $("#code").text() }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  //add_user_game_unsorted
-  startLoader();
-  fetch("/group_game_add", gga_options).then(function (response) {
-    finishLoader();
-    return response.json().then((res) => {
-      if (res.err) {
-        if ((res.err = "added")) {
-          $("#addGroupGamesInput").css("color", "var(--main-red)");
-          $('input[game_id="' + res.game + '"]').each(function () {
-            $(this).parent().parent().parent().css("color", "var(--main-red)");
-          });
-          $("#addGroupGamesInput").addClass("shake");
-          window.setTimeout(function () {
-            $("#addGroupGamesInput").css("color", "var(--main-black)");
-            $("#addGroupGamesInput").removeClass("shake");
-            $('input[game_id="' + res.game + '"]').each(function () {
-              $(this)
-                .parent()
-                .parent()
-                .parent()
-                .css("color", "var(--main-black)");
-            });
-          }, 600);
-        } else {
-          createAndShowAlert(res.err, true);
-        }
-      } else {
-        $("#editGameList").append(res.status);
-        sortEditGames();
-        registerEGS();
-      }
-    }); 
-  });
-  return false;
-}*/
 
 function sortEditGames() {
   $("#editGameList")
@@ -1300,53 +1248,6 @@ function addListDisplay(
     </li>`;
   $(dest).append(listString);
 }
-
-/**********************************/
-/*   Get all of a User's Games    */
-/**********************************/
-/* function guag() {
-  ttsFetch("/get_user_all_games", "", (res) => {
-    var htmlString = "";
-    res.lists.allGames.sort(lowerCaseNameSort());
-    for (var i = 0; i < res.lists.allGames.length; i++) {
-      htmlString +=
-        `<li id="` +
-        res.lists.allGames[i]._id +
-        `">` +
-        res.lists.allGames[i].name +
-        `</li>`;
-    }
-    //TODO: This doesn't do anything with HTMLString
-  }); */
-/* 
-  const guag_options = {
-    method: "POST",
-    body: "",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  startLoader();
-  fetch("/get_user_all_games", guag_options).then(function (response) {
-    finishLoader();
-    return response.json().then((res) => {
-      if (!res.err) {
-        var htmlString = "";
-        res.lists.allGames.sort(lowerCaseNameSort());
-        for (var i = 0; i < res.lists.allGames.length; i++) {
-          htmlString +=
-            `<li id="` +
-            res.lists.allGames[i]._id +
-            `">` +
-            res.lists.allGames[i].name +
-            `</li>`;
-        }
-      } else {
-        createAndShowAlert(res.err, true);
-      }
-    });
-  }); 
-} */
 
 /**********************************/
 /*  Get a User's Populated Lists  */
@@ -1565,6 +1466,7 @@ function gulp(showAllGames = false) {
 
       $("#listsContainer").html(htmlString);
       writeSessions(res);
+      initGreenLists();
     },
     (res) => {}
   );
@@ -1602,24 +1504,6 @@ function gulp(showAllGames = false) {
  */
 function toggleGamesAdder() {
   showAdderMenu();
-  /*
-  if ($(".gamesAdder").hasClass("off")) {
-    $(".gamesAdder").removeClass("off");
-    $("#menuAddListContainer").addClass("slideDown");
-    $("#menuAddGamesContainer").addClass("slideDown");
-    setTimeout(function () {
-      $("#menuAddListContainer").addClass("off");
-      $("#menuAddGamesContainer").addClass("off");
-    }, 501);
-    setTimeout(function () {
-      $(".gamesAdder").removeClass("slideDown");
-      $("#addListButton").addClass("rotated");
-    }, 20);
-  } else {
-    hideGamesAdderButtons();
-    $("#addListButton").removeClass("rotated");
-  }
-  */
 }
 
 function hideGamesAdderButtons() {
@@ -2616,7 +2500,7 @@ function writeGameContext(contextObj) {
     contextObj.name,
     contextObj.list
   );
-  console.log("contextObj ", contextObj);
+  //console.log("contextObj ", contextObj);
   var htmlString =
     `<div class="contextActions off" list="games` +
     contextObj.list +
@@ -2656,7 +2540,7 @@ function createContextObjectString(id, name, list) {
  * @returns
  */
 function writeListContext(contextObj) {
-  console.log("wLC: ", contextObj);
+  //console.log("wLC: ", contextObj);
   if (contextObj.listCode) {
     var shareable =
       `<li onclick="showShareList({id: '` +
@@ -3076,15 +2960,9 @@ function addNewGame(el) {
  * @param {*} event
  */
 function addList() {
-  // Number 13 is the "Enter" key on the keyboard
   console.log("addList");
-  //if (event.keyCode === 13) {
   console.log("submitting new game");
-  //event.preventDefault();
-  var list = menuAddListInput.value
-    .replace(/&/, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "\\'");
+  var list = menuAddListInput.value;
   ttsFetch("/list_add", { list: list }, (res) => {
     var gamesNum = $("#gamesView #gamesContainer").children("li").length;
     $("#gamesView #gamesContainer").append(
@@ -3093,7 +2971,7 @@ function addList() {
         `">` +
         `<div class="menuGamesContainer">
               <div class="listName" onclick="openList($(this).parent().parent().attr('id'))">` +
-        list.replace(/\\/g, "") +
+        list +
         `
               </div>
             </div>
@@ -3158,7 +3036,7 @@ function recheckGreenLists() {
 //by getting the list of games already added to the session
 //and checking to see if every game in a list has been added
 function initGreenLists() {
-  //console.log("initGreenLists");
+  console.log("initGreenLists", $("#selectLists>li").length);
   var sessionGames = [];
   $("session")
     .children()
@@ -3167,7 +3045,8 @@ function initGreenLists() {
     });
   //console.log(sessionGames);
 
-  $("#selectLists li").each(function (ind, ele) {
+  $("#selectLists>li").each(function (ind, ele) {
+    console.log($(ele).attr("id"));
     var count = 0;
     $(ele)
       .children(".listGames")
@@ -3602,6 +3481,9 @@ function showSelect(data, isOwner) {
   if (isOwner) {
     htmlString += `<div class="button greenBtn bottomBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;
   }
+  if ($("#postSelectIntro").length > 0) {
+    htmlString = $("#postSelectIntro")[0].outerHTML + htmlString;
+  }
   $("#postSelectContainer").html(htmlString);
   console.log("registered lockGames");
   //Is this setting up too many events?
@@ -3686,8 +3568,9 @@ function showVoteThumb(el) {
         if (res.length > 200) {
           res = reduceUntilNextWordEnd(res.substr(0, 200));
           res =
+            "<div>" +
             res +
-            `...<a target="_blank" href="` +
+            `...</div><a target="_blank" href="` +
             $el.children(".voteSubTitle").children("a").attr("href") +
             `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
         }
@@ -3779,16 +3662,18 @@ function fillVotes(games) {
   $("#voteContainer").html(htmlString);
   var voteIncrementer = 0;
   $("input[type=range]").on("change", function () {
-    var arr = [];
-    voteIncrementer++;
-    $("input[type=range").each(function (i, e) {
-      arr.push({ id: $(e).prop("id"), vote: $(e).val() });
-    });
-    ttsFetch(
-      "save_votes",
-      { votes: arr, incrementer: voteIncrementer, code: $("#code").text() },
-      () => {}
-    );
+    if ($(".userName").length > 0) {
+      var arr = [];
+      voteIncrementer++;
+      $("input[type=range").each(function (i, e) {
+        arr.push({ id: $(e).prop("id"), vote: $(e).val() });
+      });
+      ttsFetch(
+        "save_votes",
+        { votes: arr, incrementer: voteIncrementer, code: $("#code").text() },
+        () => {}
+      );
+    }
   });
   //sortVotes();
   for (var i = 0; i < games.length; i++) {
@@ -4099,8 +3984,10 @@ function showSelectFilter() {
         `">
       </div>
       <div id="selectFilterRowTwo" class="selectFilterRow">
-        <label for="excludeUnknown">Exclude games if player number is unknown?</label>
-        <input type="checkbox" name="excludeUnknown"></input>
+        <label for="excludeUnknown">Exclude games if game player number is unknown? </label>
+        <input type="checkbox" name="excludeUnknown" ` +
+        $("#selectFilter").attr("exclude") +
+        `></input>
       </div>
       <div id="selectFilterRowThree" class="selectFilterRow">
         <button type="reset" class="filterClear" onclick="$('#selectNumPlayers').val(0);submitSelectFilter();">Remove Filter</button>
@@ -4114,8 +4001,17 @@ function showSelectFilter() {
 }
 
 function submitSelectFilter() {
-  var players = $("#selectNumPlayers").val();
+  var players = Number($("#selectNumPlayers").val());
+  var exclude = $("#selectFilterItems input[name=excludeUnknown]").prop(
+    "checked"
+  );
   $("#selectFilter").attr("players", players);
+  if (exclude) {
+    $("#selectFilter").attr("exclude", "checked");
+  } else {
+    $("#selectFilter").attr("exclude", "");
+  }
+
   $("#selectLists .listGames li").each(function (i, e) {
     if (players <= 0) {
       $(e).removeClass("off");
@@ -4128,10 +4024,30 @@ function submitSelectFilter() {
           '"]'
       );
       if (match.length > 0) {
-        if (
-          players > Number($(match).attr("maxplayers")) ||
-          players < Number($(match).attr("minplayers"))
-        ) {
+        if ($(match).attr("minplayers")) {
+          min = Number($(match).attr("minplayers"));
+        } else {
+          min = -1;
+        }
+        if ($(match).attr("maxplayers")) {
+          max = Number($(match).attr("maxplayers"));
+        } else {
+          max = -1;
+        }
+        console.log(
+          players,
+          exclude,
+          min,
+          max,
+          min <= players && players <= max
+        );
+        if (min <= players && players <= max) {
+          $(e).removeClass("off");
+        } else {
+          $(e).addClass("off");
+        }
+      } else {
+        if (exclude) {
           $(e).addClass("off");
         } else {
           $(e).removeClass("off");
@@ -4515,6 +4431,17 @@ function showError(err) {
   }, 10);
 }
 
+function firstSessionMsg() {
+  $("body").append(
+    `<div class="firstSessionCatch" onclick="$(this).next().remove(); $(this).remove();"></div>
+<div class="firstSessionError"><div class="closeButton" onclick="$(this).parent().prev().remove(); $(this).parent().remove();">
+<ion-icon name="close-outline"></ion-icon></div><div class="firstSessionErrorMsg">` +
+      `Welcome to SelectAGame!<br><br>You're just in time! Other users are currently adding games to this session. Soon, you'll get to vote on which games you want to play. <br><br>Close this box whenever you're ready. You'll be able see which games have been added by clicking the blue list button (<ion-icon name="reader-outline"></ion-icon>). <br><br>If you'd like to add a game to be considered, log in or sign up first.` +
+      `</div><div class="firstSessionLogin"><button class="button blueBtn" onclick="window.location.href='/login';">Login/Sign Up</div></div>
+`
+  );
+}
+
 function runListImport(code) {
   ttsFetch(
     "/get_list_code_info",
@@ -4592,7 +4519,10 @@ function performListImport(code) {
           `</div></div>`
       );
   } else {
-    if ($("#importOverWriteCheckbox").prop("checked")) {
+    if (
+      $("#importOverWriteCheckbox").length == 0 ||
+      $("#importOverWriteCheckbox").prop("checked")
+    ) {
       ttsFetch("/get_list_from_code", { code: code }, (res) => {
         gulp();
         createAndShowAlert("List successfully added!");

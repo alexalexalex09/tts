@@ -327,11 +327,11 @@ select.bggFilterInput {
 #faqList {
   list-style: none;
 }
-.fq {
+.faqq {
   font-weight: 500;
   font-size: 1.4em;
 }
-.fa {
+.faqa {
   margin-left: 10px;
   margin-bottom: 1em;
 }
@@ -796,8 +796,8 @@ input#listImportSubmit.green {
   margin-top: calc(calc(var(--vh) * 7.5) - 1em - 5px);
 }
 
-.listImportError {
-  width: min(90%, 250px);
+.listImportError,
+.firstSessionError {
   left: 50%;
   top: 50%;
   position: absolute;
@@ -806,22 +806,43 @@ input#listImportSubmit.green {
   padding: 5px;
   background: var(--main-white);
   border-radius: 6px;
+  z-index: 102;
 }
 
-.listImportErrorMsg {
+.listImportError {
+  width: min(90%, 250px);
+}
+
+.firstSessionError {
+  width: min(90%, 400px);
+}
+
+.listImportErrorMsg,
+.firstSessionErrorMsg {
   height: var(--vh20);
   padding: calc(var(--vh) * 2);
   text-align: center;
   vertical-align: middle;
   display: table-cell;
-  width: min(90vw, 250px);
+  width: 100%;
   font-size: min(10vw, 20px);
 }
 
-.listImportCatch {
+.listImportCatch,
+.firstSessionCatch {
   width: 100vw;
   height: 100vh;
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(5px);
+  z-index: 100;
+  position: absolute;
+}
+
+.firstSessionErrorMsg ion-icon {
+  background-color: var(--main-blue);
+  border-radius: 12px;
+  padding: 3px;
+  transform: translateY(0.4em);
+  color: var(--main-white);
 }
 
 #importDuplicate {
@@ -1033,11 +1054,13 @@ input#listImportSubmit.green {
   box-sizing: border-box;
   justify-items: center;
   display: grid;
+  grid-template-columns: 100%;
   z-index: 101;
 }
 
 #selectFilterList {
   height: auto;
+  width: 100%;
   z-index: 2;
   color: var(--main-white);
   font-size: min(calc(var(--vh5) - 5px), 20px);
@@ -1063,7 +1086,7 @@ input#listImportSubmit.green {
   cursor: pointer;
   border-radius: 12px;
   text-align: center;
-  width: 8em;
+  width: min(8em, 95%);
   height: 1.8em;
   border: 1px solid white;
 }
@@ -1088,11 +1111,8 @@ input#listImportSubmit.green {
   margin-top: 1px;
 }
 
-#selectFilterRowOne {
-  width: auto;
-  position: relative;
-  display: table;
-  margin: 6px auto 0px;
+#selectFilterRowTwo {
+  font-size: min(3vw, 17px);
 }
 
 #selectFilterRowThree {
@@ -1104,6 +1124,10 @@ input#listImportSubmit.green {
 .selectFilterRow {
   margin-top: 6px;
   width: 100%;
+  display: table;
+  position: relative;
+  margin: 6px auto 0px;
+  text-align: center;
 }
 
 .filterActive {
@@ -1202,22 +1226,20 @@ input#listImportSubmit.green {
   transform: translateX(-50%);
 }
 
-#postSelectContainer,
-#postVoteContainer {
+#postSelectContainer {
+  grid-area: 8/2/18/10;
+  font-size: 1em;
   height: 100%;
   text-align: center;
-  overflow-y: auto;
-  overflow-x: hidden;
-  font-size: min(3 * (1vw + 1vh) / 2, 20px);
-}
-
-#postSelectContainer {
-  grid-area: 10/2/18/10;
+  align-self: start;
+  padding-top: 5px;
+  position: relative;
 }
 
 #postSelectIntro {
   grid-area: 8/2/10/10;
   height: 100%;
+  padding-bottom: 1em;
 }
 
 #postVoteContainer {
@@ -1253,7 +1275,7 @@ input#listImportSubmit.green {
 }
 
 .connecting {
-  color: var(--main-red);
+  color: var(--main-green);
 }
 
 .connecting:before,
@@ -1315,6 +1337,7 @@ input#listImportSubmit.green {
 #addGroupGamesTitle {
   width: 11em;
   margin: 0 auto;
+  font-size: min(var(--vh5), 25px);
 }
 
 #editGameList {
@@ -1324,6 +1347,11 @@ input#listImportSubmit.green {
   width: 100%;
   left: 0;
   position: relative;
+  height: calc(var(--vh) * 30);
+}
+
+#postSelectContainer .bottomBtn {
+  bottom: 0px;
 }
 
 #editGameList li {
@@ -1477,11 +1505,12 @@ input#listImportSubmit.green {
   width: 14em;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto var(--vh30);
+  grid-template-rows: auto /*var(--vh30)*/;
   gap: 1px 1px;
   grid-template-areas:
     "title"
     "description";
+  padding: 4px;
 }
 
 .showVoteThumb .voteSubX {
@@ -1511,7 +1540,7 @@ input#listImportSubmit.green {
 }
 
 .BGGDesc {
-  line-height: 0.9em;
+  line-height: 1.1em;
   grid-area: description;
   padding-top: 10px;
   height: 100%;
@@ -1537,6 +1566,14 @@ input#listImportSubmit.green {
 .BGGDescText a {
   width: 100%;
   display: inline-block;
+}
+
+#postVoteContainer {
+  height: 100%;
+  text-align: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: min(3 * (1vw + 1vh) / 2, 20px);
 }
 
 /***********************************************************************************/
@@ -2685,7 +2722,7 @@ ion-icon#addListButton {
   #gamesContainer > li,
   #gamesContainer .listGames {
     padding-left: 0px;
-    grid-template-columns: 360px 40px;
+    grid-template-columns: 340px 40px;
   }
 
   #sessionsContainer li {

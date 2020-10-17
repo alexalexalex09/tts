@@ -758,6 +758,7 @@ input#listImportSubmit.green {
 
 .textSubmit,
 .textClear,
+.filterClear,
 #listImportSubmit {
   height: calc(calc(var(--vh, 1vh) * 5) - 4px);
   width: calc(calc(var(--vh, 1vh) * 5) - 4px);
@@ -1021,12 +1022,12 @@ input#listImportSubmit.green {
 }
 
 #selectFilterItems {
-  width: min(90vw, 450px);
+  width: min(90vw, 500px);
   position: absolute;
   transform: translate(-50%, -50%);
   left: 50%;
   top: 50%;
-  padding: 15px;
+  padding: 35px 15px 15px 15px;
   background-color: var(--main-blue);
   border-radius: 12px;
   box-sizing: border-box;
@@ -1051,22 +1052,58 @@ input#listImportSubmit.green {
   vertical-align: middle;
 }
 
-#selectFilterList input.textSubmit {
-  border: none;
-  background-image: url(../img/checkmark-circle-outline-white.svg);
-  margin: 0;
-  position: relative;
-  right: unset;
-  vertical-align: middle;
-}
-
-#selectFilterList input.textSubmit {
+#selectFilterList .filterSubmit,
+#selectFilterList .filterClear {
   background-color: transparent;
   border: none;
-  background-image: url(../img/checkmark-circle-outline-white.svg);
-  margin: 0;
+  margin: 10px 0px 0px 0px;
   position: relative;
   right: 0px;
+  vertical-align: middle;
+  cursor: pointer;
+  border-radius: 12px;
+  text-align: center;
+  width: 8em;
+  height: 1.8em;
+  border: 1px solid white;
+}
+
+#selectFilterItems .closeButton ion-icon {
+  color: var(--main-white);
+}
+
+#selectFilterList .filterSubmit {
+  background-color: var(--main-green);
+}
+
+#selectFilterList .filterClear {
+  background-color: var(--main-red);
+}
+
+#selectFilterList input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  vertical-align: top;
+  margin-left: -10px;
+  margin-top: 1px;
+}
+
+#selectFilterRowOne {
+  width: auto;
+  position: relative;
+  display: table;
+  margin: 6px auto 0px;
+}
+
+#selectFilterRowThree {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
+}
+
+.selectFilterRow {
+  margin-top: 6px;
+  width: 100%;
 }
 
 .filterActive {
@@ -1175,11 +1212,11 @@ input#listImportSubmit.green {
 }
 
 #postSelectContainer {
-  grid-area: 9/2/15/10;
+  grid-area: 10/2/18/10;
 }
 
 #postSelectIntro {
-  grid-area: 11/2/19/10;
+  grid-area: 8/2/10/10;
   height: 100%;
 }
 

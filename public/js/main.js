@@ -192,6 +192,7 @@ window.addEventListener("load", function () {
         goForwardFrom("#homeView", "#postSelectView");
         window.hist = ["#homeView", "#selectView", "#postSelectView"];
         setBackNormal();
+        break;
       case "#postPostSelectView":
         goForwardFrom("#homeView", "#postSelectView");
         //lockback();
@@ -210,6 +211,7 @@ window.addEventListener("load", function () {
         });
         break;
       case "#codeView":
+      case "#selectView":
         if ($(".userName").length > 0) {
           goForwardFrom("#homeView", "#selectView");
         } else {
@@ -795,8 +797,8 @@ window.addEventListener("load", function () {
     /^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)) &&
     !/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))
   ) {
-    joinClick(); //calls joinSession and therefore join_session
-    submitCode(window.location.pathname.substr(1));
+    joinClick(); //calls joinSession
+    submitCode(window.location.pathname.substr(1)); //calls submitCode and therefore join_session
   }
 
   if (/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
@@ -4082,16 +4084,32 @@ function hitMe() {
 
 function showSelectFilter() {
   if ($("#selectFilterList").length == 0) {
-    $("body").append(`
+    $("body").append(
+      `
   <div id="selectFilterListContainer" onclick="$('#selectFilterListContainer').remove(); $('#selectFilterItems').remove();"></div>
   <div id="selectFilterItems">
+    <button class="closeButton" onclick="$('#selectFilterListContainer').remove(); $('#selectFilterItems').remove();">
+      <ion-icon name='close-outline'></ion-icon>
+    </button>
     <form id="selectFilterList" onsubmit="return submitSelectFilter()">
-      <label for="selectNumPlayers"> Filter by number of players: </label>
-      <input type="number" name="selectNumPlayers" id="selectNumPlayers" />
-      <input class="textSubmit" type='submit' value=''/>
+      <div id="selectFilterRowOne" class="selectFilterRow">
+        <label for="selectNumPlayers">Number of players:</label>
+        <input type="number" name="selectNumPlayers" id="selectNumPlayers" value="` +
+        $("#selectFilter").attr("players") +
+        `">
+      </div>
+      <div id="selectFilterRowTwo" class="selectFilterRow">
+        <label for="excludeUnknown">Exclude games if player number is unknown?</label>
+        <input type="checkbox" name="excludeUnknown"></input>
+      </div>
+      <div id="selectFilterRowThree" class="selectFilterRow">
+        <button type="reset" class="filterClear" onclick="$('#selectNumPlayers').val(0);submitSelectFilter();">Remove Filter</button>
+        <button type="submit" class="filterSubmit">Set Filter</button>
+      </div>
     </form>
   </div>
-  `);
+  `
+    );
   }
 }
 

@@ -1,5 +1,5 @@
 require("dotenv").config();
-var createError = require("http-errors");
+//var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var logger = require("morgan");
@@ -8,13 +8,15 @@ const publicRouter = require("./routes/public");
 var authRouter = require("./routes/auth");
 const session = require("express-session");
 const cfenv = require("cfenv");
-var socket_io = require("socket.io");
+//var socket_io = require("socket.io");
 var ManagementClient = require("auth0").ManagementClient;
 //const requireHTTPS = require("./middleware/requireHTTPS");
+var compression = require("compression");
 
 var app = express();
 
 //app.use(requireHTTPS);
+app.use(compression());
 app.get("*", function (req, res, next) {
   console.log("host: ", req.headers.host);
   if (req.headers.host.indexOf(":3000") == -1 && !req.secure) {

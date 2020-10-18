@@ -36,9 +36,10 @@ button {
 }
 
 .textInputCont {
-  height: var(--vh5);
+  height: 100%;
   text-align: center;
   position: relative;
+  min-height: var(--vh5);
 }
 
 .button {
@@ -733,7 +734,7 @@ input:checked + .slider:before {
   position: absolute;
   border: 1px solid black;
   border-radius: 10px;
-  height: 100%;
+  height: var(--vh5);
   box-sizing: border-box;
   width: 100%;
   padding: 0px 50px 0px 5px;
@@ -749,6 +750,11 @@ input#listImportSubmit {
   transition: background-color 0.5s;
   z-index: 3;
   cursor: pointer;
+}
+
+#addGameList {
+  margin-top: calc(var(--vh5) + 10px);
+  max-width: calc(100% - 13em);
 }
 
 .textInputCont input.textSubmit.green,
@@ -1199,7 +1205,7 @@ input#listImportSubmit.green {
 }
 
 .autocomplete-items {
-  position: relative;
+  position: absolute;
   width: 100%;
   background: var(--main-white);
   top: calc(var(--vh) * 4);
@@ -1212,6 +1218,10 @@ input#listImportSubmit.green {
   max-height: calc(var(--vh) * 25);
   overflow: auto;
   cursor: pointer;
+}
+
+.autocomplete-active {
+  border: 1px solid var(--main-gold);
 }
 
 /********************/
@@ -1234,11 +1244,11 @@ input#listImportSubmit.green {
   align-self: start;
   padding-top: 5px;
   position: relative;
+  overflow-y: auto;
 }
 
 #postSelectIntro {
   grid-area: 8/2/10/10;
-  height: 100%;
   padding-bottom: 1em;
 }
 
@@ -1951,7 +1961,7 @@ input[type="range"]:before {
   font-size: calc(var(--vh, 1vh) * 3);
   list-style: none;
   display: grid;
-  grid-template-columns: 1fr 40px;
+  grid-template-columns: calc(95vw - 60px) 40px;
   grid-template-rows: 1fr;
   align-items: start;
 }
@@ -2215,7 +2225,7 @@ ion-icon#addListButton {
 
 .itemContainer {
   margin-top: calc(calc(var(--vh) * 4) + 36px);
-  font-size: 1.3em;
+  font-size: 5vw;
 }
 
 .itemContainer ul {

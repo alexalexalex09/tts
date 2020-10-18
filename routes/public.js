@@ -234,6 +234,10 @@ function makeid(length = 5, checkList = []) {
   return result;
 }
 
+router.get("/privacy-tos", function (req, res, next) {
+  res.render("privacy-tos");
+});
+
 router.get("/*", function (req, res, next) {
   req.session.previousURL = req.session.currentURL;
   req.session.currentURL = req.originalUrl;
@@ -1235,12 +1239,11 @@ router.post("/submit_games", function (req, res) {
       if (!curSession) {
         res.send(ERR_CODE);
       } else {
-        console.log("What?");
-        socketAPI.sendNotification("A user finished adding games...");
         var index = curSession.users.findIndex(
           (obj) => obj.user == req.user.id
         );
         curSession.users[index].done = true;
+        curSession.lock = "#selectView";
         curSession.save().then(function () {
           socketAPI.addGame({ code: req.body.code });
         });
@@ -1345,14 +1348,6 @@ router.post("/lock_games", function (req, res) {
             htmlString +=
               `<li` +
               dupeSearch(fuse, curSession.votes[i]) +
-              /*
-               *
-               *
-               * TODO: Green text overrides the dup yellow, and it probably shouldn't
-               *
-               *
-               *
-               */
               `><div class="editGame` +
               green +
               `">` +
@@ -1385,18 +1380,45 @@ router.post("/lock_games", function (req, res) {
   function dupeSearch(fuse, vote) {
     vote.dup = "";
     var searchres = fuse.search(vote.name);
-    //console.log(vote.name, Object.keys(searchres).length, searchres);
+    console.log(vote.name, Object.keys(searchres).length, searchres);
     for (let key in searchres) {
       if (searchres[key].score > 0.4) {
         delete searchres[key];
       }
     }
     if (Object.keys(searchres).length > 1) {
-      //console.log("Dupe!");
-      //console.log(searchres);
       return ' class="dup"';
     } else {
-      return "";
+      var the = vote.name.substr(0, 4).toLowerCase();
+      var an = vote.name.substr(0, 3).toLowerCase();
+      var a = vote.name.substr(0, 2).toLowerCase();
+      console.log(vote.name, the, an, a);
+      var len = 0;
+      if (the == "the ") {
+        len = 4;
+      }
+      if (an == "an ") {
+        len = 3;
+      }
+      if ((a = "a ")) {
+        len = 2;
+      }
+      if (len > 0) {
+        var searchres = fuse.search(vote.name.substr(len));
+        console.log(vote.name, Object.keys(searchres).length, searchres);
+        for (let key in searchres) {
+          if (searchres[key].score > 0.4) {
+            delete searchres[key];
+          }
+        }
+        if (Object.keys(searchres).length > 1) {
+          return ' class="dup"';
+        } else {
+          return "";
+        }
+      } else {
+        return "";
+      }
     }
   }
 });

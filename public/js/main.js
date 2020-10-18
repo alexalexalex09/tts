@@ -101,9 +101,27 @@ window.addEventListener("load", function () {
       window.hist = ["#homeView", "#selectView"];
       setBackHome();
     }
-    if (dest == "#selectView") {
+    if (dest == "#selectView" && res.session.users[index].done) {
+      window.hist = ["#homeView", "#codeView", "#selectView"];
+      dest = "#postSelectView";
+    }
+    var startedSelecting = false;
+    res.session.games.forEach(function (e) {
+      if (!startedSelecting) {
+        if (e.addedBy.findIndex((obj) => obj == res.session.owner) > -1) {
+          startedSelecting = true;
+        }
+      }
+    });
+
+    if (dest == "#selectView" && !startedSelecting) {
       dest = "#codeView";
     }
+
+    if (dest == "#selectView" && startedSelecting) {
+      window.hist = ["#homeView", "#codeView"];
+    }
+
     if (dest == "#voteView" && res.session.users[index].doneVoting) {
       dest = "#postVoteView";
     }
@@ -1814,6 +1832,24 @@ function showAdder(item, theId, func, funcArg, prompt) {
   if (funcArg) {
     funcArg = `'` + funcArg + `'`;
   }
+  if (item == "game") {
+    var listSelector = `<input type="checkbox" name="addGameListCheckbox" id="addGameListCheckbox"></input><label for="addGameListCheckbox"> Add games to this list: </label><select name="addGameList" id="addGameList" disabled>`;
+    $("#gamesContainer .listName").each(function (i, e) {
+      if (i > 0) {
+        listSelector =
+          listSelector +
+          `<option value="` +
+          $(e).text().trim() +
+          `">` +
+          $(e).text().trim() +
+          `</option>`;
+      }
+    });
+    listSelector += `</select>`;
+  } else {
+    listSelector = "";
+  }
+  console.log(listSelector);
   var el =
     `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
     item +
@@ -1830,10 +1866,14 @@ function showAdder(item, theId, func, funcArg, prompt) {
     `">
     <input class="textInput" type="text" autocomplete="off" id="` +
     theId +
-    `">
-    <input class="textSubmit" type="submit" value="">
+    `">` +
+    listSelector +
+    `<input class="textSubmit" type="submit" value="">
   </form>`;
   $("body").append(el);
+  $("#addGameListCheckbox").on("click", function () {
+    $(this).parent().children("select").first().prop("disabled", !this.checked);
+  });
   getTopList();
 }
 
@@ -3770,6 +3810,7 @@ function fillPostVote(users) {
 }
 
 function textSubmit(el) {
+  console.log("Submitted");
   addNewGame(el);
   $("#addGamesInputCont .textSubmit").first().addClass("green");
   setTimeout(function () {
@@ -3897,15 +3938,23 @@ function editList(list) {
 
 function getTopList() {
   ttsFetch("/get_top_list", { code: code }, (res) => {
+    var auto = res.games.map((e) => e.name);
     if (document.getElementById("menuAddGamesInput") != null) {
-      autocomplete(document.getElementById("menuAddGamesInput"), res.games);
+      autocomplete(document.getElementById("menuAddGamesInput"), auto);
     }
     if (document.getElementById("addGamesInput") != null) {
-      autocomplete(document.getElementById("addGamesInput"), res.games);
+      autocomplete(document.getElementById("addGamesInput"), auto);
     }
-    var htmlString = `<div id="topList" class="off">`;
+    //var htmlString = `<div id="topList" class="off">`;
+    var topList = [];
     res.games.forEach(function (e, i) {
-      e.bggID = e.bggID || "";
+      topList[i] = {
+        bggID: e.bggID || "",
+        minplayers: e.minplayers || "",
+        maxplayers: e.maxplayers || "",
+        name: e.name,
+      };
+      /*e.bggID = e.bggID || "";
       e.minplayers = e.minplayers || "";
       e.maxplayers = e.maxplayers || "";
       htmlString +=
@@ -3919,9 +3968,12 @@ function getTopList() {
         e.name +
         `">` +
         e.name +
-        `</li>`;
+        `</li>`;*/
     });
-    $("body").append(htmlString + `</div>`);
+    localStorage.setItem("topList", JSON.stringify(topList));
+    //console.log(JSON.parse(localStorage.getItem("topList")));
+
+    /*$("body").append(htmlString + `</div>`);*/
     console.log("added Autocomplete");
   });
 }
@@ -4018,19 +4070,18 @@ function submitSelectFilter() {
       $("#selectFilter").removeClass("filterActive");
     } else {
       $("#selectFilter").addClass("filterActive");
-      var match = $(
-        '#topList li[name="' +
-          $(e).children(".gameName").first().text().trim() +
-          '"]'
+      var topList = JSON.parse(localStorage.getItem("topList"));
+      var match = topList.findIndex(
+        (obj) => obj.name == $(e).children(".gameName").first().text().trim()
       );
-      if (match.length > 0) {
-        if ($(match).attr("minplayers")) {
-          min = Number($(match).attr("minplayers"));
+      if (match > -1) {
+        if (typeof topList[match].minplayers != "undefined") {
+          min = Number(topList[match].minplayers);
         } else {
           min = -1;
         }
-        if ($(match).attr("maxplayers")) {
-          max = Number($(match).attr("maxplayers"));
+        if (typeof topList[match].maxplayers != "undefined") {
+          max = Number(topList[match].maxplayers);
         } else {
           max = -1;
         }
@@ -4734,7 +4785,10 @@ function autocomplete(inp, arr) {
   /*execute a function presses a key on the keyboard:*/
   inp.addEventListener("keydown", function (e) {
     var x = document.getElementById(this.id + "autocomplete-list");
+    var toSubmit = document.getElementById(this.id).parentElement;
+    //console.log(x);
     if (x) x = x.getElementsByTagName("div");
+    //console.log(x);
     if (e.keyCode == 40) {
       /*If the arrow DOWN key is pressed,
         increase the currentFocus variable:*/
@@ -4748,14 +4802,28 @@ function autocomplete(inp, arr) {
       currentFocus--;
       /*and and make the current item more visible:*/
       addActive(x);
+    } else if (e.keyCode == 39 || e.keyCode == 9) {
+      //e.preventDefault();
+      var input = toSubmit.querySelector("input[type=text]");
+      var autoc = document.querySelector(".autocomplete-active");
+      var len = input.value.length;
+      input.value = autoc.textContent;
+      setTimeout(function () {
+        input.setSelectionRange(len, autoc.textContent.length);
+      }, 10);
     } else if (e.keyCode == 13) {
       /*If the ENTER key is pressed, prevent the form from being submitted,*/
       e.preventDefault();
       if (currentFocus > -1) {
         /*and simulate a click on the "active" item:*/
         if (x) x[currentFocus].click();
+      } else {
+        if (currentFocus == -1) {
+          toSubmit.querySelector("input[type=submit]").click();
+        }
       }
     }
+    console.log(currentFocus);
   });
   function addActive(x) {
     /*a function to classify an item as "active":*/
@@ -4763,7 +4831,7 @@ function autocomplete(inp, arr) {
     /*start by removing the "active" class on all items:*/
     removeActive(x);
     if (currentFocus >= x.length) currentFocus = 0;
-    if (currentFocus < 0) currentFocus = x.length - 1;
+    if (currentFocus < -1) currentFocus = x.length - 1;
     /*add class "autocomplete-active":*/
     x[currentFocus].classList.add("autocomplete-active");
   }

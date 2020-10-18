@@ -9,24 +9,24 @@ head
   meta(name='viewport' content='width=device-width, initial-scale=1')
   link(rel='manifest' href='site.webmanifest')
   link(rel='apple-touch-icon' href='icon.png')
-  // Place favicon.ico in the root directory
   link(rel='stylesheet' href='css/normalize.css')
   link(rel='stylesheet' href='css/boilerplate.css')
-  link(rel='stylesheet' href='css/main.css')
+  link( rel='stylesheet' href='css/main.css')
   // Fonts
-  link(href='https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap' rel='preload')
+  link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap')
   meta(name='theme-color' content='#fafafa')
   script(src='js/vendor/modernizr-3.8.0.min.js')
   script(src='https://code.jquery.com/jquery-3.4.1.min.js' integrity='sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=' crossorigin='anonymous')
   script.
     window.jQuery || document.write('<script src="js/vendor/jquery-3.4.1.min.js"><\\/script>')
-  script(src='js/main.js')
+    
+  script(src='/socket.io/socket.io.js')
+  script(defer src='js/main.js')
   script(type='module' src='https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.esm.js')
   script(nomodule='' src='https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.js')
   //TODO: Remove ionicons
   script(src='https://kit.fontawesome.com/0de4e9f77d.js' crossorigin='anonymous')
   link(href="https://use.fontawesome.com/releases/v5.0.1/css/all.css" rel="stylesheet")
-  script(src='/socket.io/socket.io.js')
 //if IE
   p.browserupgrade
     | You are using an 
@@ -34,7 +34,6 @@ head
     |  browser. Please 
     a(href='https://browsehappy.com/?locale=en') upgrade your browser
     |  to improve your experience and security.
-
 block content
 
 // Footer Scripts

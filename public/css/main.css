@@ -678,7 +678,7 @@ input:checked + .slider:before {
 /*****************/
 
 #mainImg {
-  background-image: url(/img/main.svg);
+  /*background-image: url(/img/main.svg);*/
   grid-area: 1/4/7/8;
   width: var(--vh30);
   height: calc(var(--vh30) - 1px);

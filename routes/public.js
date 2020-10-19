@@ -236,6 +236,7 @@ function makeid(length = 5, checkList = []) {
 
 router.get("/privacy-tos", function (req, res, next) {
   res.render("privacy-tos");
+  next();
 });
 
 router.get("/*", function (req, res, next) {

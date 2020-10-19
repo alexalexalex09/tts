@@ -32,7 +32,7 @@ router.get("/callback", function (req, res, next) {
       return next(err);
     }
     if (!user) {
-      return res.redirect("/login");
+      return res.redirect("/nouser");
     }
     req.logIn(user, function (err) {
       if (err) {

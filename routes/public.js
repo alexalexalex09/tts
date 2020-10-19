@@ -770,10 +770,6 @@ router.post("/game_add", function (req, res) {
 
                 if (theGame) {
                   //if it's already in the array, do nothing
-                  //Here's how to get the game's name
-                  Game.findById(theGame, "name", function (err, gameToReport) {
-                    console.log("Game name: " + gameToReport.name);
-                  });
                   res.send({
                     err:
                       req.body.game.replace(/\\/, "") +
@@ -782,6 +778,12 @@ router.post("/game_add", function (req, res) {
                 } else {
                   //if it's not, push it to the array and save the user
                   curUser.lists.allGames.push(game._id);
+                  if (req.body.list) {
+                    var index = curUser.lists.custom.findIndex(
+                      (obj) => (obj.name = req.body.list)
+                    );
+                    curUser.lists.custom[index].games.push(game._id);
+                  }
                   console.log("theGame: ", theGame);
                   curUser.save().then(function (theUser) {
                     Game.findById(game._id, "name", function (

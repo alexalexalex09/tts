@@ -1834,7 +1834,7 @@ function showAdder(item, theId, func, funcArg, prompt) {
   }
   if (item == "game") {
     var listSelector = `<input type="checkbox" name="addGameListCheckbox" id="addGameListCheckbox"></input>
-                        <label for="addGameListCheckbox"> Add games to this list: </label>
+                        <label for="addGameListCheckbox"> Also add to this list: </label>
                         <select name="addGameList" id="addGameList" disabled>`;
     $("#gamesContainer .listName").each(function (i, e) {
       if (i > 0) {

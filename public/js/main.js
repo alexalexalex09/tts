@@ -1833,7 +1833,9 @@ function showAdder(item, theId, func, funcArg, prompt) {
     funcArg = `'` + funcArg + `'`;
   }
   if (item == "game") {
-    var listSelector = `<input type="checkbox" name="addGameListCheckbox" id="addGameListCheckbox"></input><label for="addGameListCheckbox"> Add games to this list: </label><select name="addGameList" id="addGameList" disabled>`;
+    var listSelector = `<input type="checkbox" name="addGameListCheckbox" id="addGameListCheckbox"></input>
+                        <label for="addGameListCheckbox"> Add games to this list: </label>
+                        <select name="addGameList" id="addGameList" disabled>`;
     $("#gamesContainer .listName").each(function (i, e) {
       if (i > 0) {
         listSelector =
@@ -2952,14 +2954,21 @@ function addNewGame(el) {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "\\'")
   );
+  if (
+    el == "#menuAddGamesInput" &&
+    $(el).parent().children("input[type=checkbox]").first().prop("checked")
+  ) {
+    var list = $("#addGameList").val();
+  } else {
+    var list = "";
+  }
   var game = $(el)
     .val()
     .replace(/&/, "&amp;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "\\'");
   $(el).val("");
-  ttsFetch("/game_add", { game: game }, (res) => {
-    //TODO: This doesn't get called at all in the event of an error?
+  ttsFetch("/game_add", { game: game, list: list }, (res) => {
     console.log(res);
     var htmlString =
       `<li>
@@ -2992,6 +3001,7 @@ function addNewGame(el) {
       recheckGreenLists();
     }
   });
+  return false;
 }
 
 /**
@@ -4806,11 +4816,13 @@ function autocomplete(inp, arr) {
       //e.preventDefault();
       var input = toSubmit.querySelector("input[type=text]");
       var autoc = document.querySelector(".autocomplete-active");
-      var len = input.value.length;
-      input.value = autoc.textContent;
-      setTimeout(function () {
-        input.setSelectionRange(len, autoc.textContent.length);
-      }, 10);
+      if (input && autoc) {
+        var len = input.value.length;
+        input.value = autoc.textContent;
+        setTimeout(function () {
+          input.setSelectionRange(len, autoc.textContent.length);
+        }, 10);
+      }
     } else if (e.keyCode == 13) {
       /*If the ENTER key is pressed, prevent the form from being submitted,*/
       e.preventDefault();

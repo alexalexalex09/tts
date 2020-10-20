@@ -10,6 +10,12 @@ window.addEventListener("load", function () {
 
   createSession = function (res) {
     console.log("createSession");
+    var crown = Math.floor(Math.random() * 5) + 1;
+    crown = "crown" + crown;
+    console.log("crown: ", crown);
+    $(".menuHomeIcon").each(function (i, e) {
+      $(this).addClass(crown);
+    }); //Set owner logo
     socket.on(res.session.code + "owner", (data) => {
       console.log("received ", data);
       if (data.selectEvent /*&& res.session.lock != "#postPostSelectView"*/) {
@@ -190,6 +196,13 @@ window.addEventListener("load", function () {
 
   joinSession = function (res) {
     $("#backArrow").removeClass("off"); //Show the back arrow
+    $(".menuHomeIcon").each(function (i, e) {
+      $(this).removeClass("crown1");
+      $(this).removeClass("crown2");
+      $(this).removeClass("crown3");
+      $(this).removeClass("crown4");
+      $(this).removeClass("crown5");
+    }); //not the owner
     setCode(res.code);
     setPhrase(`<div class="phraseText">Session: ` + res.phrase + `</div>`);
     console.log("joinSession: ", res.lock);
@@ -1603,24 +1616,36 @@ function bulkSelectGame(el) {
   console.log($(el).parent().parent().children().children(".flipped"));
   if ($(el).parent().parent().children().children(".flipped").length > 0) {
     console.log("showing bulk");
-    $(".bulkSelect").removeClass("off");
+    $("#gamesContainer .bulkSelect").removeClass("off");
     $(".listContents.slideUp").addClass("bulkShowing");
     if (
       $(el).parent().parent().children().children(".flipped").length ==
       $(el).parent().parent().children().children(".sprite").length
     ) {
-      $('.bulkSelect ion-icon[name="square-outline"]').addClass("off");
-      $('.bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
+      $('#gamesContainer .bulkSelect ion-icon[name="square-outline"]').addClass(
+        "off"
+      );
+      $(
+        '#gamesContainer .bulkSelect ion-icon[name="checkbox-outline"]'
+      ).removeClass("off");
     } else {
-      $('.bulkSelect ion-icon[name="square-outline"]').removeClass("off");
-      $('.bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+      $(
+        '#gamesContainer .bulkSelect ion-icon[name="square-outline"]'
+      ).removeClass("off");
+      $(
+        '#gamesContainer .bulkSelect ion-icon[name="checkbox-outline"]'
+      ).addClass("off");
     }
   } else {
     console.log("hiding bulk");
-    $(".bulkSelect").addClass("off");
+    $("#gamesContainer .bulkSelect").addClass("off");
     $(".listContents.slideUp").removeClass("bulkShowing");
-    $('.bulkSelect ion-icon[name="square-outline"]').removeClass("off");
-    $('.bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+    $(
+      '#gamesContainer .bulkSelect ion-icon[name="square-outline"]'
+    ).removeClass("off");
+    $('#gamesContainer .bulkSelect ion-icon[name="checkbox-outline"]').addClass(
+      "off"
+    );
   }
   console.log($(el).children("spriteChecked"));
 }
@@ -1633,15 +1658,23 @@ function closeBulk() {
       $(this).removeClass("flipped");
       $(this).children(".spriteChecked").first().addClass("spriteUnchecked");
     });
-  $(".bulkSelect").addClass("off");
+  $("#gamesContainer .bulkSelect").addClass("off");
   $(".listContents.slideUp").removeClass("bulkShowing");
-  $('.bulkSelect ion-icon[name="square-outline"]').removeClass("off");
-  $('.bulkSelect ion-icon[name="checkbox-outline"]').addClass("off");
+  $('#gamesContainer .bulkSelect ion-icon[name="square-outline"]').removeClass(
+    "off"
+  );
+  $('#gamesContainer .bulkSelect ion-icon[name="checkbox-outline"]').addClass(
+    "off"
+  );
 }
 
 function selectAllBulk() {
-  $('.bulkSelect ion-icon[name="square-outline"]').addClass("off");
-  $('.bulkSelect ion-icon[name="checkbox-outline"]').removeClass("off");
+  $('#gamesContainer .bulkSelect ion-icon[name="square-outline"]').addClass(
+    "off"
+  );
+  $(
+    '#gamesContainer .bulkSelect ion-icon[name="checkbox-outline"]'
+  ).removeClass("off");
   $(".bulkShowing")
     .children()
     .children(".sprite")
@@ -1651,8 +1684,8 @@ function selectAllBulk() {
     });
 }
 
-function deleteRemoveBulk() {
-  if ($(".bulkSelect").attr("list") == "games0") {
+function deleteRemoveBulk(el) {
+  if ($("#gamesContainer .bulkSelect").first().attr("list") == "games0") {
     showDeleteBulk();
   } else {
     showRemoveBulk();
@@ -1672,7 +1705,7 @@ function getBulkChecked() {
   var games = [];
   var count = 0;
   console.log(games);
-  $(".bulkSelect")
+  $("#gamesContainer .bulkSelect")
     .parent()
     .children(".listContents")
     .first()
@@ -1692,7 +1725,7 @@ function getBulkChecked() {
 function showRemoveBulk() {
   var toRemove = "";
   var toRemove = getBulkChecked();
-  var list = $(".bulkSelect").attr("list");
+  var list = $("#gamesContainer .bulkSelect").attr("list");
 
   toRemove.games.forEach(function (e, i) {
     toRemove.games[i].list = list;
@@ -1706,12 +1739,14 @@ function showRemoveBulk() {
 }
 
 function copyBulk() {
-  console.log($(".bulkSelect").first().attr("list"));
-  var lists = getMenuLists($(".bulkSelect").first().attr("list"));
+  console.log($("#gamesContainer .bulkSelect").first().attr("list"));
+  var lists = getMenuLists(
+    $("#gamesContainer .bulkSelect").first().attr("list")
+  );
   var bc = getBulkChecked();
   var games = bc.games;
   games.forEach(function (e) {
-    e.list = $(".bulkSelect").first().attr("list");
+    e.list = $("#gamesContainer .bulkSelect").first().attr("list");
   });
 
   console.log(games);
@@ -1720,16 +1755,18 @@ function copyBulk() {
     games,
     lists,
     "copyToList",
-    $(".bulkSelect").first().attr("list")
+    $("#gamesContainer .bulkSelect").first().attr("list")
   );
 }
 
 function moveBulk() {
-  var lists = getMenuLists($(".bulkSelect").first().attr("list"));
+  var lists = getMenuLists(
+    $("#gamesContainer .bulkSelect").first().attr("list")
+  );
   var bc = getBulkChecked();
   var games = bc.games;
   games.forEach(function (e) {
-    e.list = $(".bulkSelect").first().attr("list");
+    e.list = $("#gamesContainer .bulkSelect").first().attr("list");
   });
 
   console.log(games);
@@ -1738,7 +1775,7 @@ function moveBulk() {
     games,
     lists,
     "moveToList",
-    $(".bulkSelect").first().attr("list")
+    $("#gamesContainer .bulkSelect").first().attr("list")
   );
 }
 
@@ -1783,7 +1820,7 @@ function showSubList(subList) {
 
 function hideSubList(subList) {
   closeBulk();
-  $(".bulkSelect").each(function () {
+  $("#gamesContainer .bulkSelect").each(function () {
     this.remove();
   });
   $(subList).removeClass("slideUp");
@@ -4040,7 +4077,7 @@ function showSelectFilter() {
     </button>
     <form id="selectFilterList" onsubmit="return submitSelectFilter()">
       <div id="selectFilterRowOne" class="selectFilterRow">
-        <label for="selectNumPlayers">Number of players:</label>
+        <label for="selectNumPlayers">Filter by number of players:</label>
         <input type="number" name="selectNumPlayers" id="selectNumPlayers" value="` +
         $("#selectFilter").attr("players") +
         `">
@@ -4535,7 +4572,7 @@ function runListImport(code) {
       <div id="importOverwrite"><input type="radio" name="duplicate" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
       <div id="importRename"><input type="radio" name="duplicate" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
       </div>
-      <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+      <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().parent().remove()">Cancel</div>
   <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
           res.list.listCode +
           `')">Import</div></div>`;

@@ -52,6 +52,20 @@ Game.find({ name: /'/ }).exec(function (err, curGames) {
   });
 });
 
+User.findOne({ name: "crina" }).exec(function (err, curUser) {
+  console.log(curUser);
+  Game.find({ _id: { $in: curUser.lists.allGames } }).exec(function (
+    err,
+    curGames
+  ) {
+    var arr = [];
+    curGames.forEach(function (e) {
+      arr.push(e.name + ": " + e._id);
+    });
+    console.log("Games: ", arr);
+  });
+});
+
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum) {
   var promise = new Promise(function (resolve, reject) {
@@ -780,8 +794,10 @@ router.post("/game_add", function (req, res) {
                   curUser.lists.allGames.push(game._id);
                   if (req.body.list) {
                     var index = curUser.lists.custom.findIndex(
-                      (obj) => (obj.name = req.body.list)
+                      (obj) => obj.name == req.body.list
                     );
+                    console.log(index);
+                    console.log(curUser.lists.custom[index].games);
                     curUser.lists.custom[index].games.push(game._id);
                   }
                   console.log("theGame: ", theGame);

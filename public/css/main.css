@@ -2198,6 +2198,22 @@ ion-icon#addListButton {
   border: none;
 }
 
+.menuHomeIcon.crown1 {
+  background-image: url(/img/logo-crown1.svg);
+}
+.menuHomeIcon.crown2 {
+  background-image: url(/img/logo-crown2.svg);
+}
+.menuHomeIcon.crown3 {
+  background-image: url(/img/logo-crown3.svg);
+}
+.menuHomeIcon.crown4 {
+  background-image: url(/img/logo-crown4.svg);
+}
+.menuHomeIcon.crown5 {
+  background-image: url(/img/logo-crown5.svg);
+}
+
 .closeButton {
   position: absolute;
   right: 5px;
@@ -2733,6 +2749,11 @@ ion-icon#addListButton {
   #gamesContainer .listGames {
     padding-left: 0px;
     grid-template-columns: 340px 40px;
+  }
+
+  #selectLists .listGames .gameName,
+  #gamesContainer .listGames li {
+    padding-left: 20px;
   }
 
   #sessionsContainer li {

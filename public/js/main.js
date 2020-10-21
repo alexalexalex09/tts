@@ -2679,18 +2679,23 @@ function writeSessionContext(code, name, owned) {
       name +
       `', id:'0000` +
       code +
-      `'})"`;
+      `'})">Rename</li>` +
+      `<li onclick="showDeleteSession({id: '` +
+      code +
+      `', name: '` +
+      name +
+      `'})">Delete</li>` +
+      `</div>`;
   } else {
-    htmlString += `class="grey"`;
+    htmlString +=
+      `class="grey">Rename</li>` +
+      `<li onclick="showDeleteSession({id: '` +
+      code +
+      `', name: '` +
+      name +
+      `'})">Remove From Session</li>` +
+      `</div>`;
   }
-  htmlString +=
-    `>Rename</li>` +
-    `<li onclick="showDeleteSession({id: '` +
-    code +
-    `', name: '` +
-    name +
-    `'})">Delete</li>` +
-    `</div>`;
   return htmlString;
 }
 

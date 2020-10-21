@@ -2394,6 +2394,7 @@ async function contextBGG(el, game, recur, inexact) {
     var exactStr = "";
   } else {
     var exactStr = "&exact=1";
+    console.log(exactStr);
   }
   game = game.replace("&", "%26").replace(/\\/g, "");
   fetch(
@@ -2420,8 +2421,8 @@ async function contextBGG(el, game, recur, inexact) {
           contextBGG(el, "An " + game.substr(2), 3);
         }
         if (recur == 3) {
-          //contextBGG(el, game.substr(3), 4, true);
-          return "";
+          contextBGG(el, game.substr(3), 4, true);
+          //return "";
         }
         if (recur == 4) {
           return "";
@@ -2456,7 +2457,7 @@ async function contextBGG(el, game, recur, inexact) {
                 const getHighestRatingID = async function () {
                   console.log(Number($items.attr("total")) - 1);
                   for (var i = 0; i < Number($items.attr("total")); i++) {
-                    console.log(i + ": ");
+                    //console.log(i + ": ");
                     var rating = await fetchRating(
                       $($items.children()[i]).attr("id")
                     );

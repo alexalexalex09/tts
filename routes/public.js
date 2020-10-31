@@ -256,6 +256,10 @@ router.get("/privacy-tos", function (req, res, next) {
 router.get("/*", function (req, res, next) {
   req.session.previousURL = req.session.currentURL;
   req.session.currentURL = req.originalUrl;
+  if (typeof req.session.userNonce == "undefined") {
+    req.session.userNonce = makeid(20);
+  }
+  console.log("UserNonce: ", req.session.userNonce);
   next();
 });
 

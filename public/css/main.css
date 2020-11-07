@@ -374,6 +374,10 @@ select.bggFilterInput {
   height: 1em;
 }
 
+.listPopupPreview {
+  white-space: nowrap;
+}
+
 #currentGames {
   width: 90vw;
   height: var(--vh90);

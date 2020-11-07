@@ -136,13 +136,24 @@ window.addEventListener("load", function () {
       var votes = res.session.users[index].votes;
       for (var i = 0; i < res.session.votes.length; i++) {
         if (res.session.votes[i].active) {
+          var theVote =
+            votes[
+              votes.findIndex((obj) => obj.id == res.session.votes[i].game)
+            ];
+          if (typeof theVote == "undefined") {
+            console.log(
+              "Error voting for ",
+              res.session.votes[i].name,
+              ", vote reset to 500"
+            );
+            theVote = 500;
+          } else {
+            theVote = theVote.vote;
+          }
           games.push({
             game: res.session.votes[i].game,
             name: res.session.votes[i].name,
-            votes:
-              votes[
-                votes.findIndex((obj) => obj.id == res.session.votes[i].game)
-              ].vote,
+            votes: theVote,
           });
         }
       }

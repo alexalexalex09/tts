@@ -66,6 +66,15 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
   });
 });
 
+//Set userNonce
+router.get("/*", function (req, res, next) {
+  if (typeof req.session.userNonce == "undefined") {
+    req.session.userNonce = makeid(20);
+  }
+  console.log("UserNonce: ", req.session.userNonce);
+  next();
+});
+
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum) {
   var promise = new Promise(function (resolve, reject) {
@@ -296,9 +305,7 @@ router.get(/^\/([A-Z0-9]{6})$/, (req, res) => {
 router.get("/", (req, res) => {
   //console.log("query: ", req.query);
   //console.log("req.session: ", req.session);
-  if (typeof req.session.userNonce == "undefined") {
-    req.session.userNonce = makeid(20);
-  }
+
   socketAPI.sendNotification("Reloading...");
   res.render("index", {
     sessionCode: "none",
@@ -1253,8 +1260,6 @@ router.post("/add_game_to_session", function (req, res) {
     res.send(ERR_LOGIN);
   }
 });
-
-function checkCode() {}
 
 router.post("/submit_games", function (req, res) {
   if (req.user) {

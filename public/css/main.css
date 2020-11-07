@@ -11,6 +11,15 @@
   --main-red: #d00;
   --main-green: #5a5;
   --main-gold: #f90;
+  --font-base: 20px;
+  --font-h1: min(2.5rem, var(--vh5));
+  --font-h2: min(2rem, var(--vh4));
+  --font-h3: 1.2rem;
+  --font-h4: 1rem;
+  --font-p: 1rem;
+  --font-b: min(1.6rem, 8vw);
+  --font-5vh: var(--vh4);
+  --font-sub: 12px;
 }
 
 /*****************/
@@ -18,6 +27,7 @@
 /*****************/
 body {
   box-sizing: border-box;
+  font-size: calc((var(--vh) + 1vw) / 2);
 }
 
 a,
@@ -29,6 +39,10 @@ a:active {
 
 button {
   all: unset;
+}
+
+h1 {
+  font-weight: normal;
 }
 
 .clickable {
@@ -52,7 +66,7 @@ button {
   border-radius: 5px;
   color: var(--main-white);
   cursor: pointer;
-  font-size: min(28px, calc(var(--vh) * 5), 7.5vw);
+  font-size: var(--font-b);
 }
 
 .blueBtn {
@@ -97,11 +111,11 @@ li.grey {
   position: absolute;
   bottom: 0;
   right: 10px;
-  font-size: 12px;
+  font-size: var(--font-sub);
 }
 
 .menu.left {
-  transform: translateX(-60vw);
+  transform: translateX(-75vw);
 }
 
 .tooltip {
@@ -146,7 +160,7 @@ li.grey {
   grid-template-columns: 50% 50%;
   grid-template-rows: repeat(4, calc(var(--vh) * 7));
   color: var(--main-white);
-  font-size: calc(var(--vh) * 2.5);
+  font-size: var(--font-p);
 }
 
 #accountEmailField {
@@ -209,7 +223,7 @@ input#listImportSubmit {
   left: 10vw;
   top: var(--vh5);
   position: absolute;
-  font-size: min(4 * (1vw + 1vh) / 2, 30px);
+  font-size: var(--font-h2);
 }
 
 button.bggFilterButton {
@@ -217,10 +231,10 @@ button.bggFilterButton {
   top: var(--vh10);
   margin: 0 auto;
   width: 40vw;
-  font-size: min(4 * (1vw + 1vh) / 2, 30px);
+  font-size: var(--font-h3);
   left: 30vw;
   border: 2px solid white;
-  height: calc(var(--vh, 1vh) * 5);
+  height: var(--vh5);
 }
 
 .bggListName {
@@ -229,6 +243,7 @@ button.bggFilterButton {
   width: 50vw;
   left: 25vw;
   text-align: center;
+  font-size: var(--font-h4);
 }
 
 select#bggListSelect {
@@ -245,21 +260,25 @@ button#importBGG {
 }
 
 .bggFilters {
-  height: var(--vh20);
+  height: auto;
   top: var(--vh15);
   position: absolute;
-  width: 98vw;
-  padding-top: var(--vh);
+  width: calc(100vw - 20px);
+  left: 10px;
+  padding: 10px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 2fr 1fr;
   gap: 10px;
-  left: 1vw;
   overflow: auto;
   border-top: 1px solid white;
-  margin-top: 5px;
+  margin-top: 10px;
   border-bottom: 1px solid white;
-  background-color: var(--main-blue);
+  background-color: var(--main-white);
   z-index: 1;
+  font-size: var(--font-p);
+  color: var(--main-black);
+  box-sizing: border-box;
+  border-radius: 10px;
 }
 
 input.bggFilterInput[type="number"] {
@@ -279,9 +298,13 @@ select.bggFilterInput {
   top: var(--vh20);
   position: absolute;
   left: 10vw;
-  font-size: 1.3em;
+  font-size: var(--font-h3);
   overflow: auto;
   height: var(--vh50);
+  border: 1px solid var(--main-white);
+  padding: 10px;
+  border-radius: 12px;
+  box-sizing: border-box;
 }
 
 #bggImportList label {
@@ -294,7 +317,6 @@ select.bggFilterInput {
   top: calc(var(--vh20) - 20px);
   left: 10vw;
   position: absolute;
-  border-bottom: 1px solid white;
   width: 80vw;
   height: 19px;
 }
@@ -311,7 +333,6 @@ select.bggFilterInput {
 }
 
 #premiumContainer {
-  font-size: 1em;
   color: var(--main-white);
   text-align: center;
 }
@@ -330,11 +351,13 @@ select.bggFilterInput {
 }
 .faqq {
   font-weight: 500;
-  font-size: 1.4em;
+  font-size: var(--font-h2);
+  line-height: 1;
 }
 .faqa {
   margin-left: 10px;
   margin-bottom: 1em;
+  font-size: var(--font-p);
 }
 
 #listIcon {
@@ -344,7 +367,7 @@ select.bggFilterInput {
   border-radius: 50px;
   padding: 5px;
   color: var(--main-white);
-  font-size: calc(var(--vh) * 5);
+  font-size: var(--font-5vh);
   top: var(--vh20);
   left: 2vw;
   box-shadow: 3px 3px 6px var(--main-light-grey);
@@ -363,7 +386,7 @@ select.bggFilterInput {
   box-sizing: border-box;
   border-radius: 7px;
   color: var(--main-white);
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h3);
   overflow-y: auto;
 }
 
@@ -374,7 +397,7 @@ select.bggFilterInput {
   position: absolute;
   height: calc(var(--vh) * 3);
   min-width: calc(var(--vh) * 3);
-  font-size: calc(var(--vh) * 2);
+  font-size: var(--font-p);
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -519,7 +542,7 @@ input:checked + .slider:before {
   align-self: center;
   color: var(--main-blue);
   padding-right: 3vw;
-  font-size: max(2.5 * (1vw + 1vh) / 2, 25px);
+  font-size: var(--font-h2);
 }
 
 .login a,
@@ -588,7 +611,8 @@ input:checked + .slider:before {
 
 .pageTitle {
   grid-area: 1/1/2/11;
-  font-size: min(10 * (1vw + 1vh) / 2, 4vh);
+  font-size: var(--font-h1);
+  font-weight: normal !important; /*min(10 * (1vw + 1vh) / 2, 4vh);*/
   color: var(--main-grey);
   text-align: center;
   height: 100%;
@@ -602,14 +626,14 @@ input:checked + .slider:before {
   grid-area: 2/1/4/11;
   height: 100%;
   justify-items: center;
-  font-size: min(calc(var(--vh5) - 5px), 20px);
+  font-size: var(--font-h4);
 }
 
 .phraseDisplay {
   cursor: pointer;
   text-align: center;
   width: 100%;
-  height: 1em;
+  height: var(--font-h4);
   max-height: 1em;
   white-space: nowrap;
   display: block;
@@ -630,28 +654,10 @@ input:checked + .slider:before {
   text-align: center;
 }
 
-#backAlert {
-  color: var(--main-white);
-  background-color: var(--main-blue);
-  text-align: center;
-  border-radius: 10px;
-  font-size: 1em;
-  vertical-align: middle;
-  padding: 0.5em;
-  position: absolute;
-  width: 80vw;
-  box-sizing: border-box;
-  margin: 0 auto;
-  top: 5px;
-  right: 10vw;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
 #backArrow ion-icon {
   color: var(--main-blue);
   position: fixed;
-  font-size: 32px;
+  font-size: var(--font-h1);
   top: var(--vh40);
   transform: translateY(-50%);
   cursor: pointer;
@@ -667,7 +673,7 @@ input:checked + .slider:before {
 }
 
 .codeDisplay {
-  height: 1em;
+  height: var(--font-h4);
   text-align: center;
   cursor: pointer;
   padding: 2.5px;
@@ -689,11 +695,12 @@ input:checked + .slider:before {
 }
 
 .subTitle {
-  grid-area: 8/3/10/9;
+  grid-area: 8/2/11/10;
+  height: 100%;
   text-align: center;
   padding-top: 25px;
   line-height: 1.1em;
-  font-size: min(20px, 5vw);
+  font-size: var(--font-h3);
 }
 
 .subTitle p {
@@ -726,6 +733,7 @@ input:checked + .slider:before {
   text-align: center;
   align-self: end;
   height: calc(1em + 5px);
+  font-size: var(--font-h3);
 }
 
 .textInput {
@@ -739,7 +747,7 @@ input:checked + .slider:before {
   width: 100%;
   padding: 0px 50px 0px 5px;
   z-index: 2;
-  font-size: 1.5em;
+  font-size: var(--font-p);
 }
 
 .textInputCont input.textSubmit,
@@ -782,9 +790,6 @@ input#listImportSubmit.green {
 
 #shareListButton ion-icon {
   margin-bottom: 3px;
-}
-#listButtonContainer .button {
-  font-size: max(3.5 * (1vw + 1vh) / 2, 25px);
 }
 
 .textClear {
@@ -831,7 +836,7 @@ input#listImportSubmit.green {
   vertical-align: middle;
   display: table-cell;
   width: 100%;
-  font-size: min(10vw, 20px);
+  font-size: var(--font-h3);
 }
 
 .listImportCatch,
@@ -899,11 +904,11 @@ input#listImportSubmit.green {
 }
 
 #code {
-  font-size: calc(var(--vh, 1vh) * 7);
+  font-size: var(--font-h1);
 }
 
 #codeTitle {
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h2);
 }
 
 #codeButtons {
@@ -913,7 +918,7 @@ input#listImportSubmit.green {
 }
 
 #codeButtons ion-icon {
-  font-size: calc(var(--vh) * 6);
+  font-size: var(--font-h1);
   color: var(--main-blue);
 }
 
@@ -939,6 +944,7 @@ input#listImportSubmit.green {
   bottom: var(--vh20);
   width: 80vw;
   left: 10vw;
+  font-size: var(--font-h1);
   box-shadow: rgb(189, 189, 189) 0px 0px 5px 0px;
   padding: 2vw 0px;
   text-align: center;
@@ -966,7 +972,7 @@ input#listImportSubmit.green {
 #addGamesTitle {
   text-align: center;
   height: auto;
-  font-size: min(calc(var(--vh5) - 5px), 5vw);
+  font-size: var(--font-h2);
 }
 
 #addGamesTitle .text {
@@ -982,7 +988,7 @@ input#listImportSubmit.green {
 }
 
 #addGamesTitle ion-icon {
-  font-size: min(20px, calc(var(--vh5) - 6px));
+  font-size: var(--font-h3);
   vertical-align: top;
 }
 
@@ -994,7 +1000,7 @@ input#listImportSubmit.green {
 #addGamesTitle .tooltip {
   transform: translateX(-100vw);
   z-index: 999;
-  font-size: max(1 * (1vw + 1vh), 16px);
+  font-size: var(--font-p);
   max-width: min(50vw, 400px);
   left: max(-50vw, -400px);
 }
@@ -1008,7 +1014,7 @@ input#listImportSubmit.green {
 #hitMeContainer #hitMe {
   width: calc(var(--vh) * 20);
   height: 70%;
-  font-size: min(calc(var(--vh) * 2.5), 20px);
+  font-size: var(--font-p);
   padding-top: 1px;
   display: inline-block;
 }
@@ -1016,7 +1022,7 @@ input#listImportSubmit.green {
 #hitMeContainer #hitMeToolTip {
   display: inline-block;
   text-align: center;
-  font-size: min(20px, calc(var(--vh5) - 5px));
+  font-size: var(--font-p);
 }
 
 #hitMeToolTip .tooltip {
@@ -1033,7 +1039,7 @@ input#listImportSubmit.green {
   grid-area: 6/2/7/3;
   justify-self: start;
   align-self: end;
-  font-size: calc(var(--vh) * 2.5);
+  font-size: var(--font-p);
 }
 
 #selectFilter ion-icon {
@@ -1069,7 +1075,7 @@ input#listImportSubmit.green {
   width: 100%;
   z-index: 2;
   color: var(--main-white);
-  font-size: min(calc(var(--vh5) - 5px), 20px);
+  font-size: var(--font-h3);
 }
 
 #selectFilterList label {
@@ -1112,13 +1118,13 @@ input#listImportSubmit.green {
 #selectFilterList input[type="checkbox"] {
   width: 1em;
   height: 1em;
-  vertical-align: top;
-  margin-left: -10px;
-  margin-top: 1px;
 }
 
 #selectFilterRowTwo {
-  font-size: min(3vw, 17px);
+  font-size: var(--font-p);
+  display: grid;
+  grid-template-columns: 1fr 2em;
+  align-items: center;
 }
 
 #selectFilterRowThree {
@@ -1148,7 +1154,7 @@ input#listImportSubmit.green {
 
 #selectLists li {
   min-height: var(--vh5);
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h3);
   list-style: none;
   display: grid;
   grid-template-columns: 1fr 11vw 11vw;
@@ -1238,7 +1244,7 @@ input#listImportSubmit.green {
 
 #postSelectContainer {
   grid-area: 8/2/18/10;
-  font-size: 1em;
+  font-size: var(--font-h3);
   height: 100%;
   text-align: center;
   align-self: start;
@@ -1274,14 +1280,6 @@ input#listImportSubmit.green {
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
-}
-
-#postSelectLoadingMessage {
-  top: var(--vh50);
-  position: absolute;
-  left: 50vw;
-  transform: translateX(-50%);
-  font-size: 2em;
 }
 
 .connecting {
@@ -1347,7 +1345,7 @@ input#listImportSubmit.green {
 #addGroupGamesTitle {
   width: 11em;
   margin: 0 auto;
-  font-size: min(var(--vh5), 25px);
+  font-size: var(--font-h3);
 }
 
 #editGameList {
@@ -1366,7 +1364,7 @@ input#listImportSubmit.green {
 
 #editGameList li {
   min-height: var(--vh5);
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h3);
   list-style: none;
   display: grid;
   grid-template-columns: 1fr 11vw 11vw;
@@ -1392,7 +1390,7 @@ input#listImportSubmit.green {
 #dupTip {
   top: calc(var(--vh) * 2.5);
   position: relative;
-  font-size: max(2 * (1vw + 1vh) / 2, 25px);
+  font-size: var(--font-h3);
   color: var(--main-gold);
 }
 
@@ -1430,7 +1428,7 @@ input#listImportSubmit.green {
   width: 100%;
   text-align: center;
   height: var(--vh10);
-  font-size: min(2.5 * (1vw + 1vh) / 2, 18px);
+  font-size: var(--font-sub);
 }
 
 #voteButton {
@@ -1441,7 +1439,7 @@ input#listImportSubmit.green {
 
 .voteToolTip {
   display: inline-block;
-  font-size: 0.8em;
+  font-size: var(--font-p);
   transform: translate(-5%, -35%);
   position: relative;
   z-index: 1;
@@ -1466,7 +1464,7 @@ input#listImportSubmit.green {
 .voteLabel {
   width: 100%;
   text-align: center;
-  font-size: calc(var(--vh) * 3.5);
+  font-size: var(--font-h2);
   position: relative;
   z-index: 2;
 }
@@ -1477,7 +1475,7 @@ input#listImportSubmit.green {
 
 /*.voteToolTip:hover .toolTipContainer,*/
 .showVoteThumb .toolTipContainer {
-  transform: translate(calc(-95% + 1.5em), 0px);
+  transform: translate(calc(-100% + 31px + 1em), 0px);
 }
 
 .toolTipContainer.showToolTip:before {
@@ -1486,7 +1484,7 @@ input#listImportSubmit.green {
   content: "";
   position: absolute;
   bottom: calc(100% - 6px);
-  right: calc(5% + 0.5em - 4px);
+  right: 30px;
   border-width: 2px;
   border-style: solid;
   border-color: black black transparent transparent;
@@ -1503,7 +1501,7 @@ input#listImportSubmit.green {
   vertical-align: baseline;
   position: absolute;
   transform: translateX(-100vw) scaleY(0);
-  font-size: 0.7em;
+  font-size: var(--font-p);
   opacity: 0;
   transition: opacity 0.25s;
   display: inline-block;
@@ -1512,7 +1510,7 @@ input#listImportSubmit.green {
   border: 2px solid var(--main-black);
   border-radius: 5px;
   background-color: var(--main-white);
-  width: 14em;
+  width: 14rem;
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto /*var(--vh30)*/;
@@ -1526,6 +1524,7 @@ input#listImportSubmit.green {
 .showVoteThumb .voteSubX {
   display: block;
 }
+
 .voteSubX {
   position: absolute;
   right: 5px;
@@ -1542,17 +1541,17 @@ input#listImportSubmit.green {
 .BGGThumb {
   text-align: center;
   grid-area: image;
-  width: 5em;
-  height: 5em;
+  width: calc(var(--font-p) * 4.5);
+  height: calc(var(--font-p) * 4.5);
   float: left;
-  margin: -5px 5px 5px 5px;
+  margin: 0px 5px 2px 5px;
   display: block;
 }
 
 .BGGDesc {
   line-height: 1.1em;
   grid-area: description;
-  padding-top: 10px;
+  padding-top: 5px;
   height: 100%;
   box-sizing: border-box;
 }
@@ -1565,12 +1564,13 @@ input#listImportSubmit.green {
   text-overflow: ellipsis;
   padding: 5px;
   box-sizing: border-box;
+  font-size: var(--font-h3);
 }
 
 .BGGDescText {
   height: 100%;
   position: relative;
-  line-height: 1.2git cem;
+  line-height: 1.2em;
 }
 
 .BGGDescText a {
@@ -1583,7 +1583,7 @@ input#listImportSubmit.green {
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
-  font-size: min(3 * (1vw + 1vh) / 2, 20px);
+  font-size: var(--font-h3);
 }
 
 /***********************************************************************************/
@@ -1605,7 +1605,6 @@ input[type="range"] {
   border-radius: 0.25em;
   transform: translateX(-50%);
   background: transparent;
-  font-size: 1em;
   cursor: pointer;
 }
 input[type="range"],
@@ -1749,7 +1748,7 @@ input[type="range"]:before {
 
 #playInfo {
   text-align: center;
-  font-size: min(3 * (1vw + 1vh) / 2, 20px);
+  font-size: var(--font-p);
   grid-area: 4/2/6/10;
   height: 100%;
 }
@@ -1762,7 +1761,7 @@ input[type="range"]:before {
 
 .playGame {
   min-height: var(--vh5);
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h3);
   width: calc(100% - 4.8em);
   text-align: center;
   white-space: nowrap;
@@ -1772,22 +1771,6 @@ input[type="range"]:before {
   left: 2.4em;
 }
 
-.playGame .weight {
-  vertical-align: baseline;
-  position: absolute;
-  transform: translateX(-100vw);
-  font-size: 0.7em;
-  opacity: 0;
-  transition: opacity 0.5s;
-  display: inline-block;
-  list-style: none;
-  text-align: left;
-  border: 2px solid var(--main-black);
-  border-radius: 5px;
-  background-color: var(--main-white);
-  z-index: 2;
-}
-
 .playGameTitle {
   max-width: 90%;
   overflow: hidden;
@@ -1795,30 +1778,8 @@ input[type="range"]:before {
   display: inline-block;
 }
 
-.playGameToolTip {
-  display: inline-block;
-  font-size: 0.8em;
-  transform: translate(-5%, -55%);
-  position: relative;
-  z-index: 1;
-}
-
 .playSubTitle {
   border-bottom: 2px solid var(--main-black);
-}
-
-.playGameToolTip:hover .weight {
-  opacity: 1;
-  transition-delay: 0.5s;
-  transform: translate(-100%, 10px);
-}
-
-.playGameToolTip:hover {
-  z-index: 3;
-}
-
-.playGame.showWeight .weight {
-  opacity: 1;
 }
 
 #playShare {
@@ -1855,7 +1816,7 @@ input[type="range"]:before {
   height: 0px;
   overflow: hidden;
   color: var(--main-black);
-  font-size: 0.9em;
+  font-size: var(--font-h3);
   width: 8em;
   margin: -0.7em 0px 0.7em calc(50% - 4em);
 }
@@ -1891,6 +1852,7 @@ input[type="range"]:before {
   overflow: hidden;
   box-sizing: border-box;
   z-index: 10;
+  font-size: var(--font-p);
 }
 
 .pop .closeButton {
@@ -1924,13 +1886,13 @@ input[type="range"]:before {
   margin: 0vw auto 5vw auto;
 }
 
-#addListTitle {
+/*#addListTitle {
   text-align: center;
   align-self: end;
   height: var(--vh5);
   color: var(--main-white);
   font-size: max(3 * (1vw + 1vh) / 2, 30px);
-}
+}*/
 
 #gamesContainer {
   height: var(--vh60);
@@ -1950,7 +1912,6 @@ input[type="range"]:before {
   color: var(--main-white);
   list-style: none;
   padding-left: 5vw;
-  font-size: 1em;
   cursor: pointer;
   padding-bottom: calc(var(--vh) * 3);
   display: flex;
@@ -1958,7 +1919,7 @@ input[type="range"]:before {
 
 #gamesContainer > li {
   min-height: var(--vh5);
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h2);
   list-style: none;
   display: grid;
   grid-template-columns: calc(95vw - 60px) 40px;
@@ -1974,6 +1935,8 @@ input[type="range"]:before {
 
 #sessionsView input[type="checkbox"] {
   cursor: pointer;
+  height: 1em;
+  width: 90%;
 }
 
 #sessionsView .bulkSelect ion-icon {
@@ -2005,7 +1968,7 @@ input[type="range"]:before {
   grid-row: 1/3;
   grid-column: 3/4;
   align-self: center;
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h2);
 }
 
 .listName ion-icon {
@@ -2029,7 +1992,7 @@ ion-icon#addListButton {
   z-index: 1;
   margin-left: 42vw;
 }
-
+/*
 #gamesAdderContainer {
   height: var(--vh20);
   position: absolute;
@@ -2103,7 +2066,7 @@ ion-icon#addListButton {
 .rotated {
   transform: rotate(45deg);
 }
-
+*/
 .slideDown {
   transform: translateY(var(--vh10));
   opacity: 0;
@@ -2130,7 +2093,7 @@ ion-icon#addListButton {
 /*****************/
 /*    Testing    */
 /*****************/
-#centerbutton {
+/*#centerbutton {
   grid-area: 6/1/8/11;
   justify-self: center;
   font-size: 1.5em;
@@ -2147,7 +2110,7 @@ ion-icon#addListButton {
   justify-self: center;
   font-size: 1.5em;
 }
-
+*/
 /*****************/
 /*  Mobile Menu  */
 /*****************/
@@ -2157,7 +2120,7 @@ ion-icon#addListButton {
 }
 
 .menu {
-  width: 60vw;
+  width: 75vw;
   height: calc(var(--vh, 1vh) * 100);
   z-index: 100;
   position: absolute;
@@ -2166,7 +2129,7 @@ ion-icon#addListButton {
   color: var(--main-white);
   transform: translateX(0vw);
   transition: transform 0.5s;
-  font-size: min(calc(3 * (1vw + 1vh)), 2.5vw);
+  font-size: var(--font-p);
 }
 
 .menu a {
@@ -2184,7 +2147,6 @@ ion-icon#addListButton {
 }
 
 .menuHomeIcon {
-  font-size: calc(var(--vh) * 4);
   left: 5px;
   width: calc(var(--vh) * 4);
   height: calc(var(--vh) * 4);
@@ -2241,7 +2203,7 @@ ion-icon#addListButton {
 
 .itemContainer {
   margin-top: calc(calc(var(--vh) * 4) + 36px);
-  font-size: 5vw;
+  font-size: var(--font-h2);
 }
 
 .itemContainer ul {
@@ -2321,7 +2283,7 @@ ion-icon#addListButton {
   width: 100vw;
   background-color: white;
   color: var(--main-grey);
-  font-size: 6vw;
+  font-size: var(--font-h2);
   position: absolute;
   bottom: 0px;
   z-index: 200;
@@ -2359,6 +2321,7 @@ ion-icon#addListButton {
   position: absolute;
   backdrop-filter: blur(3px);
   z-index: 11;
+  font-size: var(--font-p);
 }
 
 .subContext,
@@ -2376,7 +2339,7 @@ ion-icon#addListButton {
   width: 90vw;
   top: calc(var(--vh) * 2);
   box-sizing: border-box;
-  font-size: 1.5em;
+  font-size: var(--font-h3);
 }
 
 .subContext {
@@ -2447,7 +2410,7 @@ ion-icon#addListButton {
   background-color: var(--main-blue);
   z-index: 1;
   color: var(--main-white);
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h2);
 }
 
 .listTitle ion-icon {
@@ -2459,11 +2422,11 @@ ion-icon#addListButton {
 
 .listTitleText {
   cursor: pointer;
-  width: calc(100% - 2em);
+  width: calc(100% - 11vw - var(--font-h2));
   float: right;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 0.5em;
+  margin-right: 3vw;
   white-space: nowrap;
 }
 
@@ -2481,7 +2444,7 @@ ion-icon#addListButton {
   background: var(--main-blue);
   z-index: 3;
   box-sizing: border-box;
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-h3);
   color: var(--main-white);
   list-style: none;
 }
@@ -2500,6 +2463,7 @@ ion-icon#addListButton {
   max-width: 100%;
   width: 100%;
   text-overflow: ellipsis;
+  margin-top: calc(calc(30px - var(--font-h3)) / 2);
 }
 
 .displayGameContainer ion-icon {
@@ -2562,7 +2526,7 @@ ion-icon#addListButton {
 }
 
 .bulkSelect ion-icon {
-  font-size: calc(var(--vh, 1vh) * 3);
+  font-size: var(--font-5vh);
   cursor: pointer;
 }
 
@@ -2684,6 +2648,19 @@ ion-icon#addListButton {
 /*        Desktop CSS        */
 /*****************************/
 @media (min-width: 1000px) {
+  :root {
+    /*--main-blue: #07f;*/
+
+    --font-base: 20px;
+    --font-h1: min(var(--vh5), 2.5rem);
+    --font-h2: 1.6rem;
+    --font-h3: 1.2rem;
+    --font-h4: 1rem;
+    --font-p: 1rem;
+    --font-b: 1.2rem;
+    --font-vw-med: min(20px, 5vw);
+    --font-5vh: var(--vh4);
+  }
   .desktopAlwaysOff {
     display: none !important;
   }
@@ -2731,7 +2708,7 @@ ion-icon#addListButton {
   .button {
     max-width: 250px;
     margin: 0 auto;
-    font-size: 24px;
+    font-size: var(--font-b);
   }
   .bottomBtn {
     left: 50%;
@@ -2742,7 +2719,7 @@ ion-icon#addListButton {
   }
 
   .textInput {
-    font-size: 24px;
+    font-size: var(--font-p);
   }
 
   #gamesContainer > li,
@@ -2760,10 +2737,14 @@ ion-icon#addListButton {
     padding-left: 10px;
   }
 
-  #gamesContainer li,
-  #sessionsContainer li {
-    font-size: 26px;
+  #gamesContainer li {
+    font-size: var(--font-h2);
   }
+
+  #sessionsContainer li {
+    font-size: var(--font-h3);
+  }
+
   #codeButtons {
     height: 100%;
     width: 250px;
@@ -2793,7 +2774,7 @@ ion-icon#addListButton {
   }
 
   .itemContainer {
-    font-size: 24px;
+    font-size: var(--font-h3);
   }
 
   .itemContainer ul li {
@@ -2801,12 +2782,13 @@ ion-icon#addListButton {
   }
 
   .pageTitle#playTitle {
-    font-size: max(3 * (1vw + 1vh) / 2, 30px);
+    font-size: var(--font-h1);
   }
 
-  .pageTitle {
-    font-size: min(2.4vw, 4vh, 35px);
-  }
+  /*.pageTitle {
+    font-size: var(--h1);
+    /*min(2.4vw, 4vh, 35px)
+  }*/
 
   #playInfo {
     grid-area: 3/2/5/10;
@@ -2840,7 +2822,7 @@ ion-icon#addListButton {
     padding: 10px 10px 31px 10px;
     width: 380px;
     left: 260px;
-    font-size: 26px;
+    font-size: var(--font-h3);
     top: 4%;
     height: fit-content;
     border-radius: 15px;
@@ -2861,7 +2843,7 @@ ion-icon#addListButton {
     width: 630px;
     padding: 15px;
     height: fit-content;
-    font-size: 26px;
+    font-size: var(--font-h2);
   }
 
   .subContextDelete .button,
@@ -3003,9 +2985,17 @@ ion-icon#addListButton {
 
   .bulkSelect {
     width: calc(100% - 11px);
-    grid-template-columns: 30px 1fr 40px 40px 40px 40px;
+    grid-template-columns: var(--vh4) 1fr var(--vh4) var(--vh4) var(--vh4) var(
+        --vh4
+      );
     justify-items: center;
     padding: 0px 5px;
+  }
+
+  #sessionsView .bulkSelect {
+    grid-template-columns: calc(var(--vh) * 7) 1fr calc(var(--vh) * 7) calc(
+        var(--vh) * 7
+      );
   }
 
   #currentGames {
@@ -3023,6 +3013,10 @@ ion-icon#addListButton {
 
   .voteLabel label {
     max-width: calc(500px);
+  }
+
+  #voteInfo {
+    font-size: var(--font-p);
   }
 }
 

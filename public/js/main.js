@@ -792,9 +792,7 @@ window.addEventListener("load", function () {
       {
         code: document.getElementById("code").innerHTML,
       },
-      (res) => {
-        console.log("submit res: ", res);
-        //$("#backArrow").attr("data-gobackto", "select");
+      () => {
         goForwardFrom("#selectView", "#postSelectView");
         if ($("#postSelectImg").length == 0 && $("#gameUnlock").length == 0) {
           $("#postSelectView").append('<div id="postSelectImg"></div>');
@@ -803,35 +801,6 @@ window.addEventListener("load", function () {
       }
     );
   });
-  /* $("#gameSubmit").click(this, function () {
-    const gs_options = {
-      method: "POST",
-      body: JSON.stringify({
-        code: document.getElementById("code").innerHTML,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    startLoader();
-    fetch("/submit_games", gs_options).then(function (response) {
-      console.log("finished");
-      finishLoader();
-      return response.json().then((res) => {
-        if (res.err) {
-          createAndShowAlert(res.err);
-        } else {
-          console.log("submit res: ", res);
-          //$("#backArrow").attr("data-gobackto", "select");
-          goForwardFrom("#selectView", "#postSelectView");
-          if ($("#postSelectImg").length == 0) {
-            $("#postSelectView").append('<div id="postSelectImg"></div>');
-            $("#postSelectContainer").css("grid-area", "9/2/15/10");
-          }
-        }
-      });
-    });
-  }); */
 
   /*******************************************/
   /* Check if url matches a code and execute */
@@ -1544,22 +1513,24 @@ function gulp(showAllGames = false) {
  * Hide or show the add game and add list buttons in the menu
  *
  */
+/*
 function toggleGamesAdder() {
   showAdderMenu();
 }
-
+*/
+/*
 function hideGamesAdderButtons() {
   $(".gamesAdder").addClass("slideDown");
   setTimeout(function () {
     $(".gamesAdder").addClass("off");
   }, 501);
 }
-
+*/
 /**
  * Shows the add Game menu in My Games and Lists
  *
  */
-function showMenuAddGame() {
+/*function showMenuAddGame() {
   hideGamesAdderButtons();
   $("#menuAddGamesContainer").removeClass("off");
   setTimeout(function () {
@@ -1573,7 +1544,7 @@ function showMenuAddList() {
   setTimeout(function () {
     $("#menuAddListContainer").removeClass("slideDown");
   }, 5);
-}
+}*/
 
 function openList(list) {
   var games = getListGames(list);
@@ -2821,17 +2792,39 @@ function closeBulkSessions() {
 
 function showBulkDeleteSessions() {
   var sessionsCount = $('.sessionsCheck input[type="checkbox"]:checked').length;
-  var plural = "";
-  if (sessionsCount > 1) {
-    plural = "s";
+  var ownedCount = 0;
+  $('.sessionsCheck input[type="checkbox"]:checked').each(function (i, e) {
+    if (
+      $(e)
+        .parent()
+        .parent()
+        .children(".sessionCode")
+        .first()
+        .text()
+        .indexOf("👑") > -1
+    ) {
+      ownedCount++;
+    }
+  });
+  var memberCount = sessionsCount - ownedCount;
+  var ownedPlural = (memberPlural = "");
+  if (ownedCount > 1) {
+    ownedPlural = "s";
+  }
+  if (memberCount > 1) {
+    memberPlural = "s";
   }
   var el = `<div class="subContextContainer"><div class="subContextDelete" id="subContext_bulkSessions" >`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
     `<div class="subContextTitle">Really delete ` +
-    sessionsCount +
+    ownedCount +
     ` session` +
-    plural +
+    ownedPlural +
+    ` and remove yourself from ` +
+    memberCount +
+    ` session` +
+    memberPlural +
     `?</div><hr/>
     <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
     <div class="button redBtn" id="deleteConfirm" onclick="bulkDeleteSessions()">Delete</div>`;
@@ -4095,7 +4088,7 @@ function showSelectFilter() {
     <form id="selectFilterList" onsubmit="return submitSelectFilter()">
       <div id="selectFilterRowOne" class="selectFilterRow">
         <label for="selectNumPlayers">Filter by number of players:</label>
-        <input type="number" name="selectNumPlayers" id="selectNumPlayers" value="` +
+        <input type="number" name="selectNumPlayers" id="selectNumPlayers" min="0" value="` +
         $("#selectFilter").attr("players") +
         `">
       </div>
@@ -4279,6 +4272,11 @@ function showBGGImport() {
   $("body").append(htmlString);
   $("#bggFilterButton").on("click", function () {
     $(".bggFilters").toggleClass("off");
+    if ($(".bggFilters").hasClass("off")) {
+      $("#bggFilterButton").text("Show Filters");
+    } else {
+      $("#bggFilterButton").text("Hide Filters");
+    }
   });
   updateFilters();
   $(".bggFilterInput").on("change", function () {
@@ -4683,6 +4681,9 @@ function getvh() {
   let vh = window.innerHeight * 0.01;
   // Then we set the value in the --vh custom property to the root of the document
   document.documentElement.style.setProperty("--vh", `${vh}px`);
+  document.documentElement.style.setProperty("--vh2", `${vh * 2}px`);
+  document.documentElement.style.setProperty("--vh3", `${vh * 3}px`);
+  document.documentElement.style.setProperty("--vh4", `${vh * 4}px`);
   document.documentElement.style.setProperty("--vh10", `${vh * 10}px`);
   document.documentElement.style.setProperty("--vh20", `${vh * 20}px`);
   document.documentElement.style.setProperty("--vh30", `${vh * 30}px`);

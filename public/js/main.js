@@ -3961,6 +3961,16 @@ function playShare() {
   }
 }
 
+function importSessionAsList() {
+  ttsFetch(
+    "/import_session_as_list",
+    { code: document.getElementById("code").innerHTML },
+    (res) => {
+      //console.log("Success");
+    }
+  );
+}
+
 function showListSettings(el) {
   console.log(el);
   if ($(el).hasClass("listExpanded")) {

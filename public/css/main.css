@@ -1228,6 +1228,7 @@ input#listImportSubmit.green {
   max-height: calc(var(--vh) * 25);
   overflow: auto;
   cursor: pointer;
+  font-size: var(--font-p);
 }
 
 .autocomplete-active {
@@ -1786,12 +1787,17 @@ input[type="range"]:before {
   border-bottom: 2px solid var(--main-black);
 }
 
-#playShare {
-  grid-area: 14/2/14/10;
+#playButtons button {
   height: min(31px, calc(var(--vh) * 6), 100%);
   width: 5em;
-  margin: 0 auto;
+  margin: 0 10px;
   padding: 0px 2vw;
+}
+
+#playButtons {
+  grid-area: 14/2/14/10;
+  display: flex;
+  justify-content: center;
 }
 
 #playImg {

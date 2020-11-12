@@ -52,6 +52,7 @@ Game.find({ name: /'/ }).exec(function (err, curGames) {
   });
 });
 
+/*
 User.findOne({ name: "crina" }).exec(function (err, curUser) {
   console.log(curUser);
   Game.find({ _id: { $in: curUser.lists.allGames } }).exec(function (
@@ -65,6 +66,7 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
     console.log("Games: ", arr);
   });
 });
+*/
 
 //Set userNonce
 router.get("/*", function (req, res, next) {
@@ -2302,7 +2304,7 @@ function bggUpdate(curUser) {
   return promise;
 }
 
-function getCodeInfo(code) {
+function getListCodeInfo(code) {
   var promise = new Promise(function (resolve, reject) {
     User.findOne({
       "lists.custom": { $elemMatch: { listCode: code } },
@@ -2327,7 +2329,7 @@ function getCodeInfo(code) {
 
 router.post("/get_list_code_info", function (req, res) {
   if (req.user) {
-    getCodeInfo(req.body.code).then(function (theList) {
+    getListCodeInfo(req.body.code).then(function (theList) {
       console.log(req.user.id);
       User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
         console.log(curUser);
@@ -2350,7 +2352,7 @@ router.post("/get_list_code_info", function (req, res) {
 
 router.post("/get_list_from_code", function (req, res) {
   if (req.user) {
-    getCodeInfo(req.body.code).then(function (theList) {
+    getListCodeInfo(req.body.code).then(function (theList) {
       if (theList.err) {
         res.send(theList);
       } else {
@@ -2370,5 +2372,46 @@ router.post("/get_list_from_code", function (req, res) {
     res.send(ERR_LOGIN);
   }
 });
+
+router.post("/import_session_as_list", function (req, res) {
+  if (req.user) {
+    getSessionInfo(req.body.code).then(function (theSession) {
+      if (!theSession.err) {
+        var theList = theSession.games; //returns array of game ObjectIds (can be as strings)
+        var name = theSession.name; //returns the Session phrase as a String
+        listAdder(name, res, req).then((list) => {
+          //create the list
+          if (typeof theList != "undefined" && list.len) {
+            //check to see everything returned OK
+            console.log(theList, list.len);
+            bulkGameAdder(theList, list.len, res, req); //then add all of the games that belong in the list and send result
+          } else {
+            //if an error happened
+            res.send(list); //send the error message returned by listAdder
+          }
+        });
+      }
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
+
+function getSessionInfo(code) {
+  var promise = new Promise(function (resolve, reject) {
+    Session.findOne({ code: code }).exec(function (err, curSession) {
+      if (err) {
+        resolve({ err: err });
+      }
+      var ret = { name: curSession.phrase };
+      ret.games = curSession.games.map((e) => {
+        return e.game;
+      });
+      console.log(ret);
+      resolve(ret);
+    });
+  });
+  return promise;
+}
 
 module.exports = router;

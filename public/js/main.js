@@ -3963,14 +3963,58 @@ function playShare() {
 
 function importSessionAsList() {
   ttsFetch(
-    "/import_session_as_list",
-    { code: document.getElementById("code").innerHTML },
+    "find_session_list",
+    {
+      list: $(".phraseText").first().text().substr(8),
+    },
     (res) => {
-      //console.log("Success");
+      console.log("Success");
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      var code = $(".codeDisplay").first().text().substr(11);
+
+      var text = "Create a new list using the games from this session?";
+      var el = `<div class="subContextContainer"><div class="subContextImport">`;
+      el +=
+        `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+        `<div class="subContextTitle">` +
+        text +
+        `</div><hr/>`;
+      if (res.exists) {
+        el += `<div id="importDuplicate">
+      <div id="importOverwrite"><input type="radio" name="duplicate" id="importOverwriteCheckbox" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
+      <div id="importRename"><input type="radio" name="duplicate" id="importRenameCheckbox"><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></div>
+      </div>`;
+      }
+      el +=
+        `<div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
+    <div class="button greenBtn" id="importSubmit" onclick="performListImport('` +
+        $("#code").html() +
+        `', '` +
+        $(".phraseText").first().text().substr(8) +
+        `', true)">Import</div>`;
+      $("body").append(el);
     }
   );
 }
 
+/*function submitImportSessionAsList() {
+  ttsFetch(
+    "import_session_as_list",
+    {
+      code: $("#code").html(),
+    },
+    (res) => {
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      if (res.err) {
+        createAndShowAlert(res.err, true);
+      }
+    }
+  );
+}*/
 function showListSettings(el) {
   console.log(el);
   if ($(el).hasClass("listExpanded")) {
@@ -4600,7 +4644,11 @@ function runListImport(code) {
       <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().parent().remove()">Cancel</div>
   <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
           res.list.listCode +
-          `')">Import</div></div>`;
+          `', '` +
+          $(".subContextTitle")
+            .text()
+            .substring(13, $(".subContextTitle").text().lastIndexOf('"'));
+        +`'">Import</div></div>`;
         $("body").append(el);
       }
     },
@@ -4618,12 +4666,8 @@ function runListImport(code) {
   return false;
 }
 
-function performListImport(code) {
+function performListImport(code, oldListName, isSession = false) {
   if ($("#importRename input").prop("checked")) {
-    var rename = $("#importRenameCheckbox").prop("checked");
-    var oldListName = $(".subContextTitle")
-      .text()
-      .substring(13, $(".subContextTitle").text().lastIndexOf('"'));
     $(".subContextImport").first().remove();
     $(".subContextContainer")
       .first()
@@ -4635,7 +4679,9 @@ function performListImport(code) {
           `"</div><hr/><div id="renameImportInputCont" class="textInputCont">
     <form onsubmit="return renameAndImportList({code: '` +
           code +
-          `', name: $('#renameImportInputCont .textInput').first().val()})" id="renameImportListInput">
+          `', name: $('#renameImportInputCont .textInput').first().val()}, ` +
+          isSession +
+          `)" id="renameImportListInput">
     <input class="textSubmit" type="submit" value="">` +
           `<input class="textInput" type="text" autocomplete="off"></input>` +
           `</form>` +
@@ -4643,10 +4689,23 @@ function performListImport(code) {
       );
   } else {
     if (
-      $("#importOverWriteCheckbox").length == 0 ||
-      $("#importOverWriteCheckbox").prop("checked")
+      $("#importOverwriteCheckbox").length == 0 ||
+      $("#importOverwriteCheckbox").prop("checked")
     ) {
-      ttsFetch("/get_list_from_code", { code: code }, (res) => {
+      //TODO: Also change renameAndImportList to handle a final boolean parameter isSession
+
+      if (!isSession) {
+        var fetch = "/get_list_from_code";
+        var body = { code: code };
+      } else {
+        var fetch = "/import_session_as_list";
+        if ($("#importOverwriteCheckbox").prop("checked")) {
+          var body = { code: code, overwrite: true };
+        } else {
+          var body = { code: code, overwrite: false };
+        }
+      }
+      ttsFetch(fetch, body, (res) => {
         gulp();
         createAndShowAlert("List successfully added!");
       });
@@ -4661,16 +4720,19 @@ function performListImport(code) {
   }
 }
 
-function renameAndImportList(data) {
+function renameAndImportList(data, isSession = false) {
   console.log(data);
-  ttsFetch(
-    "/get_list_from_code",
-    { code: data.code, name: data.name },
-    (res) => {
-      gulp();
-      createAndShowAlert("List successfully added!");
-    }
-  );
+  if (!isSession) {
+    var fetch = "/get_list_from_code";
+    var body = { code: data.code, name: data.name };
+  } else {
+    var fetch = "/import_session_as_list";
+    var body = { code: data.code, name: data.name, overwrite: false };
+  }
+  ttsFetch(fetch, body, (res) => {
+    gulp();
+    createAndShowAlert("List successfully added!");
+  });
   $(".subContextContainer").each(function () {
     $(this).remove();
   });

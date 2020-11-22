@@ -199,7 +199,7 @@ function getBGGMetaData(ids, toAdd) {
 }
 
 /*Use Async BGG Functions to get top list of games with metadata */
-getBGGPages(20).then((topGames) => {
+getBGGPages(2).then((topGames) => {
   getBGGMetaDatas(topGames).then((newData) => {
     Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
       if (curResource) {
@@ -815,21 +815,22 @@ router.post("/game_add", function (req, res) {
                   }
                   console.log("theGame: ", theGame);
                   curUser.save().then(function (theUser) {
-                    Game.findById(game._id, "name", function (
-                      err,
-                      gameToReport
-                    ) {
-                      if (gameToReport) {
-                        console.log("Game name: " + gameToReport.name);
-                        res.send({ status: gameToReport });
-                      } else {
-                        res.send({
-                          err:
-                            "Error: game not added, maybe you checked too early.",
-                        });
+                    Game.findById(
+                      game._id,
+                      "name",
+                      function (err, gameToReport) {
+                        if (gameToReport) {
+                          console.log("Game name: " + gameToReport.name);
+                          res.send({ status: gameToReport });
+                        } else {
+                          res.send({
+                            err:
+                              "Error: game not added, maybe you checked too early.",
+                          });
+                        }
+                        bggUpdate(curUser);
                       }
-                      bggUpdate(curUser);
-                    });
+                    );
                   });
                 }
               }
@@ -990,42 +991,42 @@ router.post("/join_session", function (req, res) {
           console.log("newUser ", newUser);
           if (newUser) {
             var displayName = "";
-            management.users.get({ id: req.user.user_id }, function (
-              err,
-              extUser
-            ) {
-              //console.log("auth0 user:", extUser);
-              if (err) {
-                res.send({ err: err });
-              }
-              res.locals.user = req.user;
-              if (extUser && extUser.username != "") {
-                displayName = extUser.username || req.user.displayName;
-              } else {
-                displayName = req.user.displayName || "Insert Name Here";
-              }
-              //console.log("568DisplayName: ", displayName);
-              curSession.users.push({
-                user: req.user.id,
-                name: displayName,
-                done: false,
-                doneVoting: false,
-              });
-              curSession.save().then(function () {
-                socketAPI.addGame({
-                  code: theCode,
+            management.users.get(
+              { id: req.user.user_id },
+              function (err, extUser) {
+                //console.log("auth0 user:", extUser);
+                if (err) {
+                  res.send({ err: err });
+                }
+                res.locals.user = req.user;
+                if (extUser && extUser.username != "") {
+                  displayName = extUser.username || req.user.displayName;
+                } else {
+                  displayName = req.user.displayName || "Insert Name Here";
+                }
+                //console.log("568DisplayName: ", displayName);
+                curSession.users.push({
+                  user: req.user.id,
+                  name: displayName,
+                  done: false,
+                  doneVoting: false,
                 });
-                res.send({
-                  owned: false,
-                  status: {
-                    code: curSession.code,
-                    lock: lock,
-                    games: sendGames,
-                    phrase: curSession.phrase,
-                  },
+                curSession.save().then(function () {
+                  socketAPI.addGame({
+                    code: theCode,
+                  });
+                  res.send({
+                    owned: false,
+                    status: {
+                      code: curSession.code,
+                      lock: lock,
+                      games: sendGames,
+                      phrase: curSession.phrase,
+                    },
+                  });
                 });
-              });
-            });
+              }
+            );
           } else {
             socketAPI.addGame({
               code: theCode,
@@ -1970,7 +1971,7 @@ router.post("/delete_list", function (req, res) {
       if (listNum == -1) {
         res.send({ err: "Can't delete All Games" });
       } else {
-        curUser.lists.custom.splice(listNum);
+        curUser.lists.custom.splice(listNum, 1);
         curUser.save();
         res.send({ status: "Success" });
       }
@@ -2060,17 +2061,22 @@ router.post("/list_add", function (req, res) {
   }
 });
 
-function listAdder(list, res, req) {
+function listAdder(list, id, overwrite) {
   var promise = new Promise(function (resolve, reject) {
-    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+    User.findOne({ profile_id: id }).exec(function (err, curUser) {
       var index = curUser.lists.custom.findIndex((obj) => obj.name == list);
       if (index == -1) {
         curUser.lists.custom.push({ name: list, games: [] });
         curUser.save();
         resolve({ status: "Success", len: curUser.lists.custom.length });
       } else {
-        console.log("Already added");
-        resolve({ err: "Already added a list with this name" });
+        if (overwrite) {
+          curUser.lists.custom[index] = { name: list, games: [] };
+          resolve({ status: "Success", len: index + 1 });
+        } else {
+          console.log("Already added");
+          resolve({ err: "Already added a list with this name" });
+        }
       }
     });
   });
@@ -2357,7 +2363,7 @@ router.post("/get_list_from_code", function (req, res) {
         res.send(theList);
       } else {
         var name = req.body.name || theList.name;
-        listAdder(name, res, req).then((list) => {
+        listAdder(name, req.user.id, false).then((list) => {
           console.log("ListAdder Returned");
           if (typeof theList.games != "undefined" && list.len) {
             console.log(theList.games);
@@ -2374,22 +2380,31 @@ router.post("/get_list_from_code", function (req, res) {
 });
 
 router.post("/import_session_as_list", function (req, res) {
+  console.log("adding session");
   if (req.user) {
     getSessionInfo(req.body.code).then(function (theSession) {
       if (!theSession.err) {
-        var theList = theSession.games; //returns array of game ObjectIds (can be as strings)
-        var name = theSession.name; //returns the Session phrase as a String
-        listAdder(name, res, req).then((list) => {
+        var theList = theSession.games; //array of game ObjectIds
+        console.log(typeof req.body.name);
+        if (typeof req.body.name == "undefined") {
+          var name = theSession.name; //Session phrase
+        } else {
+          var name = req.body.name;
+        }
+        listAdder(name, req.user.id, req.body.overwrite).then((list) => {
           //create the list
           if (typeof theList != "undefined" && list.len) {
             //check to see everything returned OK
             console.log(theList, list.len);
+            console.log("BulkGamesAdder:", list.len);
             bulkGameAdder(theList, list.len, res, req); //then add all of the games that belong in the list and send result
           } else {
             //if an error happened
             res.send(list); //send the error message returned by listAdder
           }
         });
+      } else {
+        res.send(theSession.err);
       }
     });
   } else {
@@ -2403,6 +2418,9 @@ function getSessionInfo(code) {
       if (err) {
         resolve({ err: err });
       }
+      if (curSession == null) {
+        resolve({ err: "No such session" });
+      }
       var ret = { name: curSession.phrase };
       ret.games = curSession.games.map((e) => {
         return e.game;
@@ -2413,5 +2431,25 @@ function getSessionInfo(code) {
   });
   return promise;
 }
+
+router.post("/find_session_list", function (req, res) {
+  if (req.user) {
+    console.log("Req: ", req.body);
+    User.findOne({
+      $and: [
+        {
+          "lists.custom": { $elemMatch: { name: req.body.list } },
+        },
+        { profile_id: req.user.id },
+      ],
+    }).exec(function (err, curSession) {
+      //console.log(curSession);
+      console.log({ exists: curSession != null });
+      res.send({ exists: curSession != null, result: curSession });
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
 
 module.exports = router;

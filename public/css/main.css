@@ -2339,7 +2339,8 @@ ion-icon#addListButton {
 .subContextDelete,
 .subContextRemove,
 .subContextAccount,
-.subContextImport {
+.subContextImport,
+.subContextImportSession {
   margin-left: 0;
   background-color: white;
   position: absolute;
@@ -2359,7 +2360,8 @@ ion-icon#addListButton {
 .subContextRename,
 .subContextDelete,
 .subContextRemove,
-.subContextImport {
+.subContextImport,
+.subContextImportSession {
   height: auto;
   padding-bottom: calc(var(--vh) * 2);
   border: solid 2px var(--main-blue);
@@ -2367,7 +2369,8 @@ ion-icon#addListButton {
 
 .subContextDelete .button,
 .subContextRemove .button,
-.subContextImport .button {
+.subContextImport .button,
+.subContextImportSession .button {
   width: 40%;
   margin: 0.4em 5% 0px;
   float: left;
@@ -2847,7 +2850,8 @@ ion-icon#addListButton {
   .subContextDelete,
   .subContextRemove,
   .subContextAccount,
-  .subContextImport {
+  .subContextImport,
+  .subContextImportSession {
     left: 10px;
     top: 4%;
     width: 630px;
@@ -2858,7 +2862,8 @@ ion-icon#addListButton {
 
   .subContextDelete .button,
   .subContextRemove .button,
-  .subContextImport .button {
+  .subContextImport .button,
+  .subContextImportSession .button {
     padding: 6px 0px;
   }
 

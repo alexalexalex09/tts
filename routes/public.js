@@ -199,7 +199,7 @@ function getBGGMetaData(ids, toAdd) {
 }
 
 /*Use Async BGG Functions to get top list of games with metadata */
-getBGGPages(2).then((topGames) => {
+getBGGPages(20).then((topGames) => {
   getBGGMetaDatas(topGames).then((newData) => {
     Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
       if (curResource) {

@@ -2452,4 +2452,64 @@ router.post("/find_session_list", function (req, res) {
   }
 });
 
+router.post("/set_session_limit", function (req, res) {
+  console.log(Number(req.body.limit));
+  console.log(req.body.limit);
+  if (req.user) {
+    if (typeof req.body.limit != "undefined") {
+      if (req.body.limit > -1) {
+        if (!isNaN(req.body.limit)) {
+          Session.updateOne(
+            { code: req.body.code },
+            { limit: Number(req.body.limit) }
+          ).exec(function (err, curSession) {
+            if (!err) {
+              res.send({ limit: Number(req.body.limit) });
+            } else {
+              res.send(err);
+            }
+          });
+        } else {
+          res.send({ err: "Limit must be a number" });
+        }
+      } else {
+        res.send({ err: "Can't set a limit below 0" });
+      }
+    } else {
+      res.send({ err: "No limit set" });
+    }
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
+
+router.post("/get_session_limit", function (req, res) {
+  if (req.user) {
+    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+      if (typeof curSession != "undefined") {
+        if (typeof curSession.limit == "undefined") {
+          console.log(curSession.limit);
+          console.log(typeof curSession.limit);
+          console.log(curSession);
+          Session.updateOne({ code: req.body.code }, { limit: 0 }).exec(
+            function (err, curSession) {
+              if (!err) {
+                res.send({ limit: 0 });
+              } else {
+                res.send(err);
+              }
+            }
+          );
+        } else {
+          res.send({ limit: Number(curSession.limit) });
+        }
+      } else {
+        res.send({ err: "No session found" });
+      }
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
+
 module.exports = router;

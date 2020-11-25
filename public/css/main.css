@@ -97,7 +97,10 @@ h1 {
 
 .red {
   color: var(--main-red);
-  background-color: var(--main-red);
+}
+
+.tempAlert.red {
+  border: 4px solid var(--main-red);
 }
 
 li.grey {
@@ -2409,7 +2412,8 @@ input[type="range"]:before {
 .subContextRemove,
 .subContextImport,
 .subContextImportSession,
-.subContextSessionSettings {
+.subContextSessionSettings,
+.subContextLimit {
   height: auto;
   padding-bottom: calc(var(--vh) * 2);
   border: solid 2px var(--main-blue);
@@ -2423,6 +2427,46 @@ input[type="range"]:before {
   margin: 0.4em 5% 0px;
   float: left;
   height: var(--vh5);
+}
+
+#sessionLimit {
+  width: max(80%, 300px);
+  margin: 0 auto;
+}
+
+#limitContainer {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 50% 1fr 4rem;
+  color: var(--main-black);
+  align-items: center;
+}
+
+#sessionLimit label {
+  padding-right: 10px;
+  text-align: right;
+  grid-area: 1/1/2/3;
+}
+
+input#selectLimit {
+  width: 2em;
+  height: 2em;
+  text-align: center;
+}
+
+.subContextLimit .button {
+  border: none;
+  width: max(95%, 11rem);
+  margin-top: 10px;
+  justify-self: center;
+}
+
+.subContextLimit .button.redBtn {
+  grid-area: 2/1/3/2;
+}
+
+.subContextLimit .button[type="submit"] {
+  grid-area: 2/2/3/4;
 }
 
 #importOverwrite,

@@ -72,86 +72,9 @@ window.addEventListener("load", function () {
     }
 
     $(".phraseDisplay>ion-icon").on("click", function () {
-      var el = `<div class="subContextContainer"><div class="subContextSessionSettings subContext">`;
-      el += `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>
-        <div class="subContextTitle">Session Settings</div><hr/><div id="sessionSettings">
-          <li id="sessionSettingsRename">Rename</li>
-          <li id="sessionSettingsShareLink">Share Link</li>          
-          <li id="sessionSettingsShareQR">Share QR Code</li>
-          <li id="sessionSettingsLimit">Set Game Limit</li>
-        </div>`;
-      $("body").append(el);
-
-      $("#sessionSettingsRename").on("click", function () {
-        showRenameSession({
-          name: $(".phraseDisplay")
-            .first()
-            .children(".phraseText")
-            .first()
-            .text()
-            .substr(8),
-          id: "0000" + $("#code").text(),
-        });
-        $(".subContextContainer").each(function () {
-          $(this).remove();
-        });
-      });
-      $("#sessionSettingsShareLink").on("click", function () {
-        copyText(
-          window.location.origin + "/" + $("#code").html(),
-          "Link copied to clipboard"
-        );
-        $(".subContextContainer").each(function () {
-          $(this).remove();
-        });
-      });
-      $("#sessionSettingsShareQR").on("click", function () {
-        showQR();
-        $(".subContextContainer").each(function () {
-          $(this).remove();
-        });
-      });
-      $("#sessionSettingsLimit").on("click", function () {
-        createAndShowAlert("This feature is still under construction", true);
-        $(".subContextContainer").each(function () {
-          $(this).remove();
-        });
-      });
+      showSessionSettings();
     });
 
-    function showQR() {
-      ttsFetch("/qr", { link: $("#code").text() }, (res) => {
-        console.log(res);
-
-        $("body").append(
-          `<div id="qrDisplayContainer">
-            <div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
-            res.img +
-            `');">
-              </div>
-              <div id="qrText">Scan this QR code to join this session!</div>
-            </div>`
-        );
-        setTimeout(function () {
-          onClickOutside(
-            "#qrDisplayContainer",
-            "#qrDisplayContainer",
-            ".subContextContainer"
-          );
-          $("#contextShadow").removeClass("off");
-        }, 10);
-      });
-    }
-    /*showRenameSession({
-        name: $(".phraseDisplay")
-          .first()
-          .children(".phraseText")
-          .first()
-          .text()
-          .substr(8),
-        id: "0000" + $("#code").text(),
-      });
-      */
     $(".phraseText").on("click", function () {
       createAndShowAlert($(".phraseText").first().text().substr(8));
     });
@@ -284,7 +207,14 @@ window.addEventListener("load", function () {
       $(this).removeClass("crown5");
     }); //not the owner
     setCode(res.code);
-    setPhrase(`<div class="phraseText">Session: ` + res.phrase + `</div>`);
+    setPhrase(
+      `<div class="phraseText">Session: ` +
+        res.phrase +
+        `</div><ion-icon name="settings-outline"></ion-icon>`
+    );
+    $(".phraseDisplay>ion-icon").on("click", function () {
+      showSessionSettings();
+    });
     console.log("joinSession: ", res.lock);
 
     var sessionGames = "<session>";
@@ -384,6 +314,83 @@ window.addEventListener("load", function () {
     catchDisplay();
     triggerPostSelectEvent();
   };
+
+  /**********************************/
+  /* Handle Session Settings Button */
+  /**********************************/
+  function showSessionSettings() {
+    var el = `<div class="subContextContainer"><div class="subContextSessionSettings subContext">`;
+    el += `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>
+      <div class="subContextTitle">Session Settings</div><hr/><div id="sessionSettings">
+        <li id="sessionSettingsShareLink">Share Link</li>
+        <li id="sessionSettingsShareQR">Share QR Code</li>`;
+    if ($(".phraseDisplay .owner").length > 0) {
+      el += `<li id="sessionSettingsRename">Rename</li>
+        <li id="sessionSettingsLimit">Set Game Limit</li>`;
+    }
+    el += `</div></div></div>`;
+    $("body").append(el);
+
+    $("#sessionSettingsRename").on("click", function () {
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      showRenameSession({
+        name: $(".phraseDisplay")
+          .first()
+          .children(".phraseText")
+          .first()
+          .text()
+          .substr(8),
+        id: "0000" + $("#code").text(),
+      });
+    });
+    $("#sessionSettingsShareLink").on("click", function () {
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      copyText(
+        window.location.origin + "/" + $("#code").html(),
+        "Link copied to clipboard"
+      );
+    });
+    $("#sessionSettingsShareQR").on("click", function () {
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      showQR();
+    });
+    $("#sessionSettingsLimit").on("click", function () {
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      showSessionLimit();
+    });
+  }
+
+  function showQR() {
+    ttsFetch("/qr", { link: $("#code").text() }, (res) => {
+      console.log(res);
+
+      $("body").append(
+        `<div id="qrDisplayContainer">
+          <div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
+          res.img +
+          `');">
+            </div>
+            <div id="qrText">Scan this QR code to join this session!</div>
+          </div>`
+      );
+      setTimeout(function () {
+        onClickOutside(
+          "#qrDisplayContainer",
+          "#qrDisplayContainer",
+          ".subContextContainer"
+        );
+        $("#contextShadow").removeClass("off");
+      }, 10);
+    });
+  }
 
   /*****************************/
   /*     Set History State     */
@@ -2920,6 +2927,46 @@ function bulkDeleteSessions() {
   });
 }
 
+function showSessionLimit() {
+  ttsFetch("/get_session_limit", { code: $("#code").text() }, (res) => {
+    var el = `<div class="subContextContainer"><div class="subContextLimit subContext">`;
+    el +=
+      `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>
+    <div class="subContextTitle">Limit User Submitted Games</div><hr/><div id="sessionLimit">
+      <form id="setLimitForm" onsubmit="return submitSetLimit()">
+      <div id="limitContainer"><label for="selectLimit">Maximum # of games each player can suggest:</label>
+      <input type="number" name="selectLimit" id="selectLimit" min="0" value="` +
+      res.limit +
+      `">
+      <input type="button" class="button redBtn" onclick="removeLimit()" value="Remove Limit"></input>
+      <input type="submit" class="button greenBtn" value="Set Limit"></input>
+      </div>
+      </form>
+    </div></div></div>`;
+    $("body").append(el);
+  });
+}
+
+function removeLimit() {
+  $("#selectLimit").val(0);
+  submitSetLimit();
+}
+
+function submitSetLimit() {
+  ttsFetch(
+    "/set_session_limit",
+    { code: $("#code").text(), limit: $("#selectLimit").val() },
+    (res) => {
+      console.log(res);
+      createAndShowAlert("Limit set successfully");
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+    }
+  );
+  return false;
+}
+
 function showRenameSession(session) {
   var el =
     `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
@@ -2956,6 +3003,9 @@ function renameSession(event, caller, code) {
               newName +
               `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="settings-outline"></ion-icon>`
           );
+        });
+        $(".phraseDisplay>ion-icon").on("click", function () {
+          showSessionSettings();
         });
       }
       if ($(".sessionTitle." + code).length == 0) {

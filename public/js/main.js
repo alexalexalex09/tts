@@ -61,18 +61,88 @@ window.addEventListener("load", function () {
     }, 500);
     if (typeof res.session.phrase == "undefined") {
       setPhrase(
-        `<div class="phraseText"></div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+        `<div class="phraseText"></div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="settings-outline"></ion-icon>`
       );
     } else {
       setPhrase(
         `<div class="phraseText">Phrase: ` +
           res.session.phrase +
-          `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+          `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="settings-outline"></ion-icon>`
       );
     }
 
-    $(".phraseDisplay ion-icon").on("click", function () {
-      showRenameSession({
+    $(".phraseDisplay>ion-icon").on("click", function () {
+      var el = `<div class="subContextContainer"><div class="subContextSessionSettings subContext">`;
+      el += `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>
+        <div class="subContextTitle">Session Settings</div><hr/><div id="sessionSettings">
+          <li id="sessionSettingsRename">Rename</li>
+          <li id="sessionSettingsShareLink">Share Link</li>          
+          <li id="sessionSettingsShareQR">Share QR Code</li>
+          <li id="sessionSettingsLimit">Set Game Limit</li>
+        </div>`;
+      $("body").append(el);
+
+      $("#sessionSettingsRename").on("click", function () {
+        showRenameSession({
+          name: $(".phraseDisplay")
+            .first()
+            .children(".phraseText")
+            .first()
+            .text()
+            .substr(8),
+          id: "0000" + $("#code").text(),
+        });
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      });
+      $("#sessionSettingsShareLink").on("click", function () {
+        copyText(
+          window.location.origin + "/" + $("#code").html(),
+          "Link copied to clipboard"
+        );
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      });
+      $("#sessionSettingsShareQR").on("click", function () {
+        showQR();
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      });
+      $("#sessionSettingsLimit").on("click", function () {
+        createAndShowAlert("This feature is still under construction", true);
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
+      });
+    });
+
+    function showQR() {
+      ttsFetch("/qr", { link: $("#code").text() }, (res) => {
+        console.log(res);
+
+        $("body").append(
+          `<div id="qrDisplayContainer">
+            <div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
+            res.img +
+            `');">
+              </div>
+              <div id="qrText">Scan this QR code to join this session!</div>
+            </div>`
+        );
+        setTimeout(function () {
+          onClickOutside(
+            "#qrDisplayContainer",
+            "#qrDisplayContainer",
+            ".subContextContainer"
+          );
+          $("#contextShadow").removeClass("off");
+        }, 10);
+      });
+    }
+    /*showRenameSession({
         name: $(".phraseDisplay")
           .first()
           .children(".phraseText")
@@ -81,8 +151,7 @@ window.addEventListener("load", function () {
           .substr(8),
         id: "0000" + $("#code").text(),
       });
-    });
-
+      */
     $(".phraseText").on("click", function () {
       createAndShowAlert($(".phraseText").first().text().substr(8));
     });
@@ -1840,7 +1909,7 @@ function closeMenuItem(view) {
 function showAdderMenu() {
   $("body").append(writeAdder("Add a list or game"));
   setTimeout(function () {
-    OnClickOutside("#menuAdder", "#menuAdder", ".subContextContainer");
+    onClickOutside("#menuAdder", "#menuAdder", ".subContextContainer");
     $("#contextShadow").removeClass("off");
   }, 10);
   $("#menuAdder").removeClass("off");
@@ -1924,7 +1993,7 @@ function showGameContext(game) {
         .appendTo($("body"));
     }
     setTimeout(function () {
-      OnClickOutside(
+      onClickOutside(
         "#context_" + game.id,
         "#context_" + game.id,
         ".subContextContainer"
@@ -2504,7 +2573,7 @@ function connectBGG() {
   return false;
 }
 
-function OnClickOutside(selector, toHide, extraSelector, hideInstead, hideFn) {
+function onClickOutside(selector, toHide, extraSelector, hideInstead, hideFn) {
   const outsideClickListener = (event) => {
     const $target = $(event.target);
 
@@ -2885,7 +2954,7 @@ function renameSession(event, caller, code) {
           $(this).html(
             `<div class="phraseText">Session: ` +
               newName +
-              `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="create-outline"></ion-icon>`
+              `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="settings-outline"></ion-icon>`
           );
         });
       }
@@ -3523,7 +3592,11 @@ function createAndShowAlert(alert, error = false) {
     red = " red";
   }
   $("body").append(
-    '<div id="tempAlert" class="tempAlert' + red + '">' + alert + "</div>"
+    '<div id="tempAlert" onclick="$(this).remove()" class="tempAlert' +
+      red +
+      '">' +
+      alert +
+      "</div>"
   );
   $("#tempAlert").css({ opacity: 1, "z-index": 101 });
   setTimeout(function () {
@@ -3606,7 +3679,7 @@ function showToolTip(thumb, container) {
     showVoteThumb(container);
     setTimeout(function () {
       $(container).toggleClass("showToolTip");
-      OnClickOutside(
+      onClickOutside(
         ".showToolTip",
         ".showToolTip",
         undefined,

@@ -5,7 +5,8 @@ var path = require("path");
 var logger = require("morgan");
 const bodyParser = require("body-parser");
 const publicRouter = require("./routes/public");
-var authRouter = require("./routes/auth");
+const authRouter = require("./routes/auth");
+const qrRouter = require("./routes/qr");
 const session = require("express-session");
 const cfenv = require("cfenv");
 //var socket_io = require("socket.io");
@@ -211,6 +212,7 @@ app.use((req, res, next) => {
 //Routers
 app.use("/", publicRouter);
 app.use("/", authRouter);
+app.use("/", qrRouter);
 
 //Authenticated page logic - just call loginRequired to protect!
 /*function loginRequired(req, res, next) {

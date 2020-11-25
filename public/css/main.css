@@ -1200,7 +1200,7 @@ input#listImportSubmit.green {
   display: grid;
   grid-template-columns: 1fr 11vw 11vw;
   grid-template-rows: 1fr;
-  align-items: start;
+  align-items: center;
 }
 
 #selectLists .listGames,
@@ -2467,6 +2467,22 @@ input#selectLimit {
 
 .subContextLimit .button[type="submit"] {
   grid-area: 2/2/3/4;
+}
+
+#limitDisplay {
+  grid-area: 6/9/7/11;
+  font-size: var(--font-p);
+  display: inline;
+  width: 100%;
+  text-align: left;
+}
+
+#limitCurrent:after {
+  content: "/";
+}
+
+#limitMax:after {
+  content: " games";
 }
 
 #importOverwrite,

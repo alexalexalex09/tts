@@ -2422,6 +2422,7 @@ function removeGame(arr) {
         $(this).remove();
       });
       gulp();
+      recheckLimit();
     }
   );
 }
@@ -2950,6 +2951,7 @@ function showSessionLimit() {
 function removeLimit() {
   $("#selectLimit").val(0);
   submitSetLimit();
+  recheckLimit();
 }
 
 function submitSetLimit() {
@@ -2962,6 +2964,7 @@ function submitSetLimit() {
       $(".subContextContainer").each(function () {
         $(this).remove();
       });
+      recheckLimit();
     }
   );
   return false;
@@ -3246,6 +3249,7 @@ function recheckGreenLists() {
       console.log("unchecked!");
     }
   });
+  recheckLimit();
 }
 
 //Check list boxes and change text to green on first display
@@ -3309,6 +3313,31 @@ function initGreenLists() {
             .prop("checked", true);
         }
       });
+  });
+  recheckLimit();
+}
+
+function recheckLimit() {
+  ttsFetch("/get_session_limit", { code: $("#code").text() }, (res) => {
+    $("#limitMax").html(res.limit);
+    if (Number($("#limitCurrent").html() < res.limit)) {
+      $("#limitDisplay").removeClass("red");
+    } else {
+      $("#limitDisplay").addClass("red");
+    }
+    if (Number($("#limitMax").html()) > 0) {
+      $("#limitDisplay").removeClass("off");
+    } else {
+      $("#limitDisplay").addClass("off");
+    }
+    console.log("Limit: ", Number($("#limitMax").html()));
+    var arr = [];
+    $(".gameName.greenText").each((i, e) => {
+      if (arr.findIndex((obj) => obj == $(e).attr("game_id")) == -1) {
+        arr.push($(e).attr("game_id"));
+      }
+    });
+    $("#limitCurrent").html(arr.length);
   });
 }
 
@@ -3438,10 +3467,14 @@ function registerEGS() {
 }
 
 function toggleFont(check) {
+  recheckLimit();
+  var current = Number($("#limitCurrent").html());
+  var max = Number($("#limitMax").html());
   console.log("toggleFont");
   var el = $(check).parent().parent().parent().children(".gameName").first();
   console.log(check);
   console.log(el);
+
   var gamesToAdd = [];
   var gamesToRemove = [];
   if (el.length > 0) {
@@ -3510,17 +3543,54 @@ function toggleFont(check) {
     console.log("Add: ", gamesToAdd);
     console.log("Remove: ", gamesToRemove);
   }
-  ttsFetch(
-    "/add_game_to_session",
-    {
-      gamesToAdd: gamesToAdd,
-      gamesToRemove: gamesToRemove,
-      code: document.getElementById("code").innerHTML,
-    },
-    () => {
-      recheckGreenLists();
+  if (gamesToAdd.length <= max - current || gamesToAdd.length == 0) {
+    ttsFetch(
+      "/add_game_to_session",
+      {
+        gamesToAdd: gamesToAdd,
+        gamesToRemove: gamesToRemove,
+        code: document.getElementById("code").innerHTML,
+      },
+      () => {
+        recheckGreenLists();
+        recheckLimit();
+      }
+    );
+  } else {
+    if (gamesToAdd.length == 1) {
+      var plural = "";
+    } else {
+      var plural = "s";
     }
-  );
+    createAndShowAlert(
+      "You cannot add " +
+        gamesToAdd.length +
+        " game" +
+        plural +
+        ". Remove some games to suggest new ones!",
+      true
+    );
+    $(check).prop("checked", false);
+    $(check)
+      .parent()
+      .parent()
+      .parent()
+      .children()
+      .first()
+      .removeClass("greenText");
+    gamesToAdd.forEach((e) => {
+      $("input[game_id=" + e + "]").each((i, e) => {
+        $(e).prop("checked", false);
+        $(e)
+          .parent()
+          .parent()
+          .parent()
+          .children()
+          .first()
+          .removeClass("greenText");
+      });
+    });
+  }
 }
 
 /*****************************/
@@ -3637,6 +3707,7 @@ function showAlert(alert) {
 }
 
 function createAndShowAlert(alert, error = false) {
+  $("#tempAlert").remove();
   var red = "";
   if (error) {
     red = " red";

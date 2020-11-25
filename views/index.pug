@@ -115,6 +115,9 @@ block content
           .tooltip Add a random game from your collection
       #selectFilter(players=0)
         ion-icon(name="filter" onclick="showSelectFilter()")
+      #limitDisplay.off
+        span#limitCurrent 0
+        span#limitMax
       #selectLists
       button#gameSubmit.button.greenBtn(type='submit' value='')
         | Submit These Games

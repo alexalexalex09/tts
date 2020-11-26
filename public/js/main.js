@@ -1913,6 +1913,21 @@ function closeMenuItem(view) {
   }, 600);
 }
 
+function premium() {
+  if ($("#premiumView").hasClass("off")) {
+    $(".pop").each(function (i, e) {
+      if ("#" + $(e).attr("id") != "#premiumView") {
+        //console.log("Closing ", "#" + $(e).attr("id"));
+        closeMenuItem("#" + $(e).attr("id"));
+      }
+    });
+    closeMenu();
+    window.setTimeout(showMenuItem("#premiumView"), 600);
+  } else {
+    closeMenuItem("#premiumView");
+  }
+}
+
 function showAdderMenu() {
   $("body").append(writeAdder("Add a list or game"));
   setTimeout(function () {

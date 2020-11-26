@@ -2486,7 +2486,7 @@ router.post("/set_session_limit", function (req, res) {
 router.post("/get_session_limit", function (req, res) {
   if (req.user) {
     Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      if (typeof curSession != "undefined") {
+      if (typeof curSession != "undefined" && curSession != null) {
         if (typeof curSession.limit == "undefined") {
           console.log(curSession.limit);
           console.log(typeof curSession.limit);
@@ -2504,7 +2504,7 @@ router.post("/get_session_limit", function (req, res) {
           res.send({ limit: Number(curSession.limit) });
         }
       } else {
-        res.send({ err: "No session found" });
+        res.send();
       }
     });
   } else {

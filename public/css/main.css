@@ -1911,6 +1911,22 @@ input[type="range"]:before {
   color: var(--main-white);
 }
 
+.pop .pageTitle#sessionsTitle {
+  height: var(--vh5);
+}
+
+#sessionsInfo {
+  color: var(--main-white);
+  width: 80%;
+  height: var(--vh5);
+  margin: 0 auto;
+  text-align: center;
+}
+
+#sessionsInfo a {
+  cursor: pointer;
+}
+
 #sessionsContainer {
   overflow-y: auto;
   height: calc(var(--vh) * 75);

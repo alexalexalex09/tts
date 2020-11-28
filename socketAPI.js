@@ -86,6 +86,19 @@ function getNames(profiles, numGames, curSession, data) {
   if (typeof numGames == "undefined") {
     console.log("Err: numgames ", numGames);
   } else {
+    console.log({ numGames });
+    var newNumGames = [];
+    for (var i = 0; i < numGames.length; i++) {
+      if (
+        numGames[i].id.substr(0, 5) != "guest" ||
+        numGames[i].id.length != 25
+      ) {
+        newNumGames.push(numGames[i]);
+      }
+    }
+    console.log({ newNumGames });
+    console.log({ numGames });
+    numGames = newNumGames;
     User.find({ profile_id: { $in: profiles } }).exec(function (
       err,
       usernames
@@ -95,7 +108,7 @@ function getNames(profiles, numGames, curSession, data) {
           (obj) => obj.profile_id == numGames[j].id
         );
         if (index == -1) {
-          theError = "id not found, aborting";
+          theError = "id " + numGames[j].id + " not found, aborting";
           break;
         }
         numGames[j].name = usernames[index].name;

@@ -7,6 +7,7 @@ var ResourceSchema = new Schema(
   {
     name: String,
     data: Object,
+    collected: Date,
   },
   {
     collection: "resources",

@@ -2472,7 +2472,7 @@ input#selectLimit {
 
 .subContextLimit .button {
   border: none;
-  width: max(95%, 11rem);
+  width: min(95%, 11rem);
   margin-top: 10px;
   justify-self: center;
 }
@@ -2486,11 +2486,11 @@ input#selectLimit {
 }
 
 #limitDisplay {
-  grid-area: 6/9/7/11;
+  grid-area: 6/8/7/11;
   font-size: var(--font-p);
   display: inline;
   width: 100%;
-  text-align: left;
+  text-align: center;
 }
 
 #limitCurrent:after {

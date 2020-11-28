@@ -74,6 +74,18 @@ router.get("/*", function (req, res, next) {
     req.session.userNonce = makeid(20);
   }
   console.log("UserNonce: ", req.session.userNonce);
+  if (typeof req.session.currentURL != "undefined") {
+    req.session.previousURL = req.session.currentURL;
+  } else {
+    req.session.previousURL = req.url;
+  }
+  req.session.currentURL = req.url;
+  console.log(
+    "Previous: ",
+    req.session.previousURL,
+    " | Current",
+    req.session.currentURL
+  );
   next();
 });
 
@@ -199,30 +211,84 @@ function getBGGMetaData(ids, toAdd) {
 }
 
 /*Use Async BGG Functions to get top list of games with metadata */
-getBGGPages(20).then((topGames) => {
-  getBGGMetaDatas(topGames).then((newData) => {
-    Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
-      if (curResource) {
-        curResource.data = { games: newData };
-        curResource.save().then(function () {
-          console.log("saved");
-        });
-      } else {
-        var newResource = new Resource({
-          name: "topGames",
-          data: { games: newData },
-        });
-        newResource.save();
-      }
-    });
-  });
-});
-function parseBGGThing($BGGItems, field, attr) {
-  if (attr) {
-    return $BGGItems.children("item").children(field).first().attr(attr);
+Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+  if (curResource) {
+    if (isNaN(curResource.collected)) {
+      resourceOutdated = true;
+    } else {
+      resourceOutdated = Date.now() - curResource.collected > 432000000; // Wait 5 days = 1000*60*60*24*5
+    }
   } else {
-    return $BGGItems.children("item").children(field).first().html();
+    resourceOutdated = true;
   }
+  if (resourceOutdated) {
+    getBGGPages(20).then((topGames) => {
+      getBGGMetaDatas(topGames).then((newData) => {
+        if (curResource) {
+          curResource.data = { games: newData };
+          curResource.collected = Date.now();
+          curResource.save().then(function () {
+            console.log("saved");
+          });
+        } else {
+          var newResource = new Resource({
+            name: "topGames",
+            data: { games: newData },
+            collected: Date.now(),
+          });
+          newResource.save();
+        }
+      });
+    });
+    function parseBGGThing($BGGItems, field, attr) {
+      if (attr) {
+        return $BGGItems.children("item").children(field).first().attr(attr);
+      } else {
+        return $BGGItems.children("item").children(field).first().html();
+      }
+    }
+  } else {
+    console.log(
+      "Skipping BGG Data Collection, will collect again in " +
+        msToTime(432000000 - (Date.now() - curResource.collected))
+    );
+  }
+});
+
+function msToTime(duration) {
+  var milliseconds = parseInt((duration % 1000) / 100),
+    seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24),
+    days = Math.floor(duration / (1000 * 60 * 60 * 24));
+
+  hours = hours < 10 ? "0" + hours : hours;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  seconds = seconds < 10 ? "0" + seconds : seconds;
+  const getPlural = (num) => {
+    if (num == 1) {
+      return "";
+    } else {
+      return "s";
+    }
+  };
+  return (
+    days +
+    " day" +
+    getPlural(days) +
+    ", " +
+    hours +
+    " hour" +
+    getPlural(hours) +
+    ", " +
+    minutes +
+    " minute" +
+    getPlural(minutes) +
+    ", and " +
+    seconds +
+    " second" +
+    getPlural(seconds)
+  );
 }
 
 /*
@@ -264,16 +330,6 @@ router.get("/privacy-tos", function (req, res, next) {
   next();
 });
 
-router.get("/*", function (req, res, next) {
-  req.session.previousURL = req.session.currentURL;
-  req.session.currentURL = req.originalUrl;
-  if (typeof req.session.userNonce == "undefined") {
-    req.session.userNonce = makeid(20);
-  }
-  console.log("UserNonce: ", req.session.userNonce);
-  next();
-});
-
 router.get("/j/:session", (req, res) => {
   console.log("Join called*********************");
   console.log("Listcode: ", req.params.listCode);
@@ -297,7 +353,6 @@ router.get(/^\/([A-Z0-9]{5})$/, (req, res) => {
 });
 router.get(/^\/([A-Z0-9]{6})$/, (req, res) => {
   console.log("Listcode: ", req.originalUrl.substr(1));
-  console.log(req.session.previousURL, req.session.currentURL);
   res.render("index", {
     listCode: req.originalUrl.substr(1),
   });
@@ -975,17 +1030,16 @@ router.post("/join_session", function (req, res) {
           if (lock == "#codeView") {
             lock = "#selectView";
           }
-          for (var i = 0; i < curSession.users.length; i++) {
-            //TODO: This could be changed to Array.findIndex
-            if (curSession.users[i].user == req.user.id) {
-              newUser = false;
-              console.log(curSession.users[i]);
-              if (curSession.users[i].done && lock == "#selectView") {
-                lock = "#postSelectView";
-              }
-              if (curSession.users[i].doneVoting && lock == "#voteView") {
-                lock = "#postVoteView";
-              }
+          var index = curSession.users.findIndex((obj) => {
+            obj.user = req.user.id;
+          });
+          if (index > -1) {
+            newUser == false;
+            if (curSession.users[index].done && lock == "#selectView") {
+              lock = "#postSelectView";
+            }
+            if (curSession.users[index].doneVoting && lock == "#voteView") {
+              lock = "#postVoteView";
             }
           }
           console.log("newUser ", newUser);
@@ -1004,7 +1058,6 @@ router.post("/join_session", function (req, res) {
                 } else {
                   displayName = req.user.displayName || "Insert Name Here";
                 }
-                //console.log("568DisplayName: ", displayName);
                 curSession.users.push({
                   user: req.user.id,
                   name: displayName,
@@ -1043,6 +1096,57 @@ router.post("/join_session", function (req, res) {
           }
         }
       } else {
+        //Joining as guest. Add to users and voting array
+        var newUser = true; //Initialize to true, set to false if user is found
+        if (lock == "#codeView") {
+          lock = "#selectView";
+        }
+        var index = curSession.users.findIndex((obj) => {
+          obj.user == "guest" + req.session.userNonce;
+        });
+        for (var i = 0; i < curSession.users.length; i++) {
+          if (curSession.users.user == "guest" + req.session.userNonce) {
+            console.log("Found one that's equal!");
+          }
+        }
+        if (index > -1) {
+          newUser = false;
+          if (curSession.users[index].done && lock == "#selectView") {
+            lock = "#postSelectView";
+          }
+          if (curSession.users[index].doneVoting && lock == "#voteView") {
+            lock = "#postVoteView";
+          }
+        }
+        if (newUser) {
+          var guestNum = 0;
+          for (var i = 0; i < curSession.users.length; i++) {
+            var curUser = curSession.users[i].user;
+            if (curUser.substr(0, 5) == "guest" && curUser.length == 25) {
+              guestNum++;
+            }
+          }
+          curSession.users.push({
+            user: "guest" + req.session.userNonce,
+            name: "Guest " + guestNum,
+            done: true,
+            doneVoting: false,
+          });
+        }
+        curSession.save().then(function () {
+          socketAPI.addGame({
+            code: theCode,
+          });
+          res.send({
+            owned: false,
+            status: {
+              code: curSession.code,
+              lock: lock,
+              games: [],
+              phrase: curSession.phrase,
+            },
+          });
+        }); /*
         //Joining as guest. Not added to users or voting array
         res.send({
           owned: false,
@@ -1052,7 +1156,7 @@ router.post("/join_session", function (req, res) {
             games: [],
             phrase: curSession.phrase,
           },
-        });
+        });*/
       }
     }
   });
@@ -2504,11 +2608,11 @@ router.post("/get_session_limit", function (req, res) {
           res.send({ limit: Number(curSession.limit) });
         }
       } else {
-        res.send();
+        res.send({ status: "no session" });
       }
     });
   } else {
-    res.send(ERR_LOGIN);
+    res.send({ status: "no user" });
   }
 });
 

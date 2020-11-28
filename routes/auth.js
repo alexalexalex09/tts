@@ -16,8 +16,9 @@ router.get(
 
   function (req, res, next) {
     //set req.session.returnTo here? Yes.
-    console.log("login:: ", req.originalUrl);
+    console.log("login:: ", req.originalUrl, ", ", req.url);
     req.session.returnTo = req.session.previousURL;
+    console.log("ReturnTo: ", req.session.returnTo);
     next();
   },
   passport.authenticate("auth0", {

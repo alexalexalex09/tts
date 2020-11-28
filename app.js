@@ -19,7 +19,8 @@ var app = express();
 //app.use(requireHTTPS);
 app.use(compression());
 app.get("*", function (req, res, next) {
-  console.log("host: ", req.headers.host);
+  //console.log("host: ", req.headers.host);
+
   if (req.headers.host.indexOf(":3000") == -1 && !req.secure) {
     res.redirect("https://" + req.headers.host + req.url);
   } else {

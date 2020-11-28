@@ -227,7 +227,6 @@ window.addEventListener("load", function () {
     console.log("initGreenLists");
     initGreenLists();
 
-    var isLockBack = false;
     switch (res.lock) {
       case "#postSelectView":
         goForwardFrom("#homeView", "#postSelectView");
@@ -2954,7 +2953,7 @@ function showSessionLimit() {
       <input type="number" name="selectLimit" id="selectLimit" min="0" value="` +
       res.limit +
       `">
-      <input type="button" class="button redBtn" onclick="removeLimit()" value="Remove Limit"></input>
+      <input type="button" class="button redBtn" onclick="removeLimit()" value="Remove"></input>
       <input type="submit" class="button greenBtn" value="Set Limit"></input>
       </div>
       </form>
@@ -3558,7 +3557,7 @@ function toggleFont(check) {
     console.log("Add: ", gamesToAdd);
     console.log("Remove: ", gamesToRemove);
   }
-  if (gamesToAdd.length <= max - current || gamesToAdd.length == 0) {
+  if (gamesToAdd.length <= max - current || gamesToAdd.length == 0 || max < 1) {
     ttsFetch(
       "/add_game_to_session",
       {

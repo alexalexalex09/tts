@@ -52,6 +52,29 @@ Game.find({ name: /'/ }).exec(function (err, curGames) {
   });
 });
 
+Session.find({ users: { $elemMatch: { user: { $regex: /guest*/ } } } }).exec(
+  function (err, curSessions) {
+    var totalSave = 0;
+    curSessions.forEach(function (e, i) {
+      var toSave = false;
+      curSessions[i].users.forEach(function (el, ind) {
+        var user = curSessions[i].users[ind].user;
+        if (user.substr(0, 5) == "guest" && user.length == 25) {
+          curSessions[i].users.splice(ind, 1);
+          totalSave++;
+          toSave = true;
+        }
+      });
+      if (toSave) {
+        curSessions[i].save();
+      }
+    });
+    if (totalSave) {
+      console.log("Removed " + totalSave + " guest user(s)");
+    }
+  }
+);
+
 /*
 User.findOne({ name: "crina" }).exec(function (err, curUser) {
   console.log(curUser);
@@ -87,6 +110,15 @@ router.get("/*", function (req, res, next) {
     req.session.currentURL
   );
   next();
+});
+
+router.get("*", function (req, res, next) {
+  console.log("UserNonce for *: ", req.session.userNonce);
+  next();
+});
+
+router.post("/user_nonce", function (req, res) {
+  res.send({ userNonce: req.session.userNonce });
 });
 
 /* Async BGG Function Definitions */
@@ -291,21 +323,6 @@ function msToTime(duration) {
   );
 }
 
-/*
-TopGame.findOne({ name: "topGames" }).exec(function (err, gameList) {
-  var index = gameList.games.findIndex((obj) => {
-    if (obj) {
-      obj.rank == (pageNum - 1) * 50 + i;
-    }
-  });
-  if (index == -1) {
-    gameList.games[(pageNum - 1) * 50 + i] = { name: e, rank: i };
-  } else {
-    gameList.games[index].name = e;
-  }
-  gameList.update();
-});
-*/
 function makeid(length = 5, checkList = []) {
   //TODO: Filter out bad words
   var result = "";
@@ -1009,6 +1026,29 @@ router.post("/join_session", function (req, res) {
             }
             //console.log(curSession.games[i], tosave);
           }
+          var index = curSession.users.findIndex((obj) => {
+            console.log(
+              obj.user +
+                " | guest" +
+                req.session.userNonce +
+                (obj.user == "guest" + req.session.userNonce)
+            );
+            return obj.user == "guest" + req.session.userNonce;
+          });
+          if (index > -1) {
+            tosave = true;
+            console.log(
+              req.session.userNonce + " at " + index + ": deleting ",
+              curSession.users[index]
+            );
+            delete curSession.users[index];
+            console.log(curSession.users);
+          } else {
+            console.log(
+              "Nothing in this list matched guest" + req.session.userNonce + ":"
+            );
+            console.log(curSession.users);
+          }
           if (tosave) {
             curSession.save(); //Save the session if the flag has been set
           }
@@ -1031,10 +1071,10 @@ router.post("/join_session", function (req, res) {
             lock = "#selectView";
           }
           var index = curSession.users.findIndex((obj) => {
-            obj.user = req.user.id;
+            return obj.user == req.user.id;
           });
           if (index > -1) {
-            newUser == false;
+            newUser = false;
             if (curSession.users[index].done && lock == "#selectView") {
               lock = "#postSelectView";
             }
@@ -1048,15 +1088,26 @@ router.post("/join_session", function (req, res) {
             management.users.get(
               { id: req.user.user_id },
               function (err, extUser) {
-                //console.log("auth0 user:", extUser);
-                if (err) {
-                  res.send({ err: err });
-                }
-                res.locals.user = req.user;
-                if (extUser && extUser.username != "") {
-                  displayName = extUser.username || req.user.displayName;
+                console.log("auth0 user:", extUser);
+                if (extUser) {
+                  if (
+                    extUser.user_metadata &&
+                    extUser.user_metadata.userDefinedName &&
+                    extUser.user_metadata.userDefinedName.length > 0
+                  ) {
+                    displayName = extUser.user_metadata.userDefinedName;
+                  } else {
+                    if (
+                      extUser.username != "" &&
+                      typeof extUser.username != "undefined"
+                    ) {
+                      displayName = extUser.username;
+                    } else {
+                      displayName = extUser.name;
+                    }
+                  }
                 } else {
-                  displayName = req.user.displayName || "Insert Name Here";
+                  displayName = req.user.displayName;
                 }
                 curSession.users.push({
                   user: req.user.id,
@@ -1064,6 +1115,13 @@ router.post("/join_session", function (req, res) {
                   done: false,
                   doneVoting: false,
                 });
+                if (
+                  curSession.users.findIndex(
+                    (obj) => obj.user == "guest" + req.session.userNonce
+                  ) > -1
+                ) {
+                  delete curSession.users[index];
+                }
                 curSession.save().then(function () {
                   socketAPI.addGame({
                     code: theCode,
@@ -1081,6 +1139,14 @@ router.post("/join_session", function (req, res) {
               }
             );
           } else {
+            if (
+              curSession.users.findIndex(
+                (obj) => obj.user == req.session.userNonce
+              ) > -1
+            ) {
+              delete curSession.users[index];
+              curSession.save();
+            }
             socketAPI.addGame({
               code: theCode,
             });
@@ -1102,13 +1168,11 @@ router.post("/join_session", function (req, res) {
           lock = "#selectView";
         }
         var index = curSession.users.findIndex((obj) => {
-          obj.user == "guest" + req.session.userNonce;
+          //console.log(obj.user, "| guest" + req.session.userNonce);
+          return obj.user == "guest" + req.session.userNonce;
         });
-        for (var i = 0; i < curSession.users.length; i++) {
-          if (curSession.users.user == "guest" + req.session.userNonce) {
-            console.log("Found one that's equal!");
-          }
-        }
+        //console.log(curSession.users);
+
         if (index > -1) {
           newUser = false;
           if (curSession.users[index].done && lock == "#selectView") {
@@ -1191,10 +1255,25 @@ router.post("/create_session", function (req, res) {
         // Get the user info from Auth0
         //console.log("auth0 user:", extUser);
         res.locals.user = req.user; //Set correct displayName and user var for locals
-        if (extUser && extUser.username != "") {
-          displayName = extUser.username || req.user.displayName;
+        if (extUser) {
+          if (
+            extUser.user_metadata &&
+            extUser.user_metadata.userDefinedName &&
+            extUser.user_metadata.userDefinedName.length > 0
+          ) {
+            displayName = extUser.user_metadata.userDefinedName;
+          } else {
+            if (
+              extUser.username != "" &&
+              typeof extUser.username != "undefined"
+            ) {
+              displayName = extUser.username;
+            } else {
+              displayName = extUser.name;
+            }
+          }
         } else {
-          displayName = req.user.displayName || "Insert Name Here";
+          displayName = req.user.displayName;
         }
         var today = new Date();
         var dd = String(today.getDate()).padStart(2, "0");
@@ -1259,7 +1338,7 @@ router.post("/add_game_to_session", function (req, res) {
                 index = j;
                 if (curSession.games[j].addedBy.includes(req.user.id)) {
                   ownedBy = true;
-                  console.log(numGames);
+                  //console.log(numGames);
                 }
               }
               if (curSession.games[j].addedBy.includes(req.user.id)) {
@@ -1270,7 +1349,7 @@ router.post("/add_game_to_session", function (req, res) {
               if (ownedBy) {
                 results.push({ err: "Already added by this user" });
               } else {
-                console.log(numGames);
+                //console.log(numGames);
                 curSession.games[index].addedBy.push(req.user.id);
                 results.push({
                   status:

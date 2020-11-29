@@ -7,7 +7,6 @@ window.addEventListener("load", function () {
   /*      Socket.io logic      */
   /*****************************/
   var socket = io();
-
   createSession = function (res) {
     console.log("createSession");
     var crown = Math.floor(Math.random() * 5) + 1;
@@ -44,6 +43,9 @@ window.addEventListener("load", function () {
     });
     $("#backArrow").removeClass("off");
     setCode(res.session.code);
+    ttsFetch("/user_nonce", {}, (res) => {
+      socket.emit("id", { id: res.userNonce, code: $("#code").text() });
+    });
     setTimeout(function () {
       $("#joinButton").css({
         opacity: "0%",
@@ -83,7 +85,7 @@ window.addEventListener("load", function () {
 
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
-    console.log(res.session.users[index].done);
+    //console.log(res.session.users[index].done);
     console.log("dest", dest);
     if (res.session.users[index].done == false && dest == "#postSelectView") {
       dest = "#selectView";
@@ -207,6 +209,9 @@ window.addEventListener("load", function () {
       $(this).removeClass("crown5");
     }); //not the owner
     setCode(res.code);
+    ttsFetch("/user_nonce", {}, (res) => {
+      socket.emit("id", { id: res.userNonce, code: $("#code").text() });
+    });
     setPhrase(
       `<div class="phraseText">Session: ` +
         res.phrase +
@@ -217,12 +222,12 @@ window.addEventListener("load", function () {
     });
     console.log("joinSession: ", res.lock);
 
-    var sessionGames = "<session>";
+    /*var sessionGames = "<session>";
     for (var i = 0; i < res.games.length; i++) {
       sessionGames +=
         '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
     }
-    $("#sessionContainer").html(sessionGames);
+    $("#sessionContainer").html(sessionGames);*/
 
     console.log("initGreenLists");
     initGreenLists();
@@ -273,6 +278,7 @@ window.addEventListener("load", function () {
     console.log("Setting up client event with " + res.code);
     socket.on(res.code + "client", (data) => {
       console.log("Got client event", data);
+
       if (data.lockBack && data.lock) {
         goForwardFrom(window.hist[window.hist.length - 1], data.lock);
         lockBack();

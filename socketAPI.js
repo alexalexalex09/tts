@@ -42,7 +42,7 @@ function getSessionGames(curSession) {
       }
     }
   }
-  console.log("curUsers: ", curUsers);
+  //console.log("curUsers: ", curUsers);
   return curUsers;
 }
 
@@ -65,17 +65,18 @@ socketAPI.addGame = function (data) {
       for (var i = 0; i < curSession.users.length; i++) {
         numGames[i] = {
           id: curSession.users[i].user,
-          name: "",
+          name: curSession.users[i].name,
           num: 0,
           done: curSession.users[i].done,
         };
       }
-      console.log("numgames: ", numGames);
+      //console.log("numgames: ", numGames);
       //a. Note that this requires "done" to be set by public.js when user clicks through
       //3. Look up names for numGames.user.name
       var profiles = curSession.users.map(function (val, i) {
         return val.user;
       });
+      console.log({ profiles });
       getNames(profiles, numGames, curSession, data);
     }
   });
@@ -86,82 +87,54 @@ function getNames(profiles, numGames, curSession, data) {
   if (typeof numGames == "undefined") {
     console.log("Err: numgames ", numGames);
   } else {
-    console.log({ numGames });
-    var newNumGames = [];
-    for (var i = 0; i < numGames.length; i++) {
-      if (
-        numGames[i].id.substr(0, 5) != "guest" ||
-        numGames[i].id.length != 25
-      ) {
-        newNumGames.push(numGames[i]);
-      }
-    }
-    console.log({ newNumGames });
-    console.log({ numGames });
-    numGames = newNumGames;
-    User.find({ profile_id: { $in: profiles } }).exec(function (
-      err,
-      usernames
-    ) {
-      for (var j = 0; j < numGames.length; j++) {
-        var index = usernames.findIndex(
-          (obj) => obj.profile_id == numGames[j].id
-        );
-        if (index == -1) {
-          theError = "id " + numGames[j].id + " not found, aborting";
-          break;
-        }
-        numGames[j].name = usernames[index].name;
-      }
-      if (theError == "") {
-        //4. Look through curSession.games
-        //a. if empty, do nothing since num=0 by default
-        if (curSession.games.length > 0) {
-          for (var k = 0; k < curSession.games.length; k++) {
-            for (var l = 0; l < curSession.games[k].addedBy.length; l++) {
-              var index = numGames.findIndex(
-                (obj) => obj.id == curSession.games[k].addedBy[l]
-              );
+    if (theError == "") {
+      //4. Look through curSession.games
+      //a. if empty, do nothing since num=0 by default
+      if (curSession.games.length > 0) {
+        for (var k = 0; k < curSession.games.length; k++) {
+          for (var l = 0; l < curSession.games[k].addedBy.length; l++) {
+            var index = numGames.findIndex(
+              (obj) => obj.id == curSession.games[k].addedBy[l]
+            );
 
-              //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
-              if (index > -1) {
-                numGames[index].num++;
-              }
+            //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
+            if (index > -1) {
+              numGames[index].num++;
             }
           }
         }
-        //Now we have numGames with id, name, done, and num filled for each user
-        //5. Remove id from each user
-        for (var i = 0; i < numGames.length; i++) {
-          numGames[i].id = "";
-        }
-        //6. Emit to owner and client
-        var gamesList = [];
-        var namesList = [];
-        console.log("curSession.games: ", curSession.games);
-        curSession.games.forEach(function (e) {
-          gamesList.push(mongoose.Types.ObjectId(e.game));
-        });
-        Game.find({ _id: { $in: gamesList } }).exec(function (err, games) {
-          games.forEach(function (e) {
-            namesList.push(e.name);
-          });
-          console.log("namesList: ", gamesList, namesList);
-          io.sockets.emit(data.code + "owner", {
-            selectEvent: true,
-            select: numGames,
-            curGames: namesList,
-          });
-          io.sockets.emit(data.code + "client", {
-            selectEvent: true,
-            select: numGames,
-            curGames: namesList,
-          });
-        });
-      } else {
-        console.log(theError);
       }
-    });
+      //Now we have numGames with id, name, done, and num filled for each user
+      //5. Remove id from each user
+      for (var i = 0; i < numGames.length; i++) {
+        numGames[i].id = "";
+      }
+      //6. Emit to owner and client
+      var gamesList = [];
+      var namesList = [];
+      //console.log("curSession.games: ", curSession.games);
+      curSession.games.forEach(function (e) {
+        gamesList.push(mongoose.Types.ObjectId(e.game));
+      });
+      Game.find({ _id: { $in: gamesList } }).exec(function (err, games) {
+        games.forEach(function (e) {
+          namesList.push(e.name);
+        });
+        //console.log("namesList: ", gamesList, namesList);
+        io.sockets.emit(data.code + "owner", {
+          selectEvent: true,
+          select: numGames,
+          curGames: namesList,
+        });
+        io.sockets.emit(data.code + "client", {
+          selectEvent: true,
+          select: numGames,
+          curGames: namesList,
+        });
+      });
+    } else {
+      console.log(theError);
+    }
   }
 }
 
@@ -216,7 +189,7 @@ socketAPI.initGames = function (data) {
             }
           }
         }
-        console.log("numGames, ", numGames);
+        //console.log("numGames, ", numGames);
         //eventually switch numGames to track ids, and return a different array, userGames, with names replaced
         socketAPI.addGame({ code: data.code });
       });
@@ -362,11 +335,38 @@ socketAPI.endVote = function (data) {
 };
 
 io.on("connection", function (socket) {
+  var id = null;
+  var code = null;
   socket.on("addGame", (data) => {
     console.log("addgame was called");
     socketAPI.addGame(data);
   });
-  console.log("A user connected");
+  socket.on("id", (data) => {
+    id = data.id;
+    code = data.code;
+    console.log("User from session ", data, " is " + id);
+  });
+  socket.on("disconnect", function (socket) {
+    console.log("User " + id + " disconnected from session " + code);
+    if (id != null && code != null && code != "") {
+      Session.findOne({ code: code }).exec(function (err, curSession) {
+        var index = curSession.users.findIndex((obj) => {
+          return obj.user == "guest" + id;
+        });
+        if (index > -1) {
+          curSession.users.splice(index, 1);
+          console.log("Deleting ", id);
+          console.log(curSession.users);
+          curSession.save().then(function () {
+            socketAPI.addGame({ code: code });
+          });
+        } else {
+          console.log("User " + id + " disconnected but wasn't in the list");
+        }
+      });
+    }
+  });
+  console.log("User " + id + " connected");
 });
 
 module.exports = socketAPI;

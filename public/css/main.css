@@ -425,6 +425,10 @@ select.bggFilterInput {
   margin-bottom: calc(var(--vh) * 1.5);
 }
 
+.curGameItem a {
+  color: var(--main-white);
+}
+
 #curGamesClose {
   z-index: 101;
   top: calc(var(--vh5) + 10px);

@@ -334,6 +334,11 @@ socketAPI.endVote = function (data) {
   io.sockets.emit(data.code + "client", { play: true, games: data.games });
 };
 
+socketAPI.setLimit = function (data) {
+  io.sockets.emit(data.code + "owner", { limit: data.limit });
+  io.sockets.emit(data.code + "client", { limit: data.limit });
+};
+
 io.on("connection", function (socket) {
   var id = null;
   var code = null;

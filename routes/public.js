@@ -249,6 +249,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
       resourceOutdated = true;
     } else {
       resourceOutdated = Date.now() - curResource.collected > 432000000; // Wait 5 days = 1000*60*60*24*5
+      //resourceOutdated = true;
     }
   } else {
     resourceOutdated = true;
@@ -1133,6 +1134,7 @@ router.post("/join_session", function (req, res) {
                       lock: lock,
                       games: sendGames,
                       phrase: curSession.phrase,
+                      limit: curSession.limit,
                     },
                   });
                 });
@@ -1157,6 +1159,7 @@ router.post("/join_session", function (req, res) {
                 lock: lock,
                 games: sendGames,
                 phrase: curSession.phrase,
+                limit: curSession.limit,
               },
             });
           }
@@ -2648,6 +2651,10 @@ router.post("/set_session_limit", function (req, res) {
           ).exec(function (err, curSession) {
             if (!err) {
               res.send({ limit: Number(req.body.limit) });
+              socketAPI.setLimit({
+                limit: req.body.limit,
+                code: req.body.code,
+              });
             } else {
               res.send(err);
             }

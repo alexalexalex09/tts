@@ -4012,6 +4012,12 @@ function sortObjectArray(arr, field) {
 function fillVotes(games) {
   games = games.sort(lowerCaseFieldSort("name"));
   var localGames = JSON.parse(localStorage.getItem($("#code").html()));
+  if (localGames === null) {
+    localGames = [];
+    for (var i = 0; i < games.length; i++) {
+      localGames[i] = { id: games[i].game, vote: "500" };
+    }
+  }
   console.log("FillVotes: ", localGames);
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
@@ -4098,6 +4104,7 @@ function fillVotes(games) {
         voteArray: voteArray,
       },
       (res) => {
+        localStorage.removeItem(theCode);
         goForwardFrom("#voteView", "#postVoteView");
         window.hist = ["#homeView", "#postVoteView"];
         setBackHome();

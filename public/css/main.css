@@ -1486,7 +1486,7 @@ input#listImportSubmit.green {
 .voteToolTip {
   display: inline-block;
   font-size: var(--font-p);
-  transform: translate(-5%, -35%);
+  transform: translate(-5%, -100%);
   position: relative;
   z-index: 1;
 }

@@ -16,6 +16,17 @@ var compression = require("compression");
 
 var app = express();
 
+//Replace MemoryStore
+const MongoStore = require("connect-mongo")(session);
+app.use(
+  session({
+    secret: process.env.CONNECT_MONGO_SECRET,
+    saveUninitialized: false, // don't create session until something stored
+    resave: false, //don't save session if unmodified
+    store: new MongoStore({ url: process.env.mongo }),
+  })
+);
+
 //app.use(requireHTTPS);
 app.use(compression());
 app.get("*", function (req, res, next) {

@@ -2,7 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const router = express.Router();
 var mongoose = require("mongoose");
+mongoose.set("useNewUrlParser", true);
 mongoose.set("useFindAndModify", false);
+mongoose.set("useCreateIndex", true);
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
 var Session = require("../models/sessions.js");
@@ -17,6 +19,7 @@ var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 
+console.log("Setting up Auth0");
 var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
@@ -33,6 +36,7 @@ const ERR_LOGIN = { err: "Log in first" };
 const ERR_LOGIN_SOFT = { err: "No user" };
 const ERR_CODE = { err: "Session not found" };
 
+console.log("Connecting Mongoose");
 var mongoDB = process.env.mongo;
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
@@ -45,6 +49,7 @@ mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
+console.log("Cleaning database");
 Game.find({ name: /'/ }).exec(function (err, curGames) {
   curGames.forEach(function (e, i) {
     curGames[i].name = e.name.replace(/([^\\])'/g, `$1\\'`);
@@ -90,36 +95,6 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
   });
 });
 */
-
-//Set userNonce
-router.get("/*", function (req, res, next) {
-  if (typeof req.session.userNonce == "undefined") {
-    req.session.userNonce = makeid(20);
-  }
-  console.log("UserNonce: ", req.session.userNonce);
-  if (typeof req.session.currentURL != "undefined") {
-    req.session.previousURL = req.session.currentURL;
-  } else {
-    req.session.previousURL = req.url;
-  }
-  req.session.currentURL = req.url;
-  console.log(
-    "Previous: ",
-    req.session.previousURL,
-    " | Current",
-    req.session.currentURL
-  );
-  next();
-});
-
-router.get("*", function (req, res, next) {
-  console.log("UserNonce for *: ", req.session.userNonce);
-  next();
-});
-
-router.post("/user_nonce", function (req, res) {
-  res.send({ userNonce: req.session.userNonce });
-});
 
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum) {
@@ -243,7 +218,9 @@ function getBGGMetaData(ids, toAdd) {
 }
 
 /*Use Async BGG Functions to get top list of games with metadata */
+console.log("Loading cached games");
 Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+  console.log("Loaded cached games");
   if (curResource) {
     if (isNaN(curResource.collected)) {
       resourceOutdated = true;
@@ -342,6 +319,37 @@ function makeid(length = 5, checkList = []) {
   } while (dup);
   return result;
 }
+
+console.log("Loading routes");
+//Set userNonce
+router.get("/*", function (req, res, next) {
+  if (typeof req.session.userNonce == "undefined") {
+    req.session.userNonce = makeid(20);
+  }
+  console.log("UserNonce: ", req.session.userNonce);
+  if (typeof req.session.currentURL != "undefined") {
+    req.session.previousURL = req.session.currentURL;
+  } else {
+    req.session.previousURL = req.url;
+  }
+  req.session.currentURL = req.url;
+  console.log(
+    "Previous: ",
+    req.session.previousURL,
+    " | Current",
+    req.session.currentURL
+  );
+  next();
+});
+
+router.get("*", function (req, res, next) {
+  console.log("UserNonce for *: ", req.session.userNonce);
+  next();
+});
+
+router.post("/user_nonce", function (req, res) {
+  res.send({ userNonce: req.session.userNonce });
+});
 
 router.get("/privacy-tos", function (req, res, next) {
   res.render("privacy-tos");
@@ -2701,5 +2709,7 @@ router.post("/get_session_limit", function (req, res) {
     res.send({ status: "no user" });
   }
 });
+
+console.log("Routes loaded");
 
 module.exports = router;

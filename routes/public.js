@@ -1,4 +1,5 @@
 require("dotenv").config();
+var loadTime = Date.now();
 const express = require("express");
 const router = express.Router();
 var mongoose = require("mongoose");
@@ -19,7 +20,7 @@ var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 
-console.log("Setting up Auth0");
+console.log("1/8: Setting up Auth0", Date.now() - loadTime);
 var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
@@ -36,7 +37,7 @@ const ERR_LOGIN = { err: "Log in first" };
 const ERR_LOGIN_SOFT = { err: "No user" };
 const ERR_CODE = { err: "Session not found" };
 
-console.log("Connecting Mongoose");
+console.log("2/8: Connecting Mongoose", Date.now() - loadTime);
 var mongoDB = process.env.mongo;
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
@@ -49,7 +50,7 @@ mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
-console.log("Cleaning database");
+console.log("3/8: Cleaning database", Date.now() - loadTime);
 Game.find({ name: /'/ }).exec(function (err, curGames) {
   curGames.forEach(function (e, i) {
     curGames[i].name = e.name.replace(/([^\\])'/g, `$1\\'`);
@@ -218,9 +219,9 @@ function getBGGMetaData(ids, toAdd) {
 }
 
 /*Use Async BGG Functions to get top list of games with metadata */
-console.log("Loading cached games");
+console.log("4/8: Loading cached games", Date.now() - loadTime);
 Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
-  console.log("Loaded cached games");
+  console.log("7/8: Loaded cached games", Date.now() - loadTime);
   if (curResource) {
     if (isNaN(curResource.collected)) {
       resourceOutdated = true;
@@ -249,6 +250,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
           newResource.save();
         }
       });
+      console.log("8/8: Loaded new BGG Data", Date.now() - loadTime);
     });
     function parseBGGThing($BGGItems, field, attr) {
       if (attr) {
@@ -259,8 +261,9 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     }
   } else {
     console.log(
-      "Skipping BGG Data Collection, will collect again in " +
-        msToTime(432000000 - (Date.now() - curResource.collected))
+      "8/8: Skipping BGG Data Collection, will collect again in " +
+        msToTime(432000000 - (Date.now() - curResource.collected)),
+      Date.now() - loadTime
     );
   }
 });
@@ -320,7 +323,7 @@ function makeid(length = 5, checkList = []) {
   return result;
 }
 
-console.log("Loading routes");
+console.log("5/8: Loading routes", Date.now() - loadTime);
 //Set userNonce
 router.get("/*", function (req, res, next) {
   if (typeof req.session.userNonce == "undefined") {
@@ -2710,6 +2713,6 @@ router.post("/get_session_limit", function (req, res) {
   }
 });
 
-console.log("Routes loaded");
+console.log("6/8: Routes loaded", Date.now() - loadTime);
 
 module.exports = router;

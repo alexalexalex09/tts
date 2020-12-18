@@ -339,6 +339,11 @@ select.bggFilterInput {
 #premiumContainer {
   color: var(--main-white);
   text-align: center;
+  padding: 0px 15px;
+}
+
+#premiumContainer ul {
+  text-align: left;
 }
 
 #premiumContainer a {
@@ -2824,8 +2829,8 @@ input#selectLimit {
   #faqContainer,
   #aboutContainer,
   #premiumContainer {
-    width: 96%;
-    left: 2%;
+    width: 92%;
+    margin-left: 4%;
   }
   #copiedAlert,
   #loginAlert,

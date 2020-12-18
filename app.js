@@ -18,14 +18,23 @@ var app = express();
 
 //Replace MemoryStore
 const MongoStore = require("connect-mongo")(session);
-app.use(
-  session({
-    secret: process.env.CONNECT_MONGO_SECRET,
-    saveUninitialized: false, // don't create session until something stored
-    resave: false, //don't save session if unmodified
-    store: new MongoStore({ url: process.env.mongo }),
-  })
-);
+var sess = {
+  secret: process.env.CONNECT_MONGO_SECRET,
+  saveUninitialized: true, // create session before something stored
+  resave: false, //don't save session if unmodified
+  store: new MongoStore({ url: process.env.mongo }),
+  cookie: {},
+};
+if (app.get("env") === "production") {
+  // Use secure cookies in production (requires SSL/TLS)
+  sess.cookie.secure = true;
+
+  // Uncomment the line below if your application is behind a proxy (like on Heroku)
+  // or if you're encountering the error message:
+  // "Unable to verify authorization request state"
+  app.set("trust proxy", 1);
+}
+app.use(session(sess));
 
 //app.use(requireHTTPS);
 app.use(compression());
@@ -39,12 +48,6 @@ app.get("*", function (req, res, next) {
   }
 });
 //Auth0 vars
-var sess = {
-  secret: process.env.oaSecret,
-  cookie: {},
-  resave: false,
-  saveUninitialized: true,
-};
 
 var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -52,17 +55,6 @@ var management = new ManagementClient({
   clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
   scope: "read:users update:users",
 });
-
-if (app.get("env") === "production") {
-  // Use secure cookies in production (requires SSL/TLS)
-  sess.cookie.secure = true;
-
-  // Uncomment the line below if your application is behind a proxy (like on Heroku)
-  // or if you're encountering the error message:
-  // "Unable to verify authorization request state"
-  app.set("trust proxy", 1);
-}
-app.use(session(sess));
 
 var envs = {
   orgUrl: process.env.oUrl,

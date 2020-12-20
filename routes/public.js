@@ -1,4 +1,5 @@
 require("dotenv").config();
+console.log("Starting...");
 var loadTime = Date.now();
 const express = require("express");
 const router = express.Router();

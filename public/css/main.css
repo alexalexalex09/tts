@@ -829,6 +829,7 @@ input#listImportSubmit.green {
   position: absolute;
   margin-top: calc(var(--vh, 1vh) * 0.5);
   z-index: 3;
+  cursor: pointer;
 }
 
 .textSubmit,
@@ -1927,7 +1928,7 @@ input[type="range"]:before {
 #sessionsInfo {
   color: var(--main-white);
   width: 80%;
-  height: var(--vh5);
+  height: var(--vh10);
   margin: 0 auto;
   text-align: center;
 }
@@ -2002,7 +2003,7 @@ input[type="range"]:before {
 
 #sessionsView .bulkSelect {
   bottom: unset;
-  top: var(--vh15);
+  top: var(--vh20);
   grid-template-columns: 10vw 1fr 10vw 10vw;
 }
 
@@ -2568,11 +2569,10 @@ input#selectLimit {
 
 .listTitleText {
   cursor: pointer;
-  width: calc(100% - 11vw - var(--font-h2));
+  width: 100%;
   float: right;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 3vw;
   white-space: nowrap;
 }
 
@@ -2609,7 +2609,6 @@ input#selectLimit {
   max-width: 100%;
   width: 100%;
   text-overflow: ellipsis;
-  margin-top: calc(calc(30px - var(--font-h3)) / 2);
 }
 
 .displayGameContainer ion-icon {
@@ -2884,7 +2883,7 @@ input#selectLimit {
   }
 
   #gamesContainer li {
-    font-size: var(--font-h2);
+    font-size: var(--font-h3);
   }
 
   #sessionsContainer li {
@@ -3011,7 +3010,7 @@ input#selectLimit {
   .listContents {
     padding: 5px;
     width: 400px;
-    height: var(--vh60);
+    height: var(--vh80);
   }
 
   #gamesAdderContainer {

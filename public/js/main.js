@@ -2031,18 +2031,6 @@ function showGameContext(game) {
         .clone(true)
         .prop("id", "context_" + game.id)
         .appendTo($("body"));
-      var bggLink = contextBGG(
-        ".contextActions.slideUp li.bggLink",
-        $(
-          "#context_stage_" +
-            game.id +
-            "[list=games" +
-            game.list +
-            "] .contextTitle"
-        )
-          .first()
-          .text()
-      );
     } else {
       $("#context_stage_" + game.id)
         .clone(true)
@@ -2059,6 +2047,21 @@ function showGameContext(game) {
     }, 10);
     $("#context_" + game.id).removeClass("off");
     $("#context_" + game.id).addClass("slideUp");
+    if (game.list) {
+      console.log($(".contextActions.slideUp li.bggLink").length);
+      contextBGG(
+        ".contextActions.slideUp li.bggLink",
+        $(
+          "#context_stage_" +
+            game.id +
+            "[list=games" +
+            game.list +
+            "] .contextTitle"
+        )
+          .first()
+          .text()
+      );
+    }
   } else {
     console.log("already clicked");
   }
@@ -2529,9 +2532,23 @@ async function contextBGG(el, game, recur, inexact) {
       }
     }
     if (index > -1) {
+      console.trace();
+      console.log({ el });
       console.log("contextBGG found the game " + game + " in local storage");
-      var ret = `https://boardgamegeek.com/boardgame/` + topList[index].bggID;
+      var theID = topList[index].bggID;
+      if (theID == "") {
+        var ret =
+          `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+          html +
+          `&objecttype=boardgame`;
+      } else {
+        var ret = `https://boardgamegeek.com/boardgame/` + topList[index].bggID;
+      }
       var html = $(el).html();
+      console.log($(el));
+      console.log({ html });
+      console.log({ ret });
+      console.log(topList[index]);
       $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
       return "";
     }

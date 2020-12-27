@@ -2089,6 +2089,7 @@ function showAdder(item, theId, func, funcArg, prompt) {
     `<input class="textSubmit" type="submit" value="">
   </form>`;
   $("body").append(el);
+  focusFirstInput(".subContextContainer");
   $("#addGameListCheckbox").on("click", function () {
     $(this).parent().children("select").first().prop("disabled", !this.checked);
   });
@@ -2279,11 +2280,14 @@ function contextRename(game) {
     game.id.substr(5 + game.length) +
     `', '` +
     game.name +
-    `')" id="renameGameInput"></input>
-    <input class="textSubmit" type="submit" value="">` +
-    `<input class="textInput" type="text" autocomplete="off"></input>` +
+    `')" id="renameGameInput"></input>` +
+    `<input class="textSubmit" type="submit" value="">` +
+    `<input class="textInput" type="text" autocomplete="off" value="` +
+    game.name.replace(/\\/g, "") +
+    `"></input>` +
     `</form>`;
   $("body").append(el);
+  focusFirstInput(".subContextContainer");
 }
 
 function renameGame(event, caller, game, oldGame) {
@@ -2329,9 +2333,12 @@ function showRenameList(list) {
     <form onsubmit="return renameList(event, this, '` +
     list.id.substr(4) +
     `')" id="renameGameInput"></input>
-    <input class="textInput" type="text" autocomplete="off"></input>
+    <input class="textInput" type="text" autocomplete="off" value="` +
+    list.name.replace(/\\/g, "") +
+    `"></input>
     <input class="textSubmit" type="submit" value="">`;
   $("body").append(el);
+  focusFirstInput(".subContextContainer");
 }
 
 function renameList(event, caller, list) {
@@ -3160,9 +3167,12 @@ function showRenameSession(session) {
     <form onsubmit="return renameSession(event, this, '` +
     session.id.substr(4) +
     `')" id="renameGameInput"></input>
-    <input class="textInput" type="text" autocomplete="off"></input>
+    <input class="textInput" type="text" autocomplete="off" value="` +
+    session.name.replace(/\\/g, "") +
+    `"></input>
     <input class="textSubmit" type="submit" value="">`;
   $("body").append(el);
+  focusFirstInput(".subContextContainer");
 }
 
 function renameSession(event, caller, code) {
@@ -3901,6 +3911,12 @@ function createAndShowAlert(alert, error = false) {
       $("#tempAlert").remove();
     }, 3000);
   }, 3000);
+}
+
+function focusFirstInput(el) {
+  $(el + ' input[type="text"]')
+    .first()
+    .focus();
 }
 
 function updateCurrentGames(curGames) {
@@ -4893,6 +4909,7 @@ function showEditMenu(text, fn) {
     </div>
   </div>`;
   $("body").append(htmlString);
+  focusFirstInput(".subContextContainer");
 }
 
 function changeUsername() {
@@ -5107,6 +5124,7 @@ function performListImport(code, oldListName, isSession = false) {
           `</form>` +
           `</div></div>`
       );
+    focusFirstInput(".subContextContainer");
   } else {
     if (
       $("#importOverwriteCheckbox").length == 0 ||

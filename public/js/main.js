@@ -1956,7 +1956,7 @@ function openListBrowser() {
               `</div>`;
           });
           htmlString +=
-            `</div></div><div class="listBrowserCode" onclick="copyText('` +
+            `</div></div><div class="listBrowserCode" onclick="copyText('https://selectagame.net/` +
             e.code +
             `', 'Code Copied')">` +
             e.code +
@@ -1980,13 +1980,11 @@ function openListBrowser() {
 function expandListBrowser(el) {
   $(el).parent().children(".listBrowserGames").toggleClass("off");
   var deg = $(el).parent().children(".listBrowserArrow").css("transform");
-  console.log("Deg: ", deg);
   if (deg == "matrix(-1, 0, 0, -1, 0, 0)") {
     deg = "matrix(1, 0, 0, 1, 0, 0)";
   } else {
     deg = "matrix(-1, 0, 0, -1, 0, 0)";
   }
-  console.log(deg);
   $(el).parent().children(".listBrowserArrow").css("transform", deg);
 }
 

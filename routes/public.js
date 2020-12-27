@@ -2714,6 +2714,41 @@ router.post("/get_session_limit", function (req, res) {
   }
 });
 
+router.post("/get_list_browser", function (req, res) {
+  if (req.user) {
+    var authorized = true; //Testing
+    if (authorized) {
+      var htmlString = "";
+      var ret = [];
+      var gameIds = [];
+      User.findOne({ name: "listmaster" }).exec(function (err, curUser) {
+        var lists = curUser.lists.custom;
+        var toPush = {};
+        lists.forEach(function (e) {
+          toPush = { name: e.name, code: e.listCode, games: [] };
+
+          e.games.forEach(function (game) {
+            gameIds.push(game);
+            toPush.games.push(game);
+          });
+          ret.push(toPush);
+        });
+        Game.find({ _id: { $in: gameIds } }).exec(function (err, curGames) {
+          var gameKey = [];
+          curGames.forEach(function (e) {
+            gameKey.push({ id: e._id, name: e.name });
+          });
+          res.send({ lists: ret, gameKey: gameKey });
+        });
+      });
+    } else {
+      res.send({ error: "unauthorized" });
+    }
+  } else {
+    res.send({ status: "no user" });
+  }
+});
+
 console.log("6/8: Routes loaded", Date.now() - loadTime);
 
 module.exports = router;

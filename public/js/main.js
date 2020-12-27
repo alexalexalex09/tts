@@ -1924,6 +1924,54 @@ function hideSubList(subList) {
   }, 510);
 }
 
+//This is called from an onclick handler set in index.pug
+//Gets the list browser with data from the backend for security purposes
+function openListBrowser() {
+  ttsFetch("/get_list_browser", {}, (res) => {
+    if (res.error == "unauthorized") {
+      createAndShowAlert(
+        "Sorry, this feature is available to premium users only",
+        true
+      );
+    } else {
+      var htmlString = `<div class="listBrowserList"><div class="listBrowserName">
+        Available Lists
+      </div><div class="listBrowserCode">
+        Code
+      </div>`;
+      res.lists.forEach(function (e) {
+        htmlString +=
+          `<div class="listBrowserName" onclick="$(this).parent().children('.listBrowserGames').toggleClass('off')">` +
+          e.name +
+          `</div><div class="listBrowserCode" onclick="copyText('` +
+          e.code +
+          `', 'Code Copied')">` +
+          e.code +
+          `</div>` +
+          `<div class="listBrowserGames off">`;
+        e.games.forEach(function (game) {
+          var index = res.gameKey.findIndex((obj) => {
+            return obj.id == game;
+          });
+          console.log(index, ": ", game);
+          htmlString +=
+            `<div class="listBrowserGame">` +
+            res.gameKey[index].name +
+            `</div>`;
+        });
+        htmlString += `</div>`;
+      });
+      htmlString += `</div>`;
+      $("#listBrowser").html(htmlString);
+      $("#listBrowser").css("transform", "translateY(-100%)");
+      $("#listBrowser").removeClass("off");
+      window.setTimeout(function () {
+        $("#listBrowser").css("transform", "translateY(0%)");
+      }, 10);
+    }
+  });
+}
+
 /**
  * {Desc} Shows a menu view
  *

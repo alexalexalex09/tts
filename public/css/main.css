@@ -2699,14 +2699,37 @@ input#selectLimit {
   height: 100%;
   position: absolute;
   background-color: var(--main-blue);
-  padding: var(--vh5) 5rem;
+  padding: var(--vh5) 1rem;
   box-sizing: border-box;
+  transition: all 0.5s;
+  transform: translateY(100%);
 }
 
-.listBrowserList {
+#listBrowserList {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 7rem;
+  grid-row-gap: 1rem;
+}
+
+.listBrowserArrow {
+  float: left;
+}
+
+.listBrowserName {
+  font-size: var(--font-h3);
+}
+
+.listBrowserGames {
+  padding-top: 10px;
+  border-top: 2px solid var(--main-white);
+  border-bottom: 2px solid var(--main-white);
+}
+
+.listBrowserName,
+.listBrowserCode,
+.listBrowserArrow {
+  cursor: pointer;
 }
 
 /****************/

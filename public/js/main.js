@@ -1927,49 +1927,74 @@ function hideSubList(subList) {
 //This is called from an onclick handler set in index.pug
 //Gets the list browser with data from the backend for security purposes
 function openListBrowser() {
-  ttsFetch("/get_list_browser", {}, (res) => {
-    if (res.error == "unauthorized") {
-      createAndShowAlert(
-        "Sorry, this feature is available to premium users only",
-        true
-      );
-    } else {
-      var htmlString = `<div class="listBrowserList"><div class="listBrowserName">
-        Available Lists
-      </div><div class="listBrowserCode">
-        Code
+  if ($("#listBrowserList").html() == "") {
+    ttsFetch("/get_list_browser", {}, (res) => {
+      if (res.error == "unauthorized") {
+        createAndShowAlert(
+          "Sorry, this feature is available to premium users only",
+          true
+        );
+      } else {
+        var htmlString = `<div class="listBrowserNameTitle">
+        <h2>Available Lists</h2>
+      </div><div class="listBrowserCodeTitle">
+        <h2>Code</h2>
       </div>`;
-      res.lists.forEach(function (e) {
-        htmlString +=
-          `<div class="listBrowserName" onclick="$(this).parent().children('.listBrowserGames').toggleClass('off')">` +
-          e.name +
-          `</div><div class="listBrowserCode" onclick="copyText('` +
-          e.code +
-          `', 'Code Copied')">` +
-          e.code +
-          `</div>` +
-          `<div class="listBrowserGames off">`;
-        e.games.forEach(function (game) {
-          var index = res.gameKey.findIndex((obj) => {
-            return obj.id == game;
-          });
-          console.log(index, ": ", game);
+        res.lists.forEach(function (e) {
           htmlString +=
-            `<div class="listBrowserGame">` +
-            res.gameKey[index].name +
+            `<div class="listBrowserItem"><div class="listBrowserArrow" onclick="expandListBrowser(this)"><ion-icon name="chevron-down-outline"></ion-icon></div><div class="listBrowserName" onclick="expandListBrowser(this)">` +
+            e.name +
+            `</div>` +
+            `<div class="listBrowserGames off">`;
+          e.games.forEach(function (game) {
+            var index = res.gameKey.findIndex((obj) => {
+              return obj.id == game;
+            });
+            htmlString +=
+              `<div class="listBrowserGame">` +
+              res.gameKey[index].name +
+              `</div>`;
+          });
+          htmlString +=
+            `</div></div><div class="listBrowserCode" onclick="copyText('` +
+            e.code +
+            `', 'Code Copied')">` +
+            e.code +
             `</div>`;
         });
-        htmlString += `</div>`;
-      });
-      htmlString += `</div>`;
-      $("#listBrowser").html(htmlString);
-      $("#listBrowser").css("transform", "translateY(-100%)");
-      $("#listBrowser").removeClass("off");
-      window.setTimeout(function () {
-        $("#listBrowser").css("transform", "translateY(0%)");
-      }, 10);
-    }
-  });
+        $("#listBrowserList").html(htmlString);
+        $("#listBrowser").removeClass("off");
+        window.setTimeout(function () {
+          $("#listBrowser").css("transform", "translateY(0%)");
+        }, 10);
+      }
+    });
+  } else {
+    $("#listBrowser").removeClass("off");
+    window.setTimeout(function () {
+      $("#listBrowser").css("transform", "translateY(0%)");
+    }, 10);
+  }
+}
+
+function expandListBrowser(el) {
+  $(el).parent().children(".listBrowserGames").toggleClass("off");
+  var deg = $(el).parent().children(".listBrowserArrow").css("transform");
+  console.log("Deg: ", deg);
+  if (deg == "matrix(-1, 0, 0, -1, 0, 0)") {
+    deg = "matrix(1, 0, 0, 1, 0, 0)";
+  } else {
+    deg = "matrix(-1, 0, 0, -1, 0, 0)";
+  }
+  console.log(deg);
+  $(el).parent().children(".listBrowserArrow").css("transform", deg);
+}
+
+function closeListBrowser() {
+  $("#listBrowser").css("transform", "translateY(100%)");
+  window.setTimeout(function () {
+    $("#listBrowser").addClass("off");
+  }, 500);
 }
 
 /**

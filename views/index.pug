@@ -259,6 +259,9 @@ block content
         p If you would like to support development and keep the servers spinning, consider buying me a coffee!
         script(type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="selectagame" data-color="#55aa55" data-emoji="🦉"  data-font="Inter" data-text="Buy me a coffee" data-outline-color="#ffffff" data-font-color="#ffffff" data-coffee-color="#FFDD00")
         #listBrowser.off
+          #listBrowserClose.closeButton(onclick='closeListBrowser()')
+            ion-icon(name="close-outline")
+          #listBrowserList
 
     #ver 
       | v0.5.6 | 

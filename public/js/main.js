@@ -19,20 +19,15 @@ window.addEventListener("load", function () {
     }
   };
   createSession = function (res) {
-    console.log("createSession");
     var crown = Math.floor(Math.random() * 5) + 1;
     crown = "crown" + crown;
-    console.log("crown: ", crown);
     $(".menuHomeIcon").each(function (i, e) {
       $(this).addClass(crown);
     }); //Set owner
     if (res.session.limit) {
       recheckLimit(res.session.limit);
     }
-    console.log(res);
-    console.log(res.session.code);
     socket.on(res.session.code + "owner", (data) => {
-      console.log("received ", data);
       if (data.selectEvent /*&& res.session.lock != "#postPostSelectView"*/) {
         //Rewrite #postSelectContainer in real time for owner if this is an owner initated event
         if ($("#gameUnlock").length == 0) {
@@ -45,7 +40,6 @@ window.addEventListener("load", function () {
       }
       if (data.startVoting) {
         //Parse the voting data and output
-        console.log(data);
         fillVotes(data.games);
       }
       if (data.voteSubmit) {
@@ -105,10 +99,8 @@ window.addEventListener("load", function () {
     var index = res.session.users.findIndex((obj) => obj.user == res.user);
     var dest = res.session.lock;
     //console.log(res.session.users[index].done);
-    console.log("dest", dest);
     if (res.session.users[index].done == false && dest == "#postSelectView") {
       dest = "#selectView";
-      console.log("changing");
     }
     var toLock = false;
     if (dest == "#postPostSelectView") {
@@ -200,9 +192,7 @@ window.addEventListener("load", function () {
       });
       fillGames(games);
     }
-    console.log("dest: " + dest);
     goForwardFrom("#homeView", dest);
-    console.log("hist after creating: ", window.hist);
     if (toLock) {
       lockGames(res.session.code);
     }
@@ -214,7 +204,6 @@ window.addEventListener("load", function () {
       }
     }
     document.getElementById("sessionContainer").innerHTML = sessionGames;
-    console.log("initGreenLists");
     initGreenLists();
   };
 
@@ -239,7 +228,6 @@ window.addEventListener("load", function () {
     $(".phraseDisplay>ion-icon").on("click", function () {
       showSessionSettings();
     });
-    console.log("joinSession: ", res.lock);
 
     var sessionGames = "<session>";
     for (var i = 0; i < res.games.length; i++) {
@@ -247,10 +235,7 @@ window.addEventListener("load", function () {
         '<sessionGame id="' + res.games[i].game + '"></sessionGame>';
     }
     $("#sessionContainer").html(sessionGames);
-
-    console.log("initGreenLists");
     initGreenLists();
-    console.log(res);
     if (res.limit) {
       recheckLimit(res.limit);
     }
@@ -267,7 +252,6 @@ window.addEventListener("load", function () {
         break;
       case "#voteView":
         ttsFetch("/get_votes", { code: $("#code").text() }, (res) => {
-          console.log(res);
           fillVotes(res.games);
           goForwardFrom("#homeView", "#voteView");
         });
@@ -298,23 +282,18 @@ window.addEventListener("load", function () {
     /* The owner can also unlock by passing unlockBack==true and setting unlock to either*/
     /* a string or an array of history states which the client will have access to.*/
     /*******************************************/
-    console.log("Setting up client event with " + res.code);
     socket.on(res.code + "client", (data) => {
-      console.log("Got client event", data);
-
       if (data.lockBack && data.lock) {
         goForwardFrom(window.hist[window.hist.length - 1], data.lock);
         lockBack();
       }
       if (data.selectEvent) {
-        console.log("SelectEvent: ", data);
         //Rewrite #postSelectContainer in real time for owner
         showSelect(data.select, false);
         data.curGames.sort(lowerCaseSort());
         updateCurrentGames(data.curGames);
       }
       if (data.unlockBack && data.unlock) {
-        console.log(data);
         if (data.unlock == "selectView") {
           window.hist = ["#homeView", "#selectView", "#postSelectView"];
           setBackNormal();
@@ -325,7 +304,6 @@ window.addEventListener("load", function () {
         );*/
       }
       if (data.startVoting) {
-        console.log("this isn't done yet!");
         //parse the voting data and output
         fillVotes(data.games);
         goForwardFrom(window.hist[window.hist.length - 1], "#voteView");
@@ -401,8 +379,6 @@ window.addEventListener("load", function () {
 
   function showQR() {
     ttsFetch("/qr", { link: $("#code").text() }, (res) => {
-      console.log(res);
-
       $("body").append(
         `<div id="qrDisplayContainer">
           <div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
@@ -518,9 +494,7 @@ window.addEventListener("load", function () {
     var from = "";
     $(".main .view").each(function (i, e) {
       if (!$(e).hasClass("off")) {
-        console.log($(e), "is the active window");
         from = "#" + $(e).attr("id");
-        console.log(from);
       }
       return $(e).hasClass("off");
     });
@@ -562,7 +536,6 @@ window.addEventListener("load", function () {
   /*****************************/
 
   function closeAllMenus(open) {
-    console.log("Open: ", open);
     $(".pop").each(function (i, e) {
       if ("#" + $(e).attr("id") != open) {
         //console.log("Closing ", "#" + $(e).attr("id"));
@@ -704,11 +677,9 @@ window.addEventListener("load", function () {
   /* Join button click handler */
   /*****************************/
   $("#joinButton").click(this, function () {
-    console.log("join clicked");
     joinClick();
   });
   function joinClick() {
-    console.log("join click");
     var oldCode = $("#code").html();
     if (oldCode != false) {
       socket.off(oldCode + "select");
@@ -721,7 +692,6 @@ window.addEventListener("load", function () {
     }
     $("#codeInputGroup").removeClass("off");
     window.setTimeout(function () {
-      console.log("wait 1");
       $("#joinButton").css({
         opacity: "0%",
         transform: "translateX(100vw)",
@@ -734,7 +704,6 @@ window.addEventListener("load", function () {
         transform: "translateY(calc(var(--vh) * 10))",
       });
       window.setTimeout(function () {
-        console.log("wait 2");
         $("#joinButton").addClass("off");
       }, 600);
     }, 10);
@@ -746,7 +715,6 @@ window.addEventListener("load", function () {
     if ($(this).parent().children("input").first().val() == "") {
       $("#joinButton").removeClass("off");
       window.setTimeout(function () {
-        console.log("wait 1");
         $("#joinButton").css({
           opacity: "100%",
           transform: "translateX(0vw)",
@@ -759,14 +727,12 @@ window.addEventListener("load", function () {
           transform: "translateY(0vh)",
         });
         window.setTimeout(function () {
-          console.log("wait 2");
           $("#codeInputGroup").addClass("off");
           $(".errorText").addClass("off");
         }, 600);
       }, 10);
     } else {
       $(this).parent().children("input").first().val("");
-      console.log($(this).parent().children("input").first().val());
     }
   });
 
@@ -916,10 +882,6 @@ window.addEventListener("load", function () {
   /*******************************************/
   /* Check if url matches a code and execute */
   /*******************************************/
-
-  console.log(window.location.pathname.substr(1));
-  console.log(/^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)));
-  console.log(/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1)));
   if (
     /^([A-Z0-9]{5})$/.test(window.location.pathname.substr(1)) &&
     !/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))
@@ -1018,10 +980,8 @@ function ttsFetch(req, body, handler, errorHandler) {
     },
   };
   console.trace();
-  console.log(tts_options);
   startLoader();
   fetch(req, tts_options).then(function (response) {
-    console.log("finished");
     finishLoader();
     return response.json().then((res) => {
       if (res.err) {
@@ -1063,8 +1023,6 @@ function goForwardFrom(from, to) {
     if (to == "#postSelectView") {
       triggerPostSelectEvent();
     }
-    console.log("going forward from " + from + " to " + to);
-    console.log(window.hist);
     if (typeof window.hist == "undefined") {
       window.hist = [from];
     }
@@ -1109,7 +1067,6 @@ function goBackFrom(from, to) {
       window.hist.pop();
     }
   } else {
-    console.log("goBackFrom: going back from ", from, " to ", to);
     if (to == "#selectView" || to == "#postSelectView") {
       window.setTimeout(function () {
         $("#listIcon").removeClass("off"), 1000;
@@ -1133,8 +1090,6 @@ function goBackFrom(from, to) {
       triggerPostSelectEvent();
     }
     if (typeof from != "undefined" && typeof to != "undefined") {
-      console.log("going back from " + from + " to " + to);
-      console.log(window.hist);
       if (from == "#postSelectView" && to == "#selectView") {
         ttsFetch(
           "/going_back",
@@ -1168,7 +1123,6 @@ function goBack(from, to) {
   } else {
     setBackNormal();
   }
-  console.log("...Going back to " + to + " from " + from);
   window.setTimeout(function () {
     $(to).css({ transform: "translateX(0vw)" });
     $(from).css({ transform: "translateX(200vw)" });
@@ -1180,10 +1134,11 @@ function goBack(from, to) {
 }
 
 function triggerPostSelectEvent() {
-  console.log("triggered");
-  ttsFetch("/get_session_post_select", { code: $("#code").text() }, (res) => {
-    console.log("triggered socket event for gsps");
-  });
+  ttsFetch(
+    "/get_session_post_select",
+    { code: $("#code").text() },
+    (res) => {}
+  );
 }
 
 function setBackHome() {
@@ -1238,7 +1193,6 @@ function lockGames(code) {
           return false;
         });*/
         $("#gameUnlock").click(this, function () {
-          console.log("gameUnlock");
           ttsFetch(
             "/unlock_games",
             {
@@ -1262,7 +1216,6 @@ function lockGames(code) {
 
 //This doesn't appear to be called anymore
 function addGroupGame() {
-  console.log("submitting new group game");
   var game = addGroupGamesInput.value
     .replace(/&/, "&amp;")
     .replace(/"/g, "&quot;")
@@ -1380,7 +1333,6 @@ function gulp(showAllGames = false) {
     "/get_user_lists_populated",
     {},
     (res) => {
-      console.log("gulp", res);
       $("#gamesContainer").html(" ");
       $("#gamesContextContainer").html(" ");
       $("#listContextContainer").html(" ");
@@ -1576,7 +1528,6 @@ function gulp(showAllGames = false) {
             })
           );
         }
-        console.log("Writing context: ", res.lists.custom[i].name);
         $("#listContextContainer").append(
           writeListContext({
             id: "list" + curId,
@@ -1614,7 +1565,6 @@ function gulp(showAllGames = false) {
         
       } else {
         if (res.err != ERR_LOGIN_SOFT) createAndShowAlert(res.err, true);
-        console.log(res.err);
       }
     });
   }); */
@@ -1684,7 +1634,6 @@ function openList(list) {
 }
 
 function getListGames(list) {
-  console.log("list: ", list);
   var arr = [];
   $("#" + list)
     .children(".listGames")
@@ -1706,9 +1655,7 @@ function getListGames(list) {
 function bulkSelectGame(el) {
   $(el).toggleClass("flipped");
   $(el).children(".spriteChecked").toggleClass("spriteUnchecked");
-  console.log($(el).parent().parent().children().children(".flipped"));
   if ($(el).parent().parent().children().children(".flipped").length > 0) {
-    console.log("showing bulk");
     $("#gamesContainer .bulkSelect").removeClass("off");
     $(".listContents.slideUp").addClass("bulkShowing");
     if (
@@ -1730,7 +1677,6 @@ function bulkSelectGame(el) {
       ).addClass("off");
     }
   } else {
-    console.log("hiding bulk");
     $("#gamesContainer .bulkSelect").addClass("off");
     $(".listContents.slideUp").removeClass("bulkShowing");
     $(
@@ -1740,7 +1686,6 @@ function bulkSelectGame(el) {
       "off"
     );
   }
-  console.log($(el).children("spriteChecked"));
 }
 
 function closeBulk() {
@@ -1797,7 +1742,6 @@ function showDeleteBulk() {
 function getBulkChecked() {
   var games = [];
   var count = 0;
-  console.log(games);
   $("#gamesContainer .bulkSelect")
     .parent()
     .children(".listContents")
@@ -1811,7 +1755,6 @@ function getBulkChecked() {
       });
       count++;
     });
-  console.log(games);
   return { games: games, count: count };
 }
 
@@ -1832,7 +1775,6 @@ function showRemoveBulk() {
 }
 
 function copyBulk() {
-  console.log($("#gamesContainer .bulkSelect").first().attr("list"));
   var lists = getMenuLists(
     $("#gamesContainer .bulkSelect").first().attr("list")
   );
@@ -1841,8 +1783,6 @@ function copyBulk() {
   games.forEach(function (e) {
     e.list = $("#gamesContainer .bulkSelect").first().attr("list");
   });
-
-  console.log(games);
   displaySubContext(
     "Copying",
     games,
@@ -1861,8 +1801,6 @@ function moveBulk() {
   games.forEach(function (e) {
     e.list = $("#gamesContainer .bulkSelect").first().attr("list");
   });
-
-  console.log(games);
   displaySubContext(
     "Moving",
     games,
@@ -2067,7 +2005,6 @@ function showAdder(item, theId, func, funcArg, prompt) {
   } else {
     listSelector = "";
   }
-  console.log(listSelector);
   var el =
     `<div class="subContextContainer"><div class="subContextRename" id="subContext_` +
     item +
@@ -2120,7 +2057,6 @@ function showGameContext(game) {
     $("#context_" + game.id).removeClass("off");
     $("#context_" + game.id).addClass("slideUp");
     if (game.list) {
-      console.log($(".contextActions.slideUp li.bggLink").length);
       contextBGG(
         ".contextActions.slideUp li.bggLink",
         $(
@@ -2135,7 +2071,6 @@ function showGameContext(game) {
       );
     }
   } else {
-    console.log("already clicked");
   }
 }
 
@@ -2152,7 +2087,6 @@ function contextMove(games) {
 
 function getMenuLists(fromList) {
   var lists = [];
-  console.log("gml ", fromList);
   $("#gamesContainer")
     .children()
     .children()
@@ -2188,7 +2122,6 @@ function closeSubContext(view) {
  * @param {*} fname
  */
 function displaySubContext(text, games, items, fname, fromList) {
-  console.log("display games, ", games);
   var el = `<div class="subContextContainer"><div class="subContext">`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
@@ -2213,7 +2146,6 @@ function displaySubContext(text, games, items, fname, fromList) {
 }
 
 function moveToList(options) {
-  console.log(options);
   ttsFetch(
     "/move_to_list",
     {
@@ -2232,7 +2164,6 @@ function moveToList(options) {
 }
 
 function contextCopy(games) {
-  console.log("gml: ", $(".contextActions.slideUp").first().attr("list"));
   var lists = getMenuLists($(".contextActions.slideUp").first().attr("list"));
   displaySubContext(
     "Copying",
@@ -2253,7 +2184,6 @@ function copyToList(options) {
       fromList: options.fromList,
     },
     (res) => {
-      console.log("copied with " + res.errors + " errors");
       $($("#" + options.games))
         .first()
         .clone(true)
@@ -2291,7 +2221,6 @@ function contextRename(game) {
 }
 
 function renameGame(event, caller, game, oldGame) {
-  console.log($(caller), "Renaming ", game);
   ttsFetch(
     "/rename_game",
     {
@@ -2299,7 +2228,6 @@ function renameGame(event, caller, game, oldGame) {
       newName: $(caller).children(".textInput").val(),
     },
     (res) => {
-      console.log("renamed");
       //$("#" + game).text(res.status.newName);
       $("#gamesContainer")
         .children()
@@ -2308,7 +2236,6 @@ function renameGame(event, caller, game, oldGame) {
         .each(function () {
           if ($(this).text() == oldGame) {
             $(this).text($(caller).val());
-            console.log("Renamed ", this);
           }
         });
       $(".subContextContainer").each(function () {
@@ -2349,7 +2276,6 @@ function renameList(event, caller, list) {
       newName: $(caller).children('input[type="text"]').first().val(),
     },
     (res) => {
-      console.log("renamed list");
       //$("#" + game).text(res.status.newName);
       $("#gamesContainer")
         .children("#games" + list)
@@ -2466,7 +2392,6 @@ function showDeleteGame(arr, string) {
 }
 
 function deleteGame(arr) {
-  console.log("arr: ", arr);
   ttsFetch(
     "/delete_game",
     {
@@ -2480,8 +2405,6 @@ function deleteGame(arr) {
           .children("li")
           .each(function () {
             if ($(this).text() == e) {
-              console.log("removing...");
-              console.log(this);
               $(this).remove();
             }
           });
@@ -2491,8 +2414,6 @@ function deleteGame(arr) {
           .children("li")
           .each(function () {
             if ($(this).text() == e) {
-              console.log("removing...");
-              console.log(this);
               $(this).parent().remove();
             }
           });
@@ -2516,7 +2437,6 @@ function contextRemove(games, text) {
   <div class="button redBtn" id="removeConfirm" onclick="removeGame([`;
 
   games.forEach(function (e, i) {
-    console.log("e: ", e, e.list.substr(e.list.length - 1));
     el +=
       "{game: '" +
       e.id +
@@ -2611,8 +2531,6 @@ async function contextBGG(el, game, recur, inexact) {
     }
     if (index > -1) {
       console.trace();
-      console.log({ el });
-      console.log("contextBGG found the game " + game + " in local storage");
       var theID = topList[index].bggID;
       if (theID == "") {
         var ret =
@@ -2623,10 +2541,6 @@ async function contextBGG(el, game, recur, inexact) {
         var ret = `https://boardgamegeek.com/boardgame/` + topList[index].bggID;
       }
       var html = $(el).html();
-      console.log($(el));
-      console.log({ html });
-      console.log({ ret });
-      console.log(topList[index]);
       $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
       return "";
     }
@@ -2636,7 +2550,6 @@ async function contextBGG(el, game, recur, inexact) {
     var exactStr = "";
   } else {
     var exactStr = "&exact=1";
-    console.log(exactStr);
   }
   game = game.replace("&", "%26").replace(":", "").replace(/\\/g, "");
   fetch(
@@ -2650,8 +2563,6 @@ async function contextBGG(el, game, recur, inexact) {
       var xmlDoc = $.parseXML(data);
       var $xml = $(xmlDoc);
       var $items = $xml.find("items");
-      console.log("items: ", $items);
-      console.log($items.attr("total"));
       if ($items.attr("total") == 0) {
         if (typeof recur == "undefined") {
           contextBGG(el, "The " + game, 1);
@@ -2670,7 +2581,6 @@ async function contextBGG(el, game, recur, inexact) {
           return "";
         }
       } else {
-        console.log("Found");
         getHighestRatedItem($items).then((id) => {
           var ret = `https://boardgamegeek.com/boardgame/` + id;
           var html = $(el).html();
@@ -2697,7 +2607,6 @@ async function contextBGG(el, game, recur, inexact) {
                   });
                 };
                 const getHighestRatingID = async function () {
-                  console.log(Number($items.attr("total")) - 1);
                   for (var i = 0; i < Number($items.attr("total")); i++) {
                     //console.log(i + ": ");
                     var rating = await fetchRating(
@@ -2723,9 +2632,6 @@ async function contextBGG(el, game, recur, inexact) {
                   ratings.sort(function (a, b) {
                     return a.rank - b.rank;
                   });
-                  console.log($items.children()[0]);
-                  console.log($items.children()[1]);
-                  console.log(ratings);
                   resolve(ratings[0].id);
                 };
                 getHighestRatingID().then((id) => {
@@ -2742,7 +2648,6 @@ async function contextBGG(el, game, recur, inexact) {
             newRating = await fetchRating($($items.children("item")[i]).attr("id"));
             ratings.push(newRating);
           }
-          console.log("ratings: ", ratings);
         }
         
         }*/
@@ -2769,13 +2674,6 @@ function onClickOutside(selector, toHide, extraSelector, hideInstead, hideFn) {
     const $target = $(event.target);
 
     /*console.log("clicked outside: ", $target);
-    console.log(selector);
-    console.log(extraSelector);
-    console.log($target.attr("id"));
-    console.log($target.closest(extraSelector));
-    console.log($(extraSelector).is(":visible"));
-    console.log($target.closest(selector));
-    console.log($(selector).is(":visible"));
     console.log((!$target.closest(selector).length && $(selector).is(":visible")));*/
     if (
       (!$target.closest(selector).length && $(selector).is(":visible")) ||
@@ -2953,7 +2851,6 @@ function writeSessionContext(code, name, owned) {
 function writeSessions(res) {
   var htmlString = "";
   if (res.sessions) {
-    console.log("Writing sessions");
     for (var i = 0; i < res.sessions.length; i++) {
       var usersplural = setPlural(res.sessions[i].users, " user, ", " users, ");
       var gamesplural = setPlural(res.sessions[i].games, " game", " games");
@@ -3143,7 +3040,6 @@ function submitSetLimit() {
     "/set_session_limit",
     { code: $("#code").text(), limit: $("#selectLimit").val() },
     (res) => {
-      console.log(res);
       createAndShowAlert("Limit set successfully");
       $(".subContextContainer").each(function () {
         $(this).remove();
@@ -3240,7 +3136,6 @@ function deleteSession(code) {
       code: code,
     },
     (res) => {
-      console.log(code);
       if (code) {
         $("#" + code)
           .parent()
@@ -3302,7 +3197,6 @@ function setPlural(countable, singular, plural) {
  * @param {*} event
  */
 function addNewGame(el) {
-  console.log("submitting new game ", $(el));
   console.log(
     $(el)
       .val()
@@ -3325,7 +3219,6 @@ function addNewGame(el) {
     .replace(/'/g, "\\'");
   $(el).val("");
   ttsFetch("/game_add", { game: game, list: list }, (res) => {
-    console.log(res);
     var htmlString =
       `<li>
                 <div rating="` +
@@ -3366,8 +3259,6 @@ function addNewGame(el) {
  * @param {*} event
  */
 function addList() {
-  console.log("addList");
-  console.log("submitting new game");
   var list = menuAddListInput.value;
   ttsFetch("/list_add", { list: list }, (res) => {
     var gamesNum = $("#gamesView #gamesContainer").children("li").length;
@@ -3400,7 +3291,6 @@ function addList() {
 }
 
 function recheckGreenLists() {
-  console.log("recheck");
   recheckLimit();
   $("#selectLists>li").each(function (ind, ele) {
     var count = 0;
@@ -3425,7 +3315,6 @@ function recheckGreenLists() {
         .children(".switch")
         .children("input")
         .prop("checked", true);
-      console.log("checked one box");
     } else {
       $(ele).children(".listName").first().removeClass("greenText");
       $(ele)
@@ -3434,7 +3323,6 @@ function recheckGreenLists() {
         .children(".switch")
         .children("input")
         .prop("checked", false);
-      console.log("unchecked!");
     }
   });
 }
@@ -3443,7 +3331,6 @@ function recheckGreenLists() {
 //by getting the list of games already added to the session
 //and checking to see if every game in a list has been added
 function initGreenLists() {
-  console.log("initGreenLists", $("#selectLists>li").length);
   var sessionGames = [];
   $("session")
     .children()
@@ -3453,7 +3340,6 @@ function initGreenLists() {
   //console.log(sessionGames);
 
   $("#selectLists>li").each(function (ind, ele) {
-    console.log($(ele).attr("id"));
     var count = 0;
     $(ele)
       .children(".listGames")
@@ -3508,7 +3394,6 @@ function recheckLimit(limit) {
   if (limit) {
     $("#limitMax").html(limit);
   }
-  console.log("Limit: ", Number($("#limitMax").html()));
   var arr = [];
   $(".gameName.greenText").each((i, e) => {
     if (arr.findIndex((obj) => obj == $(e).attr("game_id")) == -1) {
@@ -3547,7 +3432,6 @@ function makeGreenSelect(id) {
   //recheckGreenLists();
 }
 function unMakeGreenSelect(id) {
-  console.log("unmake " + id);
   $('.gameName[game_id="' + id + '"]').each(function (i, e) {
     $(e).removeClass("greenText");
     $(e)
@@ -3565,7 +3449,6 @@ function unMakeGreenSelect(id) {
 /*       Clear all checkboxes      */
 /***********************************/
 function clearLists() {
-  console.log("clearing...");
   $("selectLists")
     .children()
     .each(function (i) {
@@ -3584,7 +3467,6 @@ function clearLists() {
           el.attr("onclick", "");
           el.prop("checked", false);
           el.attr("onclick", "toggleFont(this)");
-          console.log("cleared: ", el);
         });
     });
 }
@@ -3610,7 +3492,6 @@ function toggleEdit(check) {
     (res) => {
       var htmlString = "";
       var isChecked = "";
-      console.log("modify res:", res);
       for (var i = 0; i < res.status.length; i++) {
         res.status[i].active ? (isChecked = " checked") : (isChecked = " ");
         htmlString +=
@@ -3636,17 +3517,14 @@ function toggleEdit(check) {
 }
 
 function registerEGS() {
-  console.log("egs");
   $("#editGameSubmit").off();
   $("#editGameSubmit").on("click", function () {
-    console.log("egs fired");
     ttsFetch(
       "/start_voting",
       {
         code: document.getElementById("code").innerHTML,
       },
       (res) => {
-        console.log("starting voting: ", res);
         goForwardFrom("#postSelectView", "#voteView");
       }
     );
@@ -3656,10 +3534,7 @@ function registerEGS() {
 function toggleFont(check) {
   var current = Number($("#limitCurrent").html());
   var max = Number($("#limitMax").html());
-  console.log("toggleFont");
   var el = $(check).parent().parent().parent().children(".gameName").first();
-  console.log(check);
-  console.log(el);
 
   var gamesToAdd = [];
   var gamesToRemove = [];
@@ -3726,8 +3601,6 @@ function toggleFont(check) {
         $(this).children(".gameName").removeClass("greenText");
       });
     }
-    console.log("Add: ", gamesToAdd);
-    console.log("Remove: ", gamesToRemove);
   }
   if (gamesToAdd.length <= max - current || gamesToAdd.length == 0 || max < 1) {
     ttsFetch(
@@ -3849,7 +3722,6 @@ function setCode(code) {
  */
 function setPhrase(phrase) {
   $(".phraseDisplay").each(function () {
-    console.log("Phrase: ", phrase);
     if (typeof phrase == "undefined") {
       $(this).html();
     } else {
@@ -3942,12 +3814,10 @@ function updateCurrentGames(curGames) {
  * @param {Array} select
  */
 function showSelect(data, isOwner) {
-  console.log("received select event ", data);
   htmlString = "";
   var connecting = "";
   var plural = "s";
   $.each(data, function (key, value) {
-    console.log("User object: ", key, value);
     if (value.done) {
       connecting = "done";
     } else {
@@ -3972,10 +3842,8 @@ function showSelect(data, isOwner) {
     htmlString = $("#postSelectIntro")[0].outerHTML + htmlString;
   }
   $("#postSelectContainer").html(htmlString);
-  console.log("registered lockGames");
   //Is this setting up too many events?
   $("#gameLock").click(this, function () {
-    console.log("clicked gameLock");
     lockGames($("#code").text());
   });
 }
@@ -4020,10 +3888,8 @@ function closeToolTipClickOutside(el) {
  * @param {*} el Tooltip Container
  */
 function closeToolTip(el) {
-  console.log(el);
   $(el).parent().removeClass("showToolTip");
   setTimeout(function () {
-    console.log($(el));
     $(el).parent().parent().parent().removeClass("showVoteThumb");
   }, 251);
 }
@@ -4037,7 +3903,6 @@ function closeToolTip(el) {
  * @param {*} el Tooltip Container
  */
 function showVoteThumb(el) {
-  console.log("Mouseover: ", $(el));
   var $el = $(el);
   if ($el.children(".BGGDesc").length == 0) {
     $el.append(`<div class="BGGDesc"></div>`);
@@ -4051,7 +3916,6 @@ function showVoteThumb(el) {
       });
       parseBGGThing(id, "description").then(function (res) {
         res = htmlDecode(res);
-        console.log(res.substr(0, 200));
         if (res.length > 200) {
           res = reduceUntilNextWordEnd(res.substr(0, 200));
           res =
@@ -4061,7 +3925,6 @@ function showVoteThumb(el) {
             $el.children(".voteSubTitle").children("a").attr("href") +
             `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
         }
-        console.log(res);
         $el
           .children(".BGGDesc")
           .append(`<div class="BGGDescText">` + res + `</div>`);
@@ -4126,7 +3989,6 @@ function fillVotes(games) {
       localGames[i] = { id: games[i].game, vote: "500" };
     }
   }
-  console.log("FillVotes: ", localGames);
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
     var votes =
@@ -4135,7 +3997,6 @@ function fillVotes(games) {
           return obj.id == games[i].game;
         })
       ].vote;
-    console.log({ votes });
     if (typeof votes == "undefined") {
       votes = 500;
     }
@@ -4180,7 +4041,6 @@ function fillVotes(games) {
   //sortVotes();
   for (var i = 0; i < games.length; i++) {
     contextBGG($(".voteToolTip .voteSubTitle")[i], games[i].name);
-    console.log("context for " + games[i].name.replace(/\\/g, ""));
   }
   //$(".voteSubX").on("click", function() {closeToolTip(this)});
   $(".voteLabel label").on("click", function () {
@@ -4204,7 +4064,6 @@ function fillVotes(games) {
         vote: $(e).children("input").val(),
       });
     });
-    console.log("voteArray", voteArray);
     ttsFetch(
       "/submit_votes",
       {
@@ -4222,8 +4081,6 @@ function fillVotes(games) {
 }
 
 function sortVotes() {
-  console.log("sorting");
-  console.log($("#voteContainer .voteList").first().children(".voteItem"));
   $("#voteContainer .voteList")
     .first()
     .children(".voteItem")
@@ -4273,7 +4130,6 @@ function fillPostVote(users) {
 }
 
 function textSubmit(el) {
-  console.log("Submitted");
   addNewGame(el);
   $("#addGamesInputCont .textSubmit").first().addClass("green");
   setTimeout(function () {
@@ -4324,12 +4180,10 @@ function fillGames(games) {
   });
   $(".playGameTitle").each(function (i, e) {
     contextBGG($(e).parent().children(".playBGGLink"), $(e).text());
-    console.log($(e).parent().children(".playBGGLink"), $(e).text());
   });
   for (var i = 0; i < games.length; i++) {
     contextBGG($(".voteSubTitle")[i], games[i].name);
   }
-  console.log("fillgames");
 }
 
 function playShare() {
@@ -4374,7 +4228,6 @@ function importSessionAsList() {
       list: $(".phraseText").first().text().substr(8),
     },
     (res) => {
-      console.log("Success");
       $(".subContextContainer").each(function () {
         $(this).remove();
       });
@@ -4422,9 +4275,7 @@ function importSessionAsList() {
   );
 }*/
 function showListSettings(el) {
-  console.log(el);
   if ($(el).hasClass("listExpanded")) {
-    console.log($(el).children(".listSettings"));
     $(el).next().children(".listSettings").remove();
     $(el).toggleClass("listExpanded");
   } else {
@@ -4491,7 +4342,6 @@ function getTopList() {
     //console.log(JSON.parse(localStorage.getItem("topList")));
 
     /*$("body").append(htmlString + `</div>`);*/
-    console.log("added Autocomplete");
   });
 }
 
@@ -4511,7 +4361,6 @@ function hitMe() {
   if (arr.length > 0) {
     var num = Math.floor(Math.random() * arr.length);
     var game = arr[num];
-    console.log(arr.length, num, game, arr);
     /*$("body").append(
     `<input id="hitMeGame" value="` + game + `" class="off"></input>`
   );*/
@@ -4522,7 +4371,6 @@ function hitMe() {
   ) {*/
     var el = ".listGames li .toggle .switch input[game_id='" + game + "']";
     $(el).prop("checked", true);
-    console.log($(el).prop("checked"));
     //debugger;
     toggleFont(el);
     $("#tempAlert").remove();
@@ -4602,13 +4450,6 @@ function submitSelectFilter() {
         } else {
           max = -1;
         }
-        console.log(
-          players,
-          exclude,
-          min,
-          max,
-          min <= players && players <= max
-        );
         if (min <= players && players <= max) {
           $(e).removeClass("off");
         } else {
@@ -4851,7 +4692,6 @@ function importBGG() {
       list: $("#bggListSelect").val(),
     },
     (res) => {
-      console.log(res);
       createAndShowAlert("Imported Games");
     }
   );
@@ -4876,7 +4716,6 @@ function closeCurrentGames() {
 }
 
 function startLoader() {
-  console.log("startLoader");
   console.trace();
   $(".preloader").fadeIn(1500);
 }
@@ -4923,7 +4762,6 @@ function changeUsername() {
         .replace(/'/g, "\\'"),
     },
     (res) => {
-      console.log(res);
       $("#hContainer .login .userNameContainer .userName span").text(
         "Hello, " + res.name
       );
@@ -4956,7 +4794,6 @@ function changeUsername() {
   fetch("/change_email", ce_options).then(function (response) {
     finishLoader();
     return response.json().then((res) => {
-      console.log(res);
       $("#accountEmailField").html(
         res.name +
           $("#accountEmailField")
@@ -4988,7 +4825,6 @@ function pwdReset() {
 }
 
 function showError(err) {
-  console.log("Error: ", err);
   $el = $("#errorAlert");
   $el.html(err);
   $el.removeClass("off");
@@ -5006,7 +4842,6 @@ function showError(err) {
 }
 
 function accountImportCSV() {
-  console.log("Import CSV");
   var el = `<div class="subContextContainer"><div class="subContext subContextCSV" id="subContextCSV" >`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
@@ -5020,17 +4855,14 @@ function readFile(input) {
     size: 0,
     dataFile: [],
   };
-  console.log(input);
   if (input.files && input.files[0]) {
     let reader = new FileReader();
     reader.readAsBinaryString(input.files[0]);
     reader.onload = function (e) {
-      console.log(e);
       obj_csv.size = e.total;
       obj_csv.dataFile = e.target.result;
       var parsed = Papa.parse(obj_csv.dataFile);
       parsed.data[0][0] = parsed.data[0][0].replace(/ï»¿/, "");
-      console.log({ parsed });
     };
   }
 }
@@ -5054,13 +4886,11 @@ function runListImport(code) {
       if (res.list.err) {
         createAndShowAlert(res.list.err);
       } else {
-        console.log(res);
         if (!res.overwrite) {
           var overwrite = ' class="off"';
         } else {
           var overwrite = "";
         }
-        console.log("Overwrite: ", overwrite);
         var el =
           `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
           res.list.id +
@@ -5159,7 +4989,6 @@ function performListImport(code, oldListName, isSession = false) {
 }
 
 function renameAndImportList(data, isSession = false) {
-  console.log(data);
   if (!isSession) {
     var fetch = "/get_list_from_code";
     var body = { code: data.code, name: data.name };
@@ -5185,8 +5014,6 @@ function renameAndImportList(data, isSession = false) {
  *
  */
 function getvh() {
-  console.log("getvh");
-  console.log(this);
   // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
   let vh = window.innerHeight * 0.01;
   // Then we set the value in the --vh custom property to the root of the document
@@ -5332,8 +5159,6 @@ function autocomplete(inp, arr) {
     a.setAttribute("class", "autocomplete-items");
     /*append the DIV element as a child of the autocomplete container:*/
     this.parentNode.appendChild(a);
-    console.log("appended:");
-    console.log(a);
     /*for each item in the array...*/
     for (i = 0; i < arr.length; i++) {
       /*check if the item starts with the same letters as the text field value:*/
@@ -5401,7 +5226,6 @@ function autocomplete(inp, arr) {
         }
       }
     }
-    console.log(currentFocus);
   });
   function addActive(x) {
     /*a function to classify an item as "active":*/

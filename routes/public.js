@@ -10,6 +10,7 @@ mongoose.set("useCreateIndex", true);
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
 var Session = require("../models/sessions.js");
+var Stat = require("../models/stats.js");
 var socketAPI = require("../socketAPI");
 var Fuse = require("fuse.js");
 const { response } = require("express");
@@ -1777,6 +1778,7 @@ router.post("/submit_votes", function (req, res) {
       user: req.user.id,
       voteArray: req.body.voteArray,
     });
+    saveVoteStats(req.body.voteArray);
     res.send({ status: "Submitted votes!" });
   } else {
     socketAPI.submitVotes({
@@ -1787,6 +1789,51 @@ router.post("/submit_votes", function (req, res) {
     res.send({ status: "Submitted votes!" });
   }
 });
+
+function saveVoteStats(voteArray) {
+  var gamesList = [];
+  voteArray.forEach(function (e) {
+    gamesList.push(e.game);
+  });
+  var day = new Date();
+  day = "" + day.getFullYear() + (day.getMonth() + 1) + day.getDate();
+  Stat.findOneAndUpdate(
+    { day: day },
+    { day: day },
+    { new: true, upsert: true }
+  ).exec(function (err, curStat) {
+    console.log(curStat);
+    voteArray.forEach(function (e) {
+      if (curStat.games.length > 1) {
+        var index = curStat.games.findIndex((obj) => {
+          return obj.game.toString() == e.game;
+        });
+      } else {
+        var index = -1;
+      }
+      console.log("index: " + index);
+      if (index == -1) {
+        curStat.games.push({
+          id: mongoose.Types.ObjectId(e.game),
+          votes: [
+            {
+              vote: Number(e.vote),
+              timestamp: Date.now(),
+            },
+          ],
+        });
+        console.log(curStat.games[curStat.games.length - 1]);
+      } else {
+        curStat.games[index].stats.push({
+          vote: Number(e.vote),
+          timestamp: Date.now(),
+        });
+        console.log(curStat.games[index]);
+      }
+    });
+    curStat.save();
+  });
+}
 
 router.post("/save_votes", function (req, res) {
   if (req.user) {

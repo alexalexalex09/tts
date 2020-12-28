@@ -2542,7 +2542,6 @@ async function contextBGG(el, game, recur, inexact) {
       return "";
     }
   }
-  console.log("Didn't find " + game + "in toplist")
   if (inexact) {
     var exactStr = "";
   } else {

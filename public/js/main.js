@@ -979,7 +979,6 @@ function ttsFetch(req, body, handler, errorHandler) {
       "Content-Type": "application/json",
     },
   };
-  console.trace();
   startLoader();
   fetch(req, tts_options).then(function (response) {
     finishLoader();
@@ -1008,7 +1007,6 @@ function ttsFetch(req, body, handler, errorHandler) {
  * @param {String} to
  */
 function goForwardFrom(from, to) {
-  console.trace();
   if (from != to) {
     if (to == "#selectView" || to == "#postSelectView") {
       window.setTimeout(function () {
@@ -2530,7 +2528,6 @@ async function contextBGG(el, game, recur, inexact) {
       }
     }
     if (index > -1) {
-      console.trace();
       var theID = topList[index].bggID;
       if (theID == "") {
         var ret =
@@ -2545,7 +2542,7 @@ async function contextBGG(el, game, recur, inexact) {
       return "";
     }
   }
-
+  console.log("Didn't find " + game + "in toplist")
   if (inexact) {
     var exactStr = "";
   } else {
@@ -4716,7 +4713,6 @@ function closeCurrentGames() {
 }
 
 function startLoader() {
-  console.trace();
   $(".preloader").fadeIn(1500);
 }
 

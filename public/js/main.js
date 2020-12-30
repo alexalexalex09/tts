@@ -625,13 +625,14 @@ window.addEventListener("load", function () {
   /*    FAQ Handler Handler    */
   /*****************************/
   $("#faqItem").click(this, function (el) {
-    if ($("#faqView").hasClass("off")) {
+    /*if ($("#faqView").hasClass("off")) {
       closeAllMenus("#faqView");
       closeMenu();
       window.setTimeout(showMenuItem("#faqView"), 600);
     } else {
       closeMenuItem("#faqView");
-    }
+    }*/
+    //window.open("http://help.selectagame.net", "_blank");
   });
 
   $("#faqClose").click(this, function (el) {

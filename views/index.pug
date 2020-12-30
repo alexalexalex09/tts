@@ -29,7 +29,8 @@ block content
               | Account
             li#faqItem
               ion-icon(name='help-circle-outline')
-              | FAQ
+              a(href="http://help.selectagame.net") Help
+                ion-icon(name='open-outline' style="width: 15px; transform: translate(-2px, -2px)")
             li#aboutItem
               ion-icon(name='information-circle-outline')
               | About
@@ -209,24 +210,7 @@ block content
           #accountbggConnectTitle.title BoardGameGeek Account
           #accountbggConnectField.field
             button#bggConnectButton Connect
-          #bggConnected
-
-    #faqView.pop.off
-      button#faqClose.closeButton
-        ion-icon(name='close-outline')
-      #faqTitle.pageTitle.h1 FAQ
-        .menuHomeIcon
-      #faqContainer
-        ul#faqList
-          li.faqq What is a Session?
-          li.faqa
-            | Let's say you and your friends want to get together to play games. It's always hard to pick a game, so you fire up a session, share the link, and start adding games to it. A session is the place where you list games to play when you get together, and then vote on them to create your playlist.
-          li.faqq Where can I manage my lists?
-          li.faqa
-            | In the menu (top left hand side on mobile), click "Games and Lists"
-          li.faqq How do I know if someone else already added the game I want to the session?
-          li.faqa
-            | When you're working on a session, a blue "list" button will appear on the left side of the screen. Click it to see the games that have already been added to the session.
+          #bggConnected         
 
     #aboutView.pop.off
       button#aboutClose.closeButton

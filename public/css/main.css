@@ -2870,6 +2870,8 @@ input#selectLimit {
   #premiumContainer {
     width: 92%;
     margin-left: 4%;
+    left: 0px;
+    padding: 0px;
   }
   #copiedAlert,
   #loginAlert,

@@ -119,25 +119,38 @@ function getBGGPage(pageNum) {
           var regexName = /(?<=\<a.*?boardgame\/)(.*?)(?:\/.*?class=\'primary\'[ ]*?\>)(.*?)(?=<)/g;
           var matches = data.match(regexName);
           //console.log("Matches: ", matches);
-          var I;
           var start = false;
           var ret = [];
           matches.forEach(function (e, i) {
             var id = Number(e.match(/([0-9]*)(?=\/)/g)[0]);
-            var name = e.substr(e.indexOf(">") + 1);
-            if (name.indexOf("The ") == 0) {
+            if (id.length > 0) {
+              var name = e.substr(e.indexOf(">") + 1);
+              if (name.indexOf("The ") == 0) {
+                ret.push({
+                  name: name,
+                  rank: (pageNum - 1) * 50 + i,
+                  bggID: id,
+                });
+                name = name.substr(4);
+              }
+              if (name.indexOf("A ") == 0) {
+                ret.push({
+                  name: name,
+                  rank: (pageNum - 1) * 50 + i,
+                  bggID: id,
+                });
+                name = name.substr(2);
+              }
+              if (name.indexOf("An ") == 0) {
+                ret.push({
+                  name: name,
+                  rank: (pageNum - 1) * 50 + i,
+                  bggID: id,
+                });
+                name = name.substr(3);
+              }
               ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
-              name = name.substr(4);
             }
-            if (name.indexOf("A ") == 0) {
-              ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
-              name = name.substr(2);
-            }
-            if (name.indexOf("An ") == 0) {
-              ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
-              name = name.substr(3);
-            }
-            ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
           });
           resolve(ret);
         });
@@ -209,7 +222,7 @@ function getBGGMetaData(ids, toAdd) {
                 }
                 resolve(toAdd);
               } else {
-                reject({ err: "Nothing returned" });
+                reject({ err: "255: Nothing returned" });
               }
             }
           });
@@ -229,7 +242,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
       resourceOutdated = true;
     } else {
       resourceOutdated = Date.now() - curResource.collected > 432000000; // Wait 5 days = 1000*60*60*24*5
-      //resourceOutdated = true;
+      resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;

@@ -16,16 +16,11 @@ head
   link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap')
   meta(name='theme-color' content='#fafafa')
   script(src='js/vendor/modernizr-3.8.0.min.js')
-  script(src='https://code.jquery.com/jquery-3.4.1.min.js' integrity='sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=' crossorigin='anonymous')
-  script.
-    window.jQuery || document.write('<script src="js/vendor/jquery-3.4.1.min.js"><\\/script>')
-    
+  script(src='js/vendor/jquery-3.4.1.min.js')    
   script(src='/socket.io/socket.io.js')
   script(defer src='js/main.js')
   script(type='module' src='https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.esm.js')
   script(nomodule='' src='https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.js')
-  //TODO: Remove ionicons
-  script(src='https://kit.fontawesome.com/0de4e9f77d.js' crossorigin='anonymous')
 //if IE
   p.browserupgrade
     | You are using an 

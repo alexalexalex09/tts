@@ -1351,12 +1351,26 @@ input#listImportSubmit.green {
 .connecting:before,
 .selecting:before,
 .voting:before {
-  content: "\f09c";
+  content: " ";
+  background-image: url("/img/unlock.svg");
+  background-size: contain;
+  width: var(--font-p);
+  height: var(--font-p);
+  background-repeat: no-repeat;
+  position: absolute;
+  transform: translate(-1rem, 2px);
 }
 
 .done:before,
 .voted:before {
-  content: "\f023";
+  content: " ";
+  background-image: url("/img/lock.svg");
+  background-size: contain;
+  width: var(--font-p);
+  height: var(--font-p);
+  background-repeat: no-repeat;
+  position: absolute;
+  transform: translate(-1rem, 2px);
 }
 
 .selecting,

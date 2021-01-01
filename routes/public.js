@@ -102,61 +102,56 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum) {
   var promise = new Promise(function (resolve, reject) {
-    https.get(
-      "https://boardgamegeek.com/browse/boardgame/page/" + pageNum,
-      (resp) => {
-        var data = "";
+    if (pageNum <= 10) {
+      pageNum = (pageNum - 1) * 100;
+      https.get(
+        "https://api.boardgameatlas.com/api/search?client_id=" +
+          process.env.BGAID +
+          "&limit=100&skip=" +
+          pageNum,
+        (resp) => {
+          var data = "";
 
-        // A chunk of data has been recieved.
-        resp.on("data", (chunk) => {
-          data += chunk;
-        });
+          // A chunk of data has been recieved.
+          resp.on("data", (chunk) => {
+            data += chunk;
+          });
 
-        // The whole response has been received. Print out the result.
-        resp.on("end", () => {
-          data = data.toString();
-          console.log(pageNum);
-          var regexName = /(?<=\<a.*?boardgame\/)(.*?)(?:\/.*?class=\'primary\'[ ]*?\>)(.*?)(?=<)/g;
-          var matches = data.match(regexName);
-          //console.log("Matches: ", matches);
-          var start = false;
-          var ret = [];
-          matches.forEach(function (e, i) {
-            var id = Number(e.match(/([0-9]*)(?=\/)/g)[0]);
-            if (id.length > 0) {
-              var name = e.substr(e.indexOf(">") + 1);
-              if (name.indexOf("The ") == 0) {
-                ret.push({
-                  name: name,
-                  rank: (pageNum - 1) * 50 + i,
-                  bggID: id,
-                });
-                name = name.substr(4);
-              }
-              if (name.indexOf("A ") == 0) {
-                ret.push({
-                  name: name,
-                  rank: (pageNum - 1) * 50 + i,
-                  bggID: id,
-                });
-                name = name.substr(2);
-              }
-              if (name.indexOf("An ") == 0) {
-                ret.push({
-                  name: name,
-                  rank: (pageNum - 1) * 50 + i,
-                  bggID: id,
-                });
-                name = name.substr(3);
-              }
-              ret.push({ name: name, rank: (pageNum - 1) * 50 + i, bggID: id });
+          // The whole response has been received. Print out the result.
+          resp.on("end", () => {
+            //console.log(result);
+            result = JSON.parse(data);
+            var ret = [];
+            if (result.games) {
+              result.games.forEach((game) => {
+                if (game.id.length > 0) {
+                  var name = game.name;
+                  var article = 0;
+                  if (name.indexOf("The ") == 0) {
+                    article = 4;
+                  }
+                  if (name.indexOf("A ") == 0) {
+                    article = 2;
+                  }
+                  if (name.indexOf("An ") == 0) {
+                    article = 3;
+                  }
+                  game.noarticle = name.substr(article);
+                  ret.push(game);
+                }
+              });
+              resolve(ret);
+            } else {
+              reject({ BGAPageErr: result, pageNum: pageNum });
             }
           });
-          resolve(ret);
-        });
-      }
-    );
+        }
+      );
+    } else {
+      resolve([]);
+    }
   });
+
   return promise;
 }
 
@@ -164,7 +159,8 @@ async function getBGGPages(numPages) {
   var arr = [];
   for (var i = 1; i < numPages + 1; i++) {
     var ret = await getBGGPage(i);
-    arr.push(ret);
+    arr = arr.concat(ret);
+    console.log("getBGAPage " + Math.floor((i / numPages) * 100) + "%");
   }
   return arr;
 }
@@ -195,7 +191,11 @@ async function getBGGMetaDatas(topGames) {
 function getBGGMetaData(ids, toAdd) {
   var promise = new Promise(function (resolve, reject) {
     https.get(
-      "https://www.boardgamegeek.com/xmlapi2/thing?id=" + ids,
+      "https://api.boardgameatlas.com/api/search?client_id=" +
+        process.env.BGAID +
+        "&id=" +
+        ids,
+
       (resp) => {
         var data = "";
 
@@ -222,7 +222,7 @@ function getBGGMetaData(ids, toAdd) {
                 }
                 resolve(toAdd);
               } else {
-                reject({ err: "255: Nothing returned" });
+                reject({ err: "255: Nothing returned", items: result.items });
               }
             }
           });
@@ -241,43 +241,37 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     if (isNaN(curResource.collected)) {
       resourceOutdated = true;
     } else {
-      resourceOutdated = Date.now() - curResource.collected > 432000000; // Wait 5 days = 1000*60*60*24*5
-      resourceOutdated = true; //Force update
+      resourceOutdated =
+        Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
+      //resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;
   }
   if (resourceOutdated) {
-    getBGGPages(20).then((topGames) => {
-      getBGGMetaDatas(topGames).then((newData) => {
-        if (curResource) {
-          curResource.data = { games: newData };
-          curResource.collected = Date.now();
-          curResource.save().then(function () {
-            console.log("saved");
-          });
-        } else {
-          var newResource = new Resource({
-            name: "topGames",
-            data: { games: newData },
-            collected: Date.now(),
-          });
-          newResource.save();
-        }
-      });
+    getBGGPages(10).then((topGames) => {
+      if (curResource) {
+        curResource.data = { games: topGames };
+        curResource.collected = Date.now();
+        curResource.save().then(function () {
+          console.log("saved");
+        });
+      } else {
+        var newResource = new Resource({
+          name: "topGames",
+          data: { games: topGames },
+          collected: Date.now(),
+        });
+        newResource.save();
+      }
       console.log("8/8: Loaded new BGG Data", Date.now() - loadTime);
     });
-    function parseBGGThing($BGGItems, field, attr) {
-      if (attr) {
-        return $BGGItems.children("item").children(field).first().attr(attr);
-      } else {
-        return $BGGItems.children("item").children(field).first().html();
-      }
-    }
   } else {
     console.log(
       "8/8: Skipping BGG Data Collection, will collect again in " +
-        msToTime(432000000 - (Date.now() - curResource.collected)),
+        msToTime(
+          1000 * 60 * 60 * 24 * 7 - (Date.now() - curResource.collected)
+        ),
       Date.now() - loadTime
     );
   }
@@ -2392,14 +2386,68 @@ router.post("/change_username", function (req, res) {
 router.post("/get_top_list", function (req, res) {
   Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     if (curResource) {
-      var ret = [];
-      curResource.data.games.forEach(function (e) {
-        ret.push(e);
-      });
-      res.send({ games: ret });
+      res.send({ games: curResource.data.games });
     }
   });
 });
+
+//Takes a game's name and returns an object with the game or an error
+router.post("/bga_find_game", function (req, res) {
+  console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
+  bgaRequest({
+    name: req.body.game.replace(/\W/g, ""),
+    fuzzy_match: true,
+    limit: 1,
+  }).then((ret) => {
+    console.log({ ret });
+    if (ret.games.length == 0) {
+      res.send({ err: req.body.game + " not found" });
+    } else {
+      console.log("Found " + req.body.game + ": " + ret.games[0].name);
+      console.log(ret.games.length);
+      res.send(ret.games[0]);
+    }
+  });
+});
+
+router.post("/bga_find_id", function (req, res) {
+  bgaRequest({ id: req.body.id, fuzzy_match: true, limit: 1 }).then((ret) => {
+    if (ret.games.length == 0) {
+      res.send({ err: req.body.game + " not found" });
+    } else {
+      res.send(ret.games[0]);
+    }
+  });
+});
+
+function bgaRequest(options) {
+  var promise = new Promise((resolve, reject) => {
+    var optString = "&";
+    for (let option in options) {
+      optString += option + "=" + options[option];
+    }
+    https.get(
+      "https://api.boardgameatlas.com/api/search?client_id=" +
+        process.env.BGAID +
+        optString,
+      (resp) => {
+        var data = "";
+
+        // A chunk of data has been recieved.
+        resp.on("data", (chunk) => {
+          data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on("end", () => {
+          //console.log(result);
+          resolve(JSON.parse(data));
+        });
+      }
+    );
+  });
+  return promise;
+}
 
 router.post("/connect_bgg", function (req, res) {
   if (req.user) {

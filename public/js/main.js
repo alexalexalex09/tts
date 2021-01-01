@@ -2477,30 +2477,42 @@ function removeGame(arr) {
 }
 
 function parseBGGThing(id, field) {
+  console.log("Searching for |" + id + "|");
   return new Promise(function (resolve, reject) {
-    fetch(`https://boardgamegeek.com/xmlapi2/thing?id=` + id)
-      .then((response) => response.text())
-      .then((data) => {
-        var xmlDoc = $.parseXML(data);
-        var $xml = $(xmlDoc);
-        var $items = $xml.find("items");
-        if ($items.attr("total") == 0) {
-          reject("Error");
-        } else {
-          console.log(
-            "Items: ",
-            $items.children("item").children(field).first().html()
-          );
-          resolve($items.children("item").children(field).first().html());
-        }
+    var topList = JSON.parse(localStorage.getItem("topList"));
+    if (typeof topList == "undefined") {
+      console.log("no toplist");
+      topList = [];
+    } else {
+      var index = topList.findIndex((obj) => {
+        return obj.id == id;
       });
+      console.log("Index: ", index);
+      if (index > -1) {
+        var game = topList[index];
+        console.log("resolving game: ", game.name, field);
+        resolve(game[field]);
+      }
+    }
+    console.log("didn't find it");
+    ttsFetch(
+      "/bga_find_id",
+      { id: id },
+      (res) => {
+        topList.push(res);
+        localStorage.setItem("topList", JSON.stringify(topList));
+        resolve(res[field]);
+      },
+      (err) => {
+        resolve("");
+      }
+    );
   });
 }
 
-async function contextBGG(el, game, recur, inexact) {
-  var topList = localStorage.getItem("topList");
+function getTopListIndex(game) {
+  var topList = JSON.parse(localStorage.getItem("topList"));
   if (topList) {
-    topList = JSON.parse(topList);
     var index = topList.findIndex((obj) => {
       return obj.name == game;
     });
@@ -2528,20 +2540,33 @@ async function contextBGG(el, game, recur, inexact) {
         }
       }
     }
+    return index;
+  } else {
+    return -1;
+  }
+}
+
+async function contextBGG(el, game, recur, inexact) {
+  var topList = JSON.parse(localStorage.getItem("topList"));
+  if (topList) {
+    var index = getTopListIndex(game);
     if (index > -1) {
-      var theID = topList[index].bggID;
+      var theID = topList[index].id;
       if (theID == "") {
         var ret =
           `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
           html +
           `&objecttype=boardgame`;
       } else {
-        var ret = `https://boardgamegeek.com/boardgame/` + topList[index].bggID;
+        var ret = topList[index].url;
       }
       var html = $(el).html();
       $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
       return "";
     }
+  } else {
+    //No toplist found, so initialize one to cache this result
+    topList = [];
   }
   if (inexact) {
     var exactStr = "";
@@ -2549,107 +2574,21 @@ async function contextBGG(el, game, recur, inexact) {
     var exactStr = "&exact=1";
   }
   game = game.replace("&", "%26").replace(":", "").replace(/\\/g, "");
-  fetch(
-    `https://boardgamegeek.com/xmlapi2/search?query=` +
-      game +
-      exactStr +
-      `&type=boardgame`
-  )
-    .then((response) => response.text())
-    .then((data) => {
-      var xmlDoc = $.parseXML(data);
-      var $xml = $(xmlDoc);
-      var $items = $xml.find("items");
-      if ($items.attr("total") == 0) {
-        if (typeof recur == "undefined") {
-          contextBGG(el, "The " + game, 1);
-        }
-        if (recur == 1) {
-          contextBGG(el, "A " + game.substr(4), 2);
-        }
-        if (recur == 2) {
-          contextBGG(el, "An " + game.substr(2), 3);
-        }
-        if (recur == 3) {
-          contextBGG(el, game.substr(3), 4, true);
-          //return "";
-        }
-        if (recur == 4) {
-          return "";
-        }
-      } else {
-        getHighestRatedItem($items).then((id) => {
-          var ret = `https://boardgamegeek.com/boardgame/` + id;
-          var html = $(el).html();
-          $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
-        });
-        async function getHighestRatedItem($items) {
-          return new Promise((resolve) => {
-            if ($items.attr("total") < 1) {
-              resolve("Error - no items found");
-            } else {
-              if ($items.attr("total") == 1) {
-                resolve($($items.children("item")[0]).attr("id"));
-              } else {
-                var ratings = [];
-                const fetchRating = function (id) {
-                  return new Promise((resolve) => {
-                    fetch(
-                      `https://boardgamegeek.com/xmlapi2/thing?id=` +
-                        id +
-                        `&stats=1`
-                    )
-                      .then((response) => response.text())
-                      .then((data) => resolve(data));
-                  });
-                };
-                const getHighestRatingID = async function () {
-                  for (var i = 0; i < Number($items.attr("total")); i++) {
-                    //console.log(i + ": ");
-                    var rating = await fetchRating(
-                      $($items.children()[i]).attr("id")
-                    );
-                    var theRating = $(rating)
-                      .children("item")
-                      .children("statistics")
-                      .children("ratings")
-                      .children("ranks")
-                      .children("rank[name='boardgame']")
-                      .attr("value");
-                    if (theRating == "Not Ranked") {
-                      theRating = Number.MAX_SAFE_INTEGER;
-                    } else {
-                      theRating = Number(theRating);
-                    }
-                    ratings.push({
-                      id: $(rating).children("item").attr("id"),
-                      rank: theRating,
-                    });
-                  }
-                  ratings.sort(function (a, b) {
-                    return a.rank - b.rank;
-                  });
-                  resolve(ratings[0].id);
-                };
-                getHighestRatingID().then((id) => {
-                  resolve(id);
-                });
-              }
-            }
-          });
-        }
-        /*if ($items.attr("total") > 1) {
-          var ratings = [];
-          var newRating = '';
-          for (var i = 0; i < $items.attr("total") - 1; i++) {
-            newRating = await fetchRating($($items.children("item")[i]).attr("id"));
-            ratings.push(newRating);
-          }
-        }
-        
-        }*/
-      }
-    });
+  ttsFetch(
+    "/bga_find_game",
+    { game: game },
+    (res) => {
+      topList.push(res);
+      localStorage.setItem("topList", JSON.stringify(topList));
+      var html = $(el).html();
+      $(el).html('<a href="' + res.url + `" target="_blank">` + html + `</a>`);
+      return "";
+    },
+    (err) => {
+      console.log(game + " not found");
+      return "";
+    }
+  );
 }
 
 function connectBGG() {
@@ -3905,13 +3844,14 @@ function showVoteThumb(el) {
     $el.append(`<div class="BGGDesc"></div>`);
     var id = $el.children(".voteSubTitle").children("a").attr("href");
     if (id) {
+      id = id.substr(0, id.lastIndexOf("/"));
       id = id.substr(id.lastIndexOf("/") + 1);
-      parseBGGThing(id, "thumbnail").then(function (res) {
+      parseBGGThing(id, "thumb_url").then(function (res) {
         $el
           .children(".BGGDesc")
           .prepend(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
       });
-      parseBGGThing(id, "description").then(function (res) {
+      parseBGGThing(id, "description_preview").then(function (res) {
         res = htmlDecode(res);
         if (res.length > 200) {
           res = reduceUntilNextWordEnd(res.substr(0, 200));
@@ -4090,6 +4030,7 @@ function sortVotes() {
 /*    fillPostVote(users)    */
 /*****************************/
 function fillPostVote(users) {
+  console.log("fillPostVote");
   var htmlString = ``;
   var votedText = "";
   var votedClass = "";
@@ -4312,30 +4253,7 @@ function getTopList() {
     }
     //var htmlString = `<div id="topList" class="off">`;
     var topList = [];
-    res.games.forEach(function (e, i) {
-      topList[i] = {
-        bggID: e.bggID || "",
-        minplayers: e.minplayers || "",
-        maxplayers: e.maxplayers || "",
-        name: e.name,
-      };
-      /*e.bggID = e.bggID || "";
-      e.minplayers = e.minplayers || "";
-      e.maxplayers = e.maxplayers || "";
-      htmlString +=
-        `<li bggID = "` +
-        e.bggID +
-        `"minPlayers="` +
-        e.minplayers +
-        `" maxPlayers="` +
-        e.maxplayers +
-        `" name="` +
-        e.name +
-        `">` +
-        e.name +
-        `</li>`;*/
-    });
-    localStorage.setItem("topList", JSON.stringify(topList));
+    localStorage.setItem("topList", JSON.stringify(res.games));
     //console.log(JSON.parse(localStorage.getItem("topList")));
 
     /*$("body").append(htmlString + `</div>`);*/

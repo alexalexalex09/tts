@@ -4030,7 +4030,7 @@ function sortVotes() {
 /*    fillPostVote(users)    */
 /*****************************/
 function fillPostVote(users) {
-  console.log("fillPostVote");
+  console.log("fillPostVote")
   var htmlString = ``;
   var votedText = "";
   var votedClass = "";

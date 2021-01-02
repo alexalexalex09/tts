@@ -1798,6 +1798,7 @@ router.post("/submit_votes", function (req, res) {
 });
 
 function saveVoteStats(voteArray) {
+  console.log(voteArray);
   var gamesList = [];
   voteArray.forEach(function (e) {
     gamesList.push(e.game);
@@ -1811,7 +1812,10 @@ function saveVoteStats(voteArray) {
   ).exec(function (err, curStat) {
     console.log(curStat);
     voteArray.forEach(function (e) {
-      if (curStat.games.length > 1) {
+      if (typeof curStat.games != "undefined") {
+        console.log("curStat: ", curStat.games);
+        console.log("e.game: ", e.game);
+        console.log("length: " + curStat.games.length);
         var index = curStat.games.findIndex((obj) => {
           return obj.game.toString() == e.game;
         });
@@ -1821,7 +1825,7 @@ function saveVoteStats(voteArray) {
       console.log("index: " + index);
       if (index == -1) {
         curStat.games.push({
-          id: mongoose.Types.ObjectId(e.game),
+          game: mongoose.Types.ObjectId(e.game),
           votes: [
             {
               vote: Number(e.vote),
@@ -1831,7 +1835,7 @@ function saveVoteStats(voteArray) {
         });
         console.log(curStat.games[curStat.games.length - 1]);
       } else {
-        curStat.games[index].stats.push({
+        curStat.games[index].votes.push({
           vote: Number(e.vote),
           timestamp: Date.now(),
         });
@@ -2395,7 +2399,7 @@ router.post("/get_top_list", function (req, res) {
 router.post("/bga_find_game", function (req, res) {
   console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
   bgaRequest({
-    name: req.body.game.replace(/\W/g, ""),
+    name: req.body.game.replace(/[^0-9a-zA-Z ]/g, ""),
     fuzzy_match: true,
     limit: 1,
   }).then((ret) => {

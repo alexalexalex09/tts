@@ -2573,6 +2573,7 @@ async function contextBGG(el, game, recur, inexact) {
   } else {
     var exactStr = "&exact=1";
   }
+  var name = game;
   game = game.replace("&", "%26").replace(":", "").replace(/\\/g, "");
   ttsFetch(
     "/bga_find_game",
@@ -2585,6 +2586,13 @@ async function contextBGG(el, game, recur, inexact) {
       return "";
     },
     (err) => {
+      var url = `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+      game +
+      `&objecttype=boardgame`;
+      topList.push({name: name, url: url, error: true});
+      localStorage.setItem("topList", JSON.stringify(topList));
+      var html = $(el).html();
+      $(el).html(`<a href="` + url + `" target="_blank">` + html + `</a>`);
       console.log(game + " not found");
       return "";
     }

@@ -2426,29 +2426,29 @@ router.post("/bga_find_id", function (req, res) {
 
 function bgaRequest(options) {
   var promise = new Promise((resolve, reject) => {
-    var optString = "&";
+    var optString = "";
     for (let option in options) {
-      optString += option + "=" + options[option];
+      optString += "&" + option + "=" + options[option];
     }
-    https.get(
+    optString =
       "https://api.boardgameatlas.com/api/search?client_id=" +
-        process.env.BGAID +
-        optString,
-      (resp) => {
-        var data = "";
+      process.env.BGAID +
+      optString;
+    console.log("optString: " + optString);
+    https.get(optString, (resp) => {
+      var data = "";
 
-        // A chunk of data has been recieved.
-        resp.on("data", (chunk) => {
-          data += chunk;
-        });
+      // A chunk of data has been recieved.
+      resp.on("data", (chunk) => {
+        data += chunk;
+      });
 
-        // The whole response has been received. Print out the result.
-        resp.on("end", () => {
-          //console.log(result);
-          resolve(JSON.parse(data));
-        });
-      }
-    );
+      // The whole response has been received. Print out the result.
+      resp.on("end", () => {
+        console.log(data);
+        resolve(JSON.parse(data));
+      });
+    });
   });
   return promise;
 }

@@ -2427,43 +2427,65 @@ router.post("/get_top_list", function (req, res) {
 //Takes a game's name and returns an object with the game or an error
 router.post("/bga_find_game", function (req, res) {
   console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
-  bgaRequest({
-    name: req.body.game.replace(/[^0-9a-zA-Z ]/g, ""),
-    /*fuzzy_match: true,*/
-    limit: 1,
-  }).then((ret) => {
-    if (ret.error) {
-      res.send({ err: ret.error.message });
-    }
-    console.log({ ret });
-    if (ret.games.length == 0) {
-      res.send({ err: req.body.game + " not found" });
+  Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+    var index = curResource.data.games.indexOf((obj) => {
+      obj.name == req.body.game;
+    });
+    if (index > -1) {
+      res.send(curResource.data.games[index]);
     } else {
-      console.log("Found " + req.body.game + ": " + ret.games[0].name);
-      console.log(ret.games.length);
-      Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
-        var index = curResource.data.games.indexOf((obj) => {
-          obj.name == ret.games[0].name;
-        });
-        console.log({ index });
-        if (index > -1) {
-          curResource.data.games[index] = ret.games[0];
-          console.log("Name: " + curResource.data.games[index].name);
-        } else {
-          curResource.data.games.push(ret.games[0]);
-          console.log(
-            "New name: " +
-              curResource.data.games[curResource.data.games.length - 1].name
-          );
-          console.log("New length: " + curResource.data.games.length);
+      bgaRequest({
+        name: req.body.game.replace(/[^0-9a-zA-Z ]/g, ""),
+        /*fuzzy_match: true,*/
+        limit: 1,
+      }).then((ret) => {
+        if (ret.error) {
+          res.send({ err: ret.error.message });
         }
+        var url =
+          `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+          req.body.game +
+          `&objecttype=boardgame`;
+        var userGame = {
+          name: req.body.game,
+          url: url,
+          error: true,
+        };
+        curResource.data.games.push(userGame);
         curResource.markModified("data");
-        curResource.save((err, result) => {
-          console.log({ err });
-          console.log({ result });
-          res.send(ret.games[0]);
-          console.log(result.data.games[result.data.games.length - 1].name);
-        });
+        //If the search returned no games, return a generic search for boardgamegeek
+        if (ret.games.length == 0) {
+          curResource.save();
+          res.send(userGame);
+        } else {
+          //If the search returned anything, check if it matched exactly
+          var index = curResource.data.games.indexOf((obj) => {
+            obj.name == ret.games[0].name;
+          });
+          if (index > -1) {
+            //If there's an exact match in the database, put the newly gathered information there
+            curResource.data.games[index] = ret.games[0];
+          } else {
+            //If there isn't an exact match, add the inexact match to the database
+            curResource.data.games.push(ret.games[0]);
+            //And add an entry with the user submitted search to the database
+            var newEntry = ret.games[0];
+            var actualName = newEntry.name;
+            var usersname = req.body.game;
+            console.log(ret.games[0].name, req.body.game);
+            newEntry.actualName = actualName;
+            newEntry.name = usersname;
+            console.log({ actualName });
+            console.log(newEntry.actualName);
+            console.log({ usersname });
+            console.log(newEntry.name);
+            curResource.data.games.push(newEntry);
+          }
+          curResource.markModified("data");
+          curResource.save((err, result) => {
+            res.send(ret.games[0]);
+          });
+        }
       });
     }
   });

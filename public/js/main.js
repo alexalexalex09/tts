@@ -2523,23 +2523,14 @@ function parseBGGThing(id, field) {
 function getTopListIndex(game, topList, fuse) {
   if (topList) {
     var index = topList.findIndex((obj) => {
-      return obj.name == game;
+      return (
+        obj.name == game ||
+        obj.actualName == game ||
+        obj.name == "The " + game ||
+        obj.name == "A " + game ||
+        obj.name == "An " + game
+      );
     });
-    if (index == -1) {
-      index = topList.findIndex((obj) => {
-        return obj.name == "The " + game;
-      });
-    }
-    if (index == -1) {
-      index = topList.findIndex((obj) => {
-        return obj.name == "A " + game;
-      });
-    }
-    if (index == -1) {
-      index = topList.findIndex((obj) => {
-        return obj.name == "An " + game;
-      });
-    }
     if (index == -1) {
       var searchres = fuse.search(game);
       if (searchres.length > 0) {
@@ -4026,7 +4017,7 @@ function fillVotes(games) {
       contextBGG(
         topList,
         $(".voteToolTip .voteSubTitle")[i],
-        games[i].name,
+        games[i].actualName || games[i].name,
         undefined,
         undefined,
         fuse
@@ -4425,7 +4416,7 @@ function submitSelectFilter() {
         var match = -1;
         var name = $(e).children(".gameName").first().text().trim();
         for (let i = 0; i < topList.length; i++) {
-          if (topList[i].name == name) {
+          if (topList[i].name == name || topList[i].actualName == name) {
             match = i;
             break;
           }

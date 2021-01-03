@@ -233,6 +233,7 @@ function getBGGMetaData(ids, toAdd) {
   return promise;
 }
 
+//TODO: Modify this to only update the list with new data, and not overwrite custom additions
 /*Use Async BGG Functions to get top list of games with metadata */
 console.log("4/8: Loading cached games", Date.now() - loadTime);
 Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
@@ -251,10 +252,34 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
   if (resourceOutdated) {
     getBGGPages(10).then((topGames) => {
       if (curResource) {
-        curResource.data = { games: topGames };
+        //Don't wholesale replace, instead do an upgrade
+        var games = curResource.data.games;
+        for (let i = 0; i < topGames.length; i++) {
+          //If the current index happens to be the same as the old index, don't overthink it, just replace
+          if (games[i].name == topGames[i].name) {
+            curResource.data.games[i] = topGames[i];
+          } else {
+            //If the index has changed, find the new index, if any, and upgrade
+            var index = games.indexOf((obj) => {
+              obj.name == topGames[i].name;
+            });
+            if (index > -1) {
+              //If the index is found, move it to the expected index
+              curResource.data.games.splice(index, 1); //Remove the old entry
+              curResource.data.games.splice(i, 0, topGames[i]); //Add in the updated entry at the expected point
+            } else {
+              //If it's just not in the DB at all (think new game), then splice it at the expected point
+              curResource.data.games.splice(i, 0, topGames[i]);
+            }
+          }
+        }
+        //curResource.data = { games: topGames };
+        curResource.markModified("data");
         curResource.collected = Date.now();
-        curResource.save().then(function () {
-          console.log("saved");
+        curResource.save().then(function (curResource, topListSaveErr) {
+          if (topListSaveErr) {
+            console.log({ topListSaveErr });
+          }
         });
       } else {
         var newResource = new Resource({
@@ -262,7 +287,11 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
           data: { games: topGames },
           collected: Date.now(),
         });
-        newResource.save();
+        newResource.save().then(function (curResource, err) {
+          if (err) {
+            conole.log("Error saving resource: ", err);
+          }
+        });
       }
       console.log("8/8: Loaded new BGG Data", Date.now() - loadTime);
     });
@@ -2400,16 +2429,42 @@ router.post("/bga_find_game", function (req, res) {
   console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
   bgaRequest({
     name: req.body.game.replace(/[^0-9a-zA-Z ]/g, ""),
-    fuzzy_match: true,
+    /*fuzzy_match: true,*/
     limit: 1,
   }).then((ret) => {
+    if (ret.error) {
+      res.send({ err: ret.error.message });
+    }
     console.log({ ret });
     if (ret.games.length == 0) {
       res.send({ err: req.body.game + " not found" });
     } else {
       console.log("Found " + req.body.game + ": " + ret.games[0].name);
       console.log(ret.games.length);
-      res.send(ret.games[0]);
+      Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+        var index = curResource.data.games.indexOf((obj) => {
+          obj.name == ret.games[0].name;
+        });
+        console.log({ index });
+        if (index > -1) {
+          curResource.data.games[index] = ret.games[0];
+          console.log("Name: " + curResource.data.games[index].name);
+        } else {
+          curResource.data.games.push(ret.games[0]);
+          console.log(
+            "New name: " +
+              curResource.data.games[curResource.data.games.length - 1].name
+          );
+          console.log("New length: " + curResource.data.games.length);
+        }
+        curResource.markModified("data");
+        curResource.save((err, result) => {
+          console.log({ err });
+          console.log({ result });
+          res.send(ret.games[0]);
+          console.log(result.data.games[result.data.games.length - 1].name);
+        });
+      });
     }
   });
 });
@@ -2445,7 +2500,7 @@ function bgaRequest(options) {
 
       // The whole response has been received. Print out the result.
       resp.on("end", () => {
-        console.log(data);
+        //console.log(JSON.parse(data));
         resolve(JSON.parse(data));
       });
     });

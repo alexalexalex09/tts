@@ -995,6 +995,9 @@ function ttsFetch(req, body, handler, errorHandler) {
       }
     });
   });
+  console.log("Finished fetch", body);
+  return;
+  //Return here? So that it's non-blocking?
 }
 
 /*****************************/
@@ -2055,21 +2058,28 @@ function showGameContext(game) {
     }, 10);
     $("#context_" + game.id).removeClass("off");
     $("#context_" + game.id).addClass("slideUp");
+
     if (game.list) {
-      contextBGG(
-        ".contextActions.slideUp li.bggLink",
-        $(
-          "#context_stage_" +
-            game.id +
-            "[list=games" +
-            game.list +
-            "] .contextTitle"
-        )
-          .first()
-          .text()
-      );
+      localforage.getItem("topList").then((topList) => {
+        const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+        contextBGG(
+          topList,
+          ".contextActions.slideUp li.bggLink",
+          $(
+            "#context_stage_" +
+              game.id +
+              "[list=games" +
+              game.list +
+              "] .contextTitle",
+            undefined,
+            undefined,
+            fuse
+          )
+            .first()
+            .text()
+        );
+      });
     }
-  } else {
   }
 }
 
@@ -2479,7 +2489,7 @@ function removeGame(arr) {
 function parseBGGThing(id, field) {
   console.log("Searching for |" + id + "|");
   return new Promise(function (resolve, reject) {
-    var topList = JSON.parse(localStorage.getItem("topList"));
+    var topList = localforage.getItem("topList");
     if (typeof topList == "undefined") {
       console.log("no toplist");
       topList = [];
@@ -2500,7 +2510,7 @@ function parseBGGThing(id, field) {
       { id: id },
       (res) => {
         topList.push(res);
-        localStorage.setItem("topList", JSON.stringify(topList));
+        localforage.setItem("topList", topList);
         resolve(res[field]);
       },
       (err) => {
@@ -2510,8 +2520,7 @@ function parseBGGThing(id, field) {
   });
 }
 
-function getTopListIndex(game) {
-  var topList = JSON.parse(localStorage.getItem("topList"));
+function getTopListIndex(game, topList, fuse) {
   if (topList) {
     var index = topList.findIndex((obj) => {
       return obj.name == game;
@@ -2532,7 +2541,6 @@ function getTopListIndex(game) {
       });
     }
     if (index == -1) {
-      const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
       var searchres = fuse.search(game);
       if (searchres.length > 0) {
         if (searchres[0].score < 0.1) {
@@ -2546,10 +2554,15 @@ function getTopListIndex(game) {
   }
 }
 
-async function contextBGG(el, game, recur, inexact) {
-  var topList = JSON.parse(localStorage.getItem("topList"));
+function contextBGG(topList, el, game, recur, inexact, fuse) {
+  //TODO: Make this faster. Maybe generate this function with existing data so it doesn't have to recreate it?
+  var checkdate = Date.now();
   if (topList) {
-    var index = getTopListIndex(game);
+    //TODO: This is very slow. How to improve? Rewrite with localforage
+    if (typeof fuse == "undefined") {
+      const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+    }
+    var index = getTopListIndex(game, topList, fuse);
     if (index > -1) {
       var theID = topList[index].id;
       if (theID == "") {
@@ -2575,28 +2588,43 @@ async function contextBGG(el, game, recur, inexact) {
   }
   var name = game;
   game = game.replace("&", "%26").replace(":", "").replace(/\\/g, "");
+  var diff = Date.now() - checkdate;
+  console.log("end prep" + diff);
+  var date = Date.now();
+  console.log(
+    "fetch begun: " + date.toString().substr(date.toString().length - 5)
+  );
   ttsFetch(
     "/bga_find_game",
     { game: game },
     (res) => {
       topList.push(res);
-      localStorage.setItem("topList", JSON.stringify(topList));
+      localforage.setItem("topList", topList);
       var html = $(el).html();
       $(el).html('<a href="' + res.url + `" target="_blank">` + html + `</a>`);
       return "";
     },
     (err) => {
-      var url = `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-      game +
-      `&objecttype=boardgame`;
-      topList.push({name: name, url: url, error: true});
-      localStorage.setItem("topList", JSON.stringify(topList));
+      var url =
+        `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+        game +
+        `&objecttype=boardgame`;
+      topList.push({ name: name, url: url, error: true });
+      localforage.setItem("topList", topList);
       var html = $(el).html();
       $(el).html(`<a href="` + url + `" target="_blank">` + html + `</a>`);
       console.log(game + " not found");
       return "";
     }
   );
+  var diff = Date.now() - date;
+  console.log(
+    "fetch ended: " +
+      date.toString().substr(date.toString().length - 5) +
+      ", " +
+      diff
+  );
+  return;
 }
 
 function connectBGG() {
@@ -3235,6 +3263,7 @@ function addList() {
 }
 
 function recheckGreenLists() {
+  console.log("rechecking...");
   recheckLimit();
   $("#selectLists>li").each(function (ind, ele) {
     var count = 0;
@@ -3269,6 +3298,7 @@ function recheckGreenLists() {
         .prop("checked", false);
     }
   });
+  console.log("checked");
 }
 
 //Check list boxes and change text to green on first display
@@ -3737,15 +3767,20 @@ function focusFirstInput(el) {
 
 function updateCurrentGames(curGames) {
   var htmlString = ``;
+  var date = Date.now();
   curGames.forEach(function (e) {
     htmlString += `<div class="curGameItem">` + e.replace(/\\/g, "") + `</div>`;
   });
   $("#currentGames").html(htmlString);
   $("#listNotify").html("<span>" + curGames.length + "</span>");
-  $(".curGameItem").each(function (i, e) {
-    if ($(e).children("a").length == 0) {
-      contextBGG($(e), $(e).html());
-    }
+  localforage.getItem("topList").then((topList) => {
+    const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+    $(".curGameItem").each(function (i, e) {
+      //Each of these loops takes about 50-100ms. How can we make this non-blocking?
+      if ($(e).children("a").length == 0) {
+        contextBGG(topList, $(e), $(e).html(), undefined, undefined, fuse);
+      }
+    });
   });
 }
 
@@ -3927,7 +3962,7 @@ function sortObjectArray(arr, field) {
 
 function fillVotes(games) {
   games = games.sort(lowerCaseFieldSort("name"));
-  var localGames = JSON.parse(localStorage.getItem($("#code").html()));
+  var localGames = localStorage.getItem($("#code").html());
   if (localGames === null) {
     localGames = [];
     for (var i = 0; i < games.length; i++) {
@@ -3984,44 +4019,55 @@ function fillVotes(games) {
     }
   });
   //sortVotes();
-  for (var i = 0; i < games.length; i++) {
-    contextBGG($(".voteToolTip .voteSubTitle")[i], games[i].name);
-  }
-  //$(".voteSubX").on("click", function() {closeToolTip(this)});
-  $(".voteLabel label").on("click", function () {
-    showToolTip(
-      $(this).parent(),
-      $(this).parent().children(".voteToolTip").children(".toolTipContainer")
-    );
-  });
-  $(".voteToolTip>ion-icon").on("click", function () {
-    showToolTip(
-      $(this).parent().parent(),
-      $(this).parent().children(".toolTipContainer")
-    );
-  });
-  $("#voteButton").on("click", function () {
-    var theCode = $("#code").text();
-    var voteArray = [];
-    $(".voteItem").each((i, e) => {
-      voteArray.push({
-        game: $(e).children("input")[0].id,
-        vote: $(e).children("input").val(),
-      });
+
+  localforage.getItem("topList").then((topList) => {
+    const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+    for (var i = 0; i < games.length; i++) {
+      contextBGG(
+        topList,
+        $(".voteToolTip .voteSubTitle")[i],
+        games[i].name,
+        undefined,
+        undefined,
+        fuse
+      );
+    }
+    //$(".voteSubX").on("click", function() {closeToolTip(this)});
+    $(".voteLabel label").on("click", function () {
+      showToolTip(
+        $(this).parent(),
+        $(this).parent().children(".voteToolTip").children(".toolTipContainer")
+      );
     });
-    ttsFetch(
-      "/submit_votes",
-      {
-        code: theCode,
-        voteArray: voteArray,
-      },
-      (res) => {
-        localStorage.removeItem(theCode);
-        goForwardFrom("#voteView", "#postVoteView");
-        window.hist = ["#homeView", "#postVoteView"];
-        setBackHome();
-      }
-    );
+    $(".voteToolTip>ion-icon").on("click", function () {
+      showToolTip(
+        $(this).parent().parent(),
+        $(this).parent().children(".toolTipContainer")
+      );
+    });
+    $("#voteButton").on("click", function () {
+      var theCode = $("#code").text();
+      var voteArray = [];
+      $(".voteItem").each((i, e) => {
+        voteArray.push({
+          game: $(e).children("input")[0].id,
+          vote: $(e).children("input").val(),
+        });
+      });
+      ttsFetch(
+        "/submit_votes",
+        {
+          code: theCode,
+          voteArray: voteArray,
+        },
+        (res) => {
+          localStorage.removeItem(theCode);
+          goForwardFrom("#voteView", "#postVoteView");
+          window.hist = ["#homeView", "#postVoteView"];
+          setBackHome();
+        }
+      );
+    });
   });
 }
 
@@ -4038,7 +4084,7 @@ function sortVotes() {
 /*    fillPostVote(users)    */
 /*****************************/
 function fillPostVote(users) {
-  console.log("fillPostVote")
+  console.log("fillPostVote");
   var htmlString = ``;
   var votedText = "";
   var votedClass = "";
@@ -4124,12 +4170,29 @@ function fillGames(games) {
   $(".playGameTitle").click(function () {
     $(this).parent().children(".playBGGLink").toggleClass("showBGGLink");
   });
-  $(".playGameTitle").each(function (i, e) {
-    contextBGG($(e).parent().children(".playBGGLink"), $(e).text());
+  localforage.getItem("topList").then((topList) => {
+    const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+    $(".playGameTitle").each(function (i, e) {
+      contextBGG(
+        topList,
+        $(e).parent().children(".playBGGLink"),
+        $(e).text(),
+        undefined,
+        undefined,
+        fuse
+      );
+    });
+    for (var i = 0; i < games.length; i++) {
+      contextBGG(
+        topList,
+        $(".voteSubTitle")[i],
+        games[i].name,
+        undefined,
+        undefined,
+        fuse
+      );
+    }
   });
-  for (var i = 0; i < games.length; i++) {
-    contextBGG($(".voteSubTitle")[i], games[i].name);
-  }
 }
 
 function playShare() {
@@ -4261,8 +4324,7 @@ function getTopList() {
     }
     //var htmlString = `<div id="topList" class="off">`;
     var topList = [];
-    localStorage.setItem("topList", JSON.stringify(res.games));
-    //console.log(JSON.parse(localStorage.getItem("topList")));
+    localforage.setItem("topList", res.games);
 
     /*$("body").append(htmlString + `</div>`);*/
   });
@@ -4358,33 +4420,40 @@ function submitSelectFilter() {
       $("#selectFilter").removeClass("filterActive");
     } else {
       $("#selectFilter").addClass("filterActive");
-      var topList = JSON.parse(localStorage.getItem("topList"));
-      var match = topList.findIndex(
-        (obj) => obj.name == $(e).children(".gameName").first().text().trim()
-      );
-      if (match > -1) {
-        if (typeof topList[match].minplayers != "undefined") {
-          min = Number(topList[match].minplayers);
-        } else {
-          min = -1;
+      var topList = localforage.getItem("topList").then((topList) => {
+        //TODO: Fix the rest of this function to match localforage
+        var match = -1;
+        var name = $(e).children(".gameName").first().text().trim();
+        for (let i = 0; i < topList.length; i++) {
+          if (topList[i].name == name) {
+            match = i;
+            break;
+          }
         }
-        if (typeof topList[match].maxplayers != "undefined") {
-          max = Number(topList[match].maxplayers);
+        if (match > -1) {
+          if (typeof topList[match].minplayers != "undefined") {
+            min = Number(topList[match].minplayers);
+          } else {
+            min = -1;
+          }
+          if (typeof topList[match].maxplayers != "undefined") {
+            max = Number(topList[match].maxplayers);
+          } else {
+            max = -1;
+          }
+          if (min <= players && players <= max) {
+            $(e).removeClass("off");
+          } else {
+            $(e).addClass("off");
+          }
         } else {
-          max = -1;
+          if (exclude) {
+            $(e).addClass("off");
+          } else {
+            $(e).removeClass("off");
+          }
         }
-        if (min <= players && players <= max) {
-          $(e).removeClass("off");
-        } else {
-          $(e).addClass("off");
-        }
-      } else {
-        if (exclude) {
-          $(e).addClass("off");
-        } else {
-          $(e).removeClass("off");
-        }
-      }
+      });
     }
   });
   $("#selectFilterListContainer").remove();

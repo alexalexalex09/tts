@@ -2428,8 +2428,7 @@ router.post("/bga_find_game", function (req, res) {
   console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
   Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     var a = 0;
-    var index = -1;
-    curResource.data.games.every((obj, i) => {
+    var index = curResource.data.games.findIndex((obj) => {
       if (a == 0) {
         console.log(obj.name);
         console.log(req.body.game);
@@ -2438,15 +2437,10 @@ router.post("/bga_find_game", function (req, res) {
       if (obj.name.substr(0, 4) == req.body.game.substr(0, 4)) {
         console.log("|" + obj.name + "|" + req.body.game + "|");
       }
-      if (obj.name == req.body.game) {
-        index = i;
-        return false;
-      } else {
-        return true;
-      }
+      return obj.name == req.body.game;
     });
     if (index == -1) {
-      var index = curResource.data.games.indexOf((obj) => {
+      var index = curResource.data.games.findIndex((obj) => {
         return (obj.actualName = req.body.game);
       });
     }

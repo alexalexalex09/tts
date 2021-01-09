@@ -68,7 +68,7 @@ block content
           | woodland creatures help?
       button#joinButton.button.blueBtn.b Join
       button#createButton.button.greyBtn.b Create
-      #codeInputGroup.inputGroup.off
+      form#codeInputGroup.inputGroup.off(onsubmit="return submitSessionCode()")
         #codeInputLabel.inputLabel.h2 Enter Code:
         #codeInput.textInputCont
           input.textInput(type='text')

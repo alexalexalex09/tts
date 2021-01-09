@@ -261,7 +261,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
           } else {
             //If the index has changed, find the new index, if any, and upgrade
             var index = games.indexOf((obj) => {
-              obj.name == topGames[i].name;
+              return obj.name == topGames[i].name;
             });
             if (index > -1) {
               //If the index is found, move it to the expected index
@@ -2423,19 +2423,47 @@ router.post("/get_top_list", function (req, res) {
     }
   });
 });
-
 //Takes a game's name and returns an object with the game or an error
 router.post("/bga_find_game", function (req, res) {
   console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
   Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
-    var index = curResource.data.games.indexOf((obj) => {
-      obj.name == req.body.game;
+    var a = 0;
+    var index = -1;
+    curResource.data.games.every((obj, i) => {
+      if (a == 0) {
+        console.log(obj.name);
+        console.log(req.body.game);
+        a++;
+      }
+      if (obj.name.substr(0, 4) == req.body.game.substr(0, 4)) {
+        console.log("|" + obj.name + "|" + req.body.game + "|");
+      }
+      if (obj.name == req.body.game) {
+        index = i;
+        return false;
+      } else {
+        return true;
+      }
     });
+    if (index == -1) {
+      var index = curResource.data.games.indexOf((obj) => {
+        return (obj.actualName = req.body.game);
+      });
+    }
     if (index > -1) {
+      console.log("found exact match");
       res.send(curResource.data.games[index]);
     } else {
+      console.log(
+        "Didn't find exact match for " +
+          req.body.game +
+          " in " +
+          curResource.data.games.length +
+          " records, now looking for " +
+          req.body.game.replace(/[^0-9a-zA-Z' ]/g, "")
+      );
       bgaRequest({
-        name: req.body.game.replace(/[^0-9a-zA-Z ]/g, ""),
+        name: req.body.game.replace(/[^0-9a-zA-Z' ]/g, ""),
         /*fuzzy_match: true,*/
         limit: 1,
       }).then((ret) => {
@@ -2460,7 +2488,7 @@ router.post("/bga_find_game", function (req, res) {
         } else {
           //If the search returned anything, check if it matched exactly
           var index = curResource.data.games.indexOf((obj) => {
-            obj.name == ret.games[0].name;
+            return obj.name == ret.games[0].name;
           });
           if (index > -1) {
             //If there's an exact match in the database, put the newly gathered information there
@@ -2804,16 +2832,18 @@ function getSessionInfo(code) {
     Session.findOne({ code: code }).exec(function (err, curSession) {
       if (err) {
         resolve({ err: err });
+      } else {
+        if (curSession == null) {
+          resolve({ err: "No such session" });
+        } else {
+          var ret = { name: curSession.phrase };
+          ret.games = curSession.games.map((e) => {
+            return e.game;
+          });
+          console.log(ret);
+          resolve(ret);
+        }
       }
-      if (curSession == null) {
-        resolve({ err: "No such session" });
-      }
-      var ret = { name: curSession.phrase };
-      ret.games = curSession.games.map((e) => {
-        return e.game;
-      });
-      console.log(ret);
-      resolve(ret);
     });
   });
   return promise;

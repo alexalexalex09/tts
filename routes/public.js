@@ -2425,8 +2425,11 @@ router.post("/get_top_list", function (req, res) {
 });
 //Takes a game's name and returns an object with the game or an error
 router.post("/bga_find_game", function (req, res) {
-  console.log("Finding " + req.body.game.replace(/[^0-9a-zA-Z ]/g, ""));
+  /*req.body.game = req.body.game.replace("&amp;", "and");
+  req.body.game = req.body.game.replace("&", "and");
+  console.log("Finding " + req.body.game.replace(/[^%0-9a-zA-Z ]/g, ""));*/
   Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+    /*console.log("loaded resource for " + req.body.game);*/
     var a = 0;
     var index = curResource.data.games.findIndex((obj) => {
       if (a == 0) {
@@ -2434,18 +2437,15 @@ router.post("/bga_find_game", function (req, res) {
         console.log(req.body.game);
         a++;
       }
-      if (obj.name.substr(0, 4) == req.body.game.substr(0, 4)) {
-        console.log("|" + obj.name + "|" + req.body.game + "|");
-      }
       return obj.name == req.body.game;
     });
     if (index == -1) {
       var index = curResource.data.games.findIndex((obj) => {
-        return (obj.actualName = req.body.game);
+        return obj.actualName == req.body.game;
       });
     }
     if (index > -1) {
-      console.log("found exact match");
+      console.log("found exact match for " + req.body.game);
       res.send(curResource.data.games[index]);
     } else {
       console.log(
@@ -2454,7 +2454,7 @@ router.post("/bga_find_game", function (req, res) {
           " in " +
           curResource.data.games.length +
           " records, now looking for " +
-          req.body.game.replace(/[^0-9a-zA-Z' ]/g, "")
+          req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "")
       );
       bgaRequest({
         name: req.body.game.replace(/[^0-9a-zA-Z' ]/g, ""),
@@ -2478,7 +2478,10 @@ router.post("/bga_find_game", function (req, res) {
         //If the search returned no games, return a generic search for boardgamegeek
         if (ret.games.length == 0) {
           curResource.save();
-          res.send(userGame);
+          res.send({
+            game: userGame,
+            err: "Game not found, returning search string",
+          });
         } else {
           //If the search returned anything, check if it matched exactly
           var index = curResource.data.games.indexOf((obj) => {
@@ -2514,7 +2517,7 @@ router.post("/bga_find_game", function (req, res) {
 });
 
 router.post("/bga_find_id", function (req, res) {
-  bgaRequest({ id: req.body.id, fuzzy_match: true, limit: 1 }).then((ret) => {
+  bgaRequest({ id: req.body.id, limit: 1 }).then((ret) => {
     if (ret.games.length == 0) {
       res.send({ err: req.body.game + " not found" });
     } else {

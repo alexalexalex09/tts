@@ -880,8 +880,8 @@ window.addEventListener("load", function () {
     runListImport(window.location.pathname.substr(1));
   }
 
-  /* Set up autocomplete */
-  getTopList();
+  /* Set up autocomplete, also sets topList */
+  setAutoComplete();
 
   /* Set up BGG account */
   checkBGG();
@@ -980,7 +980,6 @@ function ttsFetch(req, body, handler, errorHandler) {
       }
     });
   });
-  console.log("Finished fetch", body);
   return;
   //Return here? So that it's non-blocking?
 }
@@ -2017,7 +2016,7 @@ function showAdder(item, theId, func, funcArg, prompt) {
   $("#addGameListCheckbox").on("click", function () {
     $(this).parent().children("select").first().prop("disabled", !this.checked);
   });
-  getTopList();
+  setAutoComplete();
 }
 
 function showGameContext(game) {
@@ -2043,26 +2042,25 @@ function showGameContext(game) {
     }, 10);
     $("#context_" + game.id).removeClass("off");
     $("#context_" + game.id).addClass("slideUp");
-
+    var gamesToPush = [];
     if (game.list) {
-      localforage.getItem("topList").then((topList) => {
-        wrapGameUrls(
-          ".contextActions.slideUp li.bggLink",
-          $(
-            "#context_stage_" +
-              game.id +
-              "[list=games" +
-              game.list +
-              "] .contextTitle",
-            undefined,
-            undefined,
-            fuse
-          )
-            .first()
-            .text()
-        );
+      gamesToPush.push({
+        element: $(".contextActions.slideUp li.bggLink"),
+        game: $(
+          "#context_stage_" +
+            game.id +
+            "[list=games" +
+            game.list +
+            "] .contextTitle",
+          undefined,
+          undefined,
+          fuse
+        )
+          .first()
+          .text(),
       });
     }
+    wrapGameUrls(gamesToPush);
   }
 }
 
@@ -2473,7 +2471,7 @@ function parseBGGThing(id, field) {
   console.log("Searching for |" + id + "|" + field + "|");
   return new Promise(function (resolve, reject) {
     var index = -1;
-    var topList = localforage.getItem("topList").then((topList) => {
+    localforage.getItem("topList").then((topList) => {
       if (typeof topList == "undefined") {
         console.log("no toplist");
         topList = [];
@@ -2481,7 +2479,6 @@ function parseBGGThing(id, field) {
         index = topList.findIndex((obj) => {
           return obj.id == id;
         });
-        console.log("Index: ", index);
         if (index > -1) {
           var game = topList[index];
           console.log("resolving game: ", game.name, field);
@@ -2494,8 +2491,11 @@ function parseBGGThing(id, field) {
           "/bga_find_id",
           { id: id },
           (res) => {
-            topList.push(res);
-            localforage.setItem("topList", topList);
+            console.log(
+              "An ID of a pre-cached game had to be searched for. This shouldn't have happened!"
+            );
+            var log = { id: id, field: field };
+            console.log({ log });
             resolve(res[field]);
           },
           (err) => {
@@ -2508,15 +2508,23 @@ function parseBGGThing(id, field) {
 }
 
 function getTopListIndex(game, topList, fuse) {
+  console.log(game);
+  console.log(topList.length);
   if (topList) {
     var index = topList.findIndex((obj) => {
-      return (
+      var ret =
         obj.name == game ||
         obj.actualName == game ||
         obj.name == "The " + game ||
         obj.name == "A " + game ||
-        obj.name == "An " + game
-      );
+        obj.name == "An " + game ||
+        obj.name ==
+          game
+            .replace("&amp;", "and")
+            .replace("&", "and")
+            .replace(":", "")
+            .replace(/\\/g, "");
+      return ret;
     });
     if (index == -1) {
       var searchres = fuse.search(game);
@@ -2563,108 +2571,125 @@ function getGameUrl(games) {
     Promise.all(localforages).then((res) => {
       //if there is no topList, get one before continuing
       var topList = res[0];
+      var anyNewTopList = [];
       if (typeof topList == "undefined") {
-        getNewTopList();
+        anyNewTopList.push(getNewTopList());
         topList = [];
+      } else {
+        anyNewTopList.push(
+          new Promise((resolve, reject) => {
+            resolve(topList);
+          })
+        );
       }
+      Promise.all(anyNewTopList).then((topList) => {
+        //Promise.all returns an array, get the first result
+        topList = topList[0];
 
-      //create a Fuse for fuzzy searching in getTopListIndex
-      if (
-        typeof topList != "undefined" &&
-        topList != null &&
-        topList.length > 0
-      ) {
-        fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
-      }
+        //create a Fuse for fuzzy searching in getTopListIndex
+        if (
+          typeof topList != "undefined" &&
+          topList != null &&
+          topList.length > 0
+        ) {
+          fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+        }
 
-      //Initialize the promise array
-      var promises = [];
-      var index = -1;
-      //For each game, create a promise and push it to the array
-      games.forEach((game) => {
-        const promise = new Promise((resolveInner, rejectInner) => {
-          //If the topList is empty, shortcut
-          if (
-            typeof topList == "undefined" ||
-            topList == null ||
-            topList.length == 0
-          ) {
-            index = -1;
-          } else {
-            //Otherwise, find the index of the game in question
-            index = getTopListIndex(game, topList, fuse);
-          }
-
-          if (index > -1) {
-            //If the game in question is in the topList, return its value
-            var theURL = topList[index].url;
-            //Fall back on search if the topList is corrupted, and reset it
-            if (theURL == "" || typeof theURL == "undefined") {
-              localforage.setItem("topList", topList).then((res) => {
-                var ret =
-                  `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                  game +
-                  `&objecttype=boardgame`;
-                resolveInner({ game: game, url: ret });
-              });
+        //Initialize the promise array
+        var promises = [];
+        var index = -1;
+        //For each game, create a promise and push it to the array
+        games.forEach((game) => {
+          const promise = new Promise((resolveInner, rejectInner) => {
+            //If the topList is empty, shortcut
+            if (
+              typeof topList == "undefined" ||
+              topList == null ||
+              topList.length == 0
+            ) {
+              console.log("Couldn't find topList!");
+              index = -1;
             } else {
-              //If topList is not corrupted, resolve the current promise
-              resolveInner({ game: game, url: topList[index].url });
+              //Otherwise, find the index of the game in question
+              index = getTopListIndex(game, topList, fuse);
+              console.log("getTopListIndex found index " + index);
             }
-          } else {
-            //If the game in question isn't in the topList, search for it on BGA
-            var name = game;
-            game = game.replace("&", "%26").replace(":", "").replace(/\\/g, "");
-            ttsFetch(
-              "/bga_find_game",
-              { game: game },
-              (res) => {
-                //If a game is found, add it to topList
-                localforage.setItem("topList", topList).then((result) => {
-                  resolveInner({ game: name, url: res.url });
+
+            if (index > -1) {
+              //If the game in question is in the topList, return its value
+              var theURL = topList[index].url;
+              //Fall back on search if the topList is corrupted, and reset it
+              if (theURL == "" || typeof theURL == "undefined") {
+                localforage.setItem("topList", topList).then((res) => {
+                  var ret =
+                    `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                    game +
+                    `&objecttype=boardgame`;
+                  resolveInner({ game: game, url: ret });
                 });
-              },
-              (err) => {
-                //Otherwise, push a fallback search url to topList with error set to true so that
-                //we can later add in functionality for users to manually request a refresh
-                var url =
-                  `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                  game +
-                  `&objecttype=boardgame`;
-                if (typeof topList != "undefined" && topList != null) {
-                  topList.push({ name: name, url: url, error: true });
-                } else {
-                  topList = [];
-                }
-                localforage.setItem("topList", topList).then((result) => {
-                  resolveInner({ game: name, url: url });
-                });
+              } else {
+                //If topList is not corrupted, resolve the current promise
+                resolveInner({ game: game, url: topList[index].url });
               }
-            );
-          }
+            } else {
+              //If the game in question isn't in the topList, search for it on BGA
+              var name = game
+                .replace("&amp;", "and")
+                .replace("&", "and")
+                .replace(":", "")
+                .replace(/\\/g, "");
+              ttsFetch(
+                "/bga_find_game",
+                { game: name },
+                (res) => {
+                  //If a game is found, get the new topList from the server
+                  getNewTopList().then(
+                    resolveInner({ game: game, url: res.url })
+                  );
+                },
+                (err) => {
+                  //Otherwise, push a fallback search url to topList with error set to true so that
+                  //we can later add in functionality for users to manually request a refresh
+                  var url =
+                    `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                    name +
+                    `&objecttype=boardgame`;
+                  getNewTopList().then((result) => {
+                    resolveInner({ game: game, url: url });
+                  });
+                }
+              );
+            }
+          });
+          //Collect all the promises for all the submitted games
+          promises.push(promise);
         });
-        //Collect all the promises for all the submitted games
-        promises.push(promise);
-      });
-      //wait for them all to resolve, then resolve the outer promise
-      Promise.all(promises).then((games) => {
-        resolve(games);
+        //wait for them all to resolve, then resolve the outer promise
+        Promise.all(promises).then((games) => {
+          resolve(games);
+        });
       });
     });
   });
 }
 
-async function getNewTopList() {
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-  //await the promises. This will set the topList variable and won't need to be repeated on subsequent requests (hopefully)
-  topList = await fetch("/get_top_list", options);
-  await localforage.setItem("topList, topList");
-  return topList;
+function getNewTopList() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    //await the promises. This will set the topList variable and won't need to be repeated on subsequent requests (hopefully)
+    fetch("/get_top_list", options).then((response) => {
+      response.json().then((res) => {
+        localforage.setItem("topList", res.games).then(() => {
+          resolve(res.games);
+        });
+      });
+    });
+  });
 }
 
 function wrapGameUrls(games) {
@@ -2742,7 +2767,11 @@ function contextBGG(topList, el, game, recur, inexact, fuse) {
     var exactStr = "&exact=1";
   }
   var name = game;
-  game = game.replace("&", "%26").replace(":", "").replace(/\\/g, "");
+  game = game
+    .replace("&amp;", "and")
+    .replace("&", "and")
+    .replace(":", "")
+    .replace(/\\/g, "");
   var diff = Date.now() - checkdate;
   console.log("end prep" + diff);
   var date = Date.now();
@@ -2753,11 +2782,13 @@ function contextBGG(topList, el, game, recur, inexact, fuse) {
     "/bga_find_game",
     { game: game },
     (res) => {
-      topList.push(res);
-      localforage.setItem("topList", topList);
-      var html = $(el).html();
-      $(el).html('<a href="' + res.url + `" target="_blank">` + html + `</a>`);
-      return { new: topList };
+      getNewTopList().then((topList) => {
+        var html = $(el).html();
+        $(el).html(
+          '<a href="' + res.url + `" target="_blank">` + html + `</a>`
+        );
+        return { new: topList };
+      });
     },
     (err) => {
       var url =
@@ -2766,10 +2797,12 @@ function contextBGG(topList, el, game, recur, inexact, fuse) {
         `&objecttype=boardgame`;
       topList.push({ name: name, url: url, error: true });
       localforage.setItem("topList", topList);
-      var html = $(el).html();
-      $(el).html(`<a href="` + url + `" target="_blank">` + html + `</a>`);
-      console.log(game + " not found");
-      return { new: topList };
+      getNewTopList().then((topList) => {
+        var html = $(el).html();
+        $(el).html(`<a href="` + url + `" target="_blank">` + html + `</a>`);
+        console.log(game + " not found");
+        return { new: topList };
+      });
     }
   );
   var diff = Date.now() - date;
@@ -3922,21 +3955,23 @@ function focusFirstInput(el) {
 
 function updateCurrentGames(curGames) {
   var htmlString = ``;
-  var date = Date.now();
+  console.log(curGames);
+  console.log($(".curGameItem"));
   curGames.forEach(function (e) {
     htmlString += `<div class="curGameItem">` + e.replace(/\\/g, "") + `</div>`;
   });
   $("#currentGames").html(htmlString);
   $("#listNotify").html("<span>" + curGames.length + "</span>");
-  localforage.getItem("topList").then((topList) => {
-    var games = [];
-    $(".curGameItem").each(function (i, e) {
-      if ($(e).children("a").length == 0) {
-        games.push({ element: e, game: $(e).html() });
-      }
-    });
-    wrapGameUrls(games);
+  var games = [];
+  $(".curGameItem").each(function (i, e) {
+    if ($(e).children("a").length == 0) {
+      games.push({ element: e, game: $(e).html() });
+    }
   });
+  console.log(
+    "Wrapping " + games.length + " games that didn't have links in them"
+  );
+  wrapGameUrls(games);
 }
 
 /*****************************/
@@ -4179,51 +4214,51 @@ function fillVotes(games) {
   });
   //sortVotes();
 
-  localforage.getItem("topList").then((topList) => {
-    for (var i = 0; i < games.length; i++) {
-      wrapGameUrls(
-        $(".voteToolTip .voteSubTitle")[i],
-        games[i].actualName || games[i].name
-      );
-    }
-    //$(".voteSubX").on("click", function() {closeToolTip(this)});
-    $(".voteLabel label").on("click", function () {
-      console.log(".voteLabel label");
-      showToolTip(
-        $(this).parent(),
-        $(this).parent().children(".voteToolTip").children(".toolTipContainer")
-      );
+  var gamesToWrap = [];
+  for (var i = 0; i < games.length; i++) {
+    gamesToWrap.push({
+      game: games[i].actualName || games[i].name,
+      element: $(".voteToolTip .voteSubTitle")[i],
     });
-    $(".voteToolTip>ion-icon").on("click", function () {
-      console.log(".voteToolTip>ion-icon");
-      showToolTip(
-        $(this).parent().parent(),
-        $(this).parent().children(".toolTipContainer")
-      );
-    });
-    $("#voteButton").on("click", function () {
-      var theCode = $("#code").text();
-      var voteArray = [];
-      $(".voteItem").each((i, e) => {
-        voteArray.push({
-          game: $(e).children("input")[0].id,
-          vote: $(e).children("input").val(),
-        });
+  }
+  wrapGameUrls(gamesToWrap);
+  //$(".voteSubX").on("click", function() {closeToolTip(this)});
+  $(".voteLabel label").on("click", function () {
+    console.log(".voteLabel label");
+    showToolTip(
+      $(this).parent(),
+      $(this).parent().children(".voteToolTip").children(".toolTipContainer")
+    );
+  });
+  $(".voteToolTip>ion-icon").on("click", function () {
+    console.log(".voteToolTip>ion-icon");
+    showToolTip(
+      $(this).parent().parent(),
+      $(this).parent().children(".toolTipContainer")
+    );
+  });
+  $("#voteButton").on("click", function () {
+    var theCode = $("#code").text();
+    var voteArray = [];
+    $(".voteItem").each((i, e) => {
+      voteArray.push({
+        game: $(e).children("input")[0].id,
+        vote: $(e).children("input").val(),
       });
-      ttsFetch(
-        "/submit_votes",
-        {
-          code: theCode,
-          voteArray: voteArray,
-        },
-        (res) => {
-          localStorage.removeItem(theCode);
-          goForwardFrom("#voteView", "#postVoteView");
-          window.hist = ["#homeView", "#postVoteView"];
-          setBackHome();
-        }
-      );
     });
+    ttsFetch(
+      "/submit_votes",
+      {
+        code: theCode,
+        voteArray: voteArray,
+      },
+      (res) => {
+        localStorage.removeItem(theCode);
+        goForwardFrom("#voteView", "#postVoteView");
+        window.hist = ["#homeView", "#postVoteView"];
+        setBackHome();
+      }
+    );
   });
 }
 
@@ -4342,14 +4377,17 @@ function fillGames(games) {
   $(".playGameTitle").click(function () {
     $(this).parent().children(".playBGGLink").toggleClass("showBGGLink");
   });
-  localforage.getItem("topList").then((topList) => {
-    $(".playGameTitle").each(function (i, e) {
-      wrapGameUrls($(e).parent().children(".playBGGLink"), $(e).text());
+  var gamesToWrap = [];
+  $(".playGameTitle").each(function (i, e) {
+    gamesToWrap.push({
+      element: $(e).parent().children(".playBGGLink"),
+      game: $(e).text(),
     });
-    for (var i = 0; i < games.length; i++) {
-      wrapGameUrls($(".voteSubTitle")[i], games[i].name);
-    }
   });
+  for (var i = 0; i < games.length; i++) {
+    gamesToWrap.push({ element: $(".voteSubTitle")[i], game: games[i].name });
+  }
+  wrapGameUrls(gamesToWrap);
 }
 
 function playShare() {
@@ -4470,17 +4508,15 @@ function editList(list) {
   );
 }
 
-function getTopList() {
-  ttsFetch("/get_top_list", { code: code }, (res) => {
-    var auto = res.games.map((e) => e.name);
-    var games = res.games.map((e) => e);
+function setAutoComplete(topList) {
+  getNewTopList().then((topList) => {
+    var auto = topList.map((e) => e.name);
     if (document.getElementById("menuAddGamesInput") != null) {
       autocomplete(document.getElementById("menuAddGamesInput"), auto);
     }
     if (document.getElementById("addGamesInput") != null) {
       autocomplete(document.getElementById("addGamesInput"), auto);
     }
-    localforage.setItem("topList", JSON.parse(JSON.stringify(games)));
   });
 }
 

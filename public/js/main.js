@@ -2595,9 +2595,10 @@ function getGameUrl(games) {
           fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
         }
 
-        //Initialize the promise array
+        //Initialize the promise arrays
         var promises = [];
         var index = -1;
+        var fetches = [];
         //For each game, create a promise and push it to the array
         games.forEach((game) => {
           const promise = new Promise((resolveInner, rejectInner) => {
@@ -2633,32 +2634,14 @@ function getGameUrl(games) {
               }
             } else {
               //If the game in question isn't in the topList, search for it on BGA
-              var name = game
-                .replace("&amp;", "and")
-                .replace("&", "and")
-                .replace(":", "")
-                .replace(/\\/g, "");
-              ttsFetch(
-                "/bga_find_game",
-                { game: name },
-                (res) => {
-                  //If a game is found, get the new topList from the server
-                  getNewTopList().then(
-                    resolveInner({ game: game, url: res.url })
-                  );
-                },
-                (err) => {
-                  //Otherwise, push a fallback search url to topList with error set to true so that
-                  //we can later add in functionality for users to manually request a refresh
-                  var url =
-                    `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                    name +
-                    `&objecttype=boardgame`;
-                  getNewTopList().then((result) => {
-                    resolveInner({ game: game, url: url });
-                  });
-                }
+              fetches.push(
+                game
+                  .replace("&amp;", "and")
+                  .replace("&", "and")
+                  .replace(":", "")
+                  .replace(/\\/g, "")
               );
+              resolveInner({ game: game, toResolve: true });
             }
           });
           //Collect all the promises for all the submitted games
@@ -2666,7 +2649,20 @@ function getGameUrl(games) {
         });
         //wait for them all to resolve, then resolve the outer promise
         Promise.all(promises).then((games) => {
-          resolve(games);
+          if (fetches.length > 0) {
+            ttsFetch("/bga_find_game", { game: fetches }, (res) => {
+              //If a game is found, get the new topList from the server
+              res.forEach((game) => {
+                var index = games.findIndex((obj) => {
+                  return obj.game == game.game;
+                });
+                games[index].url = game.url;
+              });
+              getNewTopList().then(resolve(games));
+            });
+          } else {
+            resolve(games);
+          }
         });
       });
     });
@@ -2706,6 +2702,7 @@ function wrapGameUrls(games) {
 
   //Get urls for those game names
   getGameUrl(gameNames).then((res) => {
+    console.log({ res });
     //Loop through the original game/element object, matching urls with games
     //to wrap the element in a link to that url
     games.forEach((e, i) => {

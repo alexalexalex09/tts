@@ -6,11 +6,9 @@ var Schema = mongoose.Schema;
 var GameSchema = new Schema(
   {
     name: String,
-    rating: { type: Number, default: 0 },
-    owned: Number,
-    minPlayers: Number,
-    maxPlayers: Number,
     bggID: Number,
+    bgaID: String,
+    metadata: Object,
   },
   {
     collection: "games",

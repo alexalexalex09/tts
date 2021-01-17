@@ -100,8 +100,8 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
 */
 
 /* Async BGG Function Definitions */
-function getBGGPage(pageNum) {
-  var promise = new Promise(function (resolve, reject) {
+function getBGGPage(pageNum, numPages) {
+  var promise = new Promise((resolve, reject) => {
     if (pageNum <= 10) {
       pageNum = (pageNum - 1) * 100;
       https.get(
@@ -119,31 +119,9 @@ function getBGGPage(pageNum) {
 
           // The whole response has been received. Print out the result.
           resp.on("end", () => {
-            //console.log(result);
-            result = JSON.parse(data);
-            var ret = [];
-            if (result.games) {
-              result.games.forEach((game) => {
-                if (game.id.length > 0) {
-                  var name = game.name;
-                  var article = 0;
-                  if (name.indexOf("The ") == 0) {
-                    article = 4;
-                  }
-                  if (name.indexOf("A ") == 0) {
-                    article = 2;
-                  }
-                  if (name.indexOf("An ") == 0) {
-                    article = 3;
-                  }
-                  game.noarticle = name.substr(article);
-                  ret.push(game);
-                }
-              });
+            processBGA(data, pageNum, numPages).then((ret) => {
               resolve(ret);
-            } else {
-              reject({ BGAPageErr: result, pageNum: pageNum });
-            }
+            });
           });
         }
       );
@@ -151,16 +129,113 @@ function getBGGPage(pageNum) {
       resolve([]);
     }
   });
-
   return promise;
+}
+
+async function processBGA(data, pageNum, numPages) {
+  return new Promise((resolve, reject) => {
+    pageNum = Math.floor(((pageNum / 100 + 1) / numPages) * 100);
+    result = JSON.parse(data);
+    var toGet = [];
+    if (result.games) {
+      result.games.forEach((game) => {
+        toGet.push(game);
+      });
+      getTheGames(toGet).then((ret) => {
+        console.log("getBGAPage end " + pageNum + "%");
+        resolve(ret);
+      });
+    } else {
+      resolve({ BGAPageErr: result, pageNum: pageNum });
+    }
+  });
+}
+
+//Assemble promises for multiple games and return an array of results
+function getTheGames(games) {
+  var promises = [];
+  games.forEach(function (game) {
+    promises.push(getGame(game));
+  });
+  return Promise.all(promises);
+}
+
+//Returns a promise that when fulfilled will contain info about a game. Updates topGames as a side effect
+function getGame(game) {
+  return new Promise((resolve, reject) => {
+    if (game.id.length > 0) {
+      var name = game.name;
+      var article = 0;
+      if (name.indexOf("The ") == 0) {
+        article = 4;
+      }
+      if (name.indexOf("A ") == 0) {
+        article = 2;
+      }
+      if (name.indexOf("An ") == 0) {
+        article = 3;
+      }
+      game.noarticle = name.substr(article);
+
+      Game.findOne({ name: game.noarticle }).exec((curGame) => {
+        var fields = [
+          "id",
+          "name",
+          "year_published",
+          "min_players",
+          "max_players",
+          "min_playtime",
+          "max_playtime",
+          "min_age",
+          "description",
+          "description_preview",
+          "image_url",
+          "thumb_url",
+          "url",
+          "rank",
+          "primary_publisher",
+          "names",
+          "official_url",
+          "rules_url",
+        ];
+        var metadata = getFields(game, fields);
+        if (curGame) {
+          curGame.metadata = metadata;
+          curGame.bgaID = metadata.id;
+        } else {
+          curGame = new Game({
+            name: metadata.name,
+            bgaID: metadata.id,
+            metadata: metadata,
+          });
+        }
+        curGame.save().then((saved) => {
+          var toPush = {
+            name: metadata.name,
+            bgaID: metadata.id,
+            url: metadata.url,
+            game: saved._id,
+          };
+          resolve(toPush);
+        });
+      });
+    }
+  });
+}
+
+function getFields(game, fields) {
+  var ret = {};
+  fields.forEach((field) => {
+    ret[field] = game[field];
+  });
+  return ret;
 }
 
 async function getBGGPages(numPages) {
   var arr = [];
   for (var i = 1; i < numPages + 1; i++) {
-    var ret = await getBGGPage(i);
+    var ret = await getBGGPage(i, numPages);
     arr = arr.concat(ret);
-    console.log("getBGAPage " + Math.floor((i / numPages) * 100) + "%");
   }
   return arr;
 }
@@ -244,16 +319,18 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     } else {
       resourceOutdated =
         Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
-      //resourceOutdated = true; //Force update
+      resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;
   }
   if (resourceOutdated) {
     getBGGPages(10).then((topGames) => {
-      if (curResource) {
+      console.log("Topgames: " + topGames.length);
+      if (curResource && curResource.data.games.length > 0) {
         //Don't wholesale replace, instead do an upgrade
         var games = curResource.data.games;
+        console.log({ games });
         for (let i = 0; i < topGames.length; i++) {
           //If the current index happens to be the same as the old index, don't overthink it, just replace
           if (games[i].name == topGames[i].name) {
@@ -2423,6 +2500,7 @@ router.post("/get_top_list", function (req, res) {
     }
   });
 });
+
 //Takes a game's name and returns an object with the game or an error
 router.post("/bga_find_game", function (req, res) {
   /*req.body.game = req.body.game.replace("&amp;", "and");
@@ -2430,89 +2508,89 @@ router.post("/bga_find_game", function (req, res) {
   console.log("Finding " + req.body.game.replace(/[^%0-9a-zA-Z ]/g, ""));*/
   Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     /*console.log("loaded resource for " + req.body.game);*/
-    var a = 0;
-    var index = curResource.data.games.findIndex((obj) => {
-      if (a == 0) {
-        console.log(obj.name);
-        console.log(req.body.game);
-        a++;
-      }
-      return obj.name == req.body.game;
-    });
-    if (index == -1) {
-      var index = curResource.data.games.findIndex((obj) => {
-        return obj.actualName == req.body.game;
-      });
-    }
-    if (index > -1) {
-      console.log("found exact match for " + req.body.game);
-      res.send(curResource.data.games[index]);
-    } else {
-      console.log(
-        "Didn't find exact match for " +
-          req.body.game +
-          " in " +
-          curResource.data.games.length +
-          " records, now looking for " +
-          req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "")
-      );
-      bgaRequest({
-        name: req.body.game.replace(/[^0-9a-zA-Z' ]/g, ""),
-        /*fuzzy_match: true,*/
-        limit: 1,
-      }).then((ret) => {
-        if (ret.error) {
-          res.send({ err: ret.error.message });
-        }
-        var url =
-          `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-          req.body.game +
-          `&objecttype=boardgame`;
-        var userGame = {
-          name: req.body.game,
-          url: url,
-          error: true,
-        };
-        curResource.data.games.push(userGame);
-        curResource.markModified("data");
-        //If the search returned no games, return a generic search for boardgamegeek
-        if (ret.games.length == 0) {
-          curResource.save();
-          res.send({
-            game: userGame,
-            err: "Game not found, returning search string",
+    var gamesArray = req.body.game;
+    var promises = [];
+    gamesArray.forEach((currentGame, currentIndex) => {
+      promises.push(
+        new Promise(function (resolve, reject) {
+          //TODO: Change this to accept an array
+          var index = curResource.data.games.findIndex((obj) => {
+            return obj.name == currentGame;
           });
-        } else {
-          //If the search returned anything, check if it matched exactly
-          var index = curResource.data.games.indexOf((obj) => {
-            return obj.name == ret.games[0].name;
-          });
-          if (index > -1) {
-            //If there's an exact match in the database, put the newly gathered information there
-            curResource.data.games[index] = ret.games[0];
-          } else {
-            //If there isn't an exact match, add the inexact match to the database
-            curResource.data.games.push(ret.games[0]);
-            //And add an entry with the user submitted search to the database
-            var newEntry = ret.games[0];
-            var actualName = newEntry.name;
-            var usersname = req.body.game;
-            console.log(ret.games[0].name, req.body.game);
-            newEntry.actualName = actualName;
-            newEntry.name = usersname;
-            console.log({ actualName });
-            console.log(newEntry.actualName);
-            console.log({ usersname });
-            console.log(newEntry.name);
-            curResource.data.games.push(newEntry);
+          if (index == -1) {
+            var index = curResource.data.games.findIndex((obj) => {
+              return obj.actualName == currentGame;
+            });
           }
-          curResource.markModified("data");
-          curResource.save((err, result) => {
-            res.send(ret.games[0]);
+          if (index > -1) {
+            console.log("found exact match for " + currentGame);
+            resolve(curResource.data.games[index]);
+          } else {
+            console.log(
+              "Didn't find exact match for " +
+                currentGame +
+                " in " +
+                curResource.data.games.length +
+                " records, now looking for " +
+                currentGame.replace(/[^%0-9a-zA-Z' ]/g, "")
+            );
+          }
+
+          bgaRequest({
+            name: currentGame.replace(/[^0-9a-zA-Z' ]/g, ""),
+            /*fuzzy_match: true,*/
+            limit: 1,
+          }).then((ret) => {
+            //If the search returned no games, return a generic search for boardgamegeek
+            if (ret.games.length == 0) {
+              var url =
+                `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                req.body.game +
+                `&objecttype=boardgame`;
+              var userGame = {
+                name: req.body.game,
+                url: url,
+                error: true,
+              };
+              curResource.data.games.push(userGame);
+              curResource.markModified("data");
+              curResource.save().then((result) => {
+                resolve({
+                  game: userGame,
+                });
+              });
+            } else {
+              //If the search returned anything, check if it matched exactly
+              var index = curResource.data.games.indexOf((obj) => {
+                return obj.name == ret.games[0].name;
+              });
+              if (index > -1) {
+                //If there's an exact match in the database, put the newly gathered information there
+                curResource.data.games[index] = ret.games[0];
+              } else {
+                //If there isn't an exact match, add the inexact match to the database
+                curResource.data.games.push(ret.games[0]);
+                //And add an entry with the user submitted search to the database
+                var newEntry = ret.games[0];
+                var actualName = newEntry.name;
+                var usersname = req.body.game;
+                newEntry.actualName = actualName;
+                newEntry.name = usersname;
+                curResource.data.games.push(newEntry);
+              }
+              curResource.markModified("data");
+              curResource.save((err, result) => {
+                resolve(ret.games[0]);
+              });
+            }
           });
-        }
-      });
-    }
+        })
+      );
+    });
+    Promise.all(promises).then((results) => {
+      console.log(results);
+      res.send(results);
+    });
   });
 });
 
@@ -2527,7 +2605,7 @@ router.post("/bga_find_id", function (req, res) {
 });
 
 function bgaRequest(options) {
-  var promise = new Promise((resolve, reject) => {
+  var promise = new Promise(function (resolve, reject) {
     var optString = "";
     for (let option in options) {
       optString += "&" + option + "=" + options[option];
@@ -2546,9 +2624,19 @@ function bgaRequest(options) {
       });
 
       // The whole response has been received. Print out the result.
-      resp.on("end", () => {
-        //console.log(JSON.parse(data));
-        resolve(JSON.parse(data));
+      resp.on("end", (data) => {
+        data = data.toString();
+        parser.parseString(data, function (err, result) {
+          if (ret.games.length > 0) {
+            resolve(ret);
+          } else {
+            resolve(
+              `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                req.body.game +
+                `&objecttype=boardgame`
+            );
+          }
+        });
       });
     });
   });

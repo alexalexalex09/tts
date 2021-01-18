@@ -2653,9 +2653,19 @@ function getGameUrl(games) {
             ttsFetch("/bga_find_game", { game: fetches }, (res) => {
               //If a game is found, get the new topList from the server
               res.forEach((game) => {
+                game = game
+                  .replace("&amp;", "and")
+                  .replace("&", "and")
+                  .replace(":", "")
+                  .replace(/\\/g, "");
                 var index = games.findIndex((obj) => {
-                  return obj.game == game.game;
+                  return obj.game == game.name;
                 });
+                console.log(index);
+                if (index == -1) {
+                  console.log({ games });
+                  console.log({ game });
+                }
                 games[index].url = game.url;
               });
               getNewTopList().then(resolve(games));

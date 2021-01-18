@@ -2533,11 +2533,14 @@ function findAGame(currentGame, curResource) {
       return obj.name == currentGame;
     });
     console.log("index 1: " + index);
-    if (index == -1) {
+    //Don't need to do this, because a topList entry with the correctly
+    //spelled name is always created, even if the first time a game is found
+    //it's been misspelled
+    /*if (index == -1) {
       index = curResource.data.games.findIndex((obj) => {
         return obj.actualName == currentGame;
       });
-    }
+    }*/
     console.log("index 2: " + index);
     if (index == -1) {
       index = curResource.data.games.findIndex((obj) => {
@@ -2571,59 +2574,68 @@ function findAGame(currentGame, curResource) {
           currentGame.replace(/[^0-9a-zA-Z' ]/g, "") +
           `&objecttype=boardgame`;
         var userGame = {
-          name: currentGame.replace(/[^0-9a-zA-Z' ]/g, ""),
+          name: currentGame,
           url: url,
           error: true,
         };
         curResource.data.games.push(userGame);
         curResource.markModified("data");
+        TODO: This doesn't work, you need to cache all the changes to be made and then make them simultaneously/synchronously
         curResource.save().then((result) => {
-          resolve({
-            game: userGame,
-          });
+          resolve(userGame);
         });
       } else {
-        //If the search returned anything, check if it matched exactly
-        var index = curResource.data.games.findIndex((obj) => {
-          return obj.name == ret.games[0].name;
-        });
-        if (index > -1) {
-          console.log("There's an exact match after all");
-          //If there's an exact match in the database, simply return that information
-          curResource.data.games[index].actualName = ret.games[0].name;
-          curResource.markModified("data");
-          curResource.save((err, result) => {
-            resolve(ret.games[0]);
-          });
-        } else {
-          console.log("Prepping a new game");
-          //If there isn't an exact match, add the inexact match to the database
-          var newGame = new Game({
-            name: ret.games[0].name,
-            bgaID: ret.games[0].id,
-            metadata: ret.games[0],
-          });
-          newGame.save().then((saved) => {
-            var gameToAdd = {
-              name: ret.games[0].name,
+        //add the new info to the database
+        console.log("Prepping a new game");
+        Game.findOne({ name: ret.games[0].name }).exec((curGame) => {
+          //If a game matching the returned game already exists in the Game
+          //database, create a new topList entry with the misspelled title
+          //that the user was searching for that references the preexisting game.
+          //In this case, we already know that the title is misspelled because
+          //otherwise it would have already been found.
+          if (curGame) {
+            var misspelledGame = {
+              name: currentGame,
               bgaID: ret.games[0].id,
               url: ret.games[0].url,
-              game: saved._id,
+              game: curGame._id,
+              actualName: ret.games[0].name,
             };
-            curResource.data.games.push(gameToAdd);
-            //And add an entry with the user submitted search to the database
-            var newEntry = gameToAdd;
-            var actualName = newEntry.name;
-            var usersname = req.body.game;
-            newEntry.actualName = actualName;
-            newEntry.name = usersname;
-            curResource.data.games.push(newEntry);
-            curResource.markModified("data");
-            curResource.save((err, result) => {
-              resolve(ret.games[0]);
+            curResource.data.games.push(misspelledGame);
+          } else {
+            //If there is no preexisting Game in the database, create a new
+            //game and then add topList entries as appropriate
+            var newGame = new Game({
+              name: ret.games[0].name,
+              bgaID: ret.games[0].id,
+              metadata: ret.games[0],
             });
-          });
-        }
+            //create a new Game
+            newGame.save().then((saved) => {
+              //Then create a topList entry for that newly created Game
+              var gameToAdd = {
+                name: ret.games[0].name,
+                bgaID: ret.games[0].id,
+                url: ret.games[0].url,
+                game: saved._id,
+              };
+              curResource.data.games.push(gameToAdd);
+              //If the title of the returned game isn't the same as what the user searched,
+              //create a second entry in topList that refers to the same game, but with the
+              //title the user searched for.
+              if (ret.games[0].name != currentGame) {
+                var misspelledGame = gameToAdd;
+                misspelledGame.name = currentGame;
+                misspelledGame.actualName = ret.games[0].name;
+                curResource.data.games.push(misspelledGame);
+              }
+              curResource.markModified("data");
+              curResource.save((err, result) => {
+                resolve(ret.games[0]);
+              });
+            });
+          }
+        });
       }
     });
   });

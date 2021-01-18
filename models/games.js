@@ -9,6 +9,7 @@ var GameSchema = new Schema(
     bggID: Number,
     bgaID: String,
     metadata: Object,
+    actualName: String,
   },
   {
     collection: "games",

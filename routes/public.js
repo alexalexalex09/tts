@@ -319,7 +319,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     } else {
       resourceOutdated =
         Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
-      resourceOutdated = true; //Force update
+      //  resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;
@@ -330,14 +330,14 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
       if (curResource && curResource.data.games.length > 0) {
         //Don't wholesale replace, instead do an upgrade
         var games = curResource.data.games;
-        console.log({ games });
+        console.log(games.length + " games");
         for (let i = 0; i < topGames.length; i++) {
           //If the current index happens to be the same as the old index, don't overthink it, just replace
           if (games[i].name == topGames[i].name) {
             curResource.data.games[i] = topGames[i];
           } else {
             //If the index has changed, find the new index, if any, and upgrade
-            var index = games.indexOf((obj) => {
+            var index = games.findIndex((obj) => {
               return obj.name == topGames[i].name;
             });
             if (index > -1) {
@@ -2509,90 +2509,125 @@ router.post("/bga_find_game", function (req, res) {
   Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     /*console.log("loaded resource for " + req.body.game);*/
     var gamesArray = req.body.game;
-    var promises = [];
-    gamesArray.forEach((currentGame, currentIndex) => {
-      promises.push(
-        new Promise(function (resolve, reject) {
-          //TODO: Change this to accept an array
-          var index = curResource.data.games.findIndex((obj) => {
-            return obj.name == currentGame;
-          });
-          if (index == -1) {
-            var index = curResource.data.games.findIndex((obj) => {
-              return obj.actualName == currentGame;
-            });
-          }
-          if (index > -1) {
-            console.log("found exact match for " + currentGame);
-            resolve(curResource.data.games[index]);
-          } else {
-            console.log(
-              "Didn't find exact match for " +
-                currentGame +
-                " in " +
-                curResource.data.games.length +
-                " records, now looking for " +
-                currentGame.replace(/[^%0-9a-zA-Z' ]/g, "")
-            );
-          }
-
-          bgaRequest({
-            name: currentGame.replace(/[^0-9a-zA-Z' ]/g, ""),
-            /*fuzzy_match: true,*/
-            limit: 1,
-          }).then((ret) => {
-            //If the search returned no games, return a generic search for boardgamegeek
-            if (ret.games.length == 0) {
-              var url =
-                `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                req.body.game +
-                `&objecttype=boardgame`;
-              var userGame = {
-                name: req.body.game,
-                url: url,
-                error: true,
-              };
-              curResource.data.games.push(userGame);
-              curResource.markModified("data");
-              curResource.save().then((result) => {
-                resolve({
-                  game: userGame,
-                });
-              });
-            } else {
-              //If the search returned anything, check if it matched exactly
-              var index = curResource.data.games.indexOf((obj) => {
-                return obj.name == ret.games[0].name;
-              });
-              if (index > -1) {
-                //If there's an exact match in the database, put the newly gathered information there
-                curResource.data.games[index] = ret.games[0];
-              } else {
-                //If there isn't an exact match, add the inexact match to the database
-                curResource.data.games.push(ret.games[0]);
-                //And add an entry with the user submitted search to the database
-                var newEntry = ret.games[0];
-                var actualName = newEntry.name;
-                var usersname = req.body.game;
-                newEntry.actualName = actualName;
-                newEntry.name = usersname;
-                curResource.data.games.push(newEntry);
-              }
-              curResource.markModified("data");
-              curResource.save((err, result) => {
-                resolve(ret.games[0]);
-              });
-            }
-          });
-        })
-      );
-    });
-    Promise.all(promises).then((results) => {
-      console.log(results);
-      res.send(results);
+    getGamesAsync(gamesArray, curResource).then((result) => {
+      console.log("typeof result: " + typeof result);
+      res.send(result);
     });
   });
 });
+
+async function getGamesAsync(gamesArray, curResource) {
+  var res = [];
+  for (var i = 0; i < gamesArray.length; i++) {
+    var currentGame = gamesArray[i];
+    var game = await findAGame(currentGame, curResource);
+    res.push(game);
+  }
+  return res;
+}
+
+function findAGame(currentGame, curResource) {
+  return new Promise(function (resolve, reject) {
+    //TODO: Change this to accept an array
+    var index = curResource.data.games.findIndex((obj) => {
+      return obj.name == currentGame;
+    });
+    console.log("index 1: " + index);
+    if (index == -1) {
+      index = curResource.data.games.findIndex((obj) => {
+        return obj.actualName == currentGame;
+      });
+    }
+    console.log("index 2: " + index);
+    if (index == -1) {
+      index = curResource.data.games.findIndex((obj) => {
+        return obj.name == currentGame.replace(/[^%0-9a-zA-Z' ]/g, "");
+      });
+    }
+    console.log("index 3: " + index);
+    if (index > -1) {
+      console.log("found exact match for " + currentGame);
+      resolve(curResource.data.games[index]);
+    } else {
+      console.log(
+        "Didn't find exact match for " +
+          currentGame +
+          " in " +
+          curResource.data.games.length +
+          " records, now looking for " +
+          currentGame.replace(/[^%0-9a-zA-Z' ]/g, "")
+      );
+    }
+
+    bgaRequest({
+      name: currentGame.replace(/[^0-9a-zA-Z' ]/g, ""),
+      /*fuzzy_match: true,*/
+      limit: 1,
+    }).then((ret) => {
+      //If the search returned no games, return a generic search for boardgamegeek
+      if (ret.games.length == 0) {
+        var url =
+          `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+          currentGame.replace(/[^0-9a-zA-Z' ]/g, "") +
+          `&objecttype=boardgame`;
+        var userGame = {
+          name: currentGame.replace(/[^0-9a-zA-Z' ]/g, ""),
+          url: url,
+          error: true,
+        };
+        curResource.data.games.push(userGame);
+        curResource.markModified("data");
+        curResource.save().then((result) => {
+          resolve({
+            game: userGame,
+          });
+        });
+      } else {
+        //If the search returned anything, check if it matched exactly
+        var index = curResource.data.games.findIndex((obj) => {
+          return obj.name == ret.games[0].name;
+        });
+        if (index > -1) {
+          console.log("There's an exact match after all");
+          //If there's an exact match in the database, simply return that information
+          curResource.data.games[index].actualName = ret.games[0].name;
+          curResource.markModified("data");
+          curResource.save((err, result) => {
+            resolve(ret.games[0]);
+          });
+        } else {
+          console.log("Prepping a new game");
+          //If there isn't an exact match, add the inexact match to the database
+          var newGame = new Game({
+            name: ret.games[0].name,
+            bgaID: ret.games[0].id,
+            metadata: ret.games[0],
+          });
+          newGame.save().then((saved) => {
+            var gameToAdd = {
+              name: ret.games[0].name,
+              bgaID: ret.games[0].id,
+              url: ret.games[0].url,
+              game: saved._id,
+            };
+            curResource.data.games.push(gameToAdd);
+            //And add an entry with the user submitted search to the database
+            var newEntry = gameToAdd;
+            var actualName = newEntry.name;
+            var usersname = req.body.game;
+            newEntry.actualName = actualName;
+            newEntry.name = usersname;
+            curResource.data.games.push(newEntry);
+            curResource.markModified("data");
+            curResource.save((err, result) => {
+              resolve(ret.games[0]);
+            });
+          });
+        }
+      }
+    });
+  });
+}
 
 router.post("/bga_find_id", function (req, res) {
   bgaRequest({ id: req.body.id, limit: 1 }).then((ret) => {
@@ -2624,19 +2659,9 @@ function bgaRequest(options) {
       });
 
       // The whole response has been received. Print out the result.
-      resp.on("end", (data) => {
-        data = data.toString();
-        parser.parseString(data, function (err, result) {
-          if (ret.games.length > 0) {
-            resolve(ret);
-          } else {
-            resolve(
-              `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                req.body.game +
-                `&objecttype=boardgame`
-            );
-          }
-        });
+      resp.on("end", () => {
+        result = JSON.parse(data);
+        resolve(result);
       });
     });
   });

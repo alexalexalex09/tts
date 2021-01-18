@@ -164,20 +164,7 @@ function getTheGames(games) {
 function getGame(game) {
   return new Promise((resolve, reject) => {
     if (game.id.length > 0) {
-      var name = game.name;
-      var article = 0;
-      if (name.indexOf("The ") == 0) {
-        article = 4;
-      }
-      if (name.indexOf("A ") == 0) {
-        article = 2;
-      }
-      if (name.indexOf("An ") == 0) {
-        article = 3;
-      }
-      game.noarticle = name.substr(article);
-
-      Game.findOne({ name: game.noarticle }).exec((curGame) => {
+      Game.findOne({ name: game.name }).exec((curGame) => {
         var fields = [
           "id",
           "name",
@@ -2510,8 +2497,10 @@ router.post("/bga_find_game", function (req, res) {
     /*console.log("loaded resource for " + req.body.game);*/
     var gamesArray = req.body.game;
     getGamesAsync(gamesArray, curResource).then((result) => {
-      console.log("typeof result: " + typeof result);
-      res.send(result);
+      result.curResource.markModified("data");
+      result.curResource.save().then(() => {
+        res.send(result.games);
+      });
     });
   });
 });
@@ -2520,10 +2509,11 @@ async function getGamesAsync(gamesArray, curResource) {
   var res = [];
   for (var i = 0; i < gamesArray.length; i++) {
     var currentGame = gamesArray[i];
-    var game = await findAGame(currentGame, curResource);
-    res.push(game);
+    var result = await findAGame(currentGame, curResource);
+    curResource = result.curResource;
+    res.push(result.game);
   }
-  return res;
+  return { games: res, curResource: curResource };
 }
 
 function findAGame(currentGame, curResource) {
@@ -2550,7 +2540,10 @@ function findAGame(currentGame, curResource) {
     console.log("index 3: " + index);
     if (index > -1) {
       console.log("found exact match for " + currentGame);
-      resolve(curResource.data.games[index]);
+      resolve({
+        game: curResource.data.games[index],
+        curResource: curResource,
+      });
     } else {
       console.log(
         "Didn't find exact match for " +
@@ -2579,14 +2572,11 @@ function findAGame(currentGame, curResource) {
           error: true,
         };
         curResource.data.games.push(userGame);
-        curResource.markModified("data");
-        TODO: This doesn't work, you need to cache all the changes to be made and then make them simultaneously/synchronously
-        curResource.save().then((result) => {
-          resolve(userGame);
-        });
+        resolve({ game: userGame, curResource: curResource });
       } else {
         //add the new info to the database
         console.log("Prepping a new game");
+
         Game.findOne({ name: ret.games[0].name }).exec((curGame) => {
           //If a game matching the returned game already exists in the Game
           //database, create a new topList entry with the misspelled title
@@ -2629,10 +2619,7 @@ function findAGame(currentGame, curResource) {
                 misspelledGame.actualName = ret.games[0].name;
                 curResource.data.games.push(misspelledGame);
               }
-              curResource.markModified("data");
-              curResource.save((err, result) => {
-                resolve(ret.games[0]);
-              });
+              resolve({ game: ret.games[0], curResource: curResource });
             });
           }
         });

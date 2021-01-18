@@ -2566,19 +2566,18 @@ function getGameUrl(games) {
     }
 
     //Get the topList from localforage
-    var localforages = [];
-    localforages.push(localforage.getItem("topList"));
-    Promise.all(localforages).then((res) => {
+    localforage.getItem("topList").then((res) => {
       //if there is no topList, get one before continuing
-      var topList = res[0];
+      var topList = [];
       var anyNewTopList = [];
-      if (typeof topList == "undefined") {
+      if (res == null || typeof res[0] == "undefined" || res[0].length == 0) {
         anyNewTopList.push(getNewTopList());
-        topList = [];
+        console.log("Added a promise: " + typeof anyNewTopList[0]);
       } else {
+        var topList = res;
         anyNewTopList.push(
-          new Promise((resolve, reject) => {
-            resolve(topList);
+          new Promise((resolveTopList, reject) => {
+            resolveTopList(topList);
           })
         );
       }
@@ -2592,7 +2591,12 @@ function getGameUrl(games) {
           topList != null &&
           topList.length > 0
         ) {
-          fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+          var theDate = Date.now();
+          console.log("Creating fuse: " + theDate);
+          var fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+          console.log("CREATED fuse: " + theDate);
+        } else {
+          console.log(topList);
         }
 
         //Initialize the promise arrays
@@ -2611,9 +2615,13 @@ function getGameUrl(games) {
               console.log("Couldn't find topList!");
               index = -1;
             } else {
-              //Otherwise, find the index of the game in question
-              index = getTopListIndex(game, topList, fuse);
-              console.log("getTopListIndex found index " + index);
+              if (typeof fuse == "undefined") {
+                console.log("no fuse yet");
+              } else {
+                //Otherwise, find the index of the game in question
+                index = getTopListIndex(game, topList, fuse);
+                console.log("getTopListIndex found index " + index);
+              }
             }
 
             if (index > -1) {
@@ -2652,21 +2660,28 @@ function getGameUrl(games) {
           if (fetches.length > 0) {
             ttsFetch("/bga_find_game", { game: fetches }, (res) => {
               //If a game is found, get the new topList from the server
-              res.forEach((game) => {
-                game = game
-                  .replace("&amp;", "and")
-                  .replace("&", "and")
-                  .replace(":", "")
-                  .replace(/\\/g, "");
-                var index = games.findIndex((obj) => {
-                  return obj.game == game.name;
-                });
-                console.log(index);
-                if (index == -1) {
-                  console.log({ games });
-                  console.log({ game });
+              games.forEach((game, curIndex) => {
+                if (game.toResolve) {
+                  var index = res.findIndex((obj) => {
+                    return (
+                      obj.name
+                        .replace("&amp;", "and")
+                        .replace("&", "and")
+                        .replace(":", "")
+                        .replace(/\\/g, "") == game.game
+                    );
+                  });
+                  console.log(index);
+                  if (index == -1) {
+                    var url =
+                      `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                      game.game.replace(/[^0-9a-zA-Z' ]/g, "") +
+                      `&objecttype=boardgame`;
+                    games[curIndex].url = url;
+                  } else {
+                    games[curIndex].url = res[index].url;
+                  }
                 }
-                games[index].url = game.url;
               });
               getNewTopList().then(resolve(games));
             });
@@ -2704,15 +2719,21 @@ function wrapGameUrls(games) {
   //Get an array of game names and urls from getGameUrl,
   //Then wrap each element in a url by matching res.game with the games.game and using the corresponding res[index].url
   //Will not wrap anything that already has an anchor tag
-
+  console.log({ games });
   //Create an array of game names
-  var gameNames = games.map((e) => {
-    return e.game;
+  var gameNames = [];
+  games.forEach((game, index) => {
+    var safeName = game.game
+      .replace("&amp;", "and")
+      .replace("&", "and")
+      .replace(":", "")
+      .replace(/\\/g, "");
+    gameNames.push(safeName);
+    games[index].game = safeName;
   });
 
   //Get urls for those game names
   getGameUrl(gameNames).then((res) => {
-    console.log({ res });
     //Loop through the original game/element object, matching urls with games
     //to wrap the element in a link to that url
     games.forEach((e, i) => {
@@ -2722,6 +2743,12 @@ function wrapGameUrls(games) {
         var index = res.findIndex((obj) => {
           return obj.game == games[i].game;
         });
+        if (index == -1) {
+          console.log({ res });
+          var couldntfind = games[i];
+          console.log({ couldntfind });
+          console.trace();
+        }
         //Get the url to wrap
         var url = res[index].url;
         var html = $(e.element).html();
@@ -4088,7 +4115,7 @@ function showVoteThumb(el) {
       id = id.substr(id.lastIndexOf("/") + 1);
       if (id == "www.boardgamegeek.com") {
         id = $el.children(".voteSubTitle").children("a").attr("href");
-        id = id.substr(id.lastIndexof("q=") + 2);
+        id = id.substr(id.lastIndexOf("q=") + 2);
       }
       parseBGGThing(id, "thumb_url").then(function (res) {
         $el

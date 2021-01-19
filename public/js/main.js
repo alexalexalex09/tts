@@ -882,7 +882,11 @@ window.addEventListener("load", function () {
 
   /* Set up autocomplete */
   localforage.getItem("topList").then((topList) => {
-    if (typeof topList != "undefined" && topList.length > 0) {
+    if (
+      typeof topList != "undefined" &&
+      topList != null &&
+      topList.length > 0
+    ) {
       setAutoComplete(topList);
     } else {
       getNewTopList().then((topList) => {
@@ -2528,13 +2532,24 @@ function getTopListIndex(game, topList, fuse) {
             .replace("&amp;", "and")
             .replace("&", "and")
             .replace(":", "")
-            .replace(/\\/g, "");
+            .replace(/\\/g, "") ||
+        obj.name == game.replace(/[^%0-9a-zA-Z' ]/g) ||
+        obj.actualName ==
+          game
+            .replace("&amp;", "and")
+            .replace("&", "and")
+            .replace(":", "")
+            .replace(/\\/g, "") ||
+        obj.actualName == game.replace(/[^%0-9a-zA-Z' ]/g);
       return ret;
     });
     if (index == -1) {
+      console.log("Couldn't find " + game);
       var searchres = fuse.search(game);
       if (searchres.length > 0) {
-        if (searchres[0].score < 0.1) {
+        console.log("Fuse results:");
+        console.log({ searchres });
+        if (searchres[0].score < 0.4) {
           index = searchres[0].refIndex;
         }
       }
@@ -2575,7 +2590,6 @@ function getGameUrl(games) {
       //if there is no topList, get one before continuing
       var topList = [];
       var anyNewTopList = [];
-      console.log("topList length: " + res.length);
       if (res == null || typeof res[0] == "undefined" || res[0].length == 0) {
         anyNewTopList.push(getNewTopList());
         console.log("Added a promise: " + typeof anyNewTopList[0]);

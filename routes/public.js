@@ -165,7 +165,7 @@ function getTheGames(games) {
   return Promise.all(promises);
 }
 
-function prepMongo(name) {
+function prepForMongo(name) {
   if (name.indexOf("'") > -1) {
     var i = name.indexOf("'");
     name = name.substr(0, i) + "\\" + name.substr(i);
@@ -321,7 +321,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     } else {
       resourceOutdated =
         Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
-      resourceOutdated = true; //Force update
+      //resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;
@@ -2479,12 +2479,35 @@ router.post("/change_username", function (req, res) {
 });
 
 router.post("/get_top_list", function (req, res) {
-  Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
+  Game.find({ metadata: { $exists: true } }).exec(function (err, curResource) {
     if (curResource) {
-      res.send({ games: curResource.data.games });
+      games = prepGameList(curResource);
+      res.send({ games: games });
+    } else {
+      res.send({ games: [] });
     }
   });
 });
+
+function prepGameList(games) {
+  var ret = [];
+  games.forEach((e, i) => {
+    var newGame = {};
+    for (let [key, value] of Object.entries(e._doc)) {
+      if (key != "_id" && key != "__v") {
+        if (key == "metadata") {
+          for (let [prop, metadata] of Object.entries(value)) {
+            newGame[prop] = metadata;
+          }
+        } else {
+          newGame[key] = e[key];
+        }
+      }
+    }
+    ret.push(newGame);
+  });
+  return ret;
+}
 
 //Takes a game's name and returns an object with the game or an error
 router.post("/bga_find_game", function (req, res) {
@@ -2596,6 +2619,7 @@ function findAGame(currentGame, curResource) {
               actualName: ret.games[0].name,
             };
             curResource.data.games.push(misspelledGame);
+            resolve({ game: ret.games[0], curResource: curResource });
           } else {
             //If there is no preexisting Game in the database, create a new
             //game and then add topList entries as appropriate

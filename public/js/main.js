@@ -880,8 +880,16 @@ window.addEventListener("load", function () {
     runListImport(window.location.pathname.substr(1));
   }
 
-  /* Set up autocomplete, also sets topList */
-  setAutoComplete();
+  /* Set up autocomplete */
+  localforage.getItem("topList").then((topList) => {
+    if (typeof topList != "undefined" && topList.length > 0) {
+      setAutoComplete(topList);
+    } else {
+      getNewTopList().then((topList) => {
+        setAutoComplete(topList);
+      });
+    }
+  });
 
   /* Set up BGG account */
   checkBGG();
@@ -2016,7 +2024,6 @@ function showAdder(item, theId, func, funcArg, prompt) {
   $("#addGameListCheckbox").on("click", function () {
     $(this).parent().children("select").first().prop("disabled", !this.checked);
   });
-  setAutoComplete();
 }
 
 function showGameContext(game) {
@@ -2508,8 +2515,6 @@ function parseBGGThing(id, field) {
 }
 
 function getTopListIndex(game, topList, fuse) {
-  console.log(game);
-  console.log(topList.length);
   if (topList) {
     var index = topList.findIndex((obj) => {
       var ret =
@@ -2570,6 +2575,7 @@ function getGameUrl(games) {
       //if there is no topList, get one before continuing
       var topList = [];
       var anyNewTopList = [];
+      console.log("topList length: " + res.length);
       if (res == null || typeof res[0] == "undefined" || res[0].length == 0) {
         anyNewTopList.push(getNewTopList());
         console.log("Added a promise: " + typeof anyNewTopList[0]);
@@ -2620,7 +2626,6 @@ function getGameUrl(games) {
               } else {
                 //Otherwise, find the index of the game in question
                 index = getTopListIndex(game, topList, fuse);
-                console.log("getTopListIndex found index " + index);
               }
             }
 
@@ -2671,7 +2676,6 @@ function getGameUrl(games) {
                         .replace(/\\/g, "") == game.game
                     );
                   });
-                  console.log(index);
                   if (index == -1) {
                     var url =
                       `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
@@ -4543,15 +4547,13 @@ function editList(list) {
 }
 
 function setAutoComplete(topList) {
-  getNewTopList().then((topList) => {
-    var auto = topList.map((e) => e.name);
-    if (document.getElementById("menuAddGamesInput") != null) {
-      autocomplete(document.getElementById("menuAddGamesInput"), auto);
-    }
-    if (document.getElementById("addGamesInput") != null) {
-      autocomplete(document.getElementById("addGamesInput"), auto);
-    }
-  });
+  var auto = topList.map((e) => e.name);
+  if (document.getElementById("menuAddGamesInput") != null) {
+    autocomplete(document.getElementById("menuAddGamesInput"), auto);
+  }
+  if (document.getElementById("addGamesInput") != null) {
+    autocomplete(document.getElementById("addGamesInput"), auto);
+  }
 }
 
 function hitMe() {

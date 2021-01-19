@@ -60,6 +60,11 @@ Game.find({ name: /'/ }).exec(function (err, curGames) {
   });
 });
 
+//NUKE IT
+//
+//Game.deleteMany({ metadata: { $exists: true } }).exec(function (err, docs) {});
+//
+
 Session.find({ users: { $elemMatch: { user: { $regex: /guest*/ } } } }).exec(
   function (err, curSessions) {
     var totalSave = 0;
@@ -160,11 +165,20 @@ function getTheGames(games) {
   return Promise.all(promises);
 }
 
+function prepMongo(name) {
+  if (name.indexOf("'") > -1) {
+    var i = name.indexOf("'");
+    name = name.substr(0, i) + "\\" + name.substr(i);
+  }
+  return name;
+}
+
 //Returns a promise that when fulfilled will contain info about a game. Updates topGames as a side effect
 function getGame(game) {
   return new Promise((resolve, reject) => {
     if (game.id.length > 0) {
-      Game.findOne({ name: game.name }).exec((curGame) => {
+      game.name = prepMongo(game.name);
+      Game.findOne({ name: game.name }).exec(function (err, curGame) {
         var fields = [
           "id",
           "name",
@@ -187,6 +201,7 @@ function getGame(game) {
         ];
         var metadata = getFields(game, fields);
         if (curGame) {
+          //updating existing game
           curGame.metadata = metadata;
           curGame.bgaID = metadata.id;
         } else {
@@ -306,7 +321,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     } else {
       resourceOutdated =
         Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
-      //  resourceOutdated = true; //Force update
+      resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;
@@ -1098,23 +1113,6 @@ router.post("/group_game_add", function (req, res) {
     res.send(ERR_LOGIN);
   }
 });
-
-function gameCreate(name) {
-  var gamedetail = { name: name, rating: 0, owned: 0 };
-  var game = new Game(gamedetail);
-  return game;
-}
-
-function userCreate(id, name) {
-  var userdetail = {
-    profile_id: id,
-    name: name,
-    games: [],
-    lists: [],
-  };
-  var user = new User(userdetail);
-  return user;
-}
 
 router.post("/join_session", function (req, res) {
   var theCode = req.body.code.toUpperCase();
@@ -2576,13 +2574,19 @@ function findAGame(currentGame, curResource) {
       } else {
         //add the new info to the database
         console.log("Prepping a new game");
-
-        Game.findOne({ name: ret.games[0].name }).exec((curGame) => {
+        ret.games[0].name = prepForMongo(ret.games[0].name);
+        Game.findOne({ name: ret.games[0].name }).exec(function (err, curGame) {
           //If a game matching the returned game already exists in the Game
           //database, create a new topList entry with the misspelled title
           //that the user was searching for that references the preexisting game.
           //In this case, we already know that the title is misspelled because
           //otherwise it would have already been found.
+          console.log({ curGame });
+          if (curGame) {
+            console.log("Found " + ret.games[0].name);
+          } else {
+            console.log("Did not find " + ret.games[0].name);
+          }
           if (curGame) {
             var misspelledGame = {
               name: currentGame,

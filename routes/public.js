@@ -21,6 +21,7 @@ var AuthenticationClient = require("auth0").AuthenticationClient;
 var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
 const Readable = require("readable-url");
+var fuzzyMatch = require("jaro-winkler");
 
 console.log("1/8: Setting up Auth0", Date.now() - loadTime);
 var management = new ManagementClient({
@@ -2583,8 +2584,13 @@ function getNewGameFromBGA(currentGame) {
       /*fuzzy_match: true,*/
       limit: 1,
     }).then((ret) => {
+      var fuzzy = 0;
+      if (ret.games.length > 0) {
+        fuzzy = fuzzyMatch(currentGame, ret.games[0].name);
+        console.log({ fuzzy });
+      }
       //If the search returned no games, return a generic search for boardgamegeek
-      if (ret.games.length == 0) {
+      if (ret.games.length == 0 || fuzzy < 0.5) {
         var url =
           `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
           currentGame.replace(/[^0-9a-zA-Z' ]/g, "") +

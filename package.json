@@ -23,6 +23,7 @@
     "fuse.js": "^6.4.1",
     "helmet": "^3.23.3",
     "http-errors": "~1.6.3",
+    "jaro-winkler": "^0.2.8",
     "kind-of": "^6.0.3",
     "localforage": "^1.9.0",
     "mongoose": "^5.10.2",

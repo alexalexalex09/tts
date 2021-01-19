@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "acorn": "^7.4.0",
-    "auth0": "^2.28.0",
+    "auth0": "^2.31.1",
     "body-parser": "^1.19.0",
     "cfenv": "^1.2.3",
     "compression": "^1.7.4",

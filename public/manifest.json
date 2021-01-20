@@ -1,0 +1,27 @@
+{
+    "name": "SelectAGame",
+    "short_name": "SelectAGame",
+    "description": "Choose a board game to play with the help of several woodland creatures!",
+    "lang": "en-US",
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#6492c7",
+    "icons": [
+      {
+        "src": "/img/logo.svg",
+        "sizes": "238x238",
+        "type": "image/svg"
+      },
+      {
+        "src": "/img/logo192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/img/logo512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "background_color": "#fff"
+  }

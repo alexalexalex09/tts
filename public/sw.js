@@ -1,14 +1,14 @@
-const CACHE_NAME = "V2";
+const CACHE_NAME = "V4";
 const STATIC_CACHE_URLS = [
   "/",
   "/css/normalize.css",
   "/css/boilerplate.css",
   "/css/main.css",
   "/js/main.js",
-  "/js/button.prod.min.js",
-  "/js/jquery-3.4.1.js",
-  "/js/localforage.min.js",
-  "/js/modernizr-3.8.0.min.js",
+  "/js/vendor/button.prod.min.js",
+  "/js/vendor/jquery-3.4.1.min.js",
+  "/js/vendor/localforage.min.js",
+  "/js/vendor/modernizr-3.8.0.min.js",
 ];
 
 self.addEventListener("install", (event) => {

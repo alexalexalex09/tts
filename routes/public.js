@@ -463,11 +463,6 @@ router.get("/*", function (req, res, next) {
   next();
 });
 
-router.get("*", function (req, res, next) {
-  console.log("UserNonce for *: ", req.session.userNonce);
-  next();
-});
-
 router.post("/user_nonce", function (req, res) {
   res.send({ userNonce: req.session.userNonce });
 });
@@ -2147,6 +2142,87 @@ router.post("/copy_to_list", function (req, res) {
     res.send(ERR_LOGIN);
   }
 });
+
+/*
+req.body: {
+  import: [
+    ["game", "list"], 
+    ["game2", "list", "list2"]
+  ]
+}
+// Duplicate games are allowed: This will add that game to the lists in every row for that game
+*/
+router.post("/bulk_add_to_lists", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      var games = [];
+      var lists = [];
+      req.body.import.forEach((row) => {
+        games.push(row[0]);
+        for (var i = 1; i < row.length; i++) {
+          if (
+            lists.findIndex((el) => {
+              return el == row[i];
+            }) == -1
+          ) {
+            lists.push(row[i]);
+          }
+        }
+      });
+      addAllGamesIfNeeded(games).then((gameIds) => {
+        listObject = createAllListsIfNeeded(lists, curUser);
+        curUser = listObject.curUser;
+        listIds = listObject.listIds;
+        req.body.import.forEach((row) => {
+          var gameLists = row.slice(1);
+          var game = row[0];
+          curUser = addGameToListsIfNeeded(
+            game,
+            gameLists,
+            curUser,
+            gameIds,
+            listIds
+          );
+        });
+        curUser.save().then((saved) => {
+          res.send("Completed");
+        });
+      });
+    });
+  } else {
+    res.send(ERR_LOGIN);
+  }
+});
+
+function addAllGamesIfNeeded(games) {
+  return new Promise((req, res) => {
+    var gameIds = [];
+    //Add games calling bulkGameAdder
+    resolve(gameIds);
+  });
+}
+
+function createAllListsIfNeeded(lists, curUser) {
+  var userLists = curUser.lists.custom;
+  lists.forEach((list, listIndex) => {
+    var listSearch = userLists.findIndex((el) => {
+      return el == list;
+    });
+    if (listSearch == -1) {
+      curUser.lists.custom.push(list);
+      lists[listIndex] = { list: list, listIndex: listIndex };
+    } else {
+      lists[listIndex] = { list: list, listIndex: listSearch };
+    }
+  });
+  return { curUser: curUser, listIds: lists };
+}
+
+function AddGameToListsIfNeeded(game, gameLists, curUser, gameIds, listIds) {
+  var userLists = curUser.lists.custom;
+  //For the given game, go through each of the gameLists and check
+  //if the game is already in there. If not, add it.
+}
 
 router.post("/rename_game", function (req, res) {
   if (req.user) {

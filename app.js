@@ -138,7 +138,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //This includes the port when on localhost:
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static("public"));
 /*
 // Okta setup
 app.use(

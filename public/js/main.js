@@ -5109,6 +5109,18 @@ function readFile(input) {
       obj_csv.dataFile = e.target.result;
       var parsed = Papa.parse(obj_csv.dataFile);
       parsed.data[0][0] = parsed.data[0][0].replace(/ï»¿/, "");
+      var data = parsed.data;
+      data.forEach((row, rowIndex) => {
+        for (var index = row.length; index > -1; index--) {
+          if (row[index] == "") {
+            data[rowIndex].splice(index, 1);
+          }
+        }
+      });
+      console.log(data);
+      ttsFetch("/bulk_add_to_lists", { import: data }, (res) => {
+        console.log(res);
+      });
     };
   }
 }

@@ -137,8 +137,8 @@ app.set("view engine", "pug");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+//This includes the port when on localhost:
 app.use(express.static(path.join(__dirname, "public")));
-
 /*
 // Okta setup
 app.use(
@@ -170,7 +170,6 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   //console.log("custom middleware called*****************");
   if (req.user) {
-    console.log("with user");
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
       //console.log("auth0 user:", extUser);
       res.locals.user = req.user;
@@ -212,6 +211,15 @@ app.use((req, res, next) => {
     next();
   }
 });
+
+//Serviceworker
+/*app.use((req, res, next) => {
+  if (req.originalUrl == "/sw.js") {
+    res.sendFile(path.join(__dirname, "public", "sw.js"));
+  } else {
+    next();
+  }
+});*/
 
 //Routers
 app.use("/", publicRouter);

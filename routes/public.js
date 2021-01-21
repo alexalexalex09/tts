@@ -825,8 +825,6 @@ router.post("/game_add_bulk", function (req, res) {
     if (req.body.games) {
       var games = req.body.games;
       Game.find({ name: { $in: games } }).exec(function (err, curGames) {
-        console.log("Bulk add Games: ", curGames);
-        console.log(games);
         var toAdd = [];
         games.forEach(function (e, i) {
           var index = curGames.findIndex((obj) => obj.name == e);
@@ -838,7 +836,6 @@ router.post("/game_add_bulk", function (req, res) {
           toAdd.forEach(function (e) {
             curGames.push(e);
           });
-          console.log("CurGames: ", typeof curGames, ": ", curGames);
           Game.insertMany(toAdd).then(function () {
             //doesnt work becuase its a collection of objects, not an object
             Game.find({ name: { $in: games } }).exec(function (err, curGames) {
@@ -960,81 +957,68 @@ function bulkGameAdder(games, listIndexPlusOne, res, req) {
 router.post("/game_add", function (req, res) {
   if (req.user) {
     if (req.body.game) {
-      var upsertOptions = { new: true, upsert: true };
-      Game.findOneAndUpdate(
-        {
-          name: req.body.game,
-        },
-        { name: req.body.game },
-        upsertOptions,
-        function (err, game) {
-          if (!game.rating) {
-            game.rating = 0;
-          }
-          if (!game.owned) {
-            game.owned = 0;
-          }
-          console.log(game);
-          game.save().then(function (game) {
-            User.findOneAndUpdate(
-              {
-                profile_id: req.user.id,
-              },
-              { profile_id: req.user.id },
-              upsertOptions,
-              function (err, curUser) {
-                //if game and user both exist, add the game unless it's already added
-                function findGame(checkGame) {
-                  return checkGame.toString() == game._id.toString();
-                }
-                var gamesList = curUser.lists.allGames;
-                console.log(err);
-                console.log(gamesList);
-                theGame = gamesList.find(findGame);
-
-                if (theGame) {
-                  //if it's already in the array, do nothing
-                  res.send({
-                    err:
-                      req.body.game.replace(/\\/, "") +
-                      " has already been added",
-                  });
-                } else {
-                  //if it's not, push it to the array and save the user
-                  curUser.lists.allGames.push(game._id);
-                  if (req.body.list) {
-                    var index = curUser.lists.custom.findIndex(
-                      (obj) => obj.name == req.body.list
-                    );
-                    console.log(index);
-                    console.log(curUser.lists.custom[index].games);
-                    curUser.lists.custom[index].games.push(game._id);
-                  }
-                  console.log("theGame: ", theGame);
-                  curUser.save().then(function (theUser) {
-                    Game.findById(
-                      game._id,
-                      "name",
-                      function (err, gameToReport) {
-                        if (gameToReport) {
-                          console.log("Game name: " + gameToReport.name);
-                          res.send({ status: gameToReport });
-                        } else {
-                          res.send({
-                            err:
-                              "Error: game not added, maybe you checked too early.",
-                          });
-                        }
-                        bggUpdate(curUser);
-                      }
-                    );
-                  });
-                }
-              }
-            );
+      Game.findOne({ name: req.body.game }, function (err, game) {
+        if (game == null || typeof game == "undefined") {
+          var conditionalPromise = getNewGameFromBGA(req.body.game);
+        } else {
+          var conditionalPromise = new Promise((resolve) => {
+            resolve(game);
           });
         }
-      );
+        conditionalPromise.then(function (game) {
+          console.log(game.bgaID);
+          var upsertOptions = { new: true, upsert: true };
+          User.findOneAndUpdate(
+            {
+              profile_id: req.user.id,
+            },
+            { profile_id: req.user.id },
+            upsertOptions,
+            function (err, curUser) {
+              //if game and user both exist, add the game unless it's already added
+              function findGame(checkGame) {
+                return checkGame.toString() == game._id.toString();
+              }
+              var gamesList = curUser.lists.allGames;
+              theGame = gamesList.find(findGame);
+
+              if (theGame) {
+                //if it's already in the array, do nothing
+                res.send({
+                  err:
+                    req.body.game.replace(/\\/, "") + " has already been added",
+                });
+              } else {
+                //if it's not, push it to the array and save the user
+                curUser.lists.allGames.push(game._id);
+                if (req.body.list) {
+                  var index = curUser.lists.custom.findIndex(
+                    (obj) => obj.name == req.body.list
+                  );
+                  console.log(index);
+                  console.log(curUser.lists.custom[index].games);
+                  curUser.lists.custom[index].games.push(game._id);
+                }
+                console.log("theGame: ", theGame);
+                curUser.save().then(function (theUser) {
+                  Game.findById(game._id, "name", function (err, gameToReport) {
+                    if (gameToReport) {
+                      console.log("Game name: " + gameToReport.name);
+                      res.send({ status: gameToReport });
+                    } else {
+                      res.send({
+                        err:
+                          "Error: game not added, maybe you checked too early.",
+                      });
+                    }
+                    bggUpdate(curUser);
+                  });
+                });
+              }
+            }
+          );
+        });
+      });
     } else {
       res.send({ err: "Cannot add blank game" });
     }
@@ -2168,17 +2152,34 @@ games: [
 router.post("/bulk_add_to_lists", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      var games = getGamesFromCSV(req.body.import);
-      addAllGamesIfNeeded(games).then((games) => {
-        curUser = createAllListsIfNeeded(games, curUser);
-        games = getAllListIndexes(games, curUser);
-        games.forEach((game) => {
-          curUser = addGameToListsIfNeeded(game, curUser);
+      //Get the user's profile including lists
+      var games = getGamesFromCSV(req.body.import); //create the games object
+      //Only continue if there are games in the games object
+      if (games.length > 0) {
+        //Add any games that aren't already in the database to the database and add the MongoID to the game object
+        addAllGamesIfNeeded(games).then((games) => {
+          console.log({ games });
+          createAllListsIfNeeded(games, curUser).then((curUser) => {
+            curUser.lists.custom.forEach((e) => {
+              console.log(e.name);
+            });
+            //Create any lists that the user doesn't already have
+            curUser = addAllGamesToUser(games, curUser); //Add the games to the user's All Games list
+            games = getAllListIndexes(games, curUser); //Populate the games object with all list indexes now that they're created
+            games.forEach((game) => {
+              if (game.lists.length > 0) {
+                curUser = addGameToListsIfNeeded(game, curUser); //For each game in the games object, add that game to each list
+              }
+            });
+            curUser.save().then((saved) => {
+              //Save the modified user profile
+              res.send({ result: "Completed" });
+            });
+          });
         });
-        curUser.save().then((saved) => {
-          res.send("Completed");
-        });
-      });
+      } else {
+        res.send({ err: "No games to import" });
+      }
     });
   } else {
     res.send(ERR_LOGIN);
@@ -2191,58 +2192,98 @@ function getGamesFromCSV(toImport) {
     var temp = {};
     var lists = [];
     temp.name = row[0];
-    for (var i = 1; i < row.length; i++) {
-      if (
-        lists.findIndex((el) => {
-          return el.name == row[i];
-        }) == -1
-      ) {
-        lists.push({ name: row[i] });
+    if (typeof row[0] != "undefined" && row[0].length > 0) {
+      for (var i = 1; i < row.length; i++) {
+        if (
+          lists.findIndex((el) => {
+            return el.name == row[i];
+          }) == -1
+        ) {
+          lists.push({ name: row[i] });
+        }
       }
+      temp.lists = lists;
+      games.push(temp);
     }
-    temp.lists = lists;
-    games.push(temp);
   });
   return games;
 }
-
-function addAllGamesIfNeeded(games) {
-  return new Promise((req, res) => {
-    var gameIds = [];
-    //Add games calling bulkGameAdder
-    //gameIds.push(mongoose.Types.ObjectId(gameid));
-    resolve(gameIds);
-  });
+/*
+games: [
+  {
+    name: GameName,
+    id: MongoID,
+    lists: [
+      {name: list1, index: 2},
+      {name: list2, index: 5}
+    ]
+  },
+  {
+    name: GameName,
+  ...
+]
+*/
+async function addAllGamesIfNeeded(games) {
+  for (var i = 0; i < games.length; i++) {
+    var game = games[i];
+    var gameIndex = i;
+    var curGame = await Game.findOne({ name: game.name });
+    if (curGame == null || typeof curGame == "undefined") {
+      var conditionalPromise = getNewGameFromBGA(game.name);
+    } else {
+      var conditionalPromise = new Promise((cResolve) => {
+        cResolve(curGame);
+      });
+    }
+    var returnedGame = await conditionalPromise;
+    games[gameIndex].id = returnedGame._id;
+  }
+  return games;
 }
 
 function createAllListsIfNeeded(games, curUser) {
-  getListCodes().then(function (listCodeArray) {
-    games.forEach((game) => {
-      game.lists.forEach((list) => {
-        var index = curUser.lists.custom.findIndex((el) => {
-          el.name == list.name;
-        });
-        if (index == -1) {
-          var listCode = makeid(6, listCodeArray);
-          listCodeArray.push(listCode);
-          curUser.lists.custom.push({
-            games: [],
-            name: list.name,
-            listCode: listCode,
+  return new Promise((resolve, reject) => {
+    getListCodes().then(function (listCodeArray) {
+      games.forEach((game) => {
+        game.lists.forEach((list) => {
+          var index = curUser.lists.custom.findIndex((el) => {
+            return el.name == list.name;
           });
-        }
+          if (index == -1) {
+            var listCode = makeid(6, listCodeArray);
+            listCodeArray.push(listCode);
+            curUser.lists.custom.push({
+              games: [],
+              name: list.name,
+              listCode: listCode,
+            });
+          }
+        });
       });
+      resolve(curUser);
     });
-    return curUser;
   });
+}
+
+function addAllGamesToUser(games, curUser) {
+  games.forEach((game, index) => {
+    console.log({ game });
+    var index = curUser.lists.allGames.findIndex((el) => {
+      return el.toString() == game.id.toString();
+    });
+    if (index == -1) {
+      curUser.lists.allGames.push(game.id);
+    }
+  });
+  return curUser;
 }
 
 function getAllListIndexes(games, curUser) {
   games.forEach((game, index) => {
     game.lists.forEach((list, listIndex) => {
       games[index].lists[listIndex].index = curUser.lists.custom.findIndex(
-        (el) => {
-          el.name == list.name;
+        (obj) => {
+          return obj.name == list.name;
         }
       );
     });
@@ -2253,16 +2294,18 @@ function getAllListIndexes(games, curUser) {
 function addGameToListsIfNeeded(game, curUser) {
   game.lists.forEach((list) => {
     if (list.index == -1) {
-      console.log("Could not add list " + list);
+      console.log("Could not add list ");
+      console.log({ list });
     } else {
       var gameIndex = curUser.lists.custom[list.index].games.findIndex((el) => {
-        el.toString() == game.id.toString();
+        return el.toString() == game.id.toString();
       });
       if (gameIndex == -1) {
-        curUser.lists.custom[list.index].push(game.id); //push MongoID for game
+        curUser.lists.custom[list.index].games.push(game.id); //push MongoID for game
       }
     }
   });
+  return curUser;
   //For the given game, go through each of the gameLists and check
   //if the game is already in there. If not, add it.
 }

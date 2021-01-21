@@ -2774,7 +2774,7 @@ function wrapGameUrls(games) {
       if ($(e.element).children("a").length == 0) {
         //Find the game in the returned object from getGameUrl
         var index = res.findIndex((obj) => {
-          return obj.game == games[i].game;
+          return obj.game == e.game;
         });
         if (index == -1) {
           console.log({ res });
@@ -2791,95 +2791,6 @@ function wrapGameUrls(games) {
       }
     });
   });
-}
-
-function contextBGG(topList, el, game, recur, inexact, fuse) {
-  console.log(
-    "Can't return the new Toplist from here because this hasn't been promisified"
-  );
-  //TODO: Make this faster. Maybe generate this function with existing data so it doesn't have to recreate it?
-  var checkdate = Date.now();
-  if (topList) {
-    //TODO: This is very slow. How to improve? Rewrite with localforage
-    if (typeof fuse == "undefined") {
-      const fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
-    }
-    var index = getTopListIndex(game, topList, fuse);
-    if (index > -1) {
-      var theID = topList[index].id;
-      if (theID == "" || typeof theID == "undefined") {
-        var ret =
-          `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-          html +
-          `&objecttype=boardgame`;
-      } else {
-        var ret = topList[index].url;
-      }
-      var html = $(el).html();
-      $(el).html('<a href="' + ret + `" target="_blank">` + html + `</a>`);
-      console.log("returning");
-      return {};
-      console.log("returned");
-    }
-  } else {
-    //No toplist found, so initialize one to cache this result
-    topList = [];
-  }
-  console.log(
-    "Type of topList is " + typeof topList + " and length is " + topList.length
-  );
-  if (inexact) {
-    var exactStr = "";
-  } else {
-    var exactStr = "&exact=1";
-  }
-  var name = game;
-  game = game
-    .replace("&amp;", "and")
-    .replace("&", "and")
-    .replace(":", "")
-    .replace(/\\/g, "");
-  var diff = Date.now() - checkdate;
-  console.log("end prep" + diff);
-  var date = Date.now();
-  console.log(
-    "fetch begun: " + date.toString().substr(date.toString().length - 5)
-  );
-  ttsFetch(
-    "/bga_find_game",
-    { game: game },
-    (res) => {
-      getNewTopList().then((topList) => {
-        var html = $(el).html();
-        $(el).html(
-          '<a href="' + res.url + `" target="_blank">` + html + `</a>`
-        );
-        return { new: topList };
-      });
-    },
-    (err) => {
-      var url =
-        `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-        game +
-        `&objecttype=boardgame`;
-      topList.push({ name: name, url: url, error: true });
-      localforage.setItem("topList", topList);
-      getNewTopList().then((topList) => {
-        var html = $(el).html();
-        $(el).html(`<a href="` + url + `" target="_blank">` + html + `</a>`);
-        console.log(game + " not found");
-        return { new: topList };
-      });
-    }
-  );
-  var diff = Date.now() - date;
-  console.log(
-    "fetch ended: " +
-      date.toString().substr(date.toString().length - 5) +
-      ", " +
-      diff
-  );
-  return;
 }
 
 function connectBGG() {
@@ -5091,7 +5002,11 @@ function accountImportCSV() {
   var el = `<div class="subContextContainer"><div class="subContext subContextCSV" id="subContextCSV" >`;
   el +=
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
-    `<div class="subContextTitle">Choose a file to import</div><hr/>` +
+    `<div class="subContextTitle">Choose a file to import</div>` +
+    `<div class="subContextSubTitle">The first column of each row should be the name of the game, 
+    and all other items on the row will be interpreted as lists to add the game to. This operation may take a long time for large files
+    with many records, especially if those games are more obscure.</div>` +
+    `<hr/>` +
     `<input type="file" id="uploadfile" onChange="readFile(this)">`;
   $("body").append(el);
 }
@@ -5119,7 +5034,11 @@ function readFile(input) {
       });
       console.log(data);
       ttsFetch("/bulk_add_to_lists", { import: data }, (res) => {
-        console.log(res);
+        //console.log(res);
+        createAndShowAlert("Completed");
+        $(".subContextContainer").each(function () {
+          $(this).remove();
+        });
       });
     };
   }

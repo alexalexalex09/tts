@@ -2544,6 +2544,10 @@ input#selectLimit {
   word-break: break-word;
 }
 
+.subContextSubTitle {
+  font-size: var(--font-h4);
+}
+
 .subContext li {
   list-style: none;
   cursor: pointer;

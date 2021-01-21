@@ -2150,39 +2150,30 @@ req.body: {
     ["game2", "list", "list2"]
   ]
 }
+games: [
+    {
+      name: GameName,
+      id: MongoID,
+      lists: [
+        {name: list1, index: 2},
+        {name: list2, index: 5}
+      ]
+    },
+    {
+      name: GameName,
+    ...
+  ]
 // Duplicate games are allowed: This will add that game to the lists in every row for that game
 */
 router.post("/bulk_add_to_lists", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      var games = [];
-      var lists = [];
-      req.body.import.forEach((row) => {
-        games.push(row[0]);
-        for (var i = 1; i < row.length; i++) {
-          if (
-            lists.findIndex((el) => {
-              return el == row[i];
-            }) == -1
-          ) {
-            lists.push(row[i]);
-          }
-        }
-      });
-      addAllGamesIfNeeded(games).then((gameIds) => {
-        listObject = createAllListsIfNeeded(lists, curUser);
-        curUser = listObject.curUser;
-        listIds = listObject.listIds;
-        req.body.import.forEach((row) => {
-          var gameLists = row.slice(1);
-          var game = row[0];
-          curUser = addGameToListsIfNeeded(
-            game,
-            gameLists,
-            curUser,
-            gameIds,
-            listIds
-          );
+      var games = getGamesFromCSV(req.body.import);
+      addAllGamesIfNeeded(games).then((games) => {
+        curUser = createAllListsIfNeeded(games, curUser);
+        games = getAllListIndexes(games, curUser);
+        games.forEach((game) => {
+          curUser = addGameToListsIfNeeded(game, curUser);
         });
         curUser.save().then((saved) => {
           res.send("Completed");
@@ -2194,32 +2185,84 @@ router.post("/bulk_add_to_lists", function (req, res) {
   }
 });
 
+function getGamesFromCSV(toImport) {
+  var games = [];
+  toImport.forEach((row) => {
+    var temp = {};
+    var lists = [];
+    temp.name = row[0];
+    for (var i = 1; i < row.length; i++) {
+      if (
+        lists.findIndex((el) => {
+          return el.name == row[i];
+        }) == -1
+      ) {
+        lists.push({ name: row[i] });
+      }
+    }
+    temp.lists = lists;
+    games.push(temp);
+  });
+  return games;
+}
+
 function addAllGamesIfNeeded(games) {
   return new Promise((req, res) => {
     var gameIds = [];
     //Add games calling bulkGameAdder
+    //gameIds.push(mongoose.Types.ObjectId(gameid));
     resolve(gameIds);
   });
 }
 
-function createAllListsIfNeeded(lists, curUser) {
-  var userLists = curUser.lists.custom;
-  lists.forEach((list, listIndex) => {
-    var listSearch = userLists.findIndex((el) => {
-      return el == list;
+function createAllListsIfNeeded(games, curUser) {
+  getListCodes().then(function (listCodeArray) {
+    games.forEach((game) => {
+      game.lists.forEach((list) => {
+        var index = curUser.lists.custom.findIndex((el) => {
+          el.name == list.name;
+        });
+        if (index == -1) {
+          var listCode = makeid(6, listCodeArray);
+          listCodeArray.push(listCode);
+          curUser.lists.custom.push({
+            games: [],
+            name: list.name,
+            listCode: listCode,
+          });
+        }
+      });
     });
-    if (listSearch == -1) {
-      curUser.lists.custom.push(list);
-      lists[listIndex] = { list: list, listIndex: listIndex };
-    } else {
-      lists[listIndex] = { list: list, listIndex: listSearch };
-    }
+    return curUser;
   });
-  return { curUser: curUser, listIds: lists };
 }
 
-function AddGameToListsIfNeeded(game, gameLists, curUser, gameIds, listIds) {
-  var userLists = curUser.lists.custom;
+function getAllListIndexes(games, curUser) {
+  games.forEach((game, index) => {
+    game.lists.forEach((list, listIndex) => {
+      games[index].lists[listIndex].index = curUser.lists.custom.findIndex(
+        (el) => {
+          el.name == list.name;
+        }
+      );
+    });
+  });
+  return games;
+}
+
+function addGameToListsIfNeeded(game, curUser) {
+  game.lists.forEach((list) => {
+    if (list.index == -1) {
+      console.log("Could not add list " + list);
+    } else {
+      var gameIndex = curUser.lists.custom[list.index].games.findIndex((el) => {
+        el.toString() == game.id.toString();
+      });
+      if (gameIndex == -1) {
+        curUser.lists.custom[list.index].push(game.id); //push MongoID for game
+      }
+    }
+  });
   //For the given game, go through each of the gameLists and check
   //if the game is already in there. If not, add it.
 }

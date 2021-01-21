@@ -104,6 +104,43 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
   });
 });
 */
+//Top 100 games from each decade before 1990
+//Top 1000 games from 1990-2000
+//Top 1000 games from each year 2000-present
+var requests = [];
+for (var i = 1899; i < 1980; i = i + 10) {
+  var topYear = i + 11;
+  requests.push(
+    "https://api.boardgameatlas.com/api/search?client_id=" +
+      process.env.BGIAD +
+      "ph8PXFkuKb&ascending=true&lt_year_published=" +
+      topYear +
+      "&gt_year_published=" +
+      i
+  );
+}
+for (var i = 0; i <= 1000; i = i + 100) {
+  requests.push(
+    "https://api.boardgameatlas.com/api/search?client_id=" +
+      process.env.BGIAD +
+      "ph8PXFkuKb&ascending=true&lt_year_published=2001&gt_year_published=1989&skip=" +
+      i
+  );
+}
+var year = new Date().getFullYear();
+for (var j = 2000; j <= year; j++) {
+  for (var i = 0; i <= 1000; i = i + 100) {
+    requests.push(
+      "https://api.boardgameatlas.com/api/search?client_id=" +
+        process.env.BGIAD +
+        "ph8PXFkuKb&ascending=true&year_published=" +
+        j +
+        "&skip=" +
+        i
+    );
+  }
+}
+console.log({ requests });
 
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum, numPages) {

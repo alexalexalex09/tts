@@ -106,7 +106,8 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
 */
 //Top 100 games from each decade before 1990
 //Top 1000 games from 1990-2000
-//Top 1000 games from each year 2000-present
+//Top 1000 games from 2000-2010
+//Top 500 games from each year 2010-present
 var requests = [];
 for (var i = 1899; i < 1980; i = i + 10) {
   var topYear = i + 11;
@@ -126,10 +127,16 @@ for (var i = 0; i <= 1000; i = i + 100) {
       "ph8PXFkuKb&ascending=true&lt_year_published=2001&gt_year_published=1989&skip=" +
       i
   );
+  requests.push(
+    "https://api.boardgameatlas.com/api/search?client_id=" +
+      process.env.BGIAD +
+      "ph8PXFkuKb&ascending=true&lt_year_published=2011&gt_year_published=1999&skip=" +
+      i
+  );
 }
 var year = new Date().getFullYear();
-for (var j = 2000; j <= year; j++) {
-  for (var i = 0; i <= 1000; i = i + 100) {
+for (var j = 2010; j <= year; j++) {
+  for (var i = 0; i <= 500; i = i + 100) {
     requests.push(
       "https://api.boardgameatlas.com/api/search?client_id=" +
         process.env.BGIAD +
@@ -140,7 +147,7 @@ for (var j = 2000; j <= year; j++) {
     );
   }
 }
-console.log({ requests });
+console.log(requests.length);
 
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum, numPages) {

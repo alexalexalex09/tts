@@ -1,3 +1,3 @@
 # tts
 The Tidy Squirrel
-Running on selectagame.alexscottbecker.com
+Running on selectagame.net

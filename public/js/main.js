@@ -1,6 +1,9 @@
 //All DOM manipulation
 var createSession = function () {};
 var joinSession = function () {};
+if (localStorage.getItem("darkMode") == "true") {
+  toggleDarkMode();
+}
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -198,12 +201,14 @@ window.addEventListener("load", function () {
           games[i].votes += res.session.votes[i].voters[j].vote;
         }
       }
-      games.sort(function (a, b) {
-        var x = a.votes;
-        var y = b.votes;
-        return x < y ? 1 : x > y ? -1 : 0;
-      });
-      fillGames(games);
+      if (games.length > 0) {
+        games.sort(function (a, b) {
+          var x = a.votes;
+          var y = b.votes;
+          return x < y ? 1 : x > y ? -1 : 0;
+        });
+        fillGames(games);
+      }
     }
     goForwardFrom("#homeView", dest);
     if (toLock) {
@@ -632,6 +637,10 @@ window.addEventListener("load", function () {
 
   $("#bggConnectButton").click(this, function () {
     showEditMenu("Enter your BGG username", "connectBGG");
+  });
+
+  $("#darkModeButton").click(this, function () {
+    toggleDarkMode();
   });
 
   /*****************************/
@@ -1428,7 +1437,7 @@ function gulp(showAllGames = false) {
             `<div class="contextTitle">` +
             res.lists.allGames[i].name.replace(/\\/g, "") +
             `</div>` +
-            `<li class="bggLink">BoardGameGeek Link</li>` +
+            `<li class="bggLink">BoardGameAtlas Link</li>` +
             `<li onclick="contextCopy([{id: '` +
             res.lists.allGames[i]._id +
             `', name:'` +
@@ -2075,10 +2084,7 @@ function showGameContext(game) {
             game.id +
             "[list=games" +
             game.list +
-            "] .contextTitle",
-          undefined,
-          undefined,
-          fuse
+            "] .contextTitle"
         )
           .first()
           .text(),
@@ -2868,7 +2874,7 @@ function writeGameContext(contextObj) {
     `<div class="contextTitle">` +
     contextObj.name.replace(/\\/g, "") +
     `</div>` +
-    `<li class="bggLink">BoardGameGeek Link</li>` +
+    `<li class="bggLink">BoardGameAtlas Link</li>` +
     `<li onclick="contextMove([` +
     co +
     `])">Move</li>` +
@@ -4140,6 +4146,8 @@ function fillVotes(games) {
     for (var i = 0; i < games.length; i++) {
       localGames[i] = { id: games[i].game, vote: "500" };
     }
+  } else {
+    localGames = JSON.parse(localGames);
   }
   var htmlString = `<div id="voteInfo">Drag the slider for each game to vote! All the way to the right means you ABSOLUTELY have to play the game, all the way to the left means you can't stand the idea of playing the game.</div><div class="voteList">`;
   for (var i = 0; i < games.length; i++) {
@@ -4331,41 +4339,43 @@ function toggleWeight(el) {
 }
 
 function fillGames(games) {
-  var htmlString = ``;
-  var bottom = games[games.length - 1].votes;
-  var top = games[0].votes - bottom;
-  for (var i = 0; i < games.length; i++) {
-    games[i].weight = ((games[i].votes - bottom) / top) * 100;
-    games[i].weight = games[i].weight.toString().substr(0, 4);
-  }
-  for (var i = 0; i < games.length; i++) {
-    if (!$.isEmptyObject(games[i])) {
-      htmlString +=
-        `<div class="playGame"` +
-        ` id="play` +
-        i +
-        `"><div class="playGameTitle">` +
-        games[i].name.replace(/\\/g, "") +
-        `</div><div class="voteWeight">(` +
-        games[i].weight +
-        `)</div><div class="playBGGLink button greenBtn">View on BGG</div></div>`;
+  if (games.length > 0) {
+    var htmlString = ``;
+    var bottom = games[games.length - 1].votes;
+    var top = games[0].votes - bottom;
+    for (var i = 0; i < games.length; i++) {
+      games[i].weight = ((games[i].votes - bottom) / top) * 100;
+      games[i].weight = games[i].weight.toString().substr(0, 4);
     }
-  }
-  $("#playContainer").html(htmlString);
-  $(".playGameTitle").click(function () {
-    $(this).parent().children(".playBGGLink").toggleClass("showBGGLink");
-  });
-  var gamesToWrap = [];
-  $(".playGameTitle").each(function (i, e) {
-    gamesToWrap.push({
-      element: $(e).parent().children(".playBGGLink"),
-      game: $(e).text(),
+    for (var i = 0; i < games.length; i++) {
+      if (!$.isEmptyObject(games[i])) {
+        htmlString +=
+          `<div class="playGame"` +
+          ` id="play` +
+          i +
+          `"><div class="playGameTitle">` +
+          games[i].name.replace(/\\/g, "") +
+          `</div><div class="voteWeight">(` +
+          games[i].weight +
+          `)</div><div class="playBGGLink button greenBtn">View on BGA</div></div>`;
+      }
+    }
+    $("#playContainer").html(htmlString);
+    $(".playGameTitle").click(function () {
+      $(this).parent().children(".playBGGLink").toggleClass("showBGGLink");
     });
-  });
-  for (var i = 0; i < games.length; i++) {
-    gamesToWrap.push({ element: $(".voteSubTitle")[i], game: games[i].name });
+    var gamesToWrap = [];
+    $(".playGameTitle").each(function (i, e) {
+      gamesToWrap.push({
+        element: $(e).parent().children(".playBGGLink"),
+        game: $(e).text(),
+      });
+    });
+    for (var i = 0; i < games.length; i++) {
+      gamesToWrap.push({ element: $(".voteSubTitle")[i], game: games[i].name });
+    }
+    wrapGameUrls(gamesToWrap);
   }
-  wrapGameUrls(gamesToWrap);
 }
 
 function playShare() {
@@ -5041,6 +5051,37 @@ function readFile(input) {
         });
       });
     };
+  }
+}
+/*
+Dark Mode
+--main-grey: #aaa
+--main-light-grey: #ccc
+--main-blue: #436186
+--main-background: #03030e
+Normal:
+--main-blue: #6492c7;
+--main-light-grey: #aaa;
+--main-grey: #333;
+--main-background: #fff
+*/
+function toggleDarkMode() {
+  if ($("html").hasClass("dark")) {
+    localStorage.setItem("darkMode", "false");
+    $("html").removeClass("dark");
+    $("#darkModeButton").html("Enable");
+    $(":root").css("--main-grey", "#333");
+    $(":root").css("--main-light-grey", "#aaa");
+    $(":root").css("--main-blue", "#6492c7");
+    $(":root").css("--main-background", "#fff");
+  } else {
+    localStorage.setItem("darkMode", "true");
+    $("html").addClass("dark");
+    $("#darkModeButton").html("Disable");
+    $(":root").css("--main-grey", "#aaa");
+    $(":root").css("--main-light-grey", "#ccc");
+    $(":root").css("--main-blue", "#436186");
+    $(":root").css("--main-background", "#03030e");
   }
 }
 

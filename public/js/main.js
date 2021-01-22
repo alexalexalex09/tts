@@ -421,12 +421,12 @@ window.addEventListener("load", function () {
   /*     Set History State     */
   /*****************************/
   //Set an extra history state to prevent back button from closing the page
-  window.history.pushState({ page: "home", noBackExitsApp: true }, "");
+  /*window.history.pushState({ page: "home", noBackExitsApp: true }, "");
   window.addEventListener("popstate", function (event) {
     if (event.state && event.state.noBackExitsApp) {
       window.history.pushState({ noBackExitsApp: true }, "");
     }
-  });
+  });*/
 
   /*****************************/
   /*      Set Window Height    */
@@ -900,6 +900,11 @@ window.addEventListener("load", function () {
   }
 
   if (/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
+    history.pushState(
+      {},
+      "SelectAGame: " + window.location.pathname.substr(1),
+      window.location.origin + "/" + window.location.pathname.substr(1)
+    );
     runListImport(window.location.pathname.substr(1));
   }
 
@@ -3844,7 +3849,7 @@ function setCode(code) {
   $("#code").html(code);
   history.pushState(
     {},
-    "SelectAGame",
+    "SelectAGame: " + $("#code").html(),
     window.location.origin + "/" + $("#code").html()
   );
   $(".codeDisplay").each(function () {
@@ -4440,8 +4445,8 @@ function importSessionAsList() {
       </div>`;
       }
       el +=
-        `<div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
-    <div class="button greenBtn" id="importSubmit" onclick="performListImport('` +
+        `<div class="button redBtn" id="importCancel" onclick="cancelImport()">Cancel</div>` +
+        `<div class="button greenBtn" id="importSubmit" onclick="performListImport('` +
         $("#code").html() +
         `', '` +
         $(".phraseText").first().text().substr(8) +
@@ -4449,6 +4454,11 @@ function importSessionAsList() {
       $("body").append(el);
     }
   );
+}
+
+function cancelImport() {
+  $("#importCancel").parent().parent().parent().parent().remove();
+  history.pushState({}, "SelectAGame", window.location.origin + "/");
 }
 
 /*function submitImportSessionAsList() {
@@ -5123,19 +5133,21 @@ function runListImport(code) {
           ` games?</div><hr/>
       <div id="importDuplicate"` +
           overwrite +
-          `>
-      <div id="importOverwrite"><input type="radio" name="duplicate" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
-      <div id="importRename"><input type="radio" name="duplicate" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
-      </div>
-      <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="$(this).parent().parent().parent().remove()">Cancel</div>
-  <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
+          `></div>`;
+        $("body").append(el);
+        var inner =
+          `<div id="importOverwrite"><input type="radio" name="duplicate" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
+        <div id="importRename"><input type="radio" name="duplicate" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
+        </div>
+        <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="cancelImport()">Cancel</div>
+    <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
           res.list.listCode +
           `', '` +
           $(".subContextTitle")
             .text()
-            .substring(13, $(".subContextTitle").text().lastIndexOf('"'));
-        +`'">Import</div></div>`;
-        $("body").append(el);
+            .substring(13, $(".subContextTitle").text().lastIndexOf('"')) +
+          `')">Import</div>`;
+        $("#importDuplicate").html(inner);
       }
     },
     (res) => {
@@ -5195,6 +5207,7 @@ function performListImport(code, oldListName, isSession = false) {
       ttsFetch(fetch, body, (res) => {
         gulp();
         createAndShowAlert("List successfully added!");
+        history.pushState({}, "SelectAGame", window.location.origin + "/");
       });
       $(".subContextContainer").each(function () {
         $(this).remove();

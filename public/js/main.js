@@ -519,6 +519,7 @@ window.addEventListener("load", function () {
     if (from != "#homeView" && from != "") {
       window.hist = ["#homeView"];
       setBackNormal();
+      history.pushState({}, "SelectAGame", window.location.origin + "/");
       $("#homeView").css({ transform: "translateX(-200vw)" });
       $("#homeView").removeClass("off");
       $("#backArrow").addClass("off");

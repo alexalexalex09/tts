@@ -9,7 +9,8 @@ var SessionSchema = new Schema(
     phrase: String,
     creation: {
       type: Date,
-      expires: 2592000,
+      //expires: 2592000, Will have to use a mongoose cron package to manually
+      //unset the code of a document that has expired for a non-premium user
       default: Date.now,
       required: true,
     },

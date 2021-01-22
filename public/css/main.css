@@ -1799,7 +1799,7 @@ input[type="range"]::-ms-thumb {
   transform: translateY(75%) rotate(45deg);
   background: linear-gradient(
         135deg,
-        #var(--main-light-grey) 25%,
+        var(--main-light-grey) 25%,
         transparent 25%
       )
       content-box,

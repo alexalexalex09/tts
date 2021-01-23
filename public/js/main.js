@@ -1240,7 +1240,7 @@ function lockGames(code) {
   });
 }
 
-//This doesn't appear to be called anymore
+//Called by adding a game on the Edit Games List screen by #addGroupGamesInputCont
 function addGroupGame() {
   var game = addGroupGamesInput.value
     .replace(/&/, "&amp;")
@@ -1253,6 +1253,11 @@ function addGroupGame() {
       $("#editGameList").append(res.status);
       sortEditGames();
       registerEGS();
+      ttsFetch(
+        "/get_session_post_select",
+        { code: $("#code").text() },
+        (res) => {}
+      );
     },
     (res) => {
       if ((res.err = "added")) {
@@ -5085,6 +5090,7 @@ function toggleDarkMode() {
     $(":root").css("--main-light-grey", "#aaa");
     $(":root").css("--main-blue", "#6492c7");
     $(":root").css("--main-background", "#fff");
+    $(":root").css("--main-white-bg", "#fff");
   } else {
     localStorage.setItem("darkMode", "true");
     $("html").addClass("dark");
@@ -5093,6 +5099,7 @@ function toggleDarkMode() {
     $(":root").css("--main-light-grey", "#ccc");
     $(":root").css("--main-blue", "#436186");
     $(":root").css("--main-background", "#03030e");
+    $(":root").css("--main-white-bg", "#03030e");
   }
 }
 

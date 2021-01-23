@@ -6,6 +6,7 @@
   --main-blue: #6492c7;
   --main-light-grey: #aaa;
   --main-white: #fff;
+  --main-white-bg: #fff;
   --main-black: #000;
   --main-grey: #333;
   --main-red: #d00;
@@ -290,7 +291,7 @@ button#importBGG {
   border-top: 1px solid white;
   margin-top: 10px;
   border-bottom: 1px solid white;
-  background-color: var(--main-white);
+  background-color: var(--main-white-bg);
   z-index: 1;
   font-size: var(--font-p);
   color: var(--main-black);
@@ -495,7 +496,7 @@ select.bggFilterInput {
   width: calc(var(--vh, 1vh) * 2.3);
   left: calc(var(--vh, 1vh) * 0.6);
   bottom: calc(var(--vh, 1vh) * 0.4);
-  background-color: white;
+  background-color: var(--main-white-bg);
   -webkit-transition: 0.4s;
   transition: 0.4s;
 }
@@ -689,7 +690,6 @@ input:checked + .slider:before {
   height: 200px;
   background-repeat: no-repeat;
   background-size: contain;
-  background-color: white;
   justify-self: center;
 }
 
@@ -703,7 +703,7 @@ input:checked + .slider:before {
   transform: translate(-50%);
   border-radius: 12px;
   border: 3px solid var(--main-blue);
-  background-color: white;
+  background-color: var(--main-white-bg);
   display: grid;
   align-content: center;
   grid-template-rows: 200px 1fr;
@@ -1013,7 +1013,7 @@ input#listImportSubmit.green {
   text-align: center;
   transition: opacity 0.5s;
   opacity: 0;
-  background-color: var(--main-white);
+  background-color: var(--main-white-bg);
   z-index: -1;
   border: 4px solid var(--main-green);
   border-radius: 5px;
@@ -1569,7 +1569,7 @@ input#listImportSubmit.green {
   border-style: solid;
   border-color: black black transparent transparent;
   transform: rotate(-45deg);
-  background-color: white;
+  background-color: var(--main-white-bg);
 }
 
 .toolTipContainer.showToolTip {
@@ -1589,7 +1589,7 @@ input#listImportSubmit.green {
   text-align: left;
   border: 2px solid var(--main-black);
   border-radius: 5px;
-  background-color: var(--main-white);
+  background-color: var(--main-white-bg);
   width: 14rem;
   display: grid;
   grid-template-columns: 1fr;
@@ -2136,81 +2136,6 @@ input[type="range"]:before {
 #gamesContainer > li:last-child {
   margin-bottom: min(15vw, calc(var(--vh10)));
 }
-/*
-#gamesAdderContainer {
-  height: var(--vh20);
-  position: absolute;
-  bottom: 0;
-  width: 100vw;
-  background-color: var(--main-blue);
-}
-
-.gamesAdder {
-  transition: transform 0.5s, opacity 0.5s;
-}
-
-.gamesAdder {
-  color: var(--main-white);
-  position: absolute;
-  bottom: var(--vh20);
-  width: 50vw;
-  text-align: center;
-  font-size: 7vw;
-  display: flex;
-  justify-content: center;
-  background-color: var(--main-blue);
-  padding: 2.5vw 0vw;
-  cursor: pointer;
-}
-
-.gamesAdder div {
-  border: 3px solid white;
-  padding: 8px 5px 5px;
-  width: 25vw;
-  height: 20vw;
-  border-radius: 12px;
-  align-items: center;
-  align-self: center;
-  display: flex;
-  justify-items: center;
-  justify-content: center;
-}
-
-.gamesAdder:nth-child(1) {
-  left: 50vw;
-}
-
-#menuAddListContainer,
-#menuAddGamesContainer {
-  position: absolute;
-  bottom: var(--vh30);
-  width: 80vw;
-  left: 10vw;
-  transition: transform 0.5s, opacity 0.5s;
-}
-
-#menuAddListTitle,
-#menuAddGamesTitle {
-  color: white;
-  text-align: center;
-  font-size: 2em;
-}
-
-#backgroundListButton {
-  color: var(--main-white);
-  position: absolute;
-  width: 100vw;
-  align-content: start;
-  font-size: var(--vh10);
-  bottom: var(--vh5);
-  transition: transform 0.5s;
-  z-index: -1;
-}
-
-.rotated {
-  transform: rotate(45deg);
-}
-*/
 .slideDown {
   transform: translateY(var(--vh10));
   opacity: 0;
@@ -2234,27 +2159,6 @@ input[type="range"]:before {
   text-overflow: ellipsis;
 }
 
-/*****************/
-/*    Testing    */
-/*****************/
-/*#centerbutton {
-  grid-area: 6/1/8/11;
-  justify-self: center;
-  font-size: 1.5em;
-  background: var(--main-blue);
-  padding: 10px 25px;
-  color: var(--main-white);
-  border-radius: 10px;
-  align-self: center;
-  cursor: pointer;
-}
-
-#gamenum {
-  grid-area: 8/1/9/11;
-  justify-self: center;
-  font-size: 1.5em;
-}
-*/
 /*****************/
 /*  Mobile Menu  */
 /*****************/
@@ -2418,7 +2322,7 @@ html.dark #menuImg {
 /***********************/
 
 .contextMenu {
-  color: white;
+  color: var(--main-white);
 }
 
 .contextMenu ul {
@@ -2426,10 +2330,10 @@ html.dark #menuImg {
 }
 
 .contextActions {
-  border: 1px solid white;
+  border: 1px solid var(--main-white);
   padding: 5vw 5vw 15vw 5vw;
   width: 100vw;
-  background-color: white;
+  background-color: var(--main-white-bg);
   color: var(--main-grey);
   font-size: var(--font-h2);
   position: absolute;
@@ -2480,7 +2384,7 @@ html.dark #menuImg {
 .subContextImport,
 .subContextImportSession {
   margin-left: 0;
-  background-color: white;
+  background-color: var(--main-white-bg);
   position: absolute;
   border-radius: 12px;
   padding: 15px;
@@ -2726,7 +2630,7 @@ input#selectLimit {
   width: 96vw;
   bottom: calc(var(--vh) * 73);
   height: calc(var(--vh, 1vh) * 7);
-  background-color: var(--main-white);
+  background-color: var(--main-white-bg);
   position: absolute;
   z-index: 1;
   display: grid;

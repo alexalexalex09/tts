@@ -171,6 +171,7 @@ app.use((req, res, next) => {
   //console.log("custom middleware called*****************");
   if (req.user) {
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
+      console.log("auth0 error: ", err);
       console.log("auth0 user:", extUser);
       res.locals.user = req.user;
       if (extUser) {

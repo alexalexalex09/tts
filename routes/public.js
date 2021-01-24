@@ -648,6 +648,9 @@ router.post("/get_user_lists_populated", (req, res) => {
               );
             }
           } else {
+            //Ideally, this shouldn't even be here. Users shouldn't get created by a
+            //script that only runs on page load - they should get created before the
+            //page is even rendered. This is now taken care of in app.js
             newUser = {
               profile_id: req.user.id,
               name: req.user.displayName,

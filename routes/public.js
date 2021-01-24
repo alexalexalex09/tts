@@ -3,10 +3,7 @@ console.log("Starting...");
 var loadTime = Date.now();
 const express = require("express");
 const router = express.Router();
-var mongoose = require("mongoose");
-mongoose.set("useNewUrlParser", true);
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
+var mongoose = require("../mongo.js");
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
 var Session = require("../models/sessions.js");
@@ -16,7 +13,7 @@ var Fuse = require("fuse.js");
 const { response } = require("express");
 const https = require("https");
 const Resource = require("../models/resources.js");
-var ManagementClient = require("auth0").ManagementClient;
+//var ManagementClient = require("auth0").ManagementClient;
 var AuthenticationClient = require("auth0").AuthenticationClient;
 var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
@@ -24,12 +21,12 @@ const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
 
 console.log("1/8: Setting up Auth0", Date.now() - loadTime);
-var management = new ManagementClient({
+/*var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
   clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
   scope: "read:users update:users",
-});
+});*/
 
 var auth0 = new AuthenticationClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -41,17 +38,6 @@ const ERR_LOGIN_SOFT = { err: "No user" };
 const ERR_CODE = { err: "Session not found" };
 
 console.log("2/8: Connecting Mongoose", Date.now() - loadTime);
-var mongoDB = process.env.mongo;
-mongoose.connect(mongoDB, {
-  useNewUrlParser: true,
-  useFindAndModify: false,
-  useUnifiedTopology: true,
-  w: "majority",
-  family: 4,
-});
-mongoose.Promise = global.Promise;
-var db = mongoose.connection;
-db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 console.log("3/8: Cleaning database", Date.now() - loadTime);
 Game.find({ name: /'/ }).exec(function (err, curGames) {
@@ -596,68 +582,56 @@ router.post("/get_session_post_select", (req, res) => {
 router.post("/get_user_lists_populated", (req, res) => {
   console.log("gulp");
   if (req.user) {
-    console.log("extUser: ", req.extUser);
+    //console.log("extUser: ", req.extUser);
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
         //console.log("GULP curUser:", curUser);
-        management.users.get({ id: req.user.user_id }, function (err, extUser) {
-          Session.find({}, "code").exec(function (err, codeList) {
-            //console.log("auth0 user:", extUser);
-            res.locals.user = req.user;
-            if (extUser && extUser.username != "") {
+        //management.users.get({ id: req.user.user_id }, function (err, extUser) {
+        Session.find({}, "code").exec(function (err, codeList) {
+          //console.log("auth0 user:", extUser);
+          res.locals.user = req.user;
+          res.locals.email = req.user.emails[0].value;
+          /*if (extUser && extUser.username != "") {
               var displayName = extUser.username || req.user.displayName;
             } else {
-              displayName = req.user.displayName;
-            }
-            //console.log("DisplayName: ", displayName);
-            //console.log(extUser);
-            if (curUser) {
-              if (curUser.lists) {
-                var modified = false;
-                for (var i = 0; i < curUser.lists.custom.length; i++) {
-                  if (
-                    typeof curUser.lists.custom[i].listCode == "undefined" ||
-                    curUser.lists.custom[i].listCode.length == 0
-                  ) {
-                    curUser.lists.custom[i].listCode = makeid(
-                      6,
-                      codeList.map((e) => e.code)
-                    );
-                    modified = true;
-                    console.log(
-                      "Made new id for list " +
-                        curUser.lists.custom[i].name +
-                        ": " +
-                        curUser.lists.custom[i].listCode
-                    );
-                  }
+              var displayName = req.user.displayName;
+            }*/
+          //console.log("DisplayName: ", displayName);
+          //console.log(extUser);
+          if (curUser) {
+            var displayName = curUser.name;
+            res.locals.username = curUser.name;
+            if (curUser.lists) {
+              var modified = false;
+              for (var i = 0; i < curUser.lists.custom.length; i++) {
+                if (
+                  typeof curUser.lists.custom[i].listCode == "undefined" ||
+                  curUser.lists.custom[i].listCode.length == 0
+                ) {
+                  curUser.lists.custom[i].listCode = makeid(
+                    6,
+                    codeList.map((e) => e.code)
+                  );
+                  modified = true;
+                  console.log(
+                    "Made new id for list " +
+                      curUser.lists.custom[i].name +
+                      ": " +
+                      curUser.lists.custom[i].listCode
+                  );
                 }
-                if (modified) {
-                  console.log("Saving curUser");
-                  curUser.save();
-                }
-                getOwnedSessions(req.user.id, curUser.lists, res).then(
-                  (result) => {
-                    res.send(result);
-                  }
-                );
-              } else {
-                newUser = {
-                  profile_id: req.user.id,
-                  name: displayName,
-                  lists: { allGames: [], custom: [] },
-                  bgg: { username: "", collection: [] },
-                };
-                curUser = new User(newUser);
-                curUser.save().then(bggUpdate(curUser));
-                getOwnedSessions(req.user.id, curUser.lists, res).then(
-                  (result) => {
-                    res.send(result);
-                  }
-                );
               }
+              if (modified) {
+                console.log("Saving curUser");
+                curUser.save();
+              }
+              getOwnedSessions(req.user.id, curUser.lists, res).then(
+                (result) => {
+                  res.send(result);
+                }
+              );
             } else {
               newUser = {
                 profile_id: req.user.id,
@@ -666,7 +640,6 @@ router.post("/get_user_lists_populated", (req, res) => {
                 bgg: { username: "", collection: [] },
               };
               curUser = new User(newUser);
-              console.log("Creating New USER****");
               curUser.save().then(bggUpdate(curUser));
               getOwnedSessions(req.user.id, curUser.lists, res).then(
                 (result) => {
@@ -674,8 +647,23 @@ router.post("/get_user_lists_populated", (req, res) => {
                 }
               );
             }
-          });
+          } else {
+            newUser = {
+              profile_id: req.user.id,
+              name: req.user.displayName,
+              lists: { allGames: [], custom: [] },
+              bgg: { username: "", collection: [] },
+            };
+            res.locals.username = req.user.displayName;
+            curUser = new User(newUser);
+            console.log("Creating New USER****");
+            curUser.save().then(bggUpdate(curUser));
+            getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
+              res.send(result);
+            });
+          }
         });
+        //});
       });
   } else {
     res.send(ERR_LOGIN_SOFT);
@@ -1220,12 +1208,12 @@ router.post("/join_session", function (req, res) {
           }
           console.log("newUser ", newUser);
           if (newUser) {
-            var displayName = "";
+            /*var displayName = "";
             management.users.get(
               { id: req.user.user_id },
               function (err, extUser) {
-                console.log("auth0 user:", extUser);
-                if (extUser) {
+                console.log("auth0 user:", extUser);*/
+            /*if (extUser) {
                   if (
                     extUser.user_metadata &&
                     extUser.user_metadata.userDefinedName &&
@@ -1244,37 +1232,38 @@ router.post("/join_session", function (req, res) {
                   }
                 } else {
                   displayName = req.user.displayName;
-                }
-                curSession.users.push({
-                  user: req.user.id,
-                  name: displayName,
-                  done: false,
-                  doneVoting: false,
-                });
-                if (
-                  curSession.users.findIndex(
-                    (obj) => obj.user == "guest" + req.session.userNonce
-                  ) > -1
-                ) {
-                  delete curSession.users[index];
-                }
-                curSession.save().then(function () {
-                  socketAPI.addGame({
-                    code: theCode,
-                  });
-                  res.send({
-                    owned: false,
-                    status: {
-                      code: curSession.code,
-                      lock: lock,
-                      games: sendGames,
-                      phrase: curSession.phrase,
-                      limit: curSession.limit,
-                    },
-                  });
-                });
+                }*/
+            User.findOne({ id: req.user.profile_id }).exec((err, curUser) => {
+              var displayName = curUser.name;
+              curSession.users.push({
+                user: req.user.id,
+                name: displayName,
+                done: false,
+                doneVoting: false,
+              });
+              if (
+                curSession.users.findIndex(
+                  (obj) => obj.user == "guest" + req.session.userNonce
+                ) > -1
+              ) {
+                delete curSession.users[index];
               }
-            );
+              curSession.save().then(function () {
+                socketAPI.addGame({
+                  code: theCode,
+                });
+                res.send({
+                  owned: false,
+                  status: {
+                    code: curSession.code,
+                    lock: lock,
+                    games: sendGames,
+                    phrase: curSession.phrase,
+                    limit: curSession.limit,
+                  },
+                });
+              });
+            });
           } else {
             if (
               curSession.users.findIndex(
@@ -1388,12 +1377,14 @@ router.post("/create_session", function (req, res) {
         5,
         codeList.map((e) => e.code)
       ); // Make a new code for the session
+      /*
       var displayName = "";
       management.users.get({ id: req.user.user_id }, function (err, extUser) {
         // Get the user info from Auth0
-        //console.log("auth0 user:", extUser);
-        res.locals.user = req.user; //Set correct displayName and user var for locals
-        if (extUser) {
+        //console.log("auth0 user:", extUser);*/
+      res.locals.user = req.user; //Set correct displayName and user var for locals
+
+      /*if (extUser) {
           if (
             extUser.user_metadata &&
             extUser.user_metadata.userDefinedName &&
@@ -1412,7 +1403,9 @@ router.post("/create_session", function (req, res) {
           }
         } else {
           displayName = req.user.displayName;
-        }
+        }*/
+      User.findOne({ profile_id: req.user.id }).exec((err, curUser) => {
+        var displayName = curUser.name;
         var today = new Date();
         var dd = String(today.getDate()).padStart(2, "0");
         var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
@@ -2669,20 +2662,15 @@ router.post("/change_username", function (req, res) {
   var params = { id: req.user.id };
   var metadata = { userDefinedName: req.body.newName };
   console.log("Changing username: ", params, metadata);
-  management.users.updateUserMetadata(params, metadata, function (err, user) {
-    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-      curUser.name = req.body.newName;
-      curUser.save();
-      console.log("Username changed to ", req.body.newName);
-      if (err) {
-        // Handle error.
-        res.send({ err: "Username update error: ", err });
-      } else {
-        // Updated user.
-        res.send({ status: "Success", name: req.body.newName });
-      }
-    });
+  /*management.users.updateUserMetadata(params, metadata, function (err, user) {*/
+  User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+    curUser.name = req.body.newName;
+    curUser.save();
+    console.log("Username changed to ", req.body.newName);
+    // Updated user.
+    res.send({ status: "Success", name: req.body.newName });
   });
+  /*});*/
 });
 
 router.post("/get_top_list", function (req, res) {
@@ -3053,7 +3041,7 @@ function bggUpdate(curUser) {
         }
       );
     } else {
-      reject("No username");
+      reject("No BGG username");
     }
   });
   return promise;

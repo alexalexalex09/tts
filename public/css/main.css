@@ -334,6 +334,7 @@ select.bggFilterInput {
 #bggSelectAll {
   top: calc(var(--vh20) - 20px);
   left: 10vw;
+  padding-left: 11px;
   position: absolute;
   width: 80vw;
   height: 19px;

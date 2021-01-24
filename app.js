@@ -8,9 +8,14 @@ const publicRouter = require("./routes/public");
 const authRouter = require("./routes/auth");
 const qrRouter = require("./routes/qr");
 const session = require("express-session");
+var mongoose = require("./mongo.js");
+var User = require("./models/users.js");
+var Game = require("./models/games.js");
+var Session = require("./models/sessions.js");
+var Stat = require("./models/stats.js");
 const cfenv = require("cfenv");
 //var socket_io = require("socket.io");
-var ManagementClient = require("auth0").ManagementClient;
+//var ManagementClient = require("auth0").ManagementClient;
 //const requireHTTPS = require("./middleware/requireHTTPS");
 var compression = require("compression");
 
@@ -49,12 +54,12 @@ app.get("*", function (req, res, next) {
 });
 //Auth0 vars
 
-var management = new ManagementClient({
+/*var management = new ManagementClient({
   domain: process.env.AUTH0_DOMAIN,
   clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
   clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
   scope: "read:users update:users",
-});
+});*/
 
 var envs = {
   orgUrl: process.env.oUrl,
@@ -168,11 +173,55 @@ app.use((req, res, next) => {
 */
 
 app.use((req, res, next) => {
+  //Get username from Mongo and pass into locals
+  //Would it be better to send this from somewhere else?
+  //What function is called upon window load that could populate the username?
+  if (req.user) {
+    res.locals.user = req.user;
+    res.locals.email = req.user.emails[0].value;
+    User.findOne({ profile_id: req.user.id }).exec((err, curUser) => {
+      if (curUser) {
+        if (typeof curUser.name == "undefined") {
+          curUser.name = req.user.displayName;
+          curUser.save().then(() => {
+            res.locals.username = curUser.name;
+            console.log("Name is " + res.locals.username);
+            next();
+          });
+        } else {
+          res.locals.username = curUser.name;
+          console.log("Name is " + res.locals.username);
+          next();
+        }
+      } else {
+        res.locals.username = "";
+        newUser = {
+          profile_id: req.user.id,
+          name: req.user.displayName,
+          lists: { allGames: [], custom: [] },
+          bgg: { username: "", collection: [] },
+        };
+        res.locals.username = req.user.displayName;
+        curUser = new User(newUser);
+        console.log("Creating New User in app.js****");
+        curUser.save().then(() => {
+          console.log("Name is " + res.locals.username);
+          next();
+        });
+      }
+    });
+  } else {
+    console.log("Name is not found, no user");
+    next();
+  }
+});
+
+/*app.use((req, res, next) => {
   //console.log("custom middleware called*****************");
   if (req.user) {
     management.users.get({ id: req.user.user_id }, function (err, extUser) {
-      console.log("auth0 error: ", err);
-      console.log("auth0 user:", extUser);
+      //console.log("auth0 error: ", err);
+      //console.log("auth0 user:", extUser);
       res.locals.user = req.user;
       if (extUser) {
         if (
@@ -212,6 +261,7 @@ app.use((req, res, next) => {
     next();
   }
 });
+*/
 
 //Serviceworker
 /*app.use((req, res, next) => {

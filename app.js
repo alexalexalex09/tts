@@ -185,12 +185,12 @@ app.use((req, res, next) => {
           curUser.name = req.user.displayName;
           curUser.save().then(() => {
             res.locals.username = curUser.name;
-            console.log("Name is " + res.locals.username);
+            //console.log("Name is " + res.locals.username);
             next();
           });
         } else {
           res.locals.username = curUser.name;
-          console.log("Name is " + res.locals.username);
+          //console.log("Name is " + res.locals.username);
           next();
         }
       } else {
@@ -203,15 +203,15 @@ app.use((req, res, next) => {
         };
         res.locals.username = req.user.displayName;
         curUser = new User(newUser);
-        console.log("Creating New User in app.js****");
+        //console.log("Creating New User in app.js****");
         curUser.save().then(() => {
-          console.log("Name is " + res.locals.username);
+          //console.log("Name is " + res.locals.username);
           next();
         });
       }
     });
   } else {
-    console.log("Name is not found, no user");
+    //console.log("Name is not found, no user");
     next();
   }
 });

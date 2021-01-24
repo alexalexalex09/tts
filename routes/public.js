@@ -197,9 +197,12 @@ function getTheGames(games) {
 }
 
 function prepForMongo(name) {
-  if (name.indexOf("'") > -1) {
-    var i = name.indexOf("'");
-    name = name.substr(0, i) + "\\" + name.substr(i);
+  var matches = [...name.matchAll(/[^\\]'/g)];
+  for (var i = matches.length - 1; i > -1; i--) {
+    name =
+      name.substr(0, matches[i].index + 1) +
+      "\\" +
+      name.substr(matches[i].index + 1);
   }
   return name;
 }
@@ -208,7 +211,7 @@ function prepForMongo(name) {
 function getGame(game) {
   return new Promise((resolve, reject) => {
     if (game.id.length > 0) {
-      game.name = prepMongo(game.name);
+      game.name = prepForMongo(game.name);
       Game.findOne({ name: game.name }).exec(function (err, curGame) {
         var fields = [
           "id",
@@ -1036,7 +1039,7 @@ router.post("/game_add", function (req, res) {
                 }
                 console.log("theGame: ", theGame);
                 curUser.save().then(function (theUser) {
-                  Game.findById(game._id, "name", function (err, gameToReport) {
+                  Game.findById(game._id, function (err, gameToReport) {
                     if (gameToReport) {
                       console.log("Game name: " + gameToReport.name);
                       res.send({ status: gameToReport });
@@ -2790,8 +2793,7 @@ function getNewGameFromBGA(currentGame) {
       if (ret.games.length == 0 || fuzzy < 0.5) {
         var url =
           `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-          currentGame.replace(/[^0-9a-zA-Z' ]/g, "") +
-          `&objecttype=boardgame`;
+          currentGame.replace(/[^0-9a-zA-Z' ]/g, "");
         var userGame = new Game({
           name: currentGame,
           bgaID: false,
@@ -2819,10 +2821,10 @@ function getNewGameFromBGA(currentGame) {
         //otherwise it would have already been found.
         if (misspelledName) {
           var misspelledGame = new Game({
-            name: ret.games[0].name,
+            name: misspelledName,
             bgaID: ret.games[0].id,
             metadata: ret.games[0],
-            actualName: misspelledName,
+            actualName: ret.games[0].name,
           });
           misspelledGame.save().then((saved) => {
             resolve(saved);

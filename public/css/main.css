@@ -1629,6 +1629,13 @@ input#listImportSubmit.green {
   display: block;
 }
 
+.noImage {
+  border: 2px solid var(--main-black);
+    padding: 5px 0px;
+    box-sizing: border-box;
+    background-color: var(--main-white);
+}
+
 .BGGDesc {
   line-height: 1.1em;
   grid-area: description;

@@ -1143,6 +1143,7 @@ function goBack(from, to) {
   $(to).removeClass("off");
   if (to == "#homeView") {
     $("#backArrow").addClass("off");
+    history.pushState({}, "SelectAGame", window.location.origin + "/");
   }
   if (window.hist.length == 2) {
     setBackHome();
@@ -2524,6 +2525,16 @@ function parseBGGThing(id, field) {
           var game = topList[index];
           console.log("resolving game: ", game.name, field);
           resolve(game[field]);
+        } else {
+          //No ID
+          index = topList.findIndex((obj) => {
+            return obj.name == id;
+          });
+          if (index > -1) {
+            var game = topList[index];
+            console.log("resolving game: ", game.name, field);
+            resolve(game[field]);
+          }
         }
       }
       if (index == -1) {
@@ -2683,8 +2694,7 @@ function getGameUrl(games) {
                 localforage.setItem("topList", topList).then((res) => {
                   var ret =
                     `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                    game +
-                    `&objecttype=boardgame`;
+                    game;
                   resolveInner({ game: game, url: ret });
                 });
               } else {
@@ -2723,10 +2733,10 @@ function getGameUrl(games) {
                     );
                   });
                   if (index == -1) {
+                    console.log(game.game + " not found");
                     var url =
                       `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                      game.game.replace(/[^0-9a-zA-Z' ]/g, "") +
-                      `&objecttype=boardgame`;
+                      game.game.replace(/[^0-9a-zA-Z' ]/g, "");
                     games[curIndex].url = url;
                   } else {
                     games[curIndex].url = res[index].url;
@@ -3374,6 +3384,7 @@ function addNewGame(el) {
     .replace(/'/g, "\\'");
   $(el).val("");
   ttsFetch("/game_add", { game: game, list: list }, (res) => {
+    var name = res.status.name.replace(/\\/g, "");
     var htmlString =
       `<li>
                 <div rating="` +
@@ -3383,7 +3394,7 @@ function addNewGame(el) {
       `" class="gameName" game_id="` +
       res.status._id +
       `">` +
-      res.status.name.replace(/\\/g, "") +
+      name +
       `
                 </div>
                 <div class='toggle'>
@@ -4025,6 +4036,8 @@ function showSelect(data, isOwner) {
 function showToolTip(thumb, container) {
   if ($(".toolTipContainer.showToolTip").length === 0) {
     $(thumb).toggleClass("showVoteThumb");
+    console.trace();
+    console.log({ container });
     showVoteThumb(container);
     setTimeout(function () {
       $(container).toggleClass("showToolTip");
@@ -4071,32 +4084,59 @@ function showVoteThumb(el) {
   if ($el.children(".BGGDesc").length == 0) {
     $el.append(`<div class="BGGDesc"></div>`);
     var id = $el.children(".voteSubTitle").children("a").attr("href");
+    console.log("id: " + id);
     if (id) {
       id = id.substr(0, id.lastIndexOf("/"));
       id = id.substr(id.lastIndexOf("/") + 1);
       if (id == "www.boardgamegeek.com") {
         id = $el.children(".voteSubTitle").children("a").attr("href");
-        id = id.substr(id.lastIndexOf("q=") + 2);
+        if (id.indexOf("objecttype=boardgame") > -1) {
+          id = id.substring(
+            id.lastIndexOf("q=") + 2,
+            id.lastIndexOf("&object")
+          );
+        } else {
+          id = id.substr(id.lastIndexOf("q=") + 2);
+        }
+        console.log({ id });
       }
       parseBGGThing(id, "thumb_url").then(function (res) {
-        $el
-          .children(".BGGDesc")
-          .prepend(`<div class="BGGThumb"><img src="` + res + `"></img></div>`);
+        if (res != "undefined" && typeof res != "undefined") {
+          $el
+            .children(".BGGDesc")
+            .prepend(
+              `<div class="BGGThumb"><img src="` + res + `"></img></div>`
+            );
+        } else {
+          $el
+            .children(".BGGDesc")
+            .prepend(
+              `<div class="BGGThumb"><div class="noImage">No Image Found</div></div>`
+            );
+        }
       });
       parseBGGThing(id, "description_preview").then(function (res) {
-        res = htmlDecode(res);
-        if (res.length > 200) {
-          res = reduceUntilNextWordEnd(res.substr(0, 200));
-          res =
-            "<div>" +
-            res +
-            `...</div><a target="_blank" href="` +
-            $el.children(".voteSubTitle").children("a").attr("href") +
-            `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
+        if (typeof res == "undefined") {
+          $el
+            .children(".BGGDesc")
+            .append(
+              `<div class="BGGDescText">No description is available for this game.</div>`
+            );
+        } else {
+          res = htmlDecode(res);
+          if (res.length > 200) {
+            res = reduceUntilNextWordEnd(res.substr(0, 200));
+            res =
+              "<div>" +
+              res +
+              `...</div><a target="_blank" href="` +
+              $el.children(".voteSubTitle").children("a").attr("href") +
+              `">[Read More<ion-icon name="open-outline"></ion-icon>]</a>`;
+          }
+          $el
+            .children(".BGGDesc")
+            .append(`<div class="BGGDescText">` + res + `</div>`);
         }
-        $el
-          .children(".BGGDesc")
-          .append(`<div class="BGGDescText">` + res + `</div>`);
       });
     }
   }
@@ -4214,7 +4254,7 @@ function fillVotes(games) {
   var gamesToWrap = [];
   for (var i = 0; i < games.length; i++) {
     gamesToWrap.push({
-      game: games[i].actualName || games[i].name,
+      game: games[i].name,
       element: $(".voteToolTip .voteSubTitle")[i],
     });
   }

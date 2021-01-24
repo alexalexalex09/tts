@@ -134,6 +134,7 @@ for (var j = 2010; j <= year; j++) {
   }
 }
 console.log(requests.length);
+console.log(requests[20]);
 
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum, numPages) {

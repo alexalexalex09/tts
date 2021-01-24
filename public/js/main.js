@@ -2,7 +2,7 @@
 var createSession = function () {};
 var joinSession = function () {};
 if (localStorage.getItem("darkMode") == "true") {
-  toggleDarkMode();
+  enableDarkMode();
 }
 
 if ("serviceWorker" in navigator) {
@@ -1365,6 +1365,12 @@ function gulp(showAllGames = false) {
     "/get_user_lists_populated",
     {},
     (res) => {
+      if (res.darkMode == true) {
+        var darkMode = true;
+      } else {
+        var darkMode = false;
+      }
+      setDarkMode(darkMode);
       $("#gamesContainer").html(" ");
       $("#gamesContextContainer").html(" ");
       $("#listContextContainer").html(" ");
@@ -5122,24 +5128,45 @@ Normal:
 --main-background: #fff
 */
 function toggleDarkMode() {
-  if ($("html").hasClass("dark")) {
-    localStorage.setItem("darkMode", "false");
-    $("html").removeClass("dark");
-    $("#darkModeButton").html("Enable");
-    $(":root").css("--main-grey", "#333");
-    $(":root").css("--main-light-grey", "#aaa");
-    $(":root").css("--main-blue", "#6492c7");
-    $(":root").css("--main-background", "#fff");
-    $(":root").css("--main-white-bg", "#fff");
+  ttsFetch(
+    "/set_dark_mode",
+    { darkMode: !$("html").hasClass("dark") },
+    (darkMode) => {
+      if ($("html").hasClass("dark")) {
+        disableDarkMode();
+      } else {
+        enableDarkMode();
+      }
+    }
+  );
+}
+function disableDarkMode() {
+  localStorage.setItem("darkMode", "false");
+  $("html").removeClass("dark");
+  $("#darkModeButton").html("Enable");
+  $(":root").css("--main-grey", "#333");
+  $(":root").css("--main-light-grey", "#aaa");
+  $(":root").css("--main-blue", "#6492c7");
+  $(":root").css("--main-background", "#fff");
+  $(":root").css("--main-white-bg", "#fff");
+}
+
+function enableDarkMode() {
+  localStorage.setItem("darkMode", "true");
+  $("html").addClass("dark");
+  $("#darkModeButton").html("Disable");
+  $(":root").css("--main-grey", "#aaa");
+  $(":root").css("--main-light-grey", "#ccc");
+  $(":root").css("--main-blue", "#436186");
+  $(":root").css("--main-background", "#03030e");
+  $(":root").css("--main-white-bg", "#03030e");
+}
+
+function setDarkMode(mode) {
+  if (mode) {
+    enableDarkMode();
   } else {
-    localStorage.setItem("darkMode", "true");
-    $("html").addClass("dark");
-    $("#darkModeButton").html("Disable");
-    $(":root").css("--main-grey", "#aaa");
-    $(":root").css("--main-light-grey", "#ccc");
-    $(":root").css("--main-blue", "#436186");
-    $(":root").css("--main-background", "#03030e");
-    $(":root").css("--main-white-bg", "#03030e");
+    disableDarkMode();
   }
 }
 

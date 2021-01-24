@@ -183,7 +183,9 @@ li.grey {
 }
 
 #accountEmailField {
-  word-break: break-word;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #bggConnected {
@@ -1631,9 +1633,9 @@ input#listImportSubmit.green {
 
 .noImage {
   border: 2px solid var(--main-black);
-    padding: 5px 0px;
-    box-sizing: border-box;
-    background-color: var(--main-white);
+  padding: 5px 0px;
+  box-sizing: border-box;
+  background-color: var(--main-white);
 }
 
 .BGGDesc {

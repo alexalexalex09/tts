@@ -632,6 +632,9 @@ router.post("/get_user_lists_populated", (req, res) => {
               }
               getOwnedSessions(req.user.id, curUser.lists, res).then(
                 (result) => {
+                  if (typeof curUser.preferences != "undefiend") {
+                    result.darkMode = curUser.preferences.darkMode;
+                  }
                   res.send(result);
                 }
               );
@@ -646,6 +649,9 @@ router.post("/get_user_lists_populated", (req, res) => {
               curUser.save().then(bggUpdate(curUser));
               getOwnedSessions(req.user.id, curUser.lists, res).then(
                 (result) => {
+                  if (typeof curUser.preferences != "undefiend") {
+                    result.darkMode = curUser.preferences.darkMode;
+                  }
                   res.send(result);
                 }
               );
@@ -665,6 +671,9 @@ router.post("/get_user_lists_populated", (req, res) => {
             console.log("Creating New USER****");
             curUser.save().then(bggUpdate(curUser));
             getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
+              if (typeof curUser.preferences != "undefiend") {
+                result.darkMode = curUser.preferences.darkMode;
+              }
               res.send(result);
             });
           }
@@ -3290,6 +3299,19 @@ router.post("/get_list_browser", function (req, res) {
     } else {
       res.send({ error: "unauthorized" });
     }
+  } else {
+    res.send({ status: "no user" });
+  }
+});
+
+router.post("/set_dark_mode", function (req, res) {
+  if (req.user) {
+    User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+      curUser.preferences.darkMode = req.body.darkMode;
+      curUser.save().then((result) => {
+        res.send({ result: "Dark mode set to " + req.body.darkMode });
+      });
+    });
   } else {
     res.send({ status: "no user" });
   }

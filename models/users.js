@@ -17,6 +17,9 @@ var UserSchema = new Schema(
         },
       ],
     },
+    preferences: {
+      darkMode: Boolean,
+    },
     bgg: {
       username: String,
       collection: [

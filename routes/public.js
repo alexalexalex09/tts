@@ -99,7 +99,7 @@ for (var i = 1899; i < 1980; i = i + 10) {
   var topYear = i + 11;
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
-      process.env.BGIAD +
+      process.env.BGAID +
       "ph8PXFkuKb&ascending=true&lt_year_published=" +
       topYear +
       "&gt_year_published=" +
@@ -109,13 +109,13 @@ for (var i = 1899; i < 1980; i = i + 10) {
 for (var i = 0; i <= 1000; i = i + 100) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
-      process.env.BGIAD +
+      process.env.BGAID +
       "ph8PXFkuKb&ascending=true&lt_year_published=2001&gt_year_published=1989&skip=" +
       i
   );
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
-      process.env.BGIAD +
+      process.env.BGAID +
       "ph8PXFkuKb&ascending=true&lt_year_published=2011&gt_year_published=1999&skip=" +
       i
   );
@@ -125,7 +125,7 @@ for (var j = 2010; j <= year; j++) {
   for (var i = 0; i <= 500; i = i + 100) {
     requests.push(
       "https://api.boardgameatlas.com/api/search?client_id=" +
-        process.env.BGIAD +
+        process.env.BGAID +
         "ph8PXFkuKb&ascending=true&year_published=" +
         j +
         "&skip=" +
@@ -133,8 +133,6 @@ for (var j = 2010; j <= year; j++) {
     );
   }
 }
-console.log(requests.length);
-console.log(requests[20]);
 
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum, numPages) {
@@ -169,9 +167,29 @@ function getBGGPage(pageNum, numPages) {
   return promise;
 }
 
+function getBGARequest(request, num, length) {
+  var promise = new Promise((resolve, reject) => {
+    https.get(request, (resp) => {
+      var data = "";
+      // A chunk of data has been recieved.
+      resp.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      // The whole response has been received. Print out the result.
+      resp.on("end", () => {
+        processBGA(data, num, length).then((ret) => {
+          resolve(ret);
+        });
+      });
+    });
+  });
+  return promise;
+}
+
 async function processBGA(data, pageNum, numPages) {
   return new Promise((resolve, reject) => {
-    pageNum = Math.floor(((pageNum / 100 + 1) / numPages) * 100);
+    percent = Math.floor((pageNum / numPages) * 100);
     result = JSON.parse(data);
     var toGet = [];
     if (result.games) {
@@ -179,7 +197,9 @@ async function processBGA(data, pageNum, numPages) {
         toGet.push(game);
       });
       getTheGames(toGet).then((ret) => {
-        console.log("getBGAPage end " + pageNum + "%");
+        console.log(
+          "Getting BGA Games " + pageNum + "/" + numPages + ": " + percent + "%"
+        );
         resolve(ret);
       });
     } else {
@@ -277,6 +297,24 @@ async function getBGGPages(numPages) {
   return arr;
 }
 
+async function getBGARequests(requests) {
+  var arr = [];
+  for (var i = 0; i < requests.length; i++) {
+    await wait(1000);
+    var ret = await getBGARequest(requests[i], i + 1, requests.length);
+    arr = arr.concat(ret);
+  }
+  return arr;
+}
+
+function wait(ms) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(ms);
+    }, ms);
+  });
+}
+
 async function getBGGMetaDatas(topGames) {
   var newData = [];
   for (var i = 0; i < topGames.length; i++) {
@@ -362,13 +400,18 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     resourceOutdated = true;
   }
   if (resourceOutdated) {
-    getBGGPages(10).then((topGames) => {
+    //getBGGPages(10).then((topGames) => {
+    getBGARequests(requests).then((topGames) => {
       console.log("Topgames: " + topGames.length);
       if (curResource && curResource.data.games.length > 0) {
         //Don't wholesale replace, instead do an upgrade
         var games = curResource.data.games;
         console.log(games.length + " games");
-        for (let i = 0; i < topGames.length; i++) {
+        for (
+          let i = 0;
+          i < topGames.length && i < curResource.data.games.length;
+          i++
+        ) {
           //If the current index happens to be the same as the old index, don't overthink it, just replace
           if (games[i].name == topGames[i].name) {
             curResource.data.games[i] = topGames[i];

@@ -454,7 +454,7 @@ select.bggFilterInput {
 #curGamesClose {
   z-index: 101;
   top: calc(var(--vh5) + 10px);
-  right: 7vw;
+  right: 8vw;
   color: var(--main-white);
 }
 
@@ -3181,7 +3181,7 @@ input#selectLimit {
   }
 
   .voteLabel label {
-    max-width: calc(500px);
+    max-width: calc(400px);
   }
 
   #voteInfo {

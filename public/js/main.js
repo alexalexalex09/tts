@@ -2594,8 +2594,6 @@ function getTopListIndex(game, topList, fuse) {
       console.log("Couldn't find " + game);
       var searchres = fuse.search(game);
       if (searchres.length > 0) {
-        console.log("Fuse results:");
-        console.log({ searchres });
         if (searchres[0].score < 0.3) {
           index = searchres[0].refIndex;
         } else {

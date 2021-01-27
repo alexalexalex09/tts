@@ -120,6 +120,8 @@ function getNames(profiles, numGames, curSession, data) {
         games.forEach(function (e) {
           namesList.push(e.name);
         });
+        console.log({ namesList });
+        console.log({ numGames });
         //console.log("namesList: ", gamesList, namesList);
         io.sockets.emit(data.code + "owner", {
           selectEvent: true,

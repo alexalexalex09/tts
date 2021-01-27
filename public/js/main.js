@@ -2539,7 +2539,10 @@ function parseBGGThing(id, field) {
           if (index > -1) {
             var game = topList[index];
             console.log("resolving game: ", game.name, field);
-            resolve(game[field]);
+            var ret = game[field];
+            game = "";
+            resolve(ret);
+            ret = "";
           }
         }
       }
@@ -2600,6 +2603,7 @@ function getTopListIndex(game, topList, fuse) {
           return -1;
         }
       }
+      searchres = [];
     }
     return index;
   } else {

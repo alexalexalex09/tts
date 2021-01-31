@@ -223,6 +223,7 @@ window.addEventListener("load", function () {
     }
     document.getElementById("sessionContainer").innerHTML = sessionGames;
     initGreenLists();
+    recheckGreenLists();
   };
 
   joinSession = function (res) {
@@ -935,6 +936,10 @@ window.addEventListener("load", function () {
    */
 });
 //End all DOM manipulation
+//Have to end DOM manipulation here because functions must be defined globally to
+//be accessed by HTML onclick
+//TODO: convert all insertion of HTML elements by strings into insertion by
+//nodes so that they can be given event listeners
 
 /***************************************************/
 /***************************************************/
@@ -1245,8 +1250,7 @@ function lockGames(code) {
 function addGroupGame() {
   var game = addGroupGamesInput.value
     .replace(/&/, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "\\'");
+    .replace(/[^%0-9a-zA-Z' ]/g, "");
   ttsFetch(
     "/group_game_add",
     { game: game, code: $("#code").text() },
@@ -2568,34 +2572,17 @@ function parseBGGThing(id, field) {
   });
 }
 
-function getTopListIndex(game, topList, fuse) {
+function getTopListIndex(game, topList /*, fuse*/) {
   if (topList) {
     var index = topList.findIndex((obj) => {
       var ret =
-        obj.name == game ||
-        obj.actualName == game ||
-        obj.name == "The " + game ||
-        obj.name == "A " + game ||
-        obj.name == "An " + game ||
-        obj.name ==
-          game
-            .replace("&amp;", "and")
-            .replace("&", "and")
-            .replace(":", "")
-            .replace(/\\/g, "") ||
-        obj.name == game.replace(/[^%0-9a-zA-Z' ]/g) ||
-        obj.actualName ==
-          game
-            .replace("&amp;", "and")
-            .replace("&", "and")
-            .replace(":", "")
-            .replace(/\\/g, "") ||
-        obj.actualName == game.replace(/[^%0-9a-zA-Z' ]/g);
+        obj.name == game.replace(/[^%0-9a-zA-Z' ]/g, "") ||
+        obj.actualName == game.replace(/[^%0-9a-zA-Z' ]/g, "");
       return ret;
     });
     if (index == -1) {
-      console.log("Couldn't find " + game);
-      var searchres = fuse.search(game);
+      console.log("Couldn't find " + game + " in " + topList.length + " games");
+      /*var searchres = fuse.search(game);
       if (searchres.length > 0) {
         if (searchres[0].score < 0.3) {
           index = searchres[0].refIndex;
@@ -2603,7 +2590,7 @@ function getTopListIndex(game, topList, fuse) {
           return -1;
         }
       }
-      searchres = [];
+      searchres = [];*/
     }
     return index;
   } else {
@@ -2657,18 +2644,17 @@ function getGameUrl(games) {
         topList = topList[0];
 
         //create a Fuse for fuzzy searching in getTopListIndex
-        if (
+        /*if (
           typeof topList != "undefined" &&
           topList != null &&
           topList.length > 0
         ) {
           var theDate = Date.now();
-          console.log("Creating fuse: " + theDate);
           var fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
-          console.log("CREATED fuse: " + theDate);
+          console.log("Created fuse: " + theDate);
         } else {
           console.log(topList);
-        }
+        }*/
 
         //Initialize the promise arrays
         var promises = [];
@@ -2686,12 +2672,12 @@ function getGameUrl(games) {
               console.log("Couldn't find topList!");
               index = -1;
             } else {
-              if (typeof fuse == "undefined") {
+              /* if (typeof fuse == "undefined") {
                 console.log("no fuse yet");
               } else {
-                //Otherwise, find the index of the game in question
-                index = getTopListIndex(game, topList, fuse);
-              }
+                //Otherwise, find the index of the game in question*/
+              index = getTopListIndex(game, topList);
+              /* }*/
             }
 
             if (index > -1) {
@@ -2714,8 +2700,7 @@ function getGameUrl(games) {
               fetches.push(
                 game
                   .replace("&amp;", "and")
-                  .replace("&", "and")
-                  .replace(":", "")
+                  .replace(/[^%0-9a-zA-Z' ]/g, "")
                   .replace(/\\/g, "")
               );
               resolveInner({ game: game, toResolve: true });
@@ -2731,7 +2716,7 @@ function getGameUrl(games) {
               //If a game is found, get the new topList from the server
               games.forEach((game, curIndex) => {
                 if (game.toResolve) {
-                  var index = res.findIndex((obj) => {
+                  /*var index = res.findIndex((obj) => {
                     return (
                       obj.name
                         .replace("&amp;", "and")
@@ -2739,7 +2724,8 @@ function getGameUrl(games) {
                         .replace(":", "")
                         .replace(/\\/g, "") == game.game
                     );
-                  });
+                  });*/
+                  var index = -1;
                   if (index == -1) {
                     console.log(game.game + " not found");
                     var url =
@@ -2793,9 +2779,7 @@ function wrapGameUrls(games) {
   games.forEach((game, index) => {
     var safeName = game.game
       .replace("&amp;", "and")
-      .replace("&", "and")
-      .replace(":", "")
-      .replace(/\\/g, "");
+      .replace(/[^%0-9a-zA-Z' ]/g, "");
     gameNames.push(safeName);
     games[index].game = safeName;
   });
@@ -3370,13 +3354,6 @@ function setPlural(countable, singular, plural) {
  * @param {*} event
  */
 function addNewGame(el) {
-  console.log(
-    $(el)
-      .val()
-      .replace(/&/g, "&amp;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "\\'")
-  );
   if (
     el == "#menuAddGamesInput" &&
     $(el).parent().children("input[type=checkbox]").first().prop("checked")

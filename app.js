@@ -14,6 +14,19 @@ var Game = require("./models/games.js");
 var Session = require("./models/sessions.js");
 var Stat = require("./models/stats.js");
 const cfenv = require("cfenv");
+var memwatch = require("@floffah/node-memwatch");
+memwatch.on("stats", function (stats) {
+  var currentDate = new Date();
+  let time =
+    currentDate.getHours() +
+    ":" +
+    currentDate.getMinutes() +
+    ":" +
+    currentDate.getSeconds();
+  console.log(
+    time + " | " + Number(Number(stats.used_heap_size) / 1000000).toString()
+  );
+});
 //var socket_io = require("socket.io");
 //var ManagementClient = require("auth0").ManagementClient;
 //const requireHTTPS = require("./middleware/requireHTTPS");
@@ -61,14 +74,14 @@ app.get("*", function (req, res, next) {
   scope: "read:users update:users",
 });*/
 
-var envs = {
+/*var envs = {
   orgUrl: process.env.oUrl,
   token: process.env.oToken,
   issuer: process.env.oIssuer,
   client_id: process.env.oClient_id,
   client_secret: process.env.oSecret,
   secret: process.env.sSecret,
-};
+};*/
 //console.log(envs);
 
 // Load Passport

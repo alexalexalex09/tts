@@ -19,6 +19,7 @@ var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
+var memwatch = require("@floffah/node-memwatch");
 
 console.log("1/8: Setting up Auth0", Date.now() - loadTime);
 /*var management = new ManagementClient({
@@ -90,12 +91,10 @@ User.findOne({ name: "crina" }).exec(function (err, curUser) {
   });
 });
 */
-//Top 100 games from each decade before 1990
-//Top 1000 games from 1990-2000
-//Top 1000 games from 2000-2010
-//Top 500 games from each year 2010-present
+
 var requests = [];
-for (var i = 1899; i < 1980; i = i + 10) {
+//Top 100 games from each decade before 1990
+/*for (var i = 1899; i < 1980; i = i + 10) {
   var topYear = i + 11;
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
@@ -106,6 +105,8 @@ for (var i = 1899; i < 1980; i = i + 10) {
       i
   );
 }
+//Top 1000 games from 1990-2000
+//Top 1000 games from 2000-2010
 for (var i = 0; i <= 1000; i = i + 100) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
@@ -119,19 +120,22 @@ for (var i = 0; i <= 1000; i = i + 100) {
       "ph8PXFkuKb&ascending=true&lt_year_published=2011&gt_year_published=1999&skip=" +
       i
   );
-}
+}*/
+//Top 500 games from each year 2010-present
+//Edit: Top 100 games
+//for (var i = 0; i <= 500; i = i + 100) {
 var year = new Date().getFullYear();
 for (var j = 2010; j <= year; j++) {
-  for (var i = 0; i <= 500; i = i + 100) {
-    requests.push(
-      "https://api.boardgameatlas.com/api/search?client_id=" +
-        process.env.BGAID +
-        "ph8PXFkuKb&ascending=true&year_published=" +
-        j +
-        "&skip=" +
-        i
-    );
-  }
+  //for (var i = 0; i <= 100; i = i + 100) {
+  requests.push(
+    "https://api.boardgameatlas.com/api/search?client_id=" +
+      process.env.BGAID +
+      "ph8PXFkuKb&ascending=true&year_published=" +
+      j +
+      "&skip=" +
+      0 //i
+  );
+  //}
 }
 
 /* Async BGG Function Definitions */
@@ -628,6 +632,7 @@ router.post("/get_session_post_select", (req, res) => {
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
   console.log("gulp");
+  //var hd = new memwatch.HeapDiff();
   if (req.user) {
     //console.log("extUser: ", req.extUser);
     User.findOne({ profile_id: req.user.id })
@@ -679,6 +684,8 @@ router.post("/get_user_lists_populated", (req, res) => {
                   if (typeof curUser.preferences != "undefiend") {
                     result.darkMode = curUser.preferences.darkMode;
                   }
+                  /*var diff = hd.end();
+                  console.log({ diff });*/
                   res.send(result);
                 }
               );
@@ -696,6 +703,8 @@ router.post("/get_user_lists_populated", (req, res) => {
                   if (typeof curUser.preferences != "undefiend") {
                     result.darkMode = curUser.preferences.darkMode;
                   }
+                  /*var diff = hd.end();
+                  console.log({ diff });*/
                   res.send(result);
                 }
               );
@@ -718,6 +727,8 @@ router.post("/get_user_lists_populated", (req, res) => {
               if (typeof curUser.preferences != "undefiend") {
                 result.darkMode = curUser.preferences.darkMode;
               }
+              /*var diff = hd.end();
+              console.log({ diff });*/
               res.send(result);
             });
           }
@@ -726,6 +737,8 @@ router.post("/get_user_lists_populated", (req, res) => {
       });
   } else {
     res.send(ERR_LOGIN_SOFT);
+    /*var diff = hd.end();
+    console.log({ diff });*/
   }
 });
 
@@ -1048,9 +1061,10 @@ function bulkGameAdder(games, listIndexPlusOne, res, req) {
 router.post("/game_add", function (req, res) {
   if (req.user) {
     if (req.body.game) {
-      Game.findOne({ name: req.body.game }, function (err, game) {
+      var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "");
+      Game.findOne({ name: currentGame }, function (err, game) {
         if (game == null || typeof game == "undefined") {
-          var conditionalPromise = getNewGameFromBGA(req.body.game);
+          var conditionalPromise = getNewGameFromBGA(currentGame);
         } else {
           var conditionalPromise = new Promise((resolve) => {
             resolve(game);
@@ -1120,21 +1134,16 @@ router.post("/game_add", function (req, res) {
 
 router.post("/group_game_add", function (req, res) {
   if (req.user) {
-    var upsertOptions = { new: true, upsert: true };
-    Game.findOneAndUpdate(
-      {
-        name: req.body.game,
-      },
-      { name: req.body.game },
-      upsertOptions,
-      function (err, game) {
-        if (!game.rating) {
-          game.rating = 0;
-        }
-        if (!game.owned) {
-          game.owned = 0;
-        }
-        console.log(game);
+    var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "");
+    Game.findOne({ name: currentGame }, function (err, game) {
+      if (game == null || typeof game == "undefined") {
+        var conditionalPromise = getNewGameFromBGA(currentGame);
+      } else {
+        var conditionalPromise = new Promise((resolve) => {
+          resolve(game);
+        });
+      }
+      conditionalPromise.then(function (game) {
         game.save().then(function (game) {
           Session.findOne({ code: req.body.code }).exec(function (
             err,
@@ -1178,8 +1187,8 @@ router.post("/group_game_add", function (req, res) {
             }
           });
         });
-      }
-    );
+      });
+    });
   } else {
     res.send(ERR_LOGIN);
   }
@@ -1617,8 +1626,8 @@ router.post("/add_game_to_session", function (req, res) {
                 numGames++;
               }
             }
-            console.log("numGamestoRemove: ", numGames);
-            console.log(req.body.gamesToRemove);
+            //console.log("numGamestoRemove: ", numGames);
+            //console.log(req.body.gamesToRemove);
             curSession.save().then(function () {
               socketAPI.addGame({
                 code: req.body.code,
@@ -2735,7 +2744,7 @@ router.post("/change_username", function (req, res) {
 router.post("/get_top_list", function (req, res) {
   Game.find({ metadata: { $exists: true } }).exec(function (err, curResource) {
     if (curResource) {
-      games = prepGameList(curResource);
+      var games = prepGameList(curResource);
       res.send({ games: games });
     } else {
       res.send({ games: [] });
@@ -2768,10 +2777,13 @@ function prepGameList(games) {
 
 //Takes an array of game names and returns an object with the games or an error
 router.post("/bga_find_game", function (req, res) {
+  var hd = new memwatch.HeapDiff();
   var gamesArray = req.body.game;
   getGamesAsync(gamesArray).then((result) => {
     res.send(result);
   });
+  var diff = hd.end();
+  console.log({ diff });
 });
 
 async function getGamesAsync(gamesArray) {
@@ -2786,17 +2798,11 @@ async function getGamesAsync(gamesArray) {
 
 function findAGame(currentGame) {
   return new Promise(function (resolve, reject) {
-    var searchArray = [currentGame];
-    if (currentGame != currentGame.replace(/[^%0-9a-zA-Z' ]/g, "")) {
-      searchArray.push(currentGame.replace(/[^%0-9a-zA-Z' ]/g, ""));
-    }
+    currentGame = currentGame.replace(/[^%0-9a-zA-Z' ]/g, "");
     Game.find({
       $and: [
         {
-          $or: [
-            { name: { $in: searchArray } },
-            { actualName: { $in: searchArray } },
-          ],
+          $or: [{ name: currentGame }, { actualName: currentGame }],
         },
         { metadata: { $exists: true } },
       ],
@@ -2806,13 +2812,13 @@ function findAGame(currentGame) {
         curGames == null ||
         curGames.length == 0
       ) {
-        console.log("Couldn't find " + searchArray);
+        console.log("Couldn't find " + currentGame);
         getNewGameFromBGA(currentGame).then((game) => {
           resolve(game);
         });
       } else {
         console.log(typeof curGames);
-        console.log({ curGames });
+        //console.log({ curGames });
         console.log(
           "Found " + curGames[0].name + ", AKA " + curGames[0].actualName
         );

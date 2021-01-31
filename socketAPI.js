@@ -8,8 +8,6 @@ var Game = require("./models/games.js");
 var Session = require("./models/sessions.js");
 
 var socketAPI = {};
-var numGames = [];
-var code = "";
 socketAPI.io = io;
 
 socketAPI.sendNotification = function (data) {
@@ -60,84 +58,108 @@ socketAPI.addGame = function (data) {
   //1. Get Session using data.code
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     //2. Get list of curSession.users.user(s) and make a numGames array
-    var numGames = [];
     if (curSession) {
-      for (var i = 0; i < curSession.users.length; i++) {
-        numGames[i] = {
-          id: curSession.users[i].user,
-          name: curSession.users[i].name,
-          num: 0,
-          done: curSession.users[i].done,
-        };
-      }
-      //console.log("numgames: ", numGames);
-      //a. Note that this requires "done" to be set by public.js when user clicks through
-      //3. Look up names for numGames.user.name
+      var numGames = getSessionArray(curSession);
       var profiles = curSession.users.map(function (val, i) {
         return val.user;
       });
-      console.log({ profiles });
-      getNames(profiles, numGames, curSession, data);
+      getNames(profiles, numGames, curSession, data).then((res) => {
+        io.sockets.emit(data.code + "owner", res);
+        io.sockets.emit(data.code + "client", res);
+      });
     }
   });
 };
 
-function getNames(profiles, numGames, curSession, data) {
-  var theError = "";
-  if (typeof numGames == "undefined") {
-    console.log("Err: numgames ", numGames);
+function getSessionArray(curSession) {
+  var numGames = [];
+  if (curSession) {
+    for (var i = 0; i < curSession.users.length; i++) {
+      numGames[i] = {
+        id: curSession.users[i].user,
+        name: curSession.users[i].name,
+        num: 0,
+        done: curSession.users[i].done,
+      };
+    }
+    //a. Note that this requires "done" to be set by public.js when user clicks through
+    //3. Look up names for numGames.user.name
+    return numGames;
   } else {
-    if (theError == "") {
-      //4. Look through curSession.games
-      //a. if empty, do nothing since num=0 by default
-      if (curSession.games.length > 0) {
-        for (var k = 0; k < curSession.games.length; k++) {
-          for (var l = 0; l < curSession.games[k].addedBy.length; l++) {
-            var index = numGames.findIndex(
-              (obj) => obj.id == curSession.games[k].addedBy[l]
-            );
+    return { error: "No session" };
+  }
+}
 
-            //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
-            if (index > -1) {
-              numGames[index].num++;
+/*function createSessionObject(curSession) {
+  var numGames = {};
+  for (var i = 0; i < curSession.users.length; i++) {
+    if (typeof numGames[curSession.users[i].user] == "undefined") {
+      numGames[curSession.users[i].user] = { num: 0, done: false };
+    }
+  }
+  for (var i = 0; i < curSession.games.length; i++) {
+    for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
+      var owner = curSession.games[i].addedBy[j];
+      numGames[owner].done = false;
+      if (numGames[owner]) {
+        numGames[owner].num++;
+      } else {
+        numGames[owner].num = 1;
+      }
+    }
+  }
+  return numGames;
+}*/
+
+function getNames(profiles, numGames, curSession, data) {
+  return new Promise((resolve, reject) => {
+    var theError = "";
+    if (typeof numGames == "undefined") {
+      reject("Err: numgames ", numGames);
+    } else {
+      if (theError == "") {
+        //4. Look through curSession.games
+        //a. if empty, do nothing since num=0 by default
+        if (curSession.games.length > 0) {
+          for (var k = 0; k < curSession.games.length; k++) {
+            for (var l = 0; l < curSession.games[k].addedBy.length; l++) {
+              var index = numGames.findIndex(
+                (obj) => obj.id == curSession.games[k].addedBy[l]
+              );
+
+              //b. if not empty, add one to each numGames.user.num for each curSession.games.addedBy that matches
+              if (index > -1) {
+                numGames[index].num++;
+              }
             }
           }
         }
+        //Now we have numGames with id, name, done, and num filled for each user
+        //5. Remove id from each user
+        for (var i = 0; i < numGames.length; i++) {
+          numGames[i].id = "";
+        }
+        //6. Emit to owner and client
+        var gamesList = [];
+        var namesList = [];
+        curSession.games.forEach(function (e) {
+          gamesList.push(mongoose.Types.ObjectId(e.game));
+        });
+        Game.find({ _id: { $in: gamesList } }).exec(function (err, games) {
+          games.forEach(function (e) {
+            namesList.push(e.name);
+          });
+          resolve({
+            selectEvent: true,
+            select: numGames,
+            curGames: namesList,
+          });
+        });
+      } else {
+        reject({ err: theError });
       }
-      //Now we have numGames with id, name, done, and num filled for each user
-      //5. Remove id from each user
-      for (var i = 0; i < numGames.length; i++) {
-        numGames[i].id = "";
-      }
-      //6. Emit to owner and client
-      var gamesList = [];
-      var namesList = [];
-      //console.log("curSession.games: ", curSession.games);
-      curSession.games.forEach(function (e) {
-        gamesList.push(mongoose.Types.ObjectId(e.game));
-      });
-      Game.find({ _id: { $in: gamesList } }).exec(function (err, games) {
-        games.forEach(function (e) {
-          namesList.push(e.name);
-        });
-        console.log({ namesList });
-        console.log({ numGames });
-        //console.log("namesList: ", gamesList, namesList);
-        io.sockets.emit(data.code + "owner", {
-          selectEvent: true,
-          select: numGames,
-          curGames: namesList,
-        });
-        io.sockets.emit(data.code + "client", {
-          selectEvent: true,
-          select: numGames,
-          curGames: namesList,
-        });
-      });
-    } else {
-      console.log(theError);
     }
-  }
+  });
 }
 
 // @param users
@@ -145,64 +167,42 @@ function getNames(profiles, numGames, curSession, data) {
 // @param usernames
 //    Object containing all user objects in current session
 //    From command User.find({profile_id: {$in: users}}, function(err, usernames){...});
-function createUserMap(users, usernames) {
+/*function createUserMap(users, usernames) {
   var userMap = {};
   for (var i = 0; i < users.length; i++) {
     //console.log("user: ", users[i]);
     userMap[users[i].user] = usernames[i].name;
   }
   return userMap;
-}
+}*/
 
-socketAPI.initGames = function (data) {
+/*socketAPI.initGames = function (data) {
   //console.log("initGames", data);
-  var userMap = {};
-  numGames = {};
+  var numGames = {};
   Session.findOne({ code: data.code }).exec(function (err, curSession) {
     if (curSession) {
       var users = curSession.users;
-      console.log("users: ", users);
       var profiles = users.map(function (val, i) {
         return val.user;
       });
-      console.log("profiles: ", profiles);
       User.find({ profile_id: { $in: profiles } }).exec(function (
         err,
         usernames
       ) {
-        console.log("usernames: ", usernames);
-        userMap = createUserMap(users, usernames);
-        console.log("usermap: ", userMap);
-        for (var i = 0; i < curSession.users.length; i++) {
-          if (typeof numGames[curSession.users[i].user] == "undefined") {
-            numGames[curSession.users[i].user] = { num: 0, done: false };
-          }
-        }
-        for (var i = 0; i < curSession.games.length; i++) {
-          for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
-            var owner = curSession.games[i].addedBy[j];
-            //console.log("owner: ", owner);
-            numGames[owner].done = false;
-            if (numGames[owner]) {
-              numGames[owner].num++;
-              console.log(owner, ", ", numGames[owner]);
-            } else {
-              numGames[owner].num = 1;
-            }
-          }
-        }
-        //console.log("numGames, ", numGames);
-        //eventually switch numGames to track ids, and return a different array, userGames, with names replaced
-        socketAPI.addGame({ code: data.code });
+        //userMap = createUserMap(users, usernames);
+        var numGames = createSessionObject(curSession);
+        socketAPI.addGame({ code: data.code, numGames: numGames });
       });
     }
   });
-};
+};*/
 
-socketAPI.gamesSubmitted = function (data) {
+/*socketAPI.gamesSubmitted = function (data) {
+  var numGames = data.numGames;
   numGames[data.user].done = true;
+  Session.findOne({code: data.code})
   io.sockets.emit(data.code + "gamesSubmit", data);
-};
+};*/
 
 socketAPI.lockGames = function (data) {
   var ret = {};
@@ -351,7 +351,7 @@ io.on("connection", function (socket) {
   socket.on("id", (data) => {
     id = data.id;
     code = data.code;
-    console.log("User from session ", data, " is " + id);
+    //console.log("User from session ", data, " is " + id);
   });
   socket.on("disconnect", function (socket) {
     console.log("User " + id + " disconnected from session " + code);

@@ -2742,37 +2742,29 @@ router.post("/change_username", function (req, res) {
 });
 
 router.post("/get_top_list", function (req, res) {
-  Game.find({ metadata: { $exists: true } }).exec(function (err, curResource) {
-    if (curResource) {
-      var games = prepGameList(curResource);
-      res.send({ games: games });
-    } else {
-      res.send({ games: [] });
-    }
-  });
+  console.log("Finding list");
+  Game.find({}, { __v: 0, _id: 0, owned: 0, rating: 0 })
+    .lean()
+    .exec(function (err, curResource) {
+      console.log("Found list");
+      if (curResource) {
+        var games = prepGameList(curResource);
+        res.send({ games: games });
+      } else {
+        res.send({ games: [] });
+      }
+    });
 });
 
 function prepGameList(games) {
-  var ret = [];
   games.forEach((e, i) => {
-    var newGame = {};
-    for (let [key, value] of Object.entries(e._doc)) {
-      if (key != "_id" && key != "__v") {
-        if (key == "metadata") {
-          for (let [prop, metadata] of Object.entries(value)) {
-            if (prop != "name") {
-              newGame[prop] = metadata;
-            }
-          }
-        } else {
-          newGame[key] = e[key];
-        }
-      }
+    if (e.metadata) {
+      games[i].name = e.name.replace("\\", "");
+    } else {
+      games[i] = {};
     }
-    newGame.name = newGame.name.replace("\\", "");
-    ret.push(newGame);
   });
-  return ret;
+  return games;
 }
 
 //Takes an array of game names and returns an object with the games or an error

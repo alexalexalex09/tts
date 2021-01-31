@@ -2534,7 +2534,7 @@ function parseBGGThing(id, field) {
         if (index > -1) {
           var game = topList[index];
           console.log("resolving game: ", game.name, field);
-          resolve(game[field]);
+          resolve(game.metadata[field]);
         } else {
           //No ID
           index = topList.findIndex((obj) => {
@@ -2543,7 +2543,7 @@ function parseBGGThing(id, field) {
           if (index > -1) {
             var game = topList[index];
             console.log("resolving game: ", game.name, field);
-            var ret = game[field];
+            var ret = game.metadata[field];
             game = "";
             resolve(ret);
             ret = "";
@@ -2682,7 +2682,7 @@ function getGameUrl(games) {
 
             if (index > -1) {
               //If the game in question is in the topList, return its value
-              var theURL = topList[index].url;
+              var theURL = topList[index].metadata.url;
               //Fall back on search if the topList is corrupted, and reset it
               if (theURL == "" || typeof theURL == "undefined") {
                 localforage.setItem("topList", topList).then((res) => {
@@ -2693,7 +2693,7 @@ function getGameUrl(games) {
                 });
               } else {
                 //If topList is not corrupted, resolve the current promise
-                resolveInner({ game: game, url: topList[index].url });
+                resolveInner({ game: game, url: topList[index].metadata.url });
               }
             } else {
               //If the game in question isn't in the topList, search for it on BGA
@@ -3962,6 +3962,7 @@ function updateCurrentGames(curGames) {
   console.log(
     "Wrapping " + games.length + " games that didn't have links in them"
   );
+  //This rewraps ALL games because there's no function to salvage old links from the list before it's replaced wholesale
   wrapGameUrls(games);
 }
 
@@ -4648,13 +4649,13 @@ function submitSelectFilter() {
           }
         }
         if (match > -1) {
-          if (typeof topList[match].minplayers != "undefined") {
-            min = Number(topList[match].minplayers);
+          if (typeof topList[match].metadata.minplayers != "undefined") {
+            min = Number(topList[match].metadata.minplayers);
           } else {
             min = -1;
           }
-          if (typeof topList[match].maxplayers != "undefined") {
-            max = Number(topList[match].maxplayers);
+          if (typeof topList[match].metadata.maxplayers != "undefined") {
+            max = Number(topList[match].metadata.maxplayers);
           } else {
             max = -1;
           }

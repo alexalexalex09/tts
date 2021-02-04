@@ -2742,13 +2742,15 @@ router.post("/change_username", function (req, res) {
 });
 
 router.post("/get_top_list", function (req, res) {
-  console.log("Finding list");
-  Game.find({}, { __v: 0, _id: 0, owned: 0, rating: 0 })
+  Game.find(
+    { metadata: { $exists: true } },
+    { __v: 0, _id: 0, owned: 0, rating: 0 }
+  )
     .lean()
     .exec(function (err, curResource) {
-      console.log("Found list");
       if (curResource) {
         var games = prepGameList(curResource);
+        console.log(games[0].bgaID);
         res.send({ games: games });
       } else {
         res.send({ games: [] });
@@ -2757,13 +2759,11 @@ router.post("/get_top_list", function (req, res) {
 });
 
 function prepGameList(games) {
+  console.log("fixing game names");
   games.forEach((e, i) => {
-    if (e.metadata) {
-      games[i].name = e.name.replace("\\", "");
-    } else {
-      games[i] = {};
-    }
+    games[i].name = e.name.replace("\\", "");
   });
+  console.log("fixed game names");
   return games;
 }
 

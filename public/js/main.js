@@ -2529,7 +2529,7 @@ function parseBGGThing(id, field) {
         topList = [];
       } else {
         index = topList.findIndex((obj) => {
-          return obj.id == id;
+          return obj.bgaID == id;
         });
         if (index > -1) {
           var game = topList[index];
@@ -4383,6 +4383,9 @@ function fillGames(games) {
     for (var i = 0; i < games.length; i++) {
       games[i].weight = ((games[i].votes - bottom) / top) * 100;
       games[i].weight = games[i].weight.toString().substr(0, 4);
+    }
+    if (games.length == 1) {
+      games[0].weight = 100;
     }
     for (var i = 0; i < games.length; i++) {
       if (!$.isEmptyObject(games[i])) {

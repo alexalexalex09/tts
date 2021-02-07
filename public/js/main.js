@@ -3988,13 +3988,13 @@ function showSelect(data, isOwner) {
     htmlString +=
       `<div class="conUser ` +
       connecting +
-      `">User ` +
+      `">` +
       value.name +
       ` has selected ` +
       value.num +
       ` game` +
       plural +
-      `...</div>`;
+      `</div>`;
   });
   if (isOwner) {
     htmlString += `<div class="button greenBtn bottomBtn" id="gameLock" type="submit">Lock Game List 🔒</div>`;

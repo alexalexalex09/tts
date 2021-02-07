@@ -1351,8 +1351,10 @@ input#listImportSubmit.green {
   background-position: center;
 }
 
-.connecting {
-  color: var(--main-green);
+.conUser {
+  padding-left: 1.1em;
+  max-width: 100%;
+  margin-bottom: 0.5em;
 }
 
 .connecting:before,
@@ -1369,25 +1371,37 @@ input#listImportSubmit.green {
 .selecting:before,
 .voting:before {
   content: " ";
-  background-image: url("/img/unlock.svg");
   background-size: contain;
   width: var(--font-p);
   height: var(--font-p);
   background-repeat: no-repeat;
   position: absolute;
-  transform: translate(-1rem, 2px);
+  transform: translate(-1.1rem, 2px);
+}
+
+.connecting:before {
+  background-image: url("/img/unlock-red.svg");
+}
+
+.voting:before,
+.selecting:before {
+  background-image: url("/img/unlock-yellow.svg");
 }
 
 .done:before,
 .voted:before {
   content: " ";
-  background-image: url("/img/lock.svg");
+  background-image: url("/img/lock-green.svg");
   background-size: contain;
   width: var(--font-p);
   height: var(--font-p);
   background-repeat: no-repeat;
   position: absolute;
-  transform: translate(-1rem, 2px);
+  transform: translate(-1.1rem, 2px);
+}
+
+.connecting {
+  color: var(--main-red);
 }
 
 .selecting,

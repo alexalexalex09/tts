@@ -1301,8 +1301,12 @@ router.post("/join_session", function (req, res) {
                 } else {
                   displayName = req.user.displayName;
                 }*/
-            User.findOne({ id: req.user.profile_id }).exec((err, curUser) => {
+            User.findOne({ profile_id: req.user.id }).exec((err, curUser) => {
+              console.log("Profile id: " + req.user.id);
+              console.log(curUser._id);
+              console.log(curUser.name);
               var displayName = curUser.name;
+              console.log({ displayName });
               curSession.users.push({
                 user: req.user.id,
                 name: displayName,

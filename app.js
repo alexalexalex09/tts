@@ -89,8 +89,6 @@ var passport = require("passport");
 var Auth0Strategy = require("passport-auth0");
 
 // Configure Passport to use Auth0
-
-console.log("Callback: ", process.env.AUTH0_CALLBACK_URL);
 var strategy = new Auth0Strategy(
   {
     domain: process.env.AUTH0_DOMAIN,
@@ -184,6 +182,15 @@ app.use((req, res, next) => {
     });
 });
 */
+
+app.use(function (req, res, next) {
+  if (req.user) {
+    console.log(req.user.provider + "|" + req.user.id);
+  } else {
+    console.log("No user");
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   //Get username from Mongo and pass into locals

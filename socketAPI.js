@@ -14,36 +14,6 @@ socketAPI.sendNotification = function (data) {
   io.sockets.emit("hello", { msg: data });
 };
 
-//Receive the add game event from toggling the switch, including the number
-//of that user's added games from MongoDB.
-//NB: When data comes without data.user or data.numGames, the numGames object
-//is returned unmodified to initialize the object for the client.
-// @param data
-//      data.code (req) - current session code
-//      data.user (opt) - user that is currently adding a game
-//      data.numGames (opt) - number of Games current user currently has added
-
-function getSessionGames(curSession) {
-  var curUsers = {};
-  console.log(curSession);
-  for (var i = 0; i < curSession.games.length; i++) {
-    for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
-      if (typeof curUsers[curSession.games.addedBy[j]] == "undefined") {
-        curUsers[curSession.games.addedBy[j]].num = 0;
-        var index = curSession.users.findIndex((obj) => {
-          obj.user == curSession.games.addedBy[j];
-        });
-        curUsers[curSession.games.addedBy[j]].done =
-          curSession.users[index].done;
-      } else {
-        curUsers[curSession.games.addedBy[j]]++;
-      }
-    }
-  }
-  //console.log("curUsers: ", curUsers);
-  return curUsers;
-}
-
 socketAPI.addGame = function (data) {
   //Take these two pieces of data (arrays) into account if available and
   //then get all remaining game names to output the current list
@@ -89,27 +59,6 @@ function getSessionArray(curSession) {
     return { error: "No session" };
   }
 }
-
-/*function createSessionObject(curSession) {
-  var numGames = {};
-  for (var i = 0; i < curSession.users.length; i++) {
-    if (typeof numGames[curSession.users[i].user] == "undefined") {
-      numGames[curSession.users[i].user] = { num: 0, done: false };
-    }
-  }
-  for (var i = 0; i < curSession.games.length; i++) {
-    for (var j = 0; j < curSession.games[i].addedBy.length; j++) {
-      var owner = curSession.games[i].addedBy[j];
-      numGames[owner].done = false;
-      if (numGames[owner]) {
-        numGames[owner].num++;
-      } else {
-        numGames[owner].num = 1;
-      }
-    }
-  }
-  return numGames;
-}*/
 
 function getNames(profiles, numGames, curSession, data) {
   return new Promise((resolve, reject) => {
@@ -351,7 +300,6 @@ io.on("connection", function (socket) {
   socket.on("id", (data) => {
     id = data.id;
     code = data.code;
-    //console.log("User from session ", data, " is " + id);
   });
   socket.on("disconnect", function (socket) {
     console.log("User " + id + " disconnected from session " + code);

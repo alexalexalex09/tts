@@ -24,7 +24,10 @@ memwatch.on("stats", function (stats) {
     ":" +
     currentDate.getSeconds();
   console.log(
-    time + " | " + Number(Number(stats.used_heap_size) / 1000000).toString()
+    "MEM: " +
+      time +
+      " | " +
+      Number(Number(stats.used_heap_size) / 1000000).toString()
   );
 });
 //var socket_io = require("socket.io");

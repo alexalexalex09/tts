@@ -96,7 +96,7 @@ window.addEventListener("load", function () {
       );
     } else {
       setPhrase(
-        `<div class="phraseText">Phrase: ` +
+        `<div class="phraseText">` +
           res.session.phrase +
           `</div><div class="owner">👑<div class="tooltip">Owner</div></div><ion-icon name="settings-outline"></ion-icon>`
       );

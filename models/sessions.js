@@ -56,7 +56,7 @@ SessionSchema.statics.findUser = function (user) {
   });
 };
 
-module.exports = mongoose.model("Session", SessionSchema);
+module.exports = mongoose.model("Session", SessionSchema); //uses the default connection
 /*
 
 //Export function to create "SomeModel" model class

@@ -343,81 +343,6 @@ window.addEventListener("load", function () {
     triggerPostSelectEvent();
   };
 
-  /**********************************/
-  /* Handle Session Settings Button */
-  /**********************************/
-  function showSessionSettings() {
-    var el = `<div class="subContextContainer"><div class="subContextSessionSettings subContext">`;
-    el += `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>
-      <div class="subContextTitle">Session Settings</div><hr/><div id="sessionSettings">
-        <li id="sessionSettingsShareLink">Share Link</li>
-        <li id="sessionSettingsShareQR">Share QR Code</li>`;
-    if ($(".phraseDisplay .owner").length > 0) {
-      el += `<li id="sessionSettingsRename">Rename</li>
-        <li id="sessionSettingsLimit">Set Game Limit</li>`;
-    }
-    el += `</div></div></div>`;
-    $("body").append(el);
-
-    $("#sessionSettingsRename").on("click", function () {
-      $(".subContextContainer").each(function () {
-        $(this).remove();
-      });
-      showRenameSession({
-        name: $(".phraseDisplay")
-          .first()
-          .children(".phraseText")
-          .first()
-          .text()
-          .substr(8),
-        id: "0000" + $("#code").text(),
-      });
-    });
-    $("#sessionSettingsShareLink").on("click", function () {
-      $(".subContextContainer").each(function () {
-        $(this).remove();
-      });
-      copyText(
-        window.location.origin + "/" + $("#code").html(),
-        "Link copied to clipboard"
-      );
-    });
-    $("#sessionSettingsShareQR").on("click", function () {
-      $(".subContextContainer").each(function () {
-        $(this).remove();
-      });
-      showQR();
-    });
-    $("#sessionSettingsLimit").on("click", function () {
-      $(".subContextContainer").each(function () {
-        $(this).remove();
-      });
-      showSessionLimit();
-    });
-  }
-
-  function showQR() {
-    ttsFetch("/qr", { link: $("#code").text() }, (res) => {
-      $("body").append(
-        `<div id="qrDisplayContainer">
-          <div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
-          res.img +
-          `');">
-            </div>
-            <div id="qrText">Scan this QR code to join this session!</div>
-          </div>`
-      );
-      setTimeout(function () {
-        onClickOutside(
-          "#qrDisplayContainer",
-          "#qrDisplayContainer",
-          ".subContextContainer"
-        );
-        $("#contextShadow").removeClass("off");
-      }, 10);
-    });
-  }
-
   /*****************************/
   /*     Set History State     */
   /*****************************/
@@ -3205,6 +3130,81 @@ function submitSetLimit() {
     }
   );
   return false;
+}
+
+/**********************************/
+/* Handle Session Settings Button */
+/**********************************/
+function showSessionSettings() {
+  var el = `<div class="subContextContainer"><div class="subContextSessionSettings subContext">`;
+  el += `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>
+      <div class="subContextTitle">Session Settings</div><hr/><div id="sessionSettings">
+        <li id="sessionSettingsShareLink">Share Link</li>
+        <li id="sessionSettingsShareQR">Share QR Code</li>`;
+  if ($(".phraseDisplay .owner").length > 0) {
+    el += `<li id="sessionSettingsRename">Rename</li>
+        <li id="sessionSettingsLimit">Set Game Limit</li>`;
+  }
+  el += `</div></div></div>`;
+  $("body").append(el);
+
+  $("#sessionSettingsRename").on("click", function () {
+    $(".subContextContainer").each(function () {
+      $(this).remove();
+    });
+    showRenameSession({
+      name: $(".phraseDisplay")
+        .first()
+        .children(".phraseText")
+        .first()
+        .text()
+        .substr(8),
+      id: "0000" + $("#code").text(),
+    });
+  });
+  $("#sessionSettingsShareLink").on("click", function () {
+    $(".subContextContainer").each(function () {
+      $(this).remove();
+    });
+    copyText(
+      window.location.origin + "/" + $("#code").html(),
+      "Link copied to clipboard"
+    );
+  });
+  $("#sessionSettingsShareQR").on("click", function () {
+    $(".subContextContainer").each(function () {
+      $(this).remove();
+    });
+    showQR();
+  });
+  $("#sessionSettingsLimit").on("click", function () {
+    $(".subContextContainer").each(function () {
+      $(this).remove();
+    });
+    showSessionLimit();
+  });
+}
+
+function showQR() {
+  ttsFetch("/qr", { link: $("#code").text() }, (res) => {
+    $("body").append(
+      `<div id="qrDisplayContainer">
+          <div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
+        res.img +
+        `');">
+            </div>
+            <div id="qrText">Scan this QR code to join this session!</div>
+          </div>`
+    );
+    setTimeout(function () {
+      onClickOutside(
+        "#qrDisplayContainer",
+        "#qrDisplayContainer",
+        ".subContextContainer"
+      );
+      $("#contextShadow").removeClass("off");
+    }, 10);
+  });
 }
 
 function showRenameSession(session) {

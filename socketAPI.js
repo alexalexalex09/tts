@@ -247,6 +247,35 @@ socketAPI.submitVotes = function (data) {
   });
 };
 
+socketAPI.test = function (data) {
+  console.log("Socket tested");
+  Session.findOne({ code: data.code }).exec(function (err, curSession) {
+    curSession.save(function (err) {
+      var users = [];
+      console.log("Test User: " + curSession.users[0].user);
+      User.findOne({ profile_id: curSession.users[0].user })
+        .select({ profile_id: 1, name: 1 })
+        .exec(function (err, curUsers) {
+          console.log("Length: " + curUsers.length);
+          /*for (var i = 0; i < curUsers.length; i++) {
+            var index = curSession.users.findIndex(
+              (obj) => obj.user == curUsers[i].profile_id
+            );
+            users.push({
+              doneVoting: curSession.users[index].doneVoting,
+              name: curUsers[i].name,
+            });
+            console.log("Userlength: " + users.length);
+          }*/
+          /*io.sockets.emit(curSession.code + "owner", {
+            voteSubmit: true,
+            users: users,
+          });*/
+        });
+    });
+  });
+};
+
 function emitVotes(curSession) {
   var userList = [];
   var users = [];

@@ -1,13 +1,11 @@
-var mongoose = require("mongoose");
-mongoose.set("useNewUrlParser", true);
-mongoose.set("useFindAndModify", false);
-mongoose.set("useCreateIndex", true);
+let mongoose = require("mongoose");
 
 var mongoDB = process.env.mongo;
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
   useFindAndModify: false,
   useUnifiedTopology: true,
+  useCreateIndex: true,
   w: "majority",
   family: 4,
 });

@@ -1965,7 +1965,7 @@ router.post("/submit_votes", function (req, res) {
       user: req.user.id,
       voteArray: req.body.voteArray,
     });
-    saveVoteStats(req.body.voteArray);
+    //saveVoteStats(req.body.voteArray);
     res.send({ status: "Submitted votes!" });
   } else {
     socketAPI.submitVotes({
@@ -1975,6 +1975,22 @@ router.post("/submit_votes", function (req, res) {
     });
     res.send({ status: "Submitted votes!" });
   }
+});
+
+router.post("/test", function (req, res) {
+  console.log("1: Calling test function");
+  Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+    console.log("2: Found session");
+    curSession.save(function (err) {
+      console.log("3: saved session");
+      User.findOne({ profile_id: curSession.users[0].user })
+        .select({ profile_id: 1, name: 1 })
+        .exec(function (err, curUsers) {
+          console.log("4: Got user");
+        });
+    });
+  });
+  res.send({ status: "tested!" });
 });
 
 function saveVoteStats(voteArray) {

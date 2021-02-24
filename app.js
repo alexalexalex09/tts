@@ -8,7 +8,7 @@ const publicRouter = require("./routes/public");
 const authRouter = require("./routes/auth");
 const qrRouter = require("./routes/qr");
 const session = require("express-session");
-var mongoose = require("./mongo.js");
+require("./mongo.js");
 var User = require("./models/users.js");
 var Game = require("./models/games.js");
 var Session = require("./models/sessions.js");
@@ -186,14 +186,14 @@ app.use((req, res, next) => {
 });
 */
 
-app.use(function (req, res, next) {
+/*app.use(function (req, res, next) {
   if (req.user) {
     console.log(req.user.provider + "|" + req.user.id);
   } else {
     console.log("No user");
   }
   next();
-});
+});*/
 
 app.use((req, res, next) => {
   //Get username from Mongo and pass into locals

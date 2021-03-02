@@ -20,6 +20,7 @@ var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
 var memwatch = require("@floffah/node-memwatch");
+var redis = require("redis");
 
 console.log("1/8: Setting up Auth0", Date.now() - loadTime);
 /*var management = new ManagementClient({
@@ -28,6 +29,16 @@ console.log("1/8: Setting up Auth0", Date.now() - loadTime);
   clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
   scope: "read:users update:users",
 });*/
+
+var redisURL = new URL(process.env.REDIS_URL);
+console.log({ redisURL });
+console.log(redisURL.port);
+console.log(redisURL.hostname);
+console.log(redisURL.password);
+var client = redis.createClient(process.env.REDIS_URL, {
+  password: redisURL.password,
+});
+//client.auth(redisURL.password);
 
 var auth0 = new AuthenticationClient({
   domain: process.env.AUTH0_DOMAIN,
@@ -247,13 +258,10 @@ function getGame(game) {
           "min_playtime",
           "max_playtime",
           "min_age",
-          "description",
           "description_preview",
-          "image_url",
           "thumb_url",
           "url",
           "rank",
-          "primary_publisher",
           "names",
           "official_url",
           "rules_url",
@@ -658,7 +666,7 @@ router.post("/get_user_lists_populated", (req, res) => {
   } else {
     res.send(ERR_LOGIN_SOFT);
     var diff = hd.end();
-    console.log("No User");
+    console.log("No User for gulp");
     console.log({ diff });
   }
 });
@@ -2681,20 +2689,36 @@ router.post("/change_username", function (req, res) {
 });
 
 router.post("/get_top_list", function (req, res) {
-  Game.find(
-    { metadata: { $exists: true } },
-    { __v: 0, _id: 0, owned: 0, rating: 0 }
-  )
-    .lean()
-    .exec(function (err, curResource) {
-      if (curResource) {
-        var games = prepGameList(curResource);
-        console.log(games[0].bgaID);
-        res.send({ games: games });
-      } else {
-        res.send({ games: [] });
-      }
-    });
+  var hd = new memwatch.HeapDiff();
+  client.get("topList", function (err, topList) {
+    if (topList) {
+      console.log(typeof topList);
+      console.log("Toplist length: ", topList.length);
+      topList = JSON.parse(topList);
+      //TODO: This increases memory. Use JSONStream.parse instead.
+      res.send(topList);
+    } else {
+      Game.find(
+        { metadata: { $exists: true } },
+        { __v: 0, _id: 0, owned: 0, rating: 0 }
+      )
+        .limit(1000)
+        .lean()
+        .exec(function (err, curResource) {
+          var diff = hd.end();
+          console.log("get_top_list: " + curResource.length);
+          console.log({ diff });
+          if (curResource) {
+            var games = prepGameList(curResource);
+            client.set("topList", JSON.stringify({ games: games }));
+            client.expire("topList", 60 * 24);
+            res.send({ games: games });
+          } else {
+            res.send({ games: [] });
+          }
+        });
+    }
+  });
 });
 
 function prepGameList(games) {

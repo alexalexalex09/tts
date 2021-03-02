@@ -643,87 +643,15 @@ router.post("/get_user_lists_populated", (req, res) => {
         console.log({ curUser });
         //Once we've gotten the user with lists populated, get a list of all session codes
         //Session.find({}, "code").exec(function (err, codeList) {
-        res.locals.user = req.user;
-        res.locals.email = req.user.emails[0].value;
-        if (curUser) {
-          var displayName = curUser.name;
-          res.locals.username = curUser.name;
-          if (curUser.lists) {
-            var modified = false;
-            for (var i = 0; i < curUser.lists.custom.length; i++) {
-              if (
-                typeof curUser.lists.custom[i].listCode == "undefined" ||
-                curUser.lists.custom[i].listCode.length == 0
-              ) {
-                /*curUser.lists.custom[i].listCode = makeid(
-                    6,
-                    codeList.map((e) => e.code)
-                  );*/
-                curUser.lists.custom[i].listCode = makeid(6);
-                modified = true;
-                console.log(
-                  "Made new id for list " +
-                    curUser.lists.custom[i].name +
-                    ": " +
-                    curUser.lists.custom[i].listCode
-                );
-              }
-            }
-            if (modified) {
-              console.log("Saving curUser");
-              curUser.save();
-            }
-            getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
-              if (typeof curUser.preferences != "undefiend") {
-                result.darkMode = curUser.preferences.darkMode;
-              }
-              var diff = hd.end();
-              console.log("curUser + curUser.lists");
-              console.log({ diff });
-              res.send(result);
-            });
-          } else {
-            newUser = {
-              profile_id: req.user.id,
-              name: displayName,
-              lists: { allGames: [], custom: [] },
-              bgg: { username: "", collection: [] },
-            };
-            curUser = new User(newUser);
-            curUser.save().then(bggUpdate(curUser));
-            getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
-              if (typeof curUser.preferences != "undefiend") {
-                result.darkMode = curUser.preferences.darkMode;
-              }
-              var diff = hd.end();
-              console.log({ diff });
-              res.send(result);
-            });
+        getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
+          if (typeof curUser.preferences != "undefined") {
+            result.darkMode = curUser.preferences.darkMode;
           }
-        } else {
-          //Ideally, this shouldn't even be here. Users shouldn't get created by a
-          //script that only runs on page load - they should get created before the
-          //page is even rendered. This is now taken care of in app.js
-          newUser = {
-            profile_id: req.user.id,
-            name: req.user.displayName,
-            lists: { allGames: [], custom: [] },
-            bgg: { username: "", collection: [] },
-          };
-          res.locals.username = req.user.displayName;
-          curUser = new User(newUser);
-          console.log("Creating New USER****");
-          curUser.save().then(bggUpdate(curUser));
-          getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
-            if (typeof curUser.preferences != "undefiend") {
-              result.darkMode = curUser.preferences.darkMode;
-            }
-            var diff = hd.end();
-            console.log("curUser + No curUser.lists");
-            console.log({ diff });
-            res.send(result);
-          });
-        }
+          var diff = hd.end();
+          console.log("curUser + curUser.lists");
+          console.log({ diff });
+          res.send(result);
+        });
       });
     //});
     //}); Session.find({})
@@ -752,18 +680,13 @@ function getOwnedSessions(theId, lists, res) {
       curSessions
     ) {
       var sessions = [];
-      var curOwned = false;
       for (var i = 0; i < curSessions.length; i++) {
-        curOwned = false;
-        if (curSessions[i].owner == theId) {
-          curOwned = true;
-        }
         sessions.push({
           code: curSessions[i].code,
           games: curSessions[i].games.length,
           users: curSessions[i].users.length,
           phrase: curSessions[i].phrase,
-          owned: curOwned,
+          owned: curSessions[i] == theId,
         });
       }
       resolve({ lists: lists, sessions: sessions });
@@ -1434,7 +1357,10 @@ function checkIfAddedByUser(theSession, userId) {
 
 router.post("/create_session", function (req, res) {
   if (req.user) {
-    Session.find({}, "code").exec(function (err, codeList) {
+    Session.find({ code: { $exists: true } }, "code").exec(function (
+      err,
+      codeList
+    ) {
       //`console.log(codeList);
       var dup = true;
       var theCode = "";
@@ -1442,6 +1368,7 @@ router.post("/create_session", function (req, res) {
         5,
         codeList.map((e) => e.code)
       ); // Make a new code for the session
+      codeList = {};
       /*
       var displayName = "";
       management.users.get({ id: req.user.user_id }, function (err, extUser) {

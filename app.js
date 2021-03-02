@@ -43,7 +43,13 @@ var sess = {
   secret: process.env.CONNECT_MONGO_SECRET,
   saveUninitialized: true, // create session before something stored
   resave: false, //don't save session if unmodified
-  store: new MongoStore({ url: process.env.mongo }),
+  store: new MongoStore({
+    url: process.env.mongo,
+    touchAfter: 60 * 5,
+    collectionName: "mongoSessions",
+  }),
+  touchAfter: 60 * 5,
+  collectionName: "mongoSessions",
   cookie: {},
 };
 if (app.get("env") === "production") {
@@ -59,8 +65,9 @@ app.use(session(sess));
 
 //app.use(requireHTTPS);
 app.use(compression());
-app.get("*", function (req, res, next) {
+app.get("*", async function (req, res, next) {
   //console.log("host: ", req.headers.host);
+  //await Session.deleteMany({ code: { $exists: false } });
 
   if (req.headers.host.indexOf(":3000") == -1 && !req.secure) {
     res.redirect("https://" + req.headers.host + req.url);

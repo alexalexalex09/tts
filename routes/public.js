@@ -640,7 +640,7 @@ router.post("/get_session_post_select", (req, res) => {
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
   console.log("gulp");
-  var hd = new memwatch.HeapDiff();
+  /*var hd = new memwatch.HeapDiff();*/
   //If the user is logged in
   if (req.user) {
     //Get user from Mongo and Populate. This does not contribute significantly to memory overhead.
@@ -655,19 +655,19 @@ router.post("/get_user_lists_populated", (req, res) => {
           if (typeof curUser.preferences != "undefined") {
             result.darkMode = curUser.preferences.darkMode;
           }
-          var diff = hd.end();
+          /*var diff = hd.end();
           console.log("curUser + curUser.lists");
-          console.log({ diff });
+          console.log({ diff });*/
           res.send(result);
         });
       });
     //});
     //}); Session.find({})
   } else {
-    res.send(ERR_LOGIN_SOFT);
-    var diff = hd.end();
+    /*var diff = hd.end();
     console.log("No User for gulp");
-    console.log({ diff });
+    console.log({ diff });*/
+    res.send(ERR_LOGIN_SOFT);
   }
 });
 

@@ -632,113 +632,106 @@ router.post("/get_session_post_select", (req, res) => {
 //Get current user's complete list object
 router.post("/get_user_lists_populated", (req, res) => {
   console.log("gulp");
-  //var hd = new memwatch.HeapDiff();
+  var hd = new memwatch.HeapDiff();
+  //If the user is logged in
   if (req.user) {
-    //console.log("extUser: ", req.extUser);
+    //Get user from Mongo and Populate. This does not contribute significantly to memory overhead.
     User.findOne({ profile_id: req.user.id })
       .populate("lists.allGames")
       .populate("lists.custom.games")
       .exec(function (err, curUser) {
-        //console.log("GULP curUser:", curUser);
-        //management.users.get({ id: req.user.user_id }, function (err, extUser) {
-        Session.find({}, "code").exec(function (err, codeList) {
-          //console.log("auth0 user:", extUser);
-          res.locals.user = req.user;
-          res.locals.email = req.user.emails[0].value;
-          /*if (extUser && extUser.username != "") {
-              var displayName = extUser.username || req.user.displayName;
-            } else {
-              var displayName = req.user.displayName;
-            }*/
-          //console.log("DisplayName: ", displayName);
-          //console.log(extUser);
-          if (curUser) {
-            var displayName = curUser.name;
-            res.locals.username = curUser.name;
-            if (curUser.lists) {
-              var modified = false;
-              for (var i = 0; i < curUser.lists.custom.length; i++) {
-                if (
-                  typeof curUser.lists.custom[i].listCode == "undefined" ||
-                  curUser.lists.custom[i].listCode.length == 0
-                ) {
-                  curUser.lists.custom[i].listCode = makeid(
+        console.log({ curUser });
+        //Once we've gotten the user with lists populated, get a list of all session codes
+        //Session.find({}, "code").exec(function (err, codeList) {
+        res.locals.user = req.user;
+        res.locals.email = req.user.emails[0].value;
+        if (curUser) {
+          var displayName = curUser.name;
+          res.locals.username = curUser.name;
+          if (curUser.lists) {
+            var modified = false;
+            for (var i = 0; i < curUser.lists.custom.length; i++) {
+              if (
+                typeof curUser.lists.custom[i].listCode == "undefined" ||
+                curUser.lists.custom[i].listCode.length == 0
+              ) {
+                /*curUser.lists.custom[i].listCode = makeid(
                     6,
                     codeList.map((e) => e.code)
-                  );
-                  modified = true;
-                  console.log(
-                    "Made new id for list " +
-                      curUser.lists.custom[i].name +
-                      ": " +
-                      curUser.lists.custom[i].listCode
-                  );
-                }
+                  );*/
+                curUser.lists.custom[i].listCode = makeid(6);
+                modified = true;
+                console.log(
+                  "Made new id for list " +
+                    curUser.lists.custom[i].name +
+                    ": " +
+                    curUser.lists.custom[i].listCode
+                );
               }
-              if (modified) {
-                console.log("Saving curUser");
-                curUser.save();
-              }
-              getOwnedSessions(req.user.id, curUser.lists, res).then(
-                (result) => {
-                  if (typeof curUser.preferences != "undefiend") {
-                    result.darkMode = curUser.preferences.darkMode;
-                  }
-                  /*var diff = hd.end();
-                  console.log({ diff });*/
-                  res.send(result);
-                }
-              );
-            } else {
-              newUser = {
-                profile_id: req.user.id,
-                name: displayName,
-                lists: { allGames: [], custom: [] },
-                bgg: { username: "", collection: [] },
-              };
-              curUser = new User(newUser);
-              curUser.save().then(bggUpdate(curUser));
-              getOwnedSessions(req.user.id, curUser.lists, res).then(
-                (result) => {
-                  if (typeof curUser.preferences != "undefiend") {
-                    result.darkMode = curUser.preferences.darkMode;
-                  }
-                  /*var diff = hd.end();
-                  console.log({ diff });*/
-                  res.send(result);
-                }
-              );
             }
+            if (modified) {
+              console.log("Saving curUser");
+              curUser.save();
+            }
+            getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
+              if (typeof curUser.preferences != "undefiend") {
+                result.darkMode = curUser.preferences.darkMode;
+              }
+              var diff = hd.end();
+              console.log("curUser + curUser.lists");
+              console.log({ diff });
+              res.send(result);
+            });
           } else {
-            //Ideally, this shouldn't even be here. Users shouldn't get created by a
-            //script that only runs on page load - they should get created before the
-            //page is even rendered. This is now taken care of in app.js
             newUser = {
               profile_id: req.user.id,
-              name: req.user.displayName,
+              name: displayName,
               lists: { allGames: [], custom: [] },
               bgg: { username: "", collection: [] },
             };
-            res.locals.username = req.user.displayName;
             curUser = new User(newUser);
-            console.log("Creating New USER****");
             curUser.save().then(bggUpdate(curUser));
             getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
               if (typeof curUser.preferences != "undefiend") {
                 result.darkMode = curUser.preferences.darkMode;
               }
-              /*var diff = hd.end();
-              console.log({ diff });*/
+              var diff = hd.end();
+              console.log({ diff });
               res.send(result);
             });
           }
-        });
-        //});
+        } else {
+          //Ideally, this shouldn't even be here. Users shouldn't get created by a
+          //script that only runs on page load - they should get created before the
+          //page is even rendered. This is now taken care of in app.js
+          newUser = {
+            profile_id: req.user.id,
+            name: req.user.displayName,
+            lists: { allGames: [], custom: [] },
+            bgg: { username: "", collection: [] },
+          };
+          res.locals.username = req.user.displayName;
+          curUser = new User(newUser);
+          console.log("Creating New USER****");
+          curUser.save().then(bggUpdate(curUser));
+          getOwnedSessions(req.user.id, curUser.lists, res).then((result) => {
+            if (typeof curUser.preferences != "undefiend") {
+              result.darkMode = curUser.preferences.darkMode;
+            }
+            var diff = hd.end();
+            console.log("curUser + No curUser.lists");
+            console.log({ diff });
+            res.send(result);
+          });
+        }
       });
+    //});
+    //}); Session.find({})
   } else {
     res.send(ERR_LOGIN_SOFT);
-    /*var diff = hd.end();
-    console.log({ diff });*/
+    var diff = hd.end();
+    console.log("No User");
+    console.log({ diff });
   }
 });
 
@@ -1977,20 +1970,19 @@ router.post("/submit_votes", function (req, res) {
   }
 });
 
-router.post("/test", function (req, res) {
-  console.log("1: Calling test function");
-  Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-    console.log("2: Found session");
-    curSession.save(function (err) {
-      console.log("3: saved session");
-      User.findOne({ profile_id: curSession.users[0].user })
-        .select({ profile_id: 1, name: 1 })
-        .exec(function (err, curUsers) {
-          console.log("4: Got user");
-        });
+router.post("/test", async function (req, res) {
+  console.log("1: Calling test function: " + req.body.code);
+  var curSession = await Session.findOne({ code: req.body.code });
+  console.log("2: Found session");
+  console.log({ curSession });
+  await curSession.save();
+  console.log("3: saved session");
+  User.findOne({ profile_id: curSession.users[0].user })
+    .select({ profile_id: 1, name: 1 })
+    .exec(function (err, curUsers) {
+      console.log("4: Got user");
+      res.send({ status: "tested!" });
     });
-  });
-  res.send({ status: "tested!" });
 });
 
 function saveVoteStats(voteArray) {

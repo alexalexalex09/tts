@@ -34,7 +34,7 @@
     "mysql": "^2.18.1",
     "passport": "^0.4.1",
     "passport-auth0": "^1.4.0",
-    "pug": "^2.0.4",
+    "pug": "^3.0.1",
     "qr-image": "^3.2.0",
     "readable-url": "^1.1.0",
     "redis": "^3.0.2",

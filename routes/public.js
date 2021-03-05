@@ -610,29 +610,33 @@ router.get("/", (req, res) => {
 
 // Get notified when the user is navigating back
 router.post("/going_back", function (req, res) {
-  console.log(req.body, req.user);
-  if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
-    Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
-      if (!curSession) {
-        res.send(ERR_CODE);
-      } else {
-        var index = curSession.users.findIndex(
-          (obj) => obj.user == req.user.id
-        );
-        curSession.users[index].done = false;
-        console.log(req.user.id, curSession.owner);
-        console.log("lock: ", curSession.lock);
-        curSession.lock = "#selectView";
-        curSession.save().then(function (err, status) {
-          socketAPI.addGame({ code: req.body.code });
-          res.send({ status: "User editing again" });
-        });
-      }
-    });
+  if (req.user) {
+    console.log(req.body, req.user);
+    if (req.body.from == "#postSelectView" && req.body.to == "#selectView") {
+      Session.findOne({ code: req.body.code }).exec(function (err, curSession) {
+        if (!curSession) {
+          res.send(ERR_CODE);
+        } else {
+          var index = curSession.users.findIndex(
+            (obj) => obj.user == req.user.id
+          );
+          curSession.users[index].done = false;
+          console.log(req.user.id, curSession.owner);
+          console.log("lock: ", curSession.lock);
+          curSession.lock = "#selectView";
+          curSession.save().then(function (err, status) {
+            socketAPI.addGame({ code: req.body.code });
+            res.send({ status: "User editing again" });
+          });
+        }
+      });
+    } else {
+      res.send({
+        status: "Thank you for traveling with TTS Airlines",
+      });
+    }
   } else {
-    res.send({
-      status: "Thank you for traveling with TTS Airlines",
-    });
+    res.send(ERR_LOGIN);
   }
 });
 

@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 var ResourceSchema = new Schema(
   {
     name: String,
-    data: Object,
+    games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
     collected: Date,
   },
   {

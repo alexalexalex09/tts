@@ -21,6 +21,11 @@ const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
 var memwatch = require("@floffah/node-memwatch");
 var redis = require("redis");
+const { chain } = require("stream-chain");
+const { streamParser } = require("stream-json");
+const { pick } = require("stream-json/filters/Pick");
+const { ignore } = require("stream-json/filters/Ignore");
+const { streamValues } = require("stream-json/streamers/StreamValues");
 
 console.log("1/8: Setting up Auth0", Date.now() - loadTime);
 /*var management = new ManagementClient({
@@ -143,7 +148,7 @@ for (var j = 2010; j <= year; j++) {
       process.env.BGAID +
       "ph8PXFkuKb&ascending=true&year_published=" +
       j +
-      "&skip=" +
+      "&limit=100&skip=" +
       0 //i
   );
   //}
@@ -279,12 +284,7 @@ function getGame(game) {
           });
         }
         curGame.save().then((saved) => {
-          var toPush = {
-            name: metadata.name,
-            bgaID: metadata.id,
-            url: metadata.url,
-            game: saved._id,
-          };
+          var toPush = saved._id;
           resolve(toPush);
         });
       });
@@ -314,6 +314,7 @@ async function getBGARequests(requests) {
   for (var i = 0; i < requests.length; i++) {
     await wait(1000);
     var ret = await getBGARequest(requests[i], i + 1, requests.length);
+    console.log("Adding " + ret.length + " games");
     arr = arr.concat(ret);
   }
   return arr;
@@ -415,13 +416,13 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     //getBGGPages(10).then((topGames) => {
     getBGARequests(requests).then((topGames) => {
       console.log("Topgames: " + topGames.length);
-      if (curResource && curResource.data.games.length > 0) {
-        //Don't wholesale replace, instead do an upgrade
-        var games = curResource.data.games;
+      if (curResource && curResource.games.length > 0) {
+        /*//Don't wholesale replace, instead do an upgrade
+        var games = curResource.games;
         console.log(games.length + " games");
         for (
           let i = 0;
-          i < topGames.length && i < curResource.data.games.length;
+          i < topGames.length && i < curResource.games.length;
           i++
         ) {
           //If the current index happens to be the same as the old index, don't overthink it, just replace
@@ -449,12 +450,19 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
           if (topListSaveErr) {
             console.log({ topListSaveErr });
           }
+        });*/
+        curResource.collected = Date.now();
+        curResource.games = topGames;
+        curResource.save().then(function (curResource, topListSaveErr) {
+          if (topListSaveErr) {
+            console.log({ topListSaveErr });
+          }
         });
       } else {
         var newResource = new Resource({
-          name: "topGames",
-          data: { games: topGames },
+          games: topGames,
           collected: Date.now(),
+          name: "topGames",
         });
         newResource.save().then(function (curResource, err) {
           if (err) {
@@ -2689,33 +2697,40 @@ router.post("/change_username", function (req, res) {
 });
 
 router.post("/get_top_list", function (req, res) {
-  var hd = new memwatch.HeapDiff();
   client.get("topList", function (err, topList) {
-    if (topList) {
-      console.log(typeof topList);
-      console.log("Toplist length: ", topList.length);
-      topList = JSON.parse(topList);
-      //TODO: This increases memory. Use JSONStream.parse instead.
+    if (topList == 4) {
+      console.log("Serving from Redis");
       res.send(topList);
     } else {
-      Game.find(
+      /*var curResource = [];
+      const cursor = Game.find(
         { metadata: { $exists: true } },
         { __v: 0, _id: 0, owned: 0, rating: 0 }
       )
         .limit(1000)
         .lean()
+        .cursor();
+      cursor.on("data", function (doc) {
+        cursor.pause();
+        doc.name = doc.name.replace("\\", "");
+        curResource.push(doc);
+        cursor.resume();
+      });
+      cursor.on("end", function () {
+        client.set("topList", JSON.stringify(curResource));
+        client.expire("topList", 60 * 24);
+        res.send(curResource);
+      });*/
+      Resource.findOne({ name: "topGames" }, { data: 1 })
+        .lean()
+        .populate("games")
         .exec(function (err, curResource) {
-          var diff = hd.end();
-          console.log("get_top_list: " + curResource.length);
-          console.log({ diff });
-          if (curResource) {
-            var games = prepGameList(curResource);
-            client.set("topList", JSON.stringify({ games: games }));
-            client.expire("topList", 60 * 24);
-            res.send({ games: games });
-          } else {
-            res.send({ games: [] });
-          }
+          console.log(typeof curResource);
+          console.log(curResource == null);
+          console.log(typeof curResource.games);
+          client.set("topList", JSON.stringify(curResource.games));
+          client.expire("topList", 60 * 24);
+          res.send(curResource.games);
         });
     }
   });
@@ -2732,16 +2747,17 @@ function prepGameList(games) {
 
 //Takes an array of game names and returns an object with the games or an error
 router.post("/bga_find_game", function (req, res) {
-  var hd = new memwatch.HeapDiff();
+  //var hd = new memwatch.HeapDiff();
   var gamesArray = req.body.game;
   getGamesAsync(gamesArray).then((result) => {
     res.send(result);
   });
-  var diff = hd.end();
-  console.log({ diff });
+  //var diff = hd.end();
+  //console.log({ diff });
 });
 
 async function getGamesAsync(gamesArray) {
+  //TODO: This is very slow. We need a way to search for all of the games at once and then identify which games weren't found, and only adjust for those
   var result = [];
   for (var i = 0; i < gamesArray.length; i++) {
     var currentGame = gamesArray[i];
@@ -2749,6 +2765,50 @@ async function getGamesAsync(gamesArray) {
     result.push(game);
   }
   return result;
+}
+
+async function getAllGamesAsync(gamesArray) {
+  gamesArray = gamesArray.map((game) => {
+    return game.replace(/[^%0-9a-zA-Z' ]/g, "");
+  });
+  Game.find({
+    $and: [
+      {
+        $or: [
+          { name: { $in: gamesArray } },
+          { actualName: { $in: gamesArray } },
+        ],
+      },
+      { metadata: { $exists: true } },
+    ],
+  })
+    .lean()
+    .exec(function (err, curGames) {
+      populateAllGamesAsync(curGames).then((result) => {
+        return result;
+      });
+    });
+}
+
+async function populateAllGamesAsync(curGames) {
+  for (var i = 0; i < gamesArray.length; i++) {
+    var index = gamesArray[i].findIndex((obj) => {
+      return curGames.name == obj || curGames.actualName == obj;
+    });
+    var game = await function () {
+      return new Promise(function (resolve, reject) {
+        if (index == -1) {
+          //Couldn't find the game we're looking for in the array returned from MongoDB
+          getNewGameFromBGA(currentGame).then((game) => {
+            resolve(game);
+          });
+        } else {
+          resolve(curGames[index]);
+        }
+      });
+    };
+    result.push(game);
+  }
 }
 
 function findAGame(currentGame) {
@@ -2761,32 +2821,32 @@ function findAGame(currentGame) {
         },
         { metadata: { $exists: true } },
       ],
-    }).exec(function (err, curGames) {
-      if (
-        typeof curGames == "undefined" ||
-        curGames == null ||
-        curGames.length == 0
-      ) {
-        console.log("Couldn't find " + currentGame);
-        getNewGameFromBGA(currentGame).then((game) => {
-          resolve(game);
-        });
-      } else {
-        console.log(typeof curGames);
-        //console.log({ curGames });
-        console.log(
-          "Found " + curGames[0].name + ", AKA " + curGames[0].actualName
-        );
-        var index = curGames.findIndex((obj) => {
-          obj.name == currentGame;
-        });
-        if (index == -1) {
-          resolve(curGames[0]);
+    })
+      .lean()
+      .exec(function (err, curGames) {
+        if (
+          typeof curGames == "undefined" ||
+          curGames == null ||
+          curGames.length == 0
+        ) {
+          console.log("Couldn't find " + currentGame);
+          getNewGameFromBGA(currentGame).then((game) => {
+            resolve(game);
+          });
         } else {
-          resolve(curGames[index]);
+          console.log(
+            "Found " + curGames[0].name + ", AKA " + curGames[0].actualName
+          );
+          var index = curGames.findIndex((obj) => {
+            obj.name == currentGame;
+          });
+          if (index == -1) {
+            resolve(curGames[0]);
+          } else {
+            resolve(curGames[index]);
+          }
         }
-      }
-    });
+      });
   });
 }
 

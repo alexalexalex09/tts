@@ -2555,7 +2555,6 @@ function getGameUrl(games) {
       var anyNewTopList = [];
       if (res == null || typeof res[0] == "undefined" || res[0].length == 0) {
         anyNewTopList.push(getNewTopList());
-        console.log("Added a promise: " + typeof anyNewTopList[0]);
       } else {
         var topList = res;
         anyNewTopList.push(
@@ -2597,12 +2596,7 @@ function getGameUrl(games) {
               console.log("Couldn't find topList!");
               index = -1;
             } else {
-              /* if (typeof fuse == "undefined") {
-                console.log("no fuse yet");
-              } else {
-                //Otherwise, find the index of the game in question*/
               index = getTopListIndex(game, topList);
-              /* }*/
             }
 
             if (index > -1) {
@@ -2610,12 +2604,11 @@ function getGameUrl(games) {
               var theURL = topList[index].metadata.url;
               //Fall back on search if the topList is corrupted, and reset it
               if (theURL == "" || typeof theURL == "undefined") {
-                localforage.setItem("topList", topList).then((res) => {
-                  var ret =
-                    `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
-                    game;
-                  resolveInner({ game: game, url: ret });
-                });
+                getNewTopList();
+                var ret =
+                  `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                  game;
+                resolveInner({ game: game, url: ret });
               } else {
                 //If topList is not corrupted, resolve the current promise
                 resolveInner({ game: game, url: topList[index].metadata.url });
@@ -2638,19 +2631,22 @@ function getGameUrl(games) {
         Promise.all(promises).then((games) => {
           if (fetches.length > 0) {
             ttsFetch("/bga_find_game", { game: fetches }, (res) => {
-              //If a game is found, get the new topList from the server
+              //Cache all results in localforage
+              res.map((el) => {
+                console.log(el.metadata.name);
+                topList.push(el);
+              });
+              localforage.setItem("topList", topList);
               games.forEach((game, curIndex) => {
                 if (game.toResolve) {
-                  /*var index = res.findIndex((obj) => {
+                  var index = res.findIndex((obj) => {
                     return (
                       obj.name
                         .replace("&amp;", "and")
-                        .replace("&", "and")
-                        .replace(":", "")
+                        .replace(/[^%0-9a-zA-Z' ]/g, "")
                         .replace(/\\/g, "") == game.game
                     );
-                  });*/
-                  var index = -1;
+                  });
                   if (index == -1) {
                     console.log(game.game + " not found");
                     var url =
@@ -2662,7 +2658,8 @@ function getGameUrl(games) {
                   }
                 }
               });
-              getNewTopList().then(resolve(games));
+              //Set the new local topList
+              resolve(games);
             });
           } else {
             resolve(games);
@@ -2683,9 +2680,10 @@ function getNewTopList() {
     };
     //await the promises. This will set the topList variable and won't need to be repeated on subsequent requests (hopefully)
     fetch("/get_top_list", options).then((response) => {
+      console.log("GTL: " + typeof response);
       response.json().then((res) => {
-        localforage.setItem("topList", res.games).then(() => {
-          resolve(res.games);
+        localforage.setItem("topList", res).then(() => {
+          resolve(res);
         });
       });
     });

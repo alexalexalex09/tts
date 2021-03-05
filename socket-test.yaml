@@ -1,0 +1,43 @@
+config:
+  target: "http://dev.tts:3000" #"https://selectagame.net"
+  phases:
+    - duration: 20
+      arrivalRate: 10
+scenarios:
+  #- engine: "socketio"
+  - flow:
+      #- get:
+      #    url: "/H5PQW"
+      #- loop:
+      #    - emit:
+      #        channel: "addGame"
+      #        data: "H5PQW"
+      #    - think: 1
+      #  count: 20
+      #- think: 10
+      #- emit:
+      #    channel: "submitVotes"
+      #    data: '{"code":"H5PQW","voteArray":[{"game":"5f272c2a7cd31f4b4c0e72c7","vote":"771"},{"game":"5f4fe877f205cde8c05f2c48","vote":"500"},{"game":"5f272c6b7cd31f4b4c0e8128","vote":"500"}]}'
+      - post:
+          url: "/test"
+          json:
+            code: "H5PQW"
+            voteArray:
+              - game: 5f272c2a7cd31f4b4c0e72c7
+                vote: "771"
+              - game: 5f4fe877f205cde8c05f2c48
+                vote: "500"
+              - game: 5f272c6b7cd31f4b4c0e8128
+                vote: "500"
+      #- post:
+      #    url: "/submit_votes"
+      #    json:
+      #      code: "H5PQW"
+      #      voteArray:
+      #        - game: 5f272c2a7cd31f4b4c0e72c7
+      #          vote: "771"
+      #        - game: 5f4fe877f205cde8c05f2c48
+      #          vote: "500"
+      #        - game: 5f272c6b7cd31f4b4c0e8128
+      #          vote: "500"
+      - think: 10

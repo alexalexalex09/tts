@@ -38,13 +38,13 @@ var compression = require("compression");
 var app = express();
 
 //Replace MemoryStore
-const MongoStore = require("connect-mongo")(session);
+const MongoStore = require("connect-mongo").default;
 var sess = {
   secret: process.env.CONNECT_MONGO_SECRET,
   saveUninitialized: true, // create session before something stored
   resave: false, //don't save session if unmodified
-  store: new MongoStore({
-    url: process.env.mongo,
+  store: MongoStore.create({
+    mongoUrl: process.env.mongo,
     touchAfter: 60 * 5,
     collectionName: "mongoSessions",
   }),

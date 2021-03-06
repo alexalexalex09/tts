@@ -287,7 +287,7 @@ function emitVotes(curSession) {
   for (var i = 0; i < curSession.users.length; i++) {
     userList.push(curSession.users[i].user);
   }
-  User.find({ profile_id: { $in: userList } })
+  /*User.find({ profile_id: { $in: userList } })
     .select({ profile_id: 1, name: 1 })
     .exec(function (err, curUsers) {
       console.log("userList: ", userList);
@@ -295,18 +295,20 @@ function emitVotes(curSession) {
       for (var i = 0; i < curUsers.length; i++) {
         var index = curSession.users.findIndex(
           (obj) => obj.user == curUsers[i].profile_id
-        );
-        users.push({
-          doneVoting: curSession.users[index].doneVoting,
-          name: curUsers[i].name,
-        });
-      }
-      console.log(curSession.code, users);
-      io.sockets.emit(curSession.code + "owner", {
-        voteSubmit: true,
-        users: users,
-      });
+        );*/
+  for (var i = 0; i < curSession.users.length; i++) {
+    console.log(curSession.users[i].name);
+    users.push({
+      doneVoting: curSession.users[i].doneVoting,
+      name: curSession.users[i].name,
     });
+  }
+  console.log(curSession.code, users);
+  io.sockets.emit(curSession.code + "owner", {
+    voteSubmit: true,
+    users: users,
+  });
+  /* });*/
 }
 
 socketAPI.endVote = function (data) {

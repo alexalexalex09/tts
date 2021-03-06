@@ -4296,6 +4296,7 @@ function sortVotes() {
 /*    fillPostVote(users)    */
 /*****************************/
 function fillPostVote(users) {
+  console.log({ users });
   console.log("fillPostVote");
   var htmlString = ``;
   var votedText = "";
@@ -5156,7 +5157,7 @@ function firstSessionMsg() {
     `<div class="firstSessionCatch" onclick="$(this).next().remove(); $(this).remove();"></div>
 <div class="firstSessionError"><div class="closeButton" onclick="$(this).parent().prev().remove(); $(this).parent().remove();">
 <ion-icon name="close-outline"></ion-icon></div><div class="firstSessionErrorMsg">` +
-      `Welcome to SelectAGame!<br><br>You're just in time! Other users are currently adding games to this session. Soon, you'll get to vote on which games you want to play. <br><br>Close this box whenever you're ready. You'll be able see which games have been added by clicking the blue list button <span class="listPopupPreview">(<ion-icon name="reader-outline"></ion-icon>).</span> <br><br>If you'd like to add a game to be considered, log in or sign up first.` +
+      `<div class="firstSessionErrorMsgTitle">Welcome to SelectAGame!</div><br><br>You're just in time! Voting begins soon. <br><br>Close this box whenever you're ready. <br/><br/> Click the blue list button <span class="listPopupPreview">(<ion-icon name="reader-outline"></ion-icon>)</span> to see what games others have added. <br><br>Want to add a game? Log in or sign up!` +
       `</div><div class="firstSessionLogin"><button class="button blueBtn" onclick="window.location.href='/login';">Login/Sign Up</div></div>
 `
   );

@@ -897,11 +897,16 @@ input#listImportSubmit.green {
 .firstSessionErrorMsg {
   height: var(--vh20);
   padding: calc(var(--vh) * 2);
-  text-align: center;
+  text-align: left;
   vertical-align: middle;
   display: table-cell;
   width: 100%;
   font-size: var(--font-h3);
+}
+
+.firstSessionErrorMsgTitle {
+  text-align: center;
+  font-size: var(--font-h2);
 }
 
 .listImportCatch,
@@ -1327,6 +1332,10 @@ input#listImportSubmit.green {
   padding-bottom: 1em;
 }
 
+#postSelectIntro a {
+  color: var(--main-blue);
+}
+
 #postVoteContainer {
   grid-area: 4/2/10/10;
 }
@@ -1718,7 +1727,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 input[type="range"]::-webkit-slider-runnable-track {
   position: relative;
-  width: 70vw;
+  width: 70%;
   height: calc(var(--vh) * 0.8);
   background: linear-gradient(
         90deg,
@@ -1738,7 +1747,7 @@ input[type="range"]::-webkit-slider-runnable-track {
   background-size: 12.5% 100%, 100% 100%;
 }
 input[type="range"]::-moz-range-track {
-  width: 70vw;
+  width: 70%;
   height: calc(var(--vh) * 0.8);
   background: linear-gradient(
         90deg,
@@ -1759,7 +1768,7 @@ input[type="range"]::-moz-range-track {
 }
 input[type="range"]::-ms-track {
   border: none;
-  width: 70vw;
+  width: 70%;
   height: calc(var(--vh) * 0.8);
   background: linear-gradient(
         90deg,
@@ -2563,7 +2572,7 @@ input#selectLimit {
 
 .listTitleText {
   cursor: pointer;
-  width: 100%;
+  width: calc(100% - 7vw - 1em);
   float: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2997,6 +3006,10 @@ input#selectLimit {
 
   .listTitle ion-icon {
     left: 10px;
+  }
+
+  .listTitleText {
+    width: calc(100% - 1em - 10px);
   }
 
   .contextActions {

@@ -132,8 +132,8 @@ block content
       #postSelectContainer
         if !user
           #postSelectIntro 
-            | Welcome to SelectAGame! Other users are currently adding games to this session. Voting will begin soon. To add your games, 
-            a(href="/login") log in or sign up!
+            | Welcome to SelectAGame! Other users are currently adding games to this session. Voting will begin soon.
+            button.button.blueBtn(onclick="window.location.href='/login';") Log in to add a game
 
     #voteView.view.off
       #voteTitle.pageTitle.h1 Voting

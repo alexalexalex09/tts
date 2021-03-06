@@ -1336,6 +1336,10 @@ input#listImportSubmit.green {
   color: var(--main-blue);
 }
 
+#postSelectIntro button {
+  margin-top: 1rem;
+}
+
 #postVoteContainer {
   grid-area: 4/2/10/10;
 }

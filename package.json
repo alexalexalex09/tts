@@ -29,6 +29,7 @@
     "jaro-winkler": "^0.2.8",
     "kind-of": "^6.0.3",
     "localforage": "^1.9.0",
+    "md-directory": "^1.1.1",
     "mongoose": "^5.11.13",
     "morgan": "~1.9.1",
     "mysql": "^2.18.1",

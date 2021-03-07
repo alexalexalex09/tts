@@ -3,6 +3,7 @@ console.log("Starting...");
 var loadTime = Date.now();
 const express = require("express");
 const router = express.Router();
+var path = require("path");
 var mongoose = require("../mongo.js");
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
@@ -19,6 +20,7 @@ var xml2js = require("xml2js");
 var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
+var md = require("md-directory");
 var memwatch = require("@floffah/node-memwatch");
 var redis = require("redis");
 const { chain } = require("stream-chain");
@@ -562,11 +564,6 @@ router.get("/*", function (req, res, next) {
 
 router.post("/user_nonce", function (req, res) {
   res.send({ userNonce: req.session.userNonce });
-});
-
-router.get("/privacy-tos", function (req, res, next) {
-  res.render("privacy-tos");
-  next();
 });
 
 router.get("/j/:session", (req, res) => {
@@ -3384,6 +3381,11 @@ router.post("/set_dark_mode", function (req, res) {
   } else {
     res.send({ status: "no user" });
   }
+});
+
+router.post("/get_blog_entries", function (req, res) {
+  var contents = md.parseDirSync(path.join(__dirname, "posts"));
+  res.send({ contents });
 });
 
 console.log("6/8: Routes loaded", Date.now() - loadTime);

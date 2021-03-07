@@ -1,0 +1,72 @@
+.blogHeader {
+  display: grid;
+  width: 96vw;
+  grid-template-columns: 4rem 1fr 10rem;
+  height: 4rem;
+  margin-left: 2vw;
+  margin-top: 1vh;
+  align-items: center;
+  color: var(--main-blue);
+  font-size: var(--font-h2);
+}
+
+.blogImage {
+  border-radius: 100px;
+  background-color: var(--main-blue);
+  height: 4rem;
+  width: 4rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.blogTitle {
+  padding-left: 1rem;
+}
+
+.blogBack {
+  text-align: right;
+}
+
+.blog {
+  display: grid;
+  grid-template-columns: 10rem 1fr;
+  font-size: var(--font-p);
+  margin-top: 1rem;
+  width: 96vw;
+  margin-left: 2vw;
+}
+
+.postListTitle {
+  font-size: var(--font-h3);
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.postTitle {
+  cursor: pointer;
+  margin-top: 0.7rem;
+}
+
+.activeSidebar {
+  font-weight: bold;
+}
+
+.blogDisplay {
+  width: 500px;
+  max-width: calc(100% - 10rem);
+  border: 3px solid black;
+  border-radius: 5px;
+  padding: 1rem;
+}
+
+.activeTitle {
+  font-style: italic;
+  font-size: var(--font-h1);
+  text-decoration: underline;
+}
+
+.activeDate {
+  font-style: italic;
+  color: var(--main-grey);
+}

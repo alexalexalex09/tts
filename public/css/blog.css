@@ -40,8 +40,8 @@
   grid-template-columns: 10rem 1fr;
   font-size: var(--font-p);
   margin-top: 1rem;
-  width: 96vw;
-  margin-left: 2vw;
+  width: 96%;
+  margin-left: 2%;
 }
 
 .blogSidebar {
@@ -84,6 +84,11 @@
   color: var(--main-grey);
 }
 
+.postScrollUp,
+.postScrollDown {
+  display: none;
+}
+
 @media (max-width: 700px) {
   .blogBack {
     text-align: right;
@@ -112,5 +117,15 @@
     width: 96vw;
     max-width: 96vw;
     margin-top: 1rem;
+  }
+  .postScrollUp,
+  .postScrollDown {
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+  }
+  .postList {
+    max-height: 5rem;
+    overflow-y: hidden;
   }
 }

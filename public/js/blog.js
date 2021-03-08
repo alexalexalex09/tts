@@ -5,7 +5,7 @@ fetch("/get_blog_entries", {
   },
 }).then(function (response) {
   return response.json().then((res) => {
-    var sidebar = `<div class="postList"><div class="postListTitle">Posts</div>`;
+    var sidebar = `<div class="postListTitle">Posts</div><button class="postScrollUp"><ion-icon name="caret-up-outline"></ion-icon></button><div class="postList">`;
     var entries = [];
     for (let key in res.contents) {
       if (res.contents.hasOwnProperty(key)) {
@@ -27,9 +27,10 @@ fetch("/get_blog_entries", {
         `</div>`;
       highlighted = "";
     });
-    sidebar += "</div>";
+    sidebar += `</div><button class="postScrollDown"><ion-icon name="caret-down-outline"></ion-icon></button>`;
     $(".blogSidebar").html(sidebar);
     $(".activePost").html(createActiveBlog(entries[0]));
+    addScrollListeners();
     localforage.setItem("entries", entries).then(() => {
       $(".postTitle").each((i, e) => {
         $(e).on("click", function (e) {
@@ -74,6 +75,25 @@ function setNewSidebarHighlight() {
       $(e).removeClass("activeSidebar");
     }
   });
+}
+
+function addScrollListeners() {
+  $(".postScrollUp").on("click", () => scrollElement("up"));
+  $(".postScrollDown").on("click", () => scrollElement("down"));
+}
+
+function scrollElement(direction) {
+  console.log("Scroll " + direction);
+  var current = $(".postList").scrollTop();
+  if (direction === "up") {
+    $(".postList").scrollTop(
+      current - parseFloat(getComputedStyle(document.documentElement).fontSize)
+    );
+  } else {
+    $(".postList").scrollTop(
+      current + parseFloat(getComputedStyle(document.documentElement).fontSize)
+    );
+  }
 }
 
 window.addEventListener("load", function () {});

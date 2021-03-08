@@ -1,5 +1,5 @@
 ---
-title: Welcome to the Blog  for the first time
+title: Welcome to the Blog
 date: 20210306
 ---
 

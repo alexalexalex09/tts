@@ -35,6 +35,10 @@
   align-items: center;
 }
 
+.blogBack a ion-icon {
+  transform: translateY(0.2rem);
+}
+
 .blog {
   display: grid;
   grid-template-columns: 10rem 1fr;

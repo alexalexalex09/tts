@@ -4651,13 +4651,13 @@ function submitSelectFilter() {
           }
         }
         if (match > -1) {
-          if (typeof topList[match].metadata.minplayers != "undefined") {
-            min = Number(topList[match].metadata.minplayers);
+          if (typeof topList[match].metadata.min_players != "undefined") {
+            min = Number(topList[match].metadata.min_players);
           } else {
             min = -1;
           }
-          if (typeof topList[match].metadata.maxplayers != "undefined") {
-            max = Number(topList[match].metadata.maxplayers);
+          if (typeof topList[match].metadata.max_players != "undefined") {
+            max = Number(topList[match].metadata.max_players);
           } else {
             max = -1;
           }

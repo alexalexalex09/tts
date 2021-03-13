@@ -8,13 +8,13 @@ fetch("/get_blog_entries", {
     var sidebar = `<div class="postListTitle">Posts</div><button class="postScrollUp"><ion-icon name="caret-up-outline"></ion-icon></button><div class="postList">`;
     res.titles.forEach((title) => {
       sidebar +=
-        `<a href="/blog/` +
+        `<li><a href="/blog/` +
         title.slug +
         `" class="postTitle" x-date="` +
         title.date +
         `">` +
         title.title +
-        `</div>`;
+        `</a></li>`;
     });
     sidebar += `</div><button class="postScrollDown"><ion-icon name="caret-down-outline"></ion-icon></button>`;
     $(".blogSidebar").html(sidebar);

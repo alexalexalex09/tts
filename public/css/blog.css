@@ -59,9 +59,13 @@
   font-weight: bold;
 }
 
+.postList li {
+  list-style: none;
+  margin-top: 0.7rem;
+}
+
 .postTitle {
   cursor: pointer;
-  margin-top: 0.7rem;
 }
 
 .activeSidebar {
@@ -71,6 +75,8 @@
 .blogDisplay {
   width: 500px;
   max-width: 76vw;
+  justify-self: center;
+  margin: 0rem 10rem 5rem 0rem;
   border: 3px solid black;
   border-radius: 5px;
   padding: 1vw;
@@ -120,7 +126,7 @@
   .blogDisplay {
     width: 96vw;
     max-width: 96vw;
-    margin-top: 1rem;
+    margin: 1rem auto;
   }
   .postScrollUp,
   .postScrollDown {

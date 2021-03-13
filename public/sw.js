@@ -1,4 +1,4 @@
-const CACHE_NAME = "V4";
+const CACHE_NAME = "V5";
 const STATIC_CACHE_URLS = [
   "/",
   "/css/normalize.css",

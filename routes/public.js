@@ -3395,7 +3395,12 @@ router.get("/blog", (req, res) => {
   entries.sort((a, b) => {
     return b.data.date - a.data.date;
   });
-  res.render("blog");
+  var ret = prepareEntry(entries[0]);
+  res.render("blog", {
+    entryDate: ret.date,
+    entryTitle: ret.title,
+    entryContent: ret.content,
+  });
 });
 
 router.post("/get_blog_entries", function (req, res) {

@@ -13,4 +13,4 @@ That being said, I _was_ in fact coding on my own. And I didn't want to fall int
 
 Even when you're coding alone, though, these teamworking skills are important because a solo coder is essentially a team of past, present, and future self. When I write bad documentation or leave it out entirely, I get lost if I don't work in that section of code for a while. There was a time when I stepped away from the project for a month, and coming back to it was really difficult.
 
-Also, eventually a couple other people became interested in looking at the code (which, by the way, is available at https://github.com/alexalexalex09/tts). So solo projects can eventually become team projects. Especially if there's a possibility of selling off the project in the future!
+Also, eventually a couple other people became interested in looking at the code (which, by the way, is available at [https://github.com/alexalexalex09/tts](https://github.com/alexalexalex09/tts)). So solo projects can eventually become team projects. Especially if there's a possibility of selling off the project in the future!

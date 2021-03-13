@@ -6,32 +6,22 @@ fetch("/get_blog_entries", {
 }).then(function (response) {
   return response.json().then((res) => {
     var sidebar = `<div class="postListTitle">Posts</div><button class="postScrollUp"><ion-icon name="caret-up-outline"></ion-icon></button><div class="postList">`;
-    var entries = [];
-    for (let key in res.contents) {
-      if (res.contents.hasOwnProperty(key)) {
-        entries.push(res.contents[key]);
-      }
-    }
-    entries.sort((a, b) => {
-      return b.data.date - a.data.date;
-    });
-    var highlighted = " activeSidebar";
-    entries.forEach((blog) => {
+    res.titles.forEach((title) => {
       sidebar +=
-        `<div class="postTitle` +
-        highlighted +
-        `" x-date="` +
-        blog.data.date +
+        `<a href="/blog/` +
+        title.slug +
+        `" class="postTitle" x-date="` +
+        title.date +
         `">` +
-        blog.data.title +
+        title.title +
         `</div>`;
-      highlighted = "";
     });
     sidebar += `</div><button class="postScrollDown"><ion-icon name="caret-down-outline"></ion-icon></button>`;
     $(".blogSidebar").html(sidebar);
-    $(".activePost").html(createActiveBlog(entries[0]));
+    /*$(".activePost").html(createActiveBlog(entries[0]));*/
     addScrollListeners();
-    localforage.setItem("entries", entries).then(() => {
+    setNewSidebarHighlight();
+    /*localforage.setItem("entries", entries).then(() => {
       $(".postTitle").each((i, e) => {
         $(e).on("click", function (e) {
           localforage.getItem("entries").then((blogs) => {
@@ -43,7 +33,7 @@ fetch("/get_blog_entries", {
           });
         });
       });
-    });
+    });*/
   });
 });
 

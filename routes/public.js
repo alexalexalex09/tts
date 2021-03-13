@@ -4,6 +4,7 @@ var loadTime = Date.now();
 const express = require("express");
 const router = express.Router();
 var path = require("path");
+const fs = require("fs");
 var mongoose = require("../mongo.js");
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
@@ -3383,10 +3384,76 @@ router.post("/set_dark_mode", function (req, res) {
   }
 });
 
+router.get("/blog", (req, res) => {
+  var contents = md.parseDirSync(path.join(__dirname, "posts"));
+  var entries = [];
+  for (let key in contents) {
+    if (contents.hasOwnProperty(key)) {
+      entries.push(contents[key]);
+    }
+  }
+  entries.sort((a, b) => {
+    return b.data.date - a.data.date;
+  });
+  res.render("blog");
+});
+
 router.post("/get_blog_entries", function (req, res) {
   var contents = md.parseDirSync(path.join(__dirname, "posts"));
-  res.send({ contents });
+  var entries = [];
+  fs.readdir(path.join(__dirname, "posts"), (err, files) => {
+    if (err) {
+      throw err;
+    }
+    files.forEach((file) => {
+      var entry = md.parseSync(path.join(__dirname, "posts") + "/" + file);
+      entry.slug = file.substr(0, file.length - 3);
+      console.log({ entry });
+      entries.push(entry);
+    });
+    entries.sort((a, b) => {
+      return b.data.date - a.data.date;
+    });
+    console.log({ entries });
+    titles = entries.map((blog) => {
+      var date = blog.data.date.toString();
+      date =
+        date.substr(0, 4) + "/" + date.substr(4, 2) + "/" + date.substr(6, 2);
+      return { title: blog.data.title, date: date, slug: blog.slug };
+    });
+    res.send({ titles: titles });
+  });
 });
+
+router.get("/blog/:entry", (req, res) => {
+  console.log("Entry: " + req.params.entry);
+  const filePath =
+    path.join(__dirname, "posts") + "/" + req.params.entry + ".md";
+  if (fs.existsSync(filePath)) {
+    const entry = md.parseSync(
+      path.join(__dirname, "posts") + "/" + req.params.entry + ".md"
+    );
+    var ret = prepareEntry(entry);
+    res.render("blog", {
+      entryDate: ret.date,
+      entryTitle: ret.title,
+      entryContent: ret.content,
+    });
+  } else {
+    console.log("File " + req.params.entry + " not found");
+    res.redirect("/blog");
+  }
+});
+
+function prepareEntry(entry) {
+  var ret = {};
+  var date = entry.data.date.toString();
+  ret.date =
+    date.substr(0, 4) + "/" + date.substr(4, 2) + "/" + date.substr(6, 2);
+  ret.title = entry.data.title;
+  ret.content = entry.content;
+  return ret;
+}
 
 console.log("6/8: Routes loaded", Date.now() - loadTime);
 

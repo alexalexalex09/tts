@@ -303,9 +303,6 @@ app.use((req, res, next) => {
 });*/
 
 //Routers
-app.get("/blog", (req, res) => {
-  res.render("blog");
-});
 app.get("/privacy-tos", function (req, res) {
   res.render("privacy-tos");
 });

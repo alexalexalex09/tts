@@ -7,21 +7,21 @@ head
   meta(name="apple-mobile-web-app-capable" content="yes")
   meta(name="apple-mobile-web-app-title" content="SelectAGame")
   meta(name="apple-mobile-web-app-status-bar-style" content="white")
-  link(rel='apple-touch-icon' sizes="180x180" href='/img/apple-touch-icon.png')
-  link(rel='stylesheet' href='css/normalize.css')
-  link(rel='stylesheet' href='css/boilerplate.css')
-  link(rel='stylesheet' href='css/main.css')
-  link(rel='stylesheet' href='css/blog.css')
+  link(rel='apple-touch-icon' sizes="180x180" href='../img/apple-touch-icon.png')
+  link(rel='stylesheet' href='../css/normalize.css')
+  link(rel='stylesheet' href='../css/boilerplate.css')
+  link(rel='stylesheet' href='../css/main.css')
+  link(rel='stylesheet' href='../css/blog.css')
   // Fonts
   link(rel='stylesheet' href='https://fonts.googleapis.com/css?family=Josefin+Sans&display=swap')
   meta(name='theme-color' content='#fafafa')
-  link(rel="manifest" href="manifest.json")
-  script(defer src='js/blog.js')
-  script(src='js/vendor/modernizr-3.8.0.min.js')
-  script(src='js/vendor/jquery-3.4.1.min.js')
+  link(rel="manifest" href="../manifest.json")
+  script(defer src='../js/blog.js')
+  script(src='../js/vendor/modernizr-3.8.0.min.js')
+  script(src='../js/vendor/jquery-3.4.1.min.js')
   script(type='module' src='https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.esm.js')
   script(nomodule='' src='https://unpkg.com/ionicons@5.0.0/dist/ionicons/ionicons.js')
-  script(src="/js/vendor/localforage.min.js")
+  script(src="../js/vendor/localforage.min.js")
   //if IE
     p.browserupgrade
       | You are using an 
@@ -48,10 +48,16 @@ block content
     .blogTitle SelectAGame Blog
     .blogBack
       a(href="/") 
-        <ion-icon name="caret-back-outline"></ion-icon>
+        ion-icon(name="caret-back-outline")
         | Back to Home
   .blog
     .blogSidebar
       .postListTitle Posts
     .blogDisplay
       .activePost
+        .activeTitle(x-date=entryDate) 
+          | #{entryTitle}
+        .activeDate
+          | #{entryDate}
+        .activeBody 
+          | !{entryContent}

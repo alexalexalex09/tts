@@ -22,30 +22,15 @@ var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
 var md = require("md-directory");
-var memwatch = require("@floffah/node-memwatch");
-var redis = require("redis");
-const { chain } = require("stream-chain");
-const { streamParser } = require("stream-json");
-const { pick } = require("stream-json/filters/Pick");
-const { ignore } = require("stream-json/filters/Ignore");
-const { streamValues } = require("stream-json/streamers/StreamValues");
+//var memwatch = require("@floffah/node-memwatch");
+//var redis = require("redis");
 
 console.log("1/8: Setting up Auth0", Date.now() - loadTime);
-/*var management = new ManagementClient({
-  domain: process.env.AUTH0_DOMAIN,
-  clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
-  clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
-  scope: "read:users update:users",
-});*/
 
-var redisURL = new URL(process.env.REDIS_URL);
-console.log({ redisURL });
-console.log(redisURL.port);
-console.log(redisURL.hostname);
-console.log(redisURL.password);
+/*var redisURL = new URL(process.env.REDIS_URL);
 var client = redis.createClient(process.env.REDIS_URL, {
   password: redisURL.password,
-});
+});*/
 //client.auth(redisURL.password);
 
 var auth0 = new AuthenticationClient({
@@ -95,22 +80,6 @@ Session.find({ users: { $elemMatch: { user: { $regex: /guest*/ } } } }).exec(
   }
 );
 
-/*
-User.findOne({ name: "crina" }).exec(function (err, curUser) {
-  console.log(curUser);
-  Game.find({ _id: { $in: curUser.lists.allGames } }).exec(function (
-    err,
-    curGames
-  ) {
-    var arr = [];
-    curGames.forEach(function (e) {
-      arr.push(e.name + ": " + e._id);
-    });
-    console.log("Games: ", arr);
-  });
-});
-*/
-
 var requests = [];
 //Top 100 games from each decade before 1990
 /*for (var i = 1899; i < 1980; i = i + 10) {
@@ -149,7 +118,7 @@ for (var j = 2010; j <= year; j++) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
       process.env.BGAID +
-      "ph8PXFkuKb&ascending=true&year_published=" +
+      "&ascending=true&year_published=" +
       j +
       "&limit=100&skip=" +
       0 //i
@@ -1046,8 +1015,7 @@ router.post("/game_add", function (req, res) {
                       res.send({ status: gameToReport });
                     } else {
                       res.send({
-                        err:
-                          "Error: game not added, maybe you checked too early.",
+                        err: "Error: game not added, maybe you checked too early.",
                       });
                     }
                     bggUpdate(curUser);
@@ -1903,7 +1871,7 @@ router.post("/submit_votes", function (req, res) {
       user: req.user.id,
       voteArray: req.body.voteArray,
     });
-    //saveVoteStats(req.body.voteArray);
+    saveVoteStats(req.body.voteArray);
     res.send({ status: "Submitted votes!" });
   } else {
     socketAPI.submitVotes({
@@ -2701,28 +2669,8 @@ router.post("/change_username", function (req, res) {
 router.post("/get_top_list", function (req, res) {
   client.get("topList", function (err, topList) {
     if (topList == 4) {
-      console.log("Serving from Redis");
       res.send(topList);
     } else {
-      /*var curResource = [];
-      const cursor = Game.find(
-        { metadata: { $exists: true } },
-        { __v: 0, _id: 0, owned: 0, rating: 0 }
-      )
-        .limit(1000)
-        .lean()
-        .cursor();
-      cursor.on("data", function (doc) {
-        cursor.pause();
-        doc.name = doc.name.replace("\\", "");
-        curResource.push(doc);
-        cursor.resume();
-      });
-      cursor.on("end", function () {
-        client.set("topList", JSON.stringify(curResource));
-        client.expire("topList", 60 * 24);
-        res.send(curResource);
-      });*/
       Resource.findOne({ name: "topGames" }, { data: 1 })
         .lean()
         .populate("games")
@@ -3168,8 +3116,7 @@ router.post("/get_list_code_info", function (req, res) {
     });
   } else {
     res.send({
-      err:
-        "Welcome to SelectAGame!<br/></br> This link leads to a list of games; if you'd like to save it to your profile, click the button below to login or sign up!",
+      err: "Welcome to SelectAGame!<br/></br> This link leads to a list of games; if you'd like to save it to your profile, click the button below to login or sign up!",
     });
   }
 });

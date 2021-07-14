@@ -89,6 +89,10 @@
   text-decoration: underline;
 }
 
+.activeBody a {
+  color: blue;
+}
+
 .activeDate {
   font-style: italic;
   color: var(--main-grey);

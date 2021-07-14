@@ -1,19 +1,13 @@
 require("dotenv").config();
-//var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var logger = require("morgan");
-const bodyParser = require("body-parser");
 const publicRouter = require("./routes/public");
 const authRouter = require("./routes/auth");
 const qrRouter = require("./routes/qr");
 const session = require("express-session");
 require("./mongo.js");
 var User = require("./models/users.js");
-var Game = require("./models/games.js");
-var Session = require("./models/sessions.js");
-var Stat = require("./models/stats.js");
-const cfenv = require("cfenv");
 var memwatch = require("@floffah/node-memwatch");
 memwatch.on("stats", function (stats) {
   var currentDate = new Date();
@@ -30,9 +24,6 @@ memwatch.on("stats", function (stats) {
       Number(Number(stats.used_heap_size) / 1000000).toString()
   );
 });
-//var socket_io = require("socket.io");
-//var ManagementClient = require("auth0").ManagementClient;
-//const requireHTTPS = require("./middleware/requireHTTPS");
 var compression = require("compression");
 
 var app = express();
@@ -75,24 +66,6 @@ app.get("*", async function (req, res, next) {
     next();
   }
 });
-//Auth0 vars
-
-/*var management = new ManagementClient({
-  domain: process.env.AUTH0_DOMAIN,
-  clientId: process.env.AUTH0_NON_INTERACTIVE_CLIENT_ID,
-  clientSecret: process.env.AUTH0_NON_INTERACTIVE_CLIENT_SECRET,
-  scope: "read:users update:users",
-});*/
-
-/*var envs = {
-  orgUrl: process.env.oUrl,
-  token: process.env.oToken,
-  issuer: process.env.oIssuer,
-  client_id: process.env.oClient_id,
-  client_secret: process.env.oSecret,
-  secret: process.env.sSecret,
-};*/
-//console.log(envs);
 
 // Load Passport
 var passport = require("passport");
@@ -128,34 +101,9 @@ passport.deserializeUser(function (user, done) {
   done(null, user);
 });
 
-/*
-// Okta/OIDC middleware
-var oktaClient = new okta.Client({
-  orgUrl: envs.orgUrl,
-  token: envs.token,
-});
-console.log("baseURL: ", baseURL);
-const oidc = new ExpressOIDC({
-  issuer: envs.issuer,
-  client_id: envs.client_id,
-  client_secret: envs.client_secret,
-  //redirect_uri: baseURL + "/users/callback", (upgraded to 2.0)
-  appBaseUrl: baseURL,
-  scope: "openid profile",
-  routes: {
-    login: {
-      path: "/users/login",
-    },
-    loginCallback: {
-      path: "/users/callback",
-      afterCallback: "/",
-    },
-  },
-});
-*/
 //configure body-parser to be used as middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -165,42 +113,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //This includes the port when on localhost:
 app.use(express.static("public"));
-/*
-// Okta setup
-app.use(
-  session({
-    secret: envs.secret,
-    resave: true,
-    saveUninitialized: false,
-  })
-);
-app.use(oidc.router);
-app.use((req, res, next) => {
-  if (!req.userContext) {
-    return next();
-  }
-  //Make user variable available
-  oktaClient
-    .getUser(req.userContext.userinfo.sub)
-    .then((user) => {
-      req.user = user;
-      res.locals.user = user;
-      next();
-    })
-    .catch((err) => {
-      next(err);
-    });
-});
-*/
-
-/*app.use(function (req, res, next) {
-  if (req.user) {
-    console.log(req.user.provider + "|" + req.user.id);
-  } else {
-    console.log("No user");
-  }
-  next();
-});*/
 
 app.use((req, res, next) => {
   //Get username from Mongo and pass into locals
@@ -246,62 +158,6 @@ app.use((req, res, next) => {
   }
 });
 
-/*app.use((req, res, next) => {
-  //console.log("custom middleware called*****************");
-  if (req.user) {
-    management.users.get({ id: req.user.user_id }, function (err, extUser) {
-      //console.log("auth0 error: ", err);
-      //console.log("auth0 user:", extUser);
-      res.locals.user = req.user;
-      if (extUser) {
-        if (
-          extUser.user_metadata &&
-          extUser.user_metadata.userDefinedName &&
-          extUser.user_metadata.userDefinedName.length > 0
-        ) {
-          res.locals.username = extUser.user_metadata.userDefinedName;
-          console.log(
-            "Assigning metadata username to locals: ",
-            res.locals.username
-          );
-        } else {
-          if (
-            extUser.username != "" &&
-            typeof extUser.username != "undefined"
-          ) {
-            res.locals.username = extUser.username;
-            console.log(
-              "Assigning auth0 username to locals: ",
-              extUser.username
-            );
-          } else {
-            res.locals.username = extUser.name;
-            console.log("Assigning auth0 Name to locals: ", extUser.name);
-          }
-        }
-      } else {
-        res.locals.username = req.user.displayName;
-        console.log("Assigning displayname to locals");
-      }
-      res.locals.email = req.user.emails[0].value;
-      next();
-    });
-  } else {
-    console.log("No user");
-    next();
-  }
-});
-*/
-
-//Serviceworker
-/*app.use((req, res, next) => {
-  if (req.originalUrl == "/sw.js") {
-    res.sendFile(path.join(__dirname, "public", "sw.js"));
-  } else {
-    next();
-  }
-});*/
-
 //Routers
 app.get("/privacy-tos", function (req, res) {
   res.render("privacy-tos");
@@ -310,29 +166,8 @@ app.use("/", publicRouter);
 app.use("/", authRouter);
 app.use("/", qrRouter);
 
-//Authenticated page logic - just call loginRequired to protect!
-/*function loginRequired(req, res, next) {
-  if (!req.user) {
-    return res.status(401).render("unauthenticated");
-  }
-
-  next();
-}*/
-
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  /*if (
-    req.originalUrl.substr(1).length == 5 &&
-    /^([a-zA-Z0-9]{5})$/.test(req.originalUrl.substr(1))
-  ) {
-    //res.redirect("/?s=" + req.originalUrl.substr(1));
-  } else {
-    if (
-      req.originalUrl.substr(1).length == 6 &&
-      /^([a-zA-Z0-9]{6})$/.test(req.originalUrl.substr(1))
-    ) {
-      //res.redirect("/?l=" + req.originalUrl.substr(1));
-    } else {*/
   console.log("404: " + path.join(__dirname, "public") + req.originalUrl);
   res.redirect("/?err=404");
   /*}

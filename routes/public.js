@@ -3340,7 +3340,7 @@ router.get("/blog", (req, res) => {
     }
   }
   entries.sort((a, b) => {
-    return b.data.date - a.data.date;
+    return a.data.date - b.data.date;
   });
   var ret = prepareEntry(entries[0]);
   res.render("blog", {

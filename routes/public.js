@@ -3364,7 +3364,7 @@ router.post("/get_blog_entries", function (req, res) {
       entries.push(entry);
     });
     entries.sort((a, b) => {
-      return b.data.date - a.data.date;
+      return a.data.date - b.data.date;
     });
     console.log({ entries });
     titles = entries.map((blog) => {

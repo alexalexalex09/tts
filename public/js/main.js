@@ -5303,7 +5303,7 @@ function renameAndImportList(data, isSession = false) {
  */
 function getvh() {
   // First we get the viewport height and we multiple it by 1% to get a value for a vh unit
-  let vh = window.innerHeight * 0.01;
+  let vh = Math.floor(window.innerHeight * 0.01);
   // Then we set the value in the --vh custom property to the root of the document
   document.documentElement.style.setProperty("--vh", `${vh}px`);
   document.documentElement.style.setProperty("--vh2", `${vh * 2}px`);
@@ -7704,9 +7704,8 @@ License: MIT
               ((this._completeResults.data = this._completeResults.data.concat(
                 n.data
               )),
-              (this._completeResults.errors = this._completeResults.errors.concat(
-                n.errors
-              )),
+              (this._completeResults.errors =
+                this._completeResults.errors.concat(n.errors)),
               (this._completeResults.meta = n.meta)),
             this._completed ||
               !a ||
@@ -7909,7 +7908,8 @@ License: MIT
       r = Math.pow(2, 53),
       n = -r,
       s = /^\s*-?(\d+\.?|\.\d+|\d+\.\d+)(e[-+]?\d+)?\s*$/,
-      u = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/,
+      u =
+        /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/,
       t = this,
       i = 0,
       f = 0,

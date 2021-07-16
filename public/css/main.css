@@ -539,7 +539,7 @@ input:checked + .slider:before {
   display: block;
   transition: opacity 0.5s;
   width: 100%;
-  height: var(--vh100);
+  height: calc(var(--vh100) - 1px);
   position: absolute;
   border: 0px;
   overflow-y: hidden;

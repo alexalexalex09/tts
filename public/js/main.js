@@ -52,6 +52,8 @@ window.addEventListener("load", function () {
         if (data.curGames) {
           data.curGames.sort(lowerCaseSort());
           updateCurrentGames(data.curGames);
+          //TODO: Does this need to happen? This causes updateCurrentGames() to run,
+          //which causes multiple calls to get_top_list()
         }
       }
       if (data.startVoting) {
@@ -2551,8 +2553,13 @@ function getGameUrl(games) {
     //Get the topList from localforage
     localforage.getItem("topList").then((res) => {
       //if there is no topList, get one before continuing
+      //Better yet, enqueue this request server side so that
+      //once a toplist is found, all pending requests are answered.
+      //Or even better, just do this synchronously to avoid
+      //race conditions.
       var topList = [];
       var anyNewTopList = [];
+      console.log({res});
       if (res == null || typeof res[0] == "undefined" || res[0].length == 0) {
         anyNewTopList.push(getNewTopList());
       } else {

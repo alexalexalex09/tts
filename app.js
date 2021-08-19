@@ -8,8 +8,8 @@ const qrRouter = require("./routes/qr");
 const session = require("express-session");
 require("./mongo.js");
 var User = require("./models/users.js");
-var memwatch = require("@floffah/node-memwatch");
-memwatch.on("stats", function (stats) {
+//var memwatch = require("@floffah/node-memwatch");
+/*memwatch.on("stats", function (stats) {
   var currentDate = new Date();
   let time =
     currentDate.getHours() +
@@ -23,7 +23,7 @@ memwatch.on("stats", function (stats) {
       " | " +
       Number(Number(stats.used_heap_size) / 1000000).toString()
   );
-});
+});*/
 var compression = require("compression");
 
 var app = express();

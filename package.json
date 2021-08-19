@@ -10,7 +10,6 @@
     "node_args": "--inspect"
   },
   "dependencies": {
-    "@floffah/node-memwatch": "^3.0.0",
     "acorn": "^7.4.1",
     "auth0": "^2.31.1",
     "body-parser": "^1.19.0",

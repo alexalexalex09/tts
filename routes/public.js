@@ -2667,10 +2667,10 @@ router.post("/change_username", function (req, res) {
 });
 
 router.post("/get_top_list", function (req, res) {
-  client.get("topList", function (err, topList) {
+  /*client.get("topList", function (err, topList) {
     if (topList == 4) {
       res.send(topList);
-    } else {
+    } else {*/
       Resource.findOne({ name: "topGames" }, { data: 1 })
         .lean()
         .populate("games")
@@ -2678,12 +2678,12 @@ router.post("/get_top_list", function (req, res) {
           console.log(typeof curResource);
           console.log(curResource == null);
           console.log(typeof curResource.games);
-          client.set("topList", JSON.stringify(curResource.games));
-          client.expire("topList", 60 * 24);
+          /*client.set("topList", JSON.stringify(curResource.games));
+          client.expire("topList", 60 * 24);*/
           res.send(curResource.games);
         });
-    }
-  });
+    /*}*/
+  /*});*/
 });
 
 function prepGameList(games) {
@@ -2787,6 +2787,7 @@ function findAGame(currentGame) {
           console.log(
             "Found " + curGames[0].name + ", AKA " + curGames[0].actualName
           );
+          //TODO: This doesn't work
           var index = curGames.findIndex((obj) => {
             obj.name == currentGame;
           });

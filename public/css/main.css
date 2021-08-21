@@ -1527,11 +1527,17 @@ input#listImportSubmit.green {
 
 #voteContainer .voteList .voteItem {
   list-style: none;
-  width: 100%;
+  width: 70%;
   height: var(--vh10);
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: repeat(2, minmax(var(--vh5), var(--vh5)));
+  grid-row-gap: 0.5em;
+  margin: 0em auto 2em auto;
+  padding-top: 2em;
+  padding-bottom: 0.5em;
+  border: 3px solid #6492c7;
+  border-radius: 12px;
 }
 
 #voteInfo {
@@ -1550,7 +1556,7 @@ input#listImportSubmit.green {
 .voteToolTip {
   display: inline-block;
   font-size: var(--font-p);
-  transform: translate(-5%, -100%);
+  transform: translate(-5%, -80%);
   position: relative;
   z-index: 1;
 }
@@ -1562,7 +1568,7 @@ input#listImportSubmit.green {
 .voteLabel label {
   align-self: flex-end;
   height: calc(var(--vh) * 4);
-  max-width: calc(60vw - 1em);
+  max-width: calc(45vw - 1em);
   white-space: nowrap;
   text-overflow: ellipsis;
   display: inline-block;
@@ -1716,7 +1722,7 @@ input[type="range"] {
   border: solid 0 transparent;
   border-width: 0 1em;
   padding: 0px;
-  width: 70%;
+  width: 95%;
   box-sizing: border-box;
   height: calc(var(--vh) * 2);
   border-radius: 0.25em;

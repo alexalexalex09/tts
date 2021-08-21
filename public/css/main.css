@@ -1591,7 +1591,7 @@ input#listImportSubmit.green {
 
 /*.voteToolTip:hover .toolTipContainer,*/
 .showVoteThumb .toolTipContainer {
-  transform: translate(calc(-100% + 31px + 1em), 0px);
+  transform: translate(calc(-100% + 60px + 1em), 0px);
 }
 
 .toolTipContainer.showToolTip:before {
@@ -1600,7 +1600,7 @@ input#listImportSubmit.green {
   content: "";
   position: absolute;
   bottom: calc(100% - 6px);
-  right: 30px;
+  right: 59px;
   border-width: 2px;
   border-style: solid;
   border-color: black black transparent transparent;

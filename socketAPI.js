@@ -336,18 +336,26 @@ io.on("connection", function (socket) {
     console.log("User " + id + " disconnected from session " + code);
     if (id != null && code != null && code != "") {
       Session.findOne({ code: code }).exec(function (err, curSession) {
-        var index = curSession.users.findIndex((obj) => {
-          return obj.user == "guest" + id;
-        });
-        if (index > -1) {
-          curSession.users.splice(index, 1);
-          console.log("Deleting ", id);
-          console.log(curSession.users);
-          curSession.save().then(function () {
-            socketAPI.addGame({ code: code });
+        if (curSession) {
+          var index = curSession.users.findIndex((obj) => {
+            return obj.user == "guest" + id;
           });
+          if (index > -1) {
+            curSession.users.splice(index, 1);
+            console.log("Deleting ", id);
+            console.log(curSession.users);
+            curSession.save().then(function () {
+              socketAPI.addGame({ code: code });
+            });
+          } else {
+            console.log("User " + id + " disconnected but wasn't in the list");
+          }
         } else {
-          console.log("User " + id + " disconnected but wasn't in the list");
+          console.log(
+            "Disconnected byt couldn't find the code [" +
+              code +
+              "] in the database"
+          );
         }
       });
     }

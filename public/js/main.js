@@ -1321,8 +1321,8 @@ function gulp(showAllGames = false) {
         "#gamesContainer",
         false,
         "openList($(this).parent().parent().attr('id'))",
-        false,
-        false
+        "showGameContext({id: 'list'+$(this).parent().attr('id').substr(5)})",
+        "ellipsis-vertical"
       );
       res.lists.allGames.sort(lowerCaseNameSort());
       for (var i = 0; i < res.lists.allGames.length; i++) {
@@ -2004,10 +2004,11 @@ function showAdder(item, theId, func, funcArg, prompt) {
 function showGameContext(game) {
   if ($("#context_" + game.id).length == 0) {
     if (game.list) {
-      $("#context_stage_" + game.id + "[list=games" + game.list + "]")
+      //TODO: This is never called because lists simply have an id in the form list0
+      /*$("#context_stage_" + game.id + "[list=games" + game.list + "]")
         .clone(true)
         .prop("id", "context_" + game.id)
-        .appendTo($("body"));
+        .appendTo($("body"));*/
     } else {
       $("#context_stage_" + game.id)
         .clone(true)
@@ -2559,7 +2560,7 @@ function getGameUrl(games) {
       //race conditions.
       var topList = [];
       var anyNewTopList = [];
-      console.log({res});
+      console.log({ res });
       if (res == null || typeof res[0] == "undefined" || res[0].length == 0) {
         anyNewTopList.push(getNewTopList());
       } else {
@@ -2860,6 +2861,22 @@ function writeListContext(contextObj) {
   } else {
     var shareable = "";
   }
+  if (contextObj.id != "list0") {
+    var modifiable =
+      `<li onclick="showRenameList({id: '` +
+      contextObj.id +
+      `', name: '` +
+      contextObj.name +
+      `'})">Rename</li>` +
+      `<li onclick="showDeleteList({id: '` +
+      contextObj.id +
+      `', name: '` +
+      contextObj.name +
+      `'})">Delete</li>`;
+  } else {
+    modifiable = "";
+  }
+
   var htmlString =
     `<div class="contextActions off" list="` +
     contextObj.id +
@@ -2869,17 +2886,11 @@ function writeListContext(contextObj) {
     `<div class="contextTitle">` +
     contextObj.name.replace(/\\/g, "") +
     `</div>` +
+    `<li onclick="openList('games` +
+    contextObj.id.substr(4) +
+    `')">Open</li>` +
     shareable +
-    `<li onclick="showRenameList({id: '` +
-    contextObj.id +
-    `', name: '` +
-    contextObj.name +
-    `'})">Rename</li>` +
-    `<li onclick="showDeleteList({id: '` +
-    contextObj.id +
-    `', name: '` +
-    contextObj.name +
-    `'})">Delete</li>` +
+    modifiable +
     `</div>`;
   return htmlString;
 }

@@ -1264,6 +1264,7 @@ input#listImportSubmit.green {
 .listExpand ion-icon {
   transform: rotateX(0deg);
   transition: transform 0.5s;
+  margin: 5px auto;
 }
 
 .listExpand.expanded ion-icon {
@@ -1591,7 +1592,7 @@ input#listImportSubmit.green {
 
 /*.voteToolTip:hover .toolTipContainer,*/
 .showVoteThumb .toolTipContainer {
-  transform: translate(calc(-100% + 60px + 1em), 0px);
+  transform: translate(calc(-100% + 51px + 1em), 0px);
 }
 
 .toolTipContainer.showToolTip:before {
@@ -1600,7 +1601,7 @@ input#listImportSubmit.green {
   content: "";
   position: absolute;
   bottom: calc(100% - 6px);
-  right: 59px;
+  right: 50px;
   border-width: 2px;
   border-style: solid;
   border-color: black black transparent transparent;

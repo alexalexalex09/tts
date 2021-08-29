@@ -5200,7 +5200,7 @@ function runListImport(code) {
         }
         var el =
           `<div class="subContextContainer"><div class="subContextImport" id="subContext_` +
-          res.list.id +
+          res.list._id +
           `" >`;
         el +=
           `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +

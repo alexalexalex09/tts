@@ -1720,7 +1720,12 @@ function getBulkChecked() {
     .each(function () {
       games.push({
         id: $(this).parent().children("li").first().attr("id").substr(8),
-        name: $(this).parent().children("li").first().text(),
+        name: $(this)
+          .parent()
+          .children("li")
+          .first()
+          .text()
+          .replace(/\'/, `\\'`),
       });
       count++;
     });
@@ -2004,11 +2009,10 @@ function showAdder(item, theId, func, funcArg, prompt) {
 function showGameContext(game) {
   if ($("#context_" + game.id).length == 0) {
     if (game.list) {
-      //TODO: This is never called because lists simply have an id in the form list0
-      /*$("#context_stage_" + game.id + "[list=games" + game.list + "]")
+      $("#context_stage_" + game.id + "[list=games" + game.list + "]")
         .clone(true)
         .prop("id", "context_" + game.id)
-        .appendTo($("body"));*/
+        .appendTo($("body"));
     } else {
       $("#context_stage_" + game.id)
         .clone(true)

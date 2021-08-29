@@ -5217,6 +5217,7 @@ function runListImport(code) {
           `<div id="importOverwrite"><input type="radio" name="duplicate" id="importOverwriteCheckbox" name="import" checked="true"><label for="importOverwriteCheckbox"> Overwrite?</label></div>
         <div id="importRename"><input type="radio" name="duplicate" id="importRenameCheckbox" name="import" ><label for="importRenameCheckbox"> Rename?</label><input type="text" id="importRenameText" class="off"></input></div>
         </div>
+        </div>
         <div class="importContainer"><div class="button redBtn" id="importCancel" onclick="cancelImport()">Cancel</div>
     <div class="button greenBtn" id="importConfirm" onclick="performListImport('` +
           res.list.listCode +
@@ -5224,7 +5225,7 @@ function runListImport(code) {
           $(".subContextTitle")
             .text()
             .substring(13, $(".subContextTitle").text().lastIndexOf('"')) +
-          `')">Import</div>`;
+          `')">Import</div></div>`;
         $("#importDuplicate").html(inner);
       }
     },

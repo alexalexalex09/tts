@@ -2726,6 +2726,10 @@ input#selectLimit {
   grid-row-gap: 1rem;
 }
 
+#listBrowserLink {
+  cursor: pointer;
+}
+
 .listBrowserArrow {
   float: left;
 }

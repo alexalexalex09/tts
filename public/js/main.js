@@ -109,7 +109,7 @@ window.addEventListener("load", function () {
     });
 
     $(".phraseText").on("click", function () {
-      createAndShowAlert($(".phraseText").first().text().substr(8));
+      copyText($("#code").html(), "Code copied to clipboard.");
     });
 
     $("#postSelectContainer").html("");

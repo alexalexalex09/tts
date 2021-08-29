@@ -2354,7 +2354,7 @@ function showDeleteGame(arr, string) {
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button redBtn" id="deleteConfirm" onclick="deleteGame([`;
   arr.forEach(function (e, i) {
-    el += "{id: '" + e.id + "', name: '" + e.name + "'},";
+    el += "{id: '" + e.id + "', name: `" + e.name + "`},";
   });
   el = el.substr(0, el.length - 1);
   el += `])">Delete</div>`;

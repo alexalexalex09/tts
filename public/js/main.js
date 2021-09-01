@@ -2496,7 +2496,7 @@ function runTemplateGenerator(templateCode) {
     "/create_session_from_template",
     { templateCode: templateCode },
     (res) => {
-      console.log(res);
+      window.location.href = "/" + res.status.session.code;
     }
   );
 }

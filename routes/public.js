@@ -3545,10 +3545,7 @@ router.post("/create_session_from_template", function (req, res) {
               console.log({ session });
               saveNewSession(session, theCode).then((theSession) => {
                 console.log("Template Session saved");
-                res.send({
-                  owned: true,
-                  status: { session: theSession, user: req.user.id },
-                });
+                res.redirect("/" + theCode);
               });
             });
           });

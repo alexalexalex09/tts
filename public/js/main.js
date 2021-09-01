@@ -836,13 +836,14 @@ window.addEventListener("load", function () {
     runListImport(window.location.pathname.substr(1));
   }
 
-  if (/\/t\/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
+  if (/^t\/([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
     history.pushState(
       {},
       "SelectAGame: " + window.location.pathname.substr(1),
       window.location.origin + "/" + window.location.pathname.substr(1)
     );
     runTemplateGenerator(window.location.pathname.substr(3));
+    console.log("runTemplateGenerator()");
   }
 
   /* Set up autocomplete */
@@ -2488,6 +2489,16 @@ function getQr(code) {
       resolve(qrCode.img);
     });
   });
+}
+
+function runTemplateGenerator(templateCode) {
+  ttsFetch(
+    "/create_session_from_template",
+    { templateCode: templateCode },
+    (res) => {
+      console.log(res);
+    }
+  );
 }
 
 function contextRemove(games, text) {

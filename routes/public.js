@@ -1350,8 +1350,8 @@ function checkIfAddedByUser(theSession, userId) {
   return ret;
 }
 
-router.post("/create_session", function (req, res) {
-  if (req.user) {
+function createSessionCode() {
+  return new Promise((resolve, reject) => {
     Session.find({ code: { $exists: true } }, "code").exec(function (
       err,
       codeList
@@ -1361,61 +1361,57 @@ router.post("/create_session", function (req, res) {
         codeList.map((e) => e.code)
       ); // Make a new code for the session
       codeList = {};
-      /*
-      var displayName = "";
-      management.users.get({ id: req.user.user_id }, function (err, extUser) {
-        // Get the user info from Auth0
-        //console.log("auth0 user:", extUser);*/
-      res.locals.user = req.user; //Set correct displayName and user var for locals
+      resolve(theCode);
+    });
+  });
+}
 
-      /*if (extUser) {
-          if (
-            extUser.user_metadata &&
-            extUser.user_metadata.userDefinedName &&
-            extUser.user_metadata.userDefinedName.length > 0
-          ) {
-            displayName = extUser.user_metadata.userDefinedName;
-          } else {
-            if (
-              extUser.username != "" &&
-              typeof extUser.username != "undefined"
-            ) {
-              displayName = extUser.username;
-            } else {
-              displayName = extUser.name;
-            }
-          }
-        } else {
-          displayName = req.user.displayName;
-        }*/
+function createSessionMetaData(userId, theCode, displayName) {
+  var today = new Date();
+  var dd = String(today.getDate()).padStart(2, "0");
+  var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+  var yyyy = today.getFullYear();
+  var readableGen = new Readable(true, 2, "_");
+  today = mm + "." + dd + "." + yyyy + " " + readableGen.generate();
+  var sessionDetail = {
+    owner: userId,
+    phrase: today,
+    code: theCode,
+    games: [],
+    users: [
+      {
+        user: userId,
+        name: displayName,
+        done: false,
+      },
+    ],
+    lock: "#codeView",
+  };
+  return sessionDetail;
+}
+
+function saveNewSession(session, theCode) {
+  return new Promise((resolve, reject) => {
+    session.save().then(function (theSession) {
+      console.log("Session created...");
+      socketAPI.addGame({
+        code: theCode,
+      });
+      resolve(theSession);
+    });
+  });
+}
+
+router.post("/create_session", function (req, res) {
+  if (req.user) {
+    createSessionCode().then((theCode) => {
+      res.locals.user = req.user; //Set correct displayName and user var for locals
       User.findOne({ profile_id: req.user.id }).exec((err, curUser) => {
         var displayName = curUser.name;
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, "0");
-        var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
-        var yyyy = today.getFullYear();
-        var readableGen = new Readable(true, 2, "_");
-        today = mm + "." + dd + "." + yyyy + " " + readableGen.generate();
-        var sessiondetail = {
-          owner: req.user.id,
-          phrase: today,
-          code: theCode,
-          games: [],
-          users: [
-            {
-              user: req.user.id,
-              name: displayName,
-              done: false,
-            },
-          ],
-          lock: "#codeView",
-        };
-        var session = new Session(sessiondetail); //Make a new session with the new code
-        session.save().then(function (theSession) {
-          console.log("Session created...");
-          socketAPI.addGame({
-            code: theCode,
-          });
+        var session = new Session(
+          createSessionMetaData(req.user.id, theCode, displayName)
+        ); //Make a new session with the new code
+        saveNewSession(session, theCode).then((theSession) => {
           res.send({
             owned: true,
             status: { session: theSession, user: req.user.id },
@@ -3489,6 +3485,78 @@ router.post("/generate_template_session", function (req, res) {
         }
       });
     }
+  }
+});
+
+router.post("/create_session_from_template", function (req, res) {
+  console.log("Creating session from template");
+  if (req.user) {
+    console.log("user found");
+    var templateCode = req.body.templateCode;
+    templateCode = templateCode.replace("I", "1");
+    templateCode = templateCode.replace("O", "0");
+    Template.findOne({ templateCode: templateCode }).then(
+      (curTemplate, err) => {
+        console.log("Template: " + curTemplate.name);
+        createSessionCode().then((theCode) => {
+          console.log("Code: " + theCode);
+          res.locals.user = req.user; //Set correct displayName and user var for locals
+          User.findOne({ profile_id: req.user.id }).exec((err, curUser) => {
+            var displayName = curUser.name;
+            console.log("User: " + displayName);
+            var session = new Session(
+              createSessionMetaData(req.user.id, theCode, displayName)
+            );
+            //Make a new session with the new code
+            /*owner: req.user.id,
+            phrase: today,
+            code: theCode,
+            games: [],
+            users: [
+              {
+                user: req.user.id,
+                name: displayName,
+                done: false,
+              },
+            ],
+            lock: "#codeView",*/
+            var games = curTemplate.games.map((game) => {
+              return { addedBy: [req.user.id], game: game };
+            });
+            session.games = games;
+            Game.find({ _id: { $in: curTemplate.games } }).exec(function (
+              err,
+              games
+            ) {
+              session.votes = [];
+              for (var i = 0; i < games.length; i++) {
+                session.votes.push({
+                  game: games[i]._id,
+                  name: games[i].name,
+                  voters: [],
+                  active: true,
+                });
+              }
+              session.phrase = session.phrase.substr(0, 11) + curTemplate.name;
+              session.lock = "#voteView";
+              session.users = [
+                { user: req.user.id, name: displayName, done: true },
+              ];
+              console.log({ session });
+              saveNewSession(session, theCode).then((theSession) => {
+                console.log("Template Session saved");
+                res.send({
+                  owned: true,
+                  status: { session: theSession, user: req.user.id },
+                });
+              });
+            });
+          });
+        });
+      }
+    );
+  } else {
+    res.send(ERR_LOGIN);
   }
 });
 

@@ -2413,7 +2413,7 @@ html.dark #menuImg {
 
 .subContextContainer {
   width: 100vw;
-  height: var(--vh100);
+  height: calc(var(--vh100) - 1px);
   position: absolute;
   backdrop-filter: blur(3px);
   z-index: 11;
@@ -2426,7 +2426,9 @@ html.dark #menuImg {
 .subContextRemove,
 .subContextAccount,
 .subContextImport,
-.subContextImportSession {
+.subContextImportSession,
+.subContextCreateListTemplate,
+.subContextTemplate {
   margin-left: 0;
   background-color: var(--main-white-bg);
   position: absolute;
@@ -2449,7 +2451,9 @@ html.dark #menuImg {
 .subContextImport,
 .subContextImportSession,
 .subContextSessionSettings,
-.subContextLimit {
+.subContextLimit,
+.subContextCreateListTemplate,
+.subContextTemplate {
   height: auto;
   padding-bottom: calc(var(--vh) * 2);
   border: solid 2px var(--main-blue);
@@ -2463,6 +2467,17 @@ html.dark #menuImg {
   margin: 0.4em 5% 0px;
   float: left;
   height: var(--vh5);
+}
+
+.subContextTemplate {
+  display: grid;
+  grid-template-rows: 4rem 225px 1fr;
+  text-align: center;
+}
+
+.subContextTemplate .subContextTitle {
+  margin: 0px;
+  font-size: var(--font-h2);
 }
 
 #sessionLimit {
@@ -2704,6 +2719,16 @@ input#selectLimit {
 #sessionsContainer.slideUp,
 .slideUp {
   transform: translateX(0px);
+}
+
+#extrasList {
+  padding: 0px;
+  text-align: center;
+}
+#extrasList .button {
+  width: max(75%, 200px);
+  margin: 0 auto;
+  border: 3px solid var(--main-white);
 }
 
 #listBrowser {

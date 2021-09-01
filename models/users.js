@@ -16,6 +16,13 @@ var UserSchema = new Schema(
           listCode: String,
         },
       ],
+      templates: [
+        {
+          name: String,
+          games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
+          templateCode: String,
+        },
+      ],
     },
     preferences: {
       darkMode: Boolean,

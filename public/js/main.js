@@ -836,6 +836,15 @@ window.addEventListener("load", function () {
     runListImport(window.location.pathname.substr(1));
   }
 
+  if (/\/t\/^([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
+    history.pushState(
+      {},
+      "SelectAGame: " + window.location.pathname.substr(1),
+      window.location.origin + "/" + window.location.pathname.substr(1)
+    );
+    runTemplateGenerator(window.location.pathname.substr(3));
+  }
+
   /* Set up autocomplete */
   localforage.getItem("topList").then((topList) => {
     if (
@@ -2400,6 +2409,87 @@ function deleteGame(arr) {
   );
 }
 
+function showCreateListTemplate(list) {
+  var el = `<div class="subContextContainer"><div class="subContextCreateListTemplate">`;
+  el +=
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">Create a new list template for quick session creation for the list "` +
+    list.name +
+    `"</div><hr/>
+    <div id="createListTemplateInputCont" class="textInputCont">
+    <form onsubmit="return createListTemplate(event, this, '` +
+    list.id +
+    `')" id="createListTemplateInput"></input>
+    <input class="textInput" type="text" autocomplete="off" value="` +
+    list.name.replace(/\\/g, "") +
+    `"></input>
+    <input class="textSubmit" type="submit" value="">`;
+  $("body").append(el);
+  focusFirstInput(".subContextContainer");
+  document
+    .querySelector(".subContextCreateListTemplate .textInput")
+    .setSelectionRange(
+      0,
+      document.querySelector(".subContextCreateListTemplate .textInput").value
+        .length
+    );
+}
+
+function createListTemplate(event, caller, list) {
+  ttsFetch(
+    "/generate_template_session",
+    {
+      type: "list",
+      id: list,
+      listName: $(caller).children('input[type="text"]').first().val(),
+    },
+    (res) => {
+      console.log({ res });
+      $(".subContextContainer").each(function () {
+        $(this).remove();
+      });
+      showTemplate(res.template.name, res.template.templateCode, res.qr);
+    }
+  );
+  return false;
+}
+
+async function showTemplate(name, templateCode, qr) {
+  if (typeof qr === "undefined") {
+    var qr = await getQr(templateCode);
+  }
+
+  var title = `Create Instant Session<br/>` + name;
+  var text =
+    `Scan this code or go to <a href="https://selectagame.net/t/` +
+    templateCode +
+    `">https://selectagame.net/t/` +
+    templateCode +
+    `</a>` +
+    ` to create an instant game voting session.`;
+  var htmlString =
+    `<div class="subContextContainer"><div class="subContextTemplate">` +
+    `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+    `<div class="subContextTitle">` +
+    title +
+    `</div></hr>` +
+    `<div id="qrDisplay" style="background-image:url('data:image/png;base64,` +
+    qr +
+    `')"></div>` +
+    `<div class="templateText">` +
+    text +
+    `</div>`;
+  $("body").append(htmlString);
+}
+
+function getQr(code) {
+  return new Promise((resolve, reject) => {
+    ttsFetch("/qr", { code: code }, (res) => {
+      resolve(qrCode.img);
+    });
+  });
+}
+
 function contextRemove(games, text) {
   var el = `<div class="subContextContainer"><div class="subContextRemove">`;
   el +=
@@ -2867,6 +2957,11 @@ function writeListContext(contextObj) {
   }
   if (contextObj.id != "list0") {
     var modifiable =
+      `<li onclick="showCreateListTemplate({id: '` +
+      contextObj.id +
+      `', name: '` +
+      contextObj.name +
+      `'})">Create New Template List</li>` +
       `<li onclick="showRenameList({id: '` +
       contextObj.id +
       `', name: '` +

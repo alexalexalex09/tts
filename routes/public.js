@@ -9,6 +9,7 @@ var mongoose = require("../mongo.js");
 var User = require("../models/users.js");
 var Game = require("../models/games.js");
 var Session = require("../models/sessions.js");
+var Template = require("../models/templates.js");
 var Stat = require("../models/stats.js");
 var socketAPI = require("../socketAPI");
 var Fuse = require("fuse.js");
@@ -22,6 +23,7 @@ var parser = new xml2js.Parser();
 const Readable = require("readable-url");
 var fuzzyMatch = require("jaro-winkler");
 var md = require("md-directory");
+var qr = require("qr-image");
 //var memwatch = require("@floffah/node-memwatch");
 //var redis = require("redis");
 
@@ -548,6 +550,13 @@ router.get("/l/:listCode", (req, res) => {
   console.log("Listcode: ", req.params.listCode);
   res.render("index", {
     listCode: req.params.listCode,
+  });
+});
+
+router.get("/t/:templateCode", (req, res) => {
+  console.log("Template Code: ", req.params.templateCode);
+  res.render("index", {
+    templateCode: req.params.templateCode,
   });
 });
 
@@ -1347,10 +1356,7 @@ router.post("/create_session", function (req, res) {
       err,
       codeList
     ) {
-      //`console.log(codeList);
-      var dup = true;
-      var theCode = "";
-      theCode = makeid(
+      var theCode = makeid(
         5,
         codeList.map((e) => e.code)
       ); // Make a new code for the session
@@ -2671,18 +2677,18 @@ router.post("/get_top_list", function (req, res) {
     if (topList == 4) {
       res.send(topList);
     } else {*/
-      Resource.findOne({ name: "topGames" }, { data: 1 })
-        .lean()
-        .populate("games")
-        .exec(function (err, curResource) {
-          console.log(typeof curResource);
-          console.log(curResource == null);
-          console.log(typeof curResource.games);
-          /*client.set("topList", JSON.stringify(curResource.games));
+  Resource.findOne({ name: "topGames" }, { data: 1 })
+    .lean()
+    .populate("games")
+    .exec(function (err, curResource) {
+      console.log(typeof curResource);
+      console.log(curResource == null);
+      console.log(typeof curResource.games);
+      /*client.set("topList", JSON.stringify(curResource.games));
           client.expire("topList", 60 * 24);*/
-          res.send(curResource.games);
-        });
-    /*}*/
+      res.send(curResource.games);
+    });
+  /*}*/
   /*});*/
 });
 
@@ -3406,6 +3412,143 @@ function prepareEntry(entry) {
   ret.title = entry.data.title;
   ret.content = entry.content;
   return ret;
+}
+
+router.post("/generate_template_session", function (req, res) {
+  /*
+  Given a list or session and a template name, create a new link code that, when entered, will create a new
+  session (5 digit code) with the games from the list or session. When someone scans a 
+  QR code, they will be taken to a new Session on voteView, with a QR code popup that
+  tells them to share this code with their friends.
+
+  1. Copy games from list or session into an array
+  */
+  var { type, id, listName } = req.body;
+  if (type !== "list") {
+    res.send({ err: "Type Error" });
+  } else {
+    if (id === "list0") {
+      res.send({ err: "Cannot use All Games List", id: id });
+    } else {
+      User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
+        //Get list index, subtract 1 because All Games is index 0
+        var listIndex = id.substring(4) - 1;
+        //then find in the user's custom list array
+        var games = curUser.lists.custom[listIndex].games;
+        if (typeof games === "undefined" || games.length === 0) {
+          res.send({ err: "List not eligible for template" });
+        } else {
+          //2. Generate a 7 digit template code
+
+          Template.find({ code: { $exists: true } }, "code").exec(function (
+            err,
+            codeList
+          ) {
+            var templateCode = makeid(
+              6,
+              codeList.map((e) => e.code)
+            );
+            codeList = {};
+
+            //3. Generate a QR code for the template code
+
+            var qrReq = "https://" + req.headers.host + "/t/" + templateCode;
+            var code = qr.imageSync(qrReq, { type: "png" });
+            var qrCode = base64ArrayBuffer(code);
+
+            /*4. Create a new object to save to the templates model:
+      {
+        owner: [{ type: Schema.Types.ObjectId, ref: "User" }],
+        name: String,        
+        games: [{ type: Schema.Types.ObjectId, ref: "Game" }],
+        templateCode: String,
+      }
+    */
+            var newTemplate = new Template({
+              owner: curUser._id,
+              name: listName,
+              games: games,
+              templateCode: templateCode,
+            });
+            newTemplate.save().then(function (curTemplate, err) {
+              if (err) {
+                res.send({ err });
+              } else {
+                res.send({ template: curTemplate, qr: qrCode });
+              }
+            });
+            /*
+  //TODO: Add a template browser to extras
+  //TODO: Add a "Create template" option to sessions
+  //TODO: Add a route for 7 digit codes that:
+      1. Creates a new session based on the template
+      2. Advances that session to the voting stage
+      3. Displays a QR code page with a button to continue to voting
+  */
+          });
+        }
+      });
+    }
+  }
+});
+
+router.post("/qr", function (req, res) {
+  var qrReq = "https://" + req.headers.host + "/" + req.body.link;
+  var code = qr.imageSync(qrReq, { type: "png" });
+  res.send({ img: base64ArrayBuffer(code) });
+});
+
+function base64ArrayBuffer(arrayBuffer) {
+  var base64 = "";
+  var encodings =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  var bytes = new Uint8Array(arrayBuffer);
+  var byteLength = bytes.byteLength;
+  var byteRemainder = byteLength % 3;
+  var mainLength = byteLength - byteRemainder;
+
+  var a, b, c, d;
+  var chunk;
+
+  // Main loop deals with bytes in chunks of 3
+  for (var i = 0; i < mainLength; i = i + 3) {
+    // Combine the three bytes into a single integer
+    chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+
+    // Use bitmasks to extract 6-bit segments from the triplet
+    a = (chunk & 16515072) >> 18; // 16515072 = (2^6 - 1) << 18
+    b = (chunk & 258048) >> 12; // 258048   = (2^6 - 1) << 12
+    c = (chunk & 4032) >> 6; // 4032     = (2^6 - 1) << 6
+    d = chunk & 63; // 63       = 2^6 - 1
+
+    // Convert the raw binary segments to the appropriate ASCII encoding
+    base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+  }
+
+  // Deal with the remaining bytes and padding
+  if (byteRemainder == 1) {
+    chunk = bytes[mainLength];
+
+    a = (chunk & 252) >> 2; // 252 = (2^6 - 1) << 2
+
+    // Set the 4 least significant bits to zero
+    b = (chunk & 3) << 4; // 3   = 2^2 - 1
+
+    base64 += encodings[a] + encodings[b] + "==";
+  } else if (byteRemainder == 2) {
+    chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1];
+
+    a = (chunk & 64512) >> 10; // 64512 = (2^6 - 1) << 10
+    b = (chunk & 1008) >> 4; // 1008  = (2^6 - 1) << 4
+
+    // Set the 2 least significant bits to zero
+    c = (chunk & 15) << 2; // 15    = 2^4 - 1
+
+    base64 += encodings[a] + encodings[b] + encodings[c] + "=";
+  }
+
+  return base64;
 }
 
 console.log("6/8: Routes loaded", Date.now() - loadTime);

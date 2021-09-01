@@ -4,7 +4,7 @@ var path = require("path");
 var logger = require("morgan");
 const publicRouter = require("./routes/public");
 const authRouter = require("./routes/auth");
-const qrRouter = require("./routes/qr");
+//const qrRouter = require("./routes/qr");
 const session = require("express-session");
 require("./mongo.js");
 var User = require("./models/users.js");
@@ -164,7 +164,6 @@ app.get("/privacy-tos", function (req, res) {
 });
 app.use("/", publicRouter);
 app.use("/", authRouter);
-app.use("/", qrRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

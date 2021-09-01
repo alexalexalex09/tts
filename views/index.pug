@@ -238,12 +238,14 @@ block content
         ion-icon(name='close-outline')
       #premiumTitle.pageTitle.h1 Extras
       #premiumContainer 
+        ul#extrasList 
+          li.button.greenBtn(onclick='openListBrowser()') List Browser
+        br  
         p Extra features will be added and released for free during the beta phase! Your feedback is much appreciated. Send your comments and suggestions to 
           a(href="mailto:info@selectagame.net") info@selectagame.net
         p Extra features under consideration include:
-        ul
-          
-          li#listBrowserLink(onclick='openListBrowser()') NOW AVAILABLE! Click here for curated lists of award winners, new games, etc.
+        ul 
+          li#listBrowserLink(onclick='openListBrowser()') NOW AVAILABLE: Curated lists of award winners, new games, etc.
           li Custom links for joining a session
           li "Instant sessions" that will allow users to create a pre-determined session by scanning a QR code 
           li Access to game selection data trends

@@ -2551,9 +2551,12 @@ function openTemplateBrowser() {
             e.name +
             `</div>` +
             `<div class="listBrowserGames off">` +
-            `<a class="button greenBtn" href="/p/` +
+            `<a class="button greenBtn" href="/t/` +
             e.code.substring(3) +
-            `">Print</a>`;
+            `">Use</a>` +
+            `<a class="button greenBtn" target="_blank" href="/p/` +
+            e.code.substring(3) +
+            `">Print Flyer</a>`;
           e.games.forEach(function (game) {
             var index = res.gameKey.findIndex((obj) => {
               return obj.id == game;

@@ -2803,6 +2803,7 @@ function getGameUrl(games) {
               //If the game in question is in the topList, return its value
               var theURL = topList[index].metadata.url;
               //Fall back on search if the topList is corrupted, and reset it
+              console.log({ theURL });
               if (theURL == "" || typeof theURL == "undefined") {
                 getNewTopList();
                 var ret =
@@ -2833,7 +2834,6 @@ function getGameUrl(games) {
             ttsFetch("/bga_find_game", { game: fetches }, (res) => {
               //Cache all results in localforage
               res.map((el) => {
-                console.log(el.metadata.name);
                 topList.push(el);
               });
               localforage.setItem("topList", topList);
@@ -2854,7 +2854,7 @@ function getGameUrl(games) {
                       game.game.replace(/[^0-9a-zA-Z' ]/g, "");
                     games[curIndex].url = url;
                   } else {
-                    games[curIndex].url = res[index].url;
+                    games[curIndex].url = res[index].metadata.url;
                   }
                 }
               });

@@ -227,7 +227,8 @@ function getGame(game) {
   return new Promise((resolve, reject) => {
     if (game.id.length > 0) {
       game.name = prepForMongo(game.name);
-      Game.findOne({ name: game.name }).exec(function (err, curGame) {
+      var search = new RegExp(currentGame);
+      Game.findOne({ name: search }).exec(function (err, curGame) {
         var fields = [
           "id",
           "name",
@@ -847,7 +848,8 @@ router.post("/game_add_bulk", function (req, res) {
   if (req.user) {
     if (req.body.games) {
       var games = req.body.games;
-      Game.find({ name: { $in: games } }).exec(function (err, curGames) {
+      var search = games.map((g) => new RegExp(g));
+      Game.find({ name: { $in: search } }).exec(function (err, curGames) {
         var toAdd = [];
         games.forEach(function (e, i) {
           var index = curGames.findIndex((obj) => obj.name == e);
@@ -861,7 +863,7 @@ router.post("/game_add_bulk", function (req, res) {
           });
           Game.insertMany(toAdd).then(function () {
             //doesnt work becuase its a collection of objects, not an object
-            Game.find({ name: { $in: games } }).exec(function (err, curGames) {
+            Game.find({ name: { $in: search } }).exec(function (err, curGames) {
               User.findOne({ profile_id: req.user.id }).exec(function (
                 err,
                 curUser
@@ -981,7 +983,8 @@ router.post("/game_add", function (req, res) {
   if (req.user) {
     if (req.body.game) {
       var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "");
-      Game.findOne({ name: currentGame }, function (err, game) {
+      var search = new RegExp(currentGame);
+      Game.findOne({ name: search }, function (err, game) {
         if (game == null || typeof game == "undefined") {
           var conditionalPromise = getNewGameFromBGA(currentGame);
         } else {
@@ -1053,7 +1056,8 @@ router.post("/game_add", function (req, res) {
 router.post("/group_game_add", function (req, res) {
   if (req.user) {
     var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "");
-    Game.findOne({ name: currentGame }, function (err, game) {
+    var search = new RegExp(currentGame);
+    Game.findOne({ name: search }, function (err, game) {
       if (game == null || typeof game == "undefined") {
         var conditionalPromise = getNewGameFromBGA(currentGame);
       } else {
@@ -2266,7 +2270,8 @@ async function addAllGamesIfNeeded(games) {
   for (var i = 0; i < games.length; i++) {
     var game = games[i];
     var gameIndex = i;
-    var curGame = await Game.findOne({ name: game.name });
+    var search = new RegExp(currentGame);
+    var curGame = await Game.findOne({ name: search });
     if (curGame == null || typeof curGame == "undefined") {
       var conditionalPromise = getNewGameFromBGA(game.name);
     } else {
@@ -2353,11 +2358,12 @@ router.post("/rename_game", function (req, res) {
   if (req.user) {
     if (req.body.newName) {
       User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-        Game.findOne({ name: req.body.newName }).exec(function (err, curGame) {
+        var search = new RegExp(req.body.newName);
+        Game.findOne({ name: search }).exec(function (err, curGame) {
           if (curGame == null) {
             console.log("CurGame is null: ", curGame);
             Game.updateOne(
-              { name: req.body.newName },
+              { name: search },
               { name: req.body.newName },
               { upsert: true },
               function (err, newGame) {
@@ -2728,7 +2734,7 @@ async function getGamesAsync(gamesArray) {
 
 async function getAllGamesAsync(gamesArray) {
   gamesArray = gamesArray.map((game) => {
-    return game.replace(/[^%0-9a-zA-Z' ]/g, "");
+    return new RegExp(game.replace(/[^%0-9a-zA-Z' ]/g, ""));
   });
   Game.find({
     $and: [
@@ -2773,10 +2779,11 @@ async function populateAllGamesAsync(curGames) {
 function findAGame(currentGame) {
   return new Promise(function (resolve, reject) {
     currentGame = currentGame.replace(/[^%0-9a-zA-Z' ]/g, "");
+    var search = new RegExp(currentGame);
     Game.find({
       $and: [
         {
-          $or: [{ name: currentGame }, { actualName: currentGame }],
+          $or: [{ name: search }, { actualName: search }],
         },
         { metadata: { $exists: true } },
       ],
@@ -2821,6 +2828,8 @@ function getNewGameFromBGA(currentGame) {
       var fuzzy = 0;
       if (ret.games.length > 0) {
         fuzzy = fuzzyMatch(currentGame, ret.games[0].name);
+        console.log("Game as submitted: ", currentGame);
+        console.log("Game found on BGA: ", ret.games[0].name);
         console.log({ fuzzy });
       }
       //If the search returned no games, return a generic search for boardgamegeek
@@ -2848,6 +2857,8 @@ function getNewGameFromBGA(currentGame) {
           var misspelledName = false;
         }
         ret.games[0].name = prepForMongo(ret.games[0].name);
+        console.log("Adjusted game name: ", ret.games[0].name);
+        console.log("Misspelled name: ", misspelledName);
         //If a game matching the returned game already exists in the Game
         //database, create a new topList entry with the misspelled title
         //that the user was searching for that references the preexisting game.
@@ -2861,6 +2872,7 @@ function getNewGameFromBGA(currentGame) {
             actualName: ret.games[0].name,
           });
           misspelledGame.save().then((saved) => {
+            console.log({ saved });
             resolve(saved);
           });
         } else {
@@ -2872,6 +2884,7 @@ function getNewGameFromBGA(currentGame) {
           });
           //create a new Game
           newGame.save().then((saved) => {
+            console.log({ saved });
             resolve(saved);
           });
         }

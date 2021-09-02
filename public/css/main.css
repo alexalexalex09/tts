@@ -2725,9 +2725,10 @@ input#selectLimit {
   padding: 0px;
   text-align: center;
 }
+
 #extrasList .button {
   width: max(75%, 200px);
-  margin: 0 auto;
+  margin: 0 auto 0.5rem auto;
   border: 3px solid var(--main-white);
 }
 
@@ -2773,6 +2774,13 @@ input#selectLimit {
 .listBrowserCode,
 .listBrowserArrow {
   cursor: pointer;
+}
+
+.listBrowserGames a.button.greenBtn {
+  width: 10rem;
+  height: 2.5rem;
+  border: 3px solid var(--main-white);
+  margin: 0.5rem auto;
 }
 
 /****************/

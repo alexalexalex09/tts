@@ -560,6 +560,13 @@ router.get("/t/:templateCode", (req, res) => {
   });
 });
 
+router.get("/p/:templateCode", (req, res) => {
+  console.log("Template Code: ", req.params.templateCode);
+  res.render("print", {
+    templateCode: req.params.templateCode,
+  });
+});
+
 router.get(/^\/([A-Z0-9]{5})$/, (req, res) => {
   console.log("Listcode: ", req.originalUrl.substr(1));
   res.render("index", {
@@ -3321,6 +3328,59 @@ router.post("/get_list_browser", function (req, res) {
   }
 });
 
+router.post("/get_template_browser", function (req, res) {
+  if (req.user) {
+    var authorized = true; //Testing
+    if (authorized) {
+      var ret = [];
+      var gameIds = [];
+      Template.find({ owner: req.user.id }).exec(function (err, curTemplates) {
+        var toPush = {};
+        curTemplates.forEach(function (e) {
+          toPush = { name: e.name, code: "/t/" + e.templateCode, games: [] };
+          e.games.forEach(function (game) {
+            gameIds.push(game);
+            toPush.games.push(game);
+          });
+          ret.push(toPush);
+        });
+        Game.find({ _id: { $in: gameIds } }).exec(function (err, curGames) {
+          var gameKey = [];
+          curGames.forEach(function (e) {
+            gameKey.push({ id: e._id, name: e.name });
+          });
+          res.send({ lists: ret, gameKey: gameKey });
+        });
+      });
+    } else {
+      res.send({ error: "unauthorized" });
+    }
+  } else {
+    res.send({ status: "no user" });
+  }
+});
+
+router.post("/get_template_info", function (req, res) {
+  if (req.user) {
+    if (req.body.code) {
+      templateCode = req.body.code;
+      Template.findOne({ templateCode: templateCode }).exec(function (
+        err,
+        curTemplate
+      ) {
+        var qrReq = "https://" + req.headers.host + "/t/" + templateCode;
+        var code = qr.imageSync(qrReq, { type: "png" });
+        var qrCode = base64ArrayBuffer(code);
+        res.send({ template: curTemplate, qr: qrCode });
+      });
+    } else {
+      res.send({ status: "No code sent" });
+    }
+  } else {
+    res.send({ status: "no user" });
+  }
+});
+
 router.post("/set_dark_mode", function (req, res) {
   if (req.user) {
     User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
@@ -3461,7 +3521,7 @@ router.post("/generate_template_session", function (req, res) {
       }
     */
             var newTemplate = new Template({
-              owner: curUser._id,
+              owner: curUser.profile_id,
               name: listName,
               games: games,
               templateCode: templateCode,

@@ -4,6 +4,10 @@ block variables
   
   - var title = "SelectAGame"
 
+block customScripts 
+  link(rel='stylesheet' href='/css/main.css')
+  script(defer src='/js/main.js')
+
 block content
   #mainView.main
     #hContainer
@@ -240,14 +244,14 @@ block content
       #premiumContainer 
         ul#extrasList 
           li.button.greenBtn(onclick='openListBrowser()') List Browser
-        br  
+          li.button.greenBtn(onclick='openTemplateBrowser()') Template Browser
         p Extra features will be added and released for free during the beta phase! Your feedback is much appreciated. Send your comments and suggestions to 
           a(href="mailto:info@selectagame.net") info@selectagame.net
         p Extra features under consideration include:
         ul 
           li#listBrowserLink(onclick='openListBrowser()') NOW AVAILABLE: Curated lists of award winners, new games, etc.
+          li#listBrowserLink(onclick='openTemplateBrowser()') NOW AVAILABLE: "Instant sessions" that will allow users to create a pre-determined session by scanning a QR code 
           li Custom links for joining a session
-          li "Instant sessions" that will allow users to create a pre-determined session by scanning a QR code 
           li Access to game selection data trends
           li Fullscreen list and session management
         p If you would like to support development and keep the servers spinning, consider buying me a coffee!
@@ -256,6 +260,11 @@ block content
           #listBrowserClose.closeButton(onclick='closeListBrowser()')
             ion-icon(name="close-outline")
           #listBrowserList
+        #templateBrowser.off
+          #templateBrowserClose.closeButton(onclick='closeTemplateBrowser()')
+            ion-icon(name="close-outline")
+          #templateBrowserList
+        
 
     #ver(style="position: absolute; bottom: 0; right: 10px;") 
       | v0.6.8 | 

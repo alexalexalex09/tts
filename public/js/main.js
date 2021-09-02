@@ -843,7 +843,6 @@ window.addEventListener("load", function () {
       window.location.origin + "/" + window.location.pathname.substr(1)
     );
     runTemplateGenerator(window.location.pathname.substr(3));
-    console.log("runTemplateGenerator()");
   }
 
   /* Set up autocomplete */
@@ -1917,6 +1916,13 @@ function closeListBrowser() {
   }, 500);
 }
 
+function closeTemplateBrowser() {
+  $("#templateBrowser").css("transform", "translateY(100%)");
+  window.setTimeout(function () {
+    $("#templateBrowser").addClass("off");
+  }, 500);
+}
+
 /**
  * {Desc} Shows a menu view
  *
@@ -2496,9 +2502,87 @@ function runTemplateGenerator(templateCode) {
     "/create_session_from_template",
     { templateCode: templateCode },
     (res) => {
-      window.location.href = "/" + res.status.session.code;
+      var theCode = res.status.session.code;
+      ttsFetch("/qr", { link: "/" + theCode }, (res) => {
+        var htmlString =
+          `` +
+          `<div class="subContextContainer"><div class="subContextTemplate">` +
+          `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +
+          `<div class="subContextTitle">Scan to join<br/><a href="https://selectagame.net/` +
+          theCode +
+          `">https://selectagame.net/` +
+          theCode +
+          `</a></div></hr>` +
+          `<div id="qrDisplay" style="background-image: url('data:image/png;base64,` +
+          res.img +
+          `');">
+            </div>
+            <div id="qrText">Congratulations! You may now vote on which game to play. Invite your friends using the above QR code, link, or session code ` +
+          theCode +
+          `.</div>
+          <a href="https://selectagame.net/` +
+          theCode +
+          `"><div class="button greenBtn">Take me there!</div></a>
+          </div>`;
+        $("body").append(htmlString);
+      });
     }
   );
+}
+
+function openTemplateBrowser() {
+  if ($("#templateBrowserList").html() == "") {
+    console.log("Opening Template Browser");
+    ttsFetch("/get_template_browser", {}, (res) => {
+      if (res.error == "unauthorized") {
+        createAndShowAlert(
+          "Sorry, this feature is available to premium users only",
+          true
+        );
+      } else {
+        var htmlString = `<div class="listBrowserNameTitle">
+        <h2>Available Templates</h2>
+      </div><div class="listBrowserCodeTitle">
+        <h2>Code</h2>
+      </div>`;
+        res.lists.forEach(function (e) {
+          htmlString +=
+            `<div class="listBrowserItem"><div class="listBrowserArrow" onclick="expandListBrowser(this)"><ion-icon name="chevron-down-outline"></ion-icon></div><div class="listBrowserName" onclick="expandListBrowser(this)">` +
+            e.name +
+            `</div>` +
+            `<div class="listBrowserGames off">` +
+            `<a class="button greenBtn" href="/p/` +
+            e.code.substring(3) +
+            `">Print</a>`;
+          e.games.forEach(function (game) {
+            var index = res.gameKey.findIndex((obj) => {
+              return obj.id == game;
+            });
+            htmlString +=
+              `<div class="listBrowserGame">` +
+              res.gameKey[index].name +
+              `</div>`;
+          });
+          htmlString +=
+            `</div></div><div class="listBrowserCode" onclick="copyText('https://selectagame.net` +
+            e.code +
+            `', 'Code Copied')">` +
+            e.code +
+            `</div>`;
+        });
+        $("#listBrowserList").html(htmlString);
+        $("#listBrowser").removeClass("off");
+        window.setTimeout(function () {
+          $("#listBrowser").css("transform", "translateY(0%)");
+        }, 10);
+      }
+    });
+  } else {
+    $("#listBrowser").removeClass("off");
+    window.setTimeout(function () {
+      $("#listBrowser").css("transform", "translateY(0%)");
+    }, 10);
+  }
 }
 
 function contextRemove(games, text) {

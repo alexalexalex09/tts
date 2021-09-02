@@ -1377,9 +1377,9 @@ function gulp(showAllGames = false) {
           res.lists.allGames[i]._id +
           `" onclick="showGameContext({id:'` +
           res.lists.allGames[i]._id +
-          `', name: '` +
+          `', name: \`` +
           res.lists.allGames[i].name +
-          `', list: '0'})">` +
+          `\`, list: '0'})">` +
           res.lists.allGames[i].name.replace(/\\/g, "") +
           `</li>`;
         //Append the "All Games" list to the first <li>
@@ -1398,19 +1398,19 @@ function gulp(showAllGames = false) {
             `<li class="bggLink">BoardGameAtlas Link</li>` +
             `<li onclick="contextCopy([{id: '` +
             res.lists.allGames[i]._id +
-            `', name:'` +
+            `', name:\`` +
             res.lists.allGames[i].name +
-            `'}])">Copy</li>` +
+            `\`}])">Copy</li>` +
             `<li onclick="contextRename({id: '` +
             res.lists.allGames[i]._id +
-            `', name:'` +
+            `', name:\`` +
             res.lists.allGames[i].name +
-            `'}, this)">Rename</li>` +
+            `\`}, this)">Rename</li>` +
             `<li class="red" onclick="showDeleteGame([{id: '` +
             res.lists.allGames[i]._id +
-            `', name:'` +
+            `', name:\`` +
             res.lists.allGames[i].name +
-            `'}], '&quot;` +
+            `\`}], '&quot;` +
             res.lists.allGames[i].name +
             `&quot;')">Delete</li>` +
             `</div>`
@@ -1480,9 +1480,9 @@ function gulp(showAllGames = false) {
             res.lists.custom[i].games[j]._id +
             `" onclick="showGameContext({id: '` +
             res.lists.custom[i].games[j]._id +
-            `', name: '` +
+            `', name: \`` +
             res.lists.custom[i].games[j].name +
-            `', list: '` +
+            `\`, list: '` +
             listNum +
             `'})">` +
             res.lists.custom[i].games[j].name.replace(/\\/g, "") +
@@ -2198,9 +2198,9 @@ function contextRename(game) {
     `"</div><hr/><div id="renameGameInputCont" class="textInputCont">
     <form onsubmit="return renameGame(event, this, '` +
     game.id.substr(5 + game.length) +
-    `', '` +
+    `', \`` +
     game.name +
-    `')" id="renameGameInput"></input>` +
+    `\`)" id="renameGameInput"></input>` +
     `<input class="textSubmit" type="submit" value="">` +
     `<input class="textInput" type="text" autocomplete="off" value="` +
     game.name.replace(/\\/g, "") +
@@ -2374,7 +2374,7 @@ function showDeleteGame(arr, string) {
   <div class="button greenBtn" id="deleteCancel" onclick="$(this).parent().parent().remove()">Cancel</div>
   <div class="button redBtn" id="deleteConfirm" onclick="deleteGame([`;
   arr.forEach(function (e, i) {
-    el += "{id: '" + e.id + "', name: `" + e.name + "`},";
+    el += `{id: '` + e.id + `', name: \`` + e.name + `\`},`;
   });
   el = el.substr(0, el.length - 1);
   el += `])">Delete</div>`;
@@ -2602,11 +2602,11 @@ function contextRemove(games, text) {
     el +=
       "{game: '" +
       e.id +
-      `', name: '` +
+      `', name: \`` +
       e.name +
-      `', list: '` +
+      `\`, list: \`` +
       e.list.substr(e.list.length - 1) +
-      "'},";
+      "`},";
   });
   el = el.substr(0, el.length - 1);
   el += `])">Remove</div>`;
@@ -3022,15 +3022,15 @@ function writeGameContext(contextObj) {
     `, this)">Rename</li>` +
     `<li onclick="contextRemove([` +
     co +
-    `], '` +
+    `], \`` +
     contextObj.name +
-    `')">Remove</li>` +
+    `\`)">Remove</li>` +
     `</div>`;
   return htmlString;
 }
 
 function createContextObjectString(id, name, list) {
-  return `{id: '` + id + `', name:'` + name + `', list:'` + list + `'}`;
+  return `{id: '` + id + `', name:\`` + name + `\`, list:'` + list + `'}`;
 }
 
 /**
@@ -3045,9 +3045,9 @@ function writeListContext(contextObj) {
     var shareable =
       `<li onclick="showShareList({id: '` +
       contextObj.id +
-      `', name: '` +
+      `', name: \`` +
       contextObj.name +
-      `', listCode: '` +
+      `\`, listCode: '` +
       contextObj.listCode +
       `'})">Share</li>`;
   } else {
@@ -3057,19 +3057,19 @@ function writeListContext(contextObj) {
     var modifiable =
       `<li onclick="showCreateListTemplate({id: '` +
       contextObj.id +
-      `', name: '` +
+      `', name: \`` +
       contextObj.name +
-      `'})">Create New Template List</li>` +
+      `\`})">Create New Template List</li>` +
       `<li onclick="showRenameList({id: '` +
       contextObj.id +
-      `', name: '` +
+      `', name: \`` +
       contextObj.name +
-      `'})">Rename</li>` +
+      `\`})">Rename</li>` +
       `<li onclick="showDeleteList({id: '` +
       contextObj.id +
-      `', name: '` +
+      `', name: \`` +
       contextObj.name +
-      `'})">Delete</li>`;
+      `\`})">Delete</li>`;
   } else {
     modifiable = "";
   }
@@ -3114,25 +3114,25 @@ function writeSessionContext(code, name, owned) {
     `<li `;
   if ($("#" + code + " .owner").length > 0 || owned == true) {
     htmlString +=
-      `onclick="showRenameSession({name: '` +
+      `onclick="showRenameSession({name: \`` +
       name +
-      `', id:'0000` +
+      `\`, id:'0000` +
       code +
       `'})">Rename</li>` +
       `<li onclick="showDeleteSession({id: '` +
       code +
-      `', name: '` +
+      `', name: \`` +
       name +
-      `'})">Delete</li>` +
+      `\`})">Delete</li>` +
       `</div>`;
   } else {
     htmlString +=
       `class="grey">Rename</li>` +
       `<li onclick="showDeleteSession({id: '` +
       code +
-      `', name: '` +
+      `', name: \`` +
       name +
-      `'})">Remove From Session</li>` +
+      `\`})">Remove From Session</li>` +
       `</div>`;
   }
   return htmlString;

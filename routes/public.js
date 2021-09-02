@@ -212,13 +212,13 @@ function getTheGames(games) {
 }
 
 function prepForMongo(name) {
-  var matches = [...name.matchAll(/[^\\]'/g)];
+  /*var matches = [...name.matchAll(/[^\\]'/g)];
   for (var i = matches.length - 1; i > -1; i--) {
     name =
       name.substr(0, matches[i].index + 1) +
       "\\" +
       name.substr(matches[i].index + 1);
-  }
+  }*/
   return name;
 }
 
@@ -2780,6 +2780,7 @@ function findAGame(currentGame) {
   return new Promise(function (resolve, reject) {
     currentGame = currentGame.replace(/[^%0-9a-zA-Z' ]/g, "");
     var search = new RegExp(currentGame);
+    console.log(search);
     Game.find({
       $and: [
         {

@@ -2750,6 +2750,8 @@ input#selectLimit {
   display: grid;
   grid-template-columns: 1fr 7rem;
   grid-row-gap: 1rem;
+  max-height: var(--vh90);
+  overflow: auto;
 }
 
 #listBrowserLink {
@@ -2781,6 +2783,10 @@ input#selectLimit {
   height: 2.5rem;
   border: 3px solid var(--main-white);
   margin: 0.5rem auto;
+}
+
+.templateBrowserDesc {
+  grid-column: 1 / 3;
 }
 
 /****************/

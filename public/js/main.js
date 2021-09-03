@@ -2544,7 +2544,8 @@ function openTemplateBrowser() {
         <h2>Available Templates</h2>
       </div><div class="listBrowserCodeTitle">
         <h2>Code</h2>
-      </div>`;
+      </div>
+      <div class="templateBrowserDesc">You can create new templates from lists using a particular list's context menu. Anyone who uses a template will immediately create a new voting session with the included games!</div>`;
         res.lists.forEach(function (e) {
           htmlString +=
             `<div class="listBrowserItem"><div class="listBrowserArrow" onclick="expandListBrowser(this)"><ion-icon name="chevron-down-outline"></ion-icon></div><div class="listBrowserName" onclick="expandListBrowser(this)">` +

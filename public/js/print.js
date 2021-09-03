@@ -3,9 +3,7 @@ function setupTemplatePrint(theCode) {
     $("#printTemplate").html(res.template.name);
     $("#printURL").html("selectagame.net/t/" + res.template.templateCode);
     $("#printQR").html(
-      `<img id="qrDisplay" style="content: url('data:image/png;base64,` +
-        res.qr +
-        `')"></img>`
+      `<img id="qrDisplay" src="data:image/png;base64,` + res.qr + `"></img>`
     );
   });
 }

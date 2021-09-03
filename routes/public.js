@@ -227,7 +227,7 @@ function getGame(game) {
   return new Promise((resolve, reject) => {
     if (game.id.length > 0) {
       game.name = prepForMongo(game.name);
-      var search = new RegExp(currentGame);
+      var search = new RegExp(game.name);
       Game.findOne({ name: search }).exec(function (err, curGame) {
         var fields = [
           "id",
@@ -2270,7 +2270,7 @@ async function addAllGamesIfNeeded(games) {
   for (var i = 0; i < games.length; i++) {
     var game = games[i];
     var gameIndex = i;
-    var search = new RegExp(currentGame);
+    var search = new RegExp(game);
     var curGame = await Game.findOne({ name: search });
     if (curGame == null || typeof curGame == "undefined") {
       var conditionalPromise = getNewGameFromBGA(game.name);
@@ -3331,6 +3331,7 @@ router.post("/get_list_browser", function (req, res) {
           curGames.forEach(function (e) {
             gameKey.push({ id: e._id, name: e.name });
           });
+          checkForMissingGames(curGames, gameIds);
           res.send({ lists: ret, gameKey: gameKey });
         });
       });
@@ -3365,6 +3366,7 @@ router.post("/get_template_browser", function (req, res) {
           });
           res.send({ lists: ret, gameKey: gameKey });
         });
+        checkForMissingGames(curGames, gameIds);
       });
     } else {
       res.send({ error: "unauthorized" });
@@ -3373,6 +3375,14 @@ router.post("/get_template_browser", function (req, res) {
     res.send({ status: "no user" });
   }
 });
+
+function checkForMissingGames(foundGames, suppliedGames, type) {
+  //1. Check foundGames against supplied games.
+  //2. Collect games that did not find a match in an array
+  //3. If a game id is discovered in suppliedGames that does not have a match in foundGames,
+  //     search the current user's lists and templates for that game and remove it.
+  //NB: This should only happen if a game is permanently removed from the backend.
+}
 
 router.post("/get_template_info", function (req, res) {
   if (req.user) {

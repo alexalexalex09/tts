@@ -2567,7 +2567,7 @@ input#selectLimit {
 #contextShadow {
   backdrop-filter: blur(3px);
   width: 100vw;
-  height: var(--vh100);
+  height: calc(var(--vh100) - 1px);
   position: absolute;
   top: 0;
   left: 0;

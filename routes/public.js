@@ -3350,23 +3350,27 @@ router.post("/get_template_browser", function (req, res) {
       var ret = [];
       var gameIds = [];
       Template.find({ owner: req.user.id }).exec(function (err, curTemplates) {
-        var toPush = {};
-        curTemplates.forEach(function (e) {
-          toPush = { name: e.name, code: "/t/" + e.templateCode, games: [] };
-          e.games.forEach(function (game) {
-            gameIds.push(game);
-            toPush.games.push(game);
+        if (curTemplates.length > 0) {
+          var toPush = {};
+          curTemplates.forEach(function (e) {
+            toPush = { name: e.name, code: "/t/" + e.templateCode, games: [] };
+            e.games.forEach(function (game) {
+              gameIds.push(game);
+              toPush.games.push(game);
+            });
+            ret.push(toPush);
           });
-          ret.push(toPush);
-        });
-        Game.find({ _id: { $in: gameIds } }).exec(function (err, curGames) {
-          var gameKey = [];
-          curGames.forEach(function (e) {
-            gameKey.push({ id: e._id, name: e.name });
+          Game.find({ _id: { $in: gameIds } }).exec(function (err, curGames) {
+            var gameKey = [];
+            curGames.forEach(function (e) {
+              gameKey.push({ id: e._id, name: e.name });
+            });
+            res.send({ lists: ret, gameKey: gameKey });
           });
-          res.send({ lists: ret, gameKey: gameKey });
-        });
-        checkForMissingGames(curGames, gameIds);
+          checkForMissingGames(curGames, gameIds);
+        } else {
+          res.send({ error: "No templates available!" });
+        }
       });
     } else {
       res.send({ error: "unauthorized" });

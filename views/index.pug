@@ -75,7 +75,7 @@ block content
           br.softBreak#woodland
           | woodland creatures help?
       button#joinButton.button.blueBtn.b Join
-      button#createButton.button.greyBtn.b Create
+      button#createButton.button.greyBtn.b Start
       form#codeInputGroup.inputGroup.off(onsubmit="return submitSessionCode()")
         #codeInputLabel.inputLabel.h2 Enter Code:
         #codeInput.textInputCont
@@ -85,7 +85,7 @@ block content
         #codeError.errorText.off.p Wrong code. Please try again.
 
     #codeView.view.off
-      .pageTitle.h1 SelectAGame
+      .pageTitle.h1 Session Created!
       .sessionInfoDisplay 
         .phraseDisplay
       #codeImg
@@ -129,7 +129,7 @@ block content
         span#limitMax
       #selectLists
       button#gameSubmit.button.greenBtn(type='submit' value='')
-        | Submit These Games
+        | Finish Selecting ✔️
     
     #postSelectView.view.off
       #postSelectTitle.pageTitle.h1 Waiting...

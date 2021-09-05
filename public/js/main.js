@@ -3356,8 +3356,14 @@ function showSessionSettings() {
         <li id="sessionSettingsShareLink">Share Link</li>
         <li id="sessionSettingsShareQR">Share QR Code</li>`;
   if ($(".phraseDisplay .owner").length > 0) {
-    el += `<li id="sessionSettingsRename">Rename</li>
-        <li id="sessionSettingsLimit">Set Game Limit</li>`;
+    el += `<li id="sessionSettingsRename">Rename</li>`;
+    if (
+      $("#codeView").is(":visible") ||
+      $("#selectView").is(":visible") ||
+      $("#postSelectView").is(":visible")
+    ) {
+      el += `<li id="sessionSettingsLimit">Set Game Limit</li>`;
+    }
   }
   el += `</div></div></div>`;
   $("body").append(el);

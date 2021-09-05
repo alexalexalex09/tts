@@ -3365,7 +3365,7 @@ router.post("/get_template_browser", function (req, res) {
             curGames.forEach(function (e) {
               gameKey.push({ id: e._id, name: e.name });
             });
-            //checkForMissingGames(curGames, gameIds);
+            checkForMissingGames(curGames, gameIds);
             res.send({ lists: ret, gameKey: gameKey });
           });
         } else {

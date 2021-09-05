@@ -542,7 +542,7 @@ input:checked + .slider:before {
   height: calc(var(--vh100) - 1px);
   position: absolute;
   border: 0px;
-  overflow-y: hidden;
+  overflow: hidden;
 }
 
 #hContainer {
@@ -2919,9 +2919,9 @@ input#selectLimit {
   #menuClose {
     display: none;
   }
-  .menuHomeIcon {
+  /*.menuHomeIcon {
     left: 25px;
-  }
+  }*/
   #faqContainer,
   #aboutContainer,
   #premiumContainer {

@@ -1355,6 +1355,26 @@ input#listImportSubmit.green {
   background-position: center;
 }
 
+#postVoteAd {
+  border: 1
+  px
+   solid var(--main-black);
+      background: var(--main-background);
+      grid-area: 12/2/15/7;
+      height: 100%;
+      text-align: center;
+      align-items: center;
+      display: grid;
+}
+
+.voteTitle {
+  font-size: var(--font-h1);
+}
+
+.voteContent {
+  font-size: var(--font-p);
+}
+
 #postSelectImg {
   grid-area: 4/2/8/10;
   height: 100%;

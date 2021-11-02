@@ -83,49 +83,33 @@ Session.find({ users: { $elemMatch: { user: { $regex: /guest*/ } } } }).exec(
 );
 
 var requests = [];
-//Top 100 games from each decade before 1990
-/*for (var i = 1899; i < 1980; i = i + 10) {
-  var topYear = i + 11;
+//Get top 100 games overall
+/*requests.push(
+  "https://api.boardgameatlas.com/api/search?client_id=" +
+    process.env.BGAID +
+    "&ascending=true&limit=100&skip=0"
+);*/
+//Top 10 games from 1990-2010
+for (var i = 1990; i <= 2010; i++) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
       process.env.BGAID +
-      "ph8PXFkuKb&ascending=true&lt_year_published=" +
-      topYear +
-      "&gt_year_published=" +
-      i
+      "&ascending=true&year_published=" +
+      i +
+      "&limit=10&skip=0"
   );
 }
-//Top 1000 games from 1990-2000
-//Top 1000 games from 2000-2010
-for (var i = 0; i <= 1000; i = i + 100) {
-  requests.push(
-    "https://api.boardgameatlas.com/api/search?client_id=" +
-      process.env.BGAID +
-      "ph8PXFkuKb&ascending=true&lt_year_published=2001&gt_year_published=1989&skip=" +
-      i
-  );
-  requests.push(
-    "https://api.boardgameatlas.com/api/search?client_id=" +
-      process.env.BGAID +
-      "ph8PXFkuKb&ascending=true&lt_year_published=2011&gt_year_published=1999&skip=" +
-      i
-  );
-}*/
-//Top 500 games from each year 2010-present
-//Edit: Top 100 games
-//for (var i = 0; i <= 500; i = i + 100) {
+//Top 100 games from each year 2010-present
 var year = new Date().getFullYear();
 for (var j = 2010; j <= year; j++) {
-  //for (var i = 0; i <= 100; i = i + 100) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
       process.env.BGAID +
       "&ascending=true&year_published=" +
       j +
       "&limit=100&skip=" +
-      0 //i
+      0 
   );
-  //}
 }
 
 /* Async BGG Function Definitions */
@@ -382,7 +366,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     } else {
       resourceOutdated =
         Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
-      //resourceOutdated = true; //Force update
+      resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;

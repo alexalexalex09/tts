@@ -1318,7 +1318,7 @@ input#listImportSubmit.green {
 }
 
 #postSelectContainer {
-  grid-area: 8/2/18/10;
+  grid-area: 10/2/18/10;
   font-size: var(--font-h3);
   height: 100%;
   text-align: center;
@@ -1326,6 +1326,17 @@ input#listImportSubmit.green {
   padding-top: 5px;
   position: relative;
   overflow-y: auto;
+}
+
+#postSelectAd {
+  grid-area: 8/2/10/10;
+    width: 94%;
+    height: 94%;
+    text-align: center;
+    border: 1px solid var(--main-black);
+    background: var(--main-background);
+    margin-top: 3%;
+    margin-left: 3%;
 }
 
 #postSelectIntro {

@@ -1367,11 +1367,11 @@ input#listImportSubmit.green {
       display: grid;
 }
 
-.voteTitle {
+.adTitle {
   font-size: var(--font-h1);
 }
 
-.voteContent {
+.adContent {
   font-size: var(--font-p);
 }
 

@@ -83,23 +83,17 @@ Session.find({ users: { $elemMatch: { user: { $regex: /guest*/ } } } }).exec(
 );
 
 var requests = [];
-//Get top 100 games overall
-/*requests.push(
-  "https://api.boardgameatlas.com/api/search?client_id=" +
-    process.env.BGAID +
-    "&ascending=true&limit=100&skip=0"
-);*/
-//Top 10 games from 1990-2010
-for (var i = 1990; i <= 2010; i++) {
+//Get top 1000 games overall
+for (var i = 0; i <= 900; i = i + 100) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
       process.env.BGAID +
-      "&ascending=true&year_published=" +
-      i +
-      "&limit=10&skip=0"
+      "&ascending=true&limit=100&skip=i"
   );
 }
 //Top 100 games from each year 2010-present
+//BGA API can't order by rank so don't do this anymore
+/*
 var year = new Date().getFullYear();
 for (var j = 2010; j <= year; j++) {
   requests.push(
@@ -111,6 +105,7 @@ for (var j = 2010; j <= year; j++) {
       0 
   );
 }
+*/
 
 /* Async BGG Function Definitions */
 function getBGGPage(pageNum, numPages) {

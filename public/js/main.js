@@ -43,6 +43,7 @@ window.addEventListener("load", function () {
     if (res.session.limit) {
       recheckLimit(res.session.limit);
     }
+    ttsFetch("/refresh_games_list",{code: res.session.code},(res) => console.log("Refreshed: " + res));
     socket.on(res.session.code + "owner", (data) => {
       if (data.selectEvent /*&& res.session.lock != "#postPostSelectView"*/) {
         //Rewrite #postSelectContainer in real time for owner if this is an owner initated event
@@ -810,7 +811,7 @@ window.addEventListener("load", function () {
         goForwardFrom("#selectView", "#postSelectView");
         if ($("#postSelectImg").length == 0 && $("#gameUnlock").length == 0) {
           $("#postSelectView").append('<div id="postSelectImg"></div>');
-          $("#postSelectContainer").css("grid-area", "9/2/15/10");
+          $("#postSelectContainer").css("grid-area", "10/2/18/10");
         }
       }
     );
@@ -1133,6 +1134,7 @@ function lockGames(code) {
     $("#postSelectView").css({
       transform: "translateX(-200vw)",
     });
+    $("#postSelectAd").css({display: "none"});
     window.setTimeout(function () {
       $("#postSelectTitle").html(
         "Edit Games List <div class='menuHomeIcon'></div>"
@@ -1173,6 +1175,7 @@ function lockGames(code) {
               goBackFrom("#postSelectView", "#selectView");
               setTimeout(function () {
                 $("#postSelectContainer").html("");
+                $("#postSelectAd").css({display: "block"});
               }, 1000);
             }
           );
@@ -2673,6 +2676,8 @@ function parseBGGThing(id, field) {
       }
       if (index == -1) {
         console.log("didn't find it");
+        //TODO: Modify res so that it includes a placeholder "error" image and desc, because
+        //otherwise this will likely show root
         ttsFetch(
           "/bga_find_id",
           { id: id },
@@ -2703,15 +2708,19 @@ function getTopListIndex(game, topList /*, fuse*/) {
     });
     if (index == -1) {
       console.log("Couldn't find " + game + " in " + topList.length + " games");
-      /*var searchres = fuse.search(game);
+      var fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
+      var searchres = fuse.search(game);
+      console.log(searchres);
+      fuse = [];
       if (searchres.length > 0) {
         if (searchres[0].score < 0.3) {
           index = searchres[0].refIndex;
         } else {
+          console.log("...Not even using fuzzy search")
           return -1;
         }
       }
-      searchres = [];*/
+      searchres = [];
     }
     return index;
   } else {
@@ -2808,7 +2817,7 @@ function getGameUrl(games) {
               if (theURL == "" || typeof theURL == "undefined") {
                 getNewTopList();
                 var ret =
-                  `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                  `https://www.boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=` +
                   game;
                 resolveInner({ game: game, url: ret });
               } else {
@@ -2851,7 +2860,7 @@ function getGameUrl(games) {
                   if (index == -1) {
                     console.log(game.game + " not found");
                     var url =
-                      `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+                      `https://www.boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=` +
                       game.game.replace(/[^0-9a-zA-Z' ]/g, "");
                     games[curIndex].url = url;
                   } else {
@@ -4165,6 +4174,9 @@ function focusFirstInput(el) {
 }
 
 function updateCurrentGames(curGames) {
+  if ($(".currentGames").length == 0) {
+    
+  }
   var htmlString = ``;
   console.log(curGames);
   console.log($(".curGameItem"));

@@ -160,7 +160,7 @@ socketAPI.lockGames = function (data) {
     curSession.lock = "#postPostSelectView";
     ret.lockBack = true;
     ret.lock = "#postSelectView";
-    console.log("sending " + data.code + "client with data", ret);
+    console.log("sending " + data.code + " client with data", ret);
     io.sockets.emit(data.code + "client", ret);
     curSession.save();
   });

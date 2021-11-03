@@ -88,7 +88,7 @@ for (var i = 0; i <= 900; i = i + 100) {
   requests.push(
     "https://api.boardgameatlas.com/api/search?client_id=" +
       process.env.BGAID +
-      "&ascending=true&limit=100&skip=i"
+      "&ascending=true&limit=100&skip=" + i
   );
 }
 //Top 100 games from each year 2010-present
@@ -361,7 +361,7 @@ Resource.findOne({ name: "topGames" }).exec(function (err, curResource) {
     } else {
       resourceOutdated =
         Date.now() - curResource.collected > 1000 * 60 * 60 * 24 * 7; // Wait 7 days = 1000*60*60*24*7
-      resourceOutdated = true; //Force update
+    //resourceOutdated = true; //Force update
     }
   } else {
     resourceOutdated = true;
@@ -961,10 +961,11 @@ function bulkGameAdder(games, listIndexPlusOne, res, req) {
 router.post("/game_add", function (req, res) {
   if (req.user) {
     if (req.body.game) {
-      var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "");
-      var search = new RegExp(currentGame);
-      Game.findOne({ name: search }, function (err, game) {
+      var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "") ;
+      var search = new RegExp("^" + currentGame+ "$");
+      Game.findOne({ name: search}, function (err, game) {
         if (game == null || typeof game == "undefined") {
+          console.log("Game to add ("+search+") not found, getting new game from BGA");
           var conditionalPromise = getNewGameFromBGA(currentGame);
         } else {
           var conditionalPromise = new Promise((resolve) => {
@@ -973,6 +974,7 @@ router.post("/game_add", function (req, res) {
         }
         conditionalPromise.then(function (game) {
           console.log(game.bgaID);
+          console.log({game});
           var upsertOptions = { new: true, upsert: true };
           User.findOneAndUpdate(
             {
@@ -1392,6 +1394,17 @@ function saveNewSession(session, theCode) {
   });
 }
 
+router.post("/refresh_games_list", function (req, res) {
+  if (req.user) {
+    socketAPI.addGame({
+      code: req.body.code
+    });
+    res.send({status: "Games refreshed"})
+  } else {
+    res.send(ERR_LOGIN);
+  }
+})
+
 router.post("/create_session", function (req, res) {
   if (req.user) {
     createSessionCode().then((theCode) => {
@@ -1586,11 +1599,11 @@ router.post("/submit_games", function (req, res) {
 });
 
 router.post("/lock_games", function (req, res) {
-  /* This whole function needs to be rethought. The idea is that it does the following:
+  /* 
     1. Look through the list of games in the session and see if any need added to the voting array
     2. Pass the name, id, and active status of each game in the voting array within the htmlString output
       2a. To do that, we need to get the name of each game from the Games collection
-      2b. We also need to learn whether it's a dupe
+      2b. We also need to learn whether it's a duplicate
     Note: Once added, you can't remove a game from the voting array
 
   */
@@ -2781,7 +2794,7 @@ function findAGame(currentGame) {
           });
         } else {
           console.log(
-            "Found " + curGames[0].name + ", AKA " + curGames[0].actualName
+            "Found " + currentGame + " as " + curGames[0].name + ", AKA " + curGames[0].actualName
           );
           //TODO: This doesn't work
           var index = curGames.findIndex((obj) => {
@@ -2803,9 +2816,10 @@ function getNewGameFromBGA(currentGame) {
     bgaRequest({
       name: currentGame.replace(/[^0-9a-zA-Z' ]/g, ""),
       /*fuzzy_match: true,*/
-      limit: 1,
+      limit: 100,
     }).then((ret) => {
       var fuzzy = 0;
+      console.log("Getting new BGA game, found "+ret.games.length);
       if (ret.games.length > 0) {
         fuzzy = fuzzyMatch(currentGame, ret.games[0].name);
         console.log("Game as submitted: ", currentGame);
@@ -2814,8 +2828,9 @@ function getNewGameFromBGA(currentGame) {
       }
       //If the search returned no games, return a generic search for boardgamegeek
       if (ret.games.length == 0 || fuzzy < 0.5) {
+        console.log("No good matches, searching BGG. Fuzzy was " + fuzzy)
         var url =
-          `https://www.boardgamegeek.com/geeksearch.php?action=search&q=` +
+          `https://www.boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=` +
           currentGame.replace(/[^0-9a-zA-Z' ]/g, "");
         var userGame = new Game({
           name: currentGame,

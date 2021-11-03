@@ -3367,7 +3367,7 @@ router.post("/get_template_browser", function (req, res) {
         }
       });
     } else {
-      res.send({ error: "unauthorized" });
+      res.send({ error: "Sorry, this feature is available to premium users only" });
     }
   } else {
     res.send({ status: "no user" });

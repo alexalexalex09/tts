@@ -2537,12 +2537,6 @@ function openTemplateBrowser() {
   if ($("#templateBrowserList").html() == "") {
     console.log("Opening Template Browser");
     ttsFetch("/get_template_browser", {}, (res) => {
-      if (res.error == "unauthorized") {
-        createAndShowAlert(
-          "Sorry, this feature is available to premium users only",
-          true
-        );
-      } else {
         var htmlString = `<div class="listBrowserNameTitle">
         <h2>Available Templates</h2>
       </div><div class="listBrowserCodeTitle">
@@ -2582,7 +2576,6 @@ function openTemplateBrowser() {
         window.setTimeout(function () {
           $("#listBrowser").css("transform", "translateY(0%)");
         }, 10);
-      }
     });
   } else {
     $("#listBrowser").removeClass("off");

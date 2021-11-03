@@ -4308,14 +4308,7 @@ function showVoteThumb(el) {
       id = id.substr(id.lastIndexOf("/") + 1);
       if (id == "www.boardgamegeek.com") {
         id = $el.children(".voteSubTitle").children("a").attr("href");
-        if (id.indexOf("objecttype=boardgame") > -1) {
-          id = id.substring(
-            id.lastIndexOf("q=") + 2,
-            id.lastIndexOf("&object")
-          );
-        } else {
-          id = id.substr(id.lastIndexOf("q=") + 2);
-        }
+        id = id.substr(id.lastIndexOf("q=") + 2);
         console.log({ id });
       }
       parseBGGThing(id, "thumb_url").then(function (res) {

@@ -71,12 +71,12 @@ div#printURL {
 #bottomImgContainer {
   width: 100%;
   display: grid;
-  justify-items: center;
 }
 
 img#bottomImg {
   height: 1.5in;
   bottom: 0.1in;
+  left: 2.5in;
   position: absolute;
 }
 

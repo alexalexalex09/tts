@@ -68,9 +68,14 @@ div#printURL {
   font-size: 20px;
 }
 
+#bottomImgContainer {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+}
+
 img#bottomImg {
-  width: 600px;
-  left: calc(50% - 300px);
+  height: 1.5in;
   bottom: 0.1in;
   position: absolute;
 }

@@ -2471,12 +2471,12 @@ async function showTemplate(name, templateCode, qr) {
 
   var title = `Create Instant Session<br/>` + name;
   var text =
-    `Scan this code or go to <a href="https://selectagame.net/t/` +
+    `Here is your template!<br>Now, anyone who scans this code or goes to<br><a href="https://selectagame.net/t/` +
     templateCode +
     `">https://selectagame.net/t/` +
     templateCode +
     `</a>` +
-    ` to create an instant game voting session.`;
+    `<br> will create an instant game voting session to share with their friends.`;
   var htmlString =
     `<div class="subContextContainer"><div class="subContextTemplate">` +
     `<div class="closeButton" id="subContextClose" onclick="$(this).parent().parent().remove()"><ion-icon name="close-outline"></div>` +

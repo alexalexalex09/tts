@@ -3363,11 +3363,11 @@ router.post("/get_template_browser", function (req, res) {
             res.send({ lists: ret, gameKey: gameKey });
           });
         } else {
-          res.send({ error: "No templates available!" });
+          res.send({ err: "No templates available!" });
         }
       });
     } else {
-      res.send({ error: "Sorry, this feature is available to premium users only" });
+      res.send({ err: "Sorry, this feature is available to premium users only" });
     }
   } else {
     res.send({ status: "no user" });

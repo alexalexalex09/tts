@@ -1880,7 +1880,7 @@ function openListBrowser() {
               `</div>`;
           });
           htmlString +=
-            `</div></div><div class="listBrowserCode" onclick="copyText('https://selectagame.net/` +
+            `</div></div><div class="listBrowserCode" onclick="copyText('` +
             e.code +
             `', 'Code Copied')">` +
             e.code +

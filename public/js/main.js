@@ -1880,7 +1880,7 @@ function openListBrowser() {
               `</div>`;
           });
           htmlString +=
-            `</div></div><div class="listBrowserCode" onclick="copyText('` +
+            `</div></div><div class="listBrowserCode" onclick="runListImport('` +
             e.code +
             `', 'Code Copied')">` +
             e.code +
@@ -5384,6 +5384,9 @@ function firstSessionMsg() {
 }
 
 function runListImport(code) {
+  code = code.toUpperCase();
+  code = code.replace("I", "1");
+  code = code.replace("O", "0");
   ttsFetch(
     "/get_list_code_info",
     { code: code },

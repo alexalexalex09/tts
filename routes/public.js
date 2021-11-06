@@ -207,7 +207,7 @@ function getGame(game) {
     if (game.id.length > 0) {
       game.name = prepForMongo(game.name);
       var search = new RegExp(game.name);
-      Game.findOne({ name: search }).exec(function (err, curGame) {
+      Game.findOne({ name: game.name }).exec(function (err, curGame) {
         var fields = [
           "id",
           "name",

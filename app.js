@@ -120,6 +120,10 @@ app.use((req, res, next) => {
   //What function is called upon window load that could populate the username?
   if (req.user) {
     res.locals.user = req.user;
+    console.log("username: ", req.user.username);
+    console.log("user_name: ", req.user.user_name);
+    console.log("name: ", req.username);
+    console.log("_name: ", req.user_name);
     res.locals.email = req.user.emails[0].value;
     User.findOne({ profile_id: req.user.id }).exec((err, curUser) => {
       if (curUser) {

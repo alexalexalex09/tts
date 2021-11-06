@@ -1333,10 +1333,14 @@ input#listImportSubmit.green {
     width: 94%;
     height: 94%;
     text-align: center;
-    border: 1px solid var(--main-black);
     background: var(--main-background);
     margin-top: 3%;
     margin-left: 3%;
+}
+
+img.ad {
+  max-width: 100%;
+  max-height: 100%;
 }
 
 #postSelectIntro {

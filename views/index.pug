@@ -136,10 +136,9 @@ block content
       .sessionInfoDisplay 
         .phraseDisplay
         #postSelectCodeDisplay.codeDisplay Your Code:
-      #postSelectImg      
+      #postSelectImg
       #postSelectAd
-        .adTitle Your Ad Here!
-        .adContent Contact info@selectagame.net to place an ad
+        img.ad(src="/img/sample-ad.png")
       #postSelectContainer
         if !user
           #postSelectIntro 
@@ -162,8 +161,7 @@ block content
       #postVoteContainer
       #postVoteImg
       #postVoteAd
-        .adTitle Your Ad Here!
-        .adContent Contact info@selectagame.net to place an ad
+        img.ad(src="/img/sample-ad.png")
     
     #playView.view.off
       #playTitle.pageTitle.h1 Start Playing!

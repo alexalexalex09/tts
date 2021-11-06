@@ -3586,9 +3586,8 @@ function addNewGame(el) {
   }
   var game = $(el)
     .val()
-    .replace(/&/, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "\\'");
+    .replace(/\"/g, "&quot;")
+    .replace(/\'/g, "\\'");
   $(el).val("");
   ttsFetch("/game_add", { game: game, list: list }, (res) => {
     var name = res.status.name.replace(/\\/g, "");

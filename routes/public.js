@@ -206,7 +206,7 @@ function getGame(game) {
   return new Promise((resolve, reject) => {
     if (game.id.length > 0) {
       game.name = prepForMongo(game.name);
-      var search = new RegExp(game.name);
+      var search = new RegExp("^"+game.name+"$");
       Game.findOne({ name: game.name }).exec(function (err, curGame) {
         var fields = [
           "id",
@@ -827,8 +827,9 @@ router.post("/game_add_bulk", function (req, res) {
   if (req.user) {
     if (req.body.games) {
       var games = req.body.games;
-      var search = games.map((g) => new RegExp(g));
+      var search = games.map((g) => new RegExp("^"+g+"$"));
       Game.find({ name: { $in: search } }).exec(function (err, curGames) {
+        curGames.forEach((e) => {console.log(e.name)});
         var toAdd = [];
         games.forEach(function (e, i) {
           var index = curGames.findIndex((obj) => obj.name == e);
@@ -961,7 +962,7 @@ function bulkGameAdder(games, listIndexPlusOne, res, req) {
 router.post("/game_add", function (req, res) {
   if (req.user) {
     if (req.body.game) {
-      var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "") ;
+      var currentGame = req.body.game.replace(/[^%0-9a-zA-Z&' ]/g, "") ;
       var search = new RegExp("^" + currentGame+ "$");
       Game.findOne({ name: search}, function (err, game) {
         if (game == null || typeof game == "undefined") {
@@ -1037,7 +1038,7 @@ router.post("/game_add", function (req, res) {
 router.post("/group_game_add", function (req, res) {
   if (req.user) {
     var currentGame = req.body.game.replace(/[^%0-9a-zA-Z' ]/g, "");
-    var search = new RegExp(currentGame);
+    var search = new RegExp("^"+currentGame+"$");
     Game.findOne({ name: search }, function (err, game) {
       if (game == null || typeof game == "undefined") {
         var conditionalPromise = getNewGameFromBGA(currentGame);
@@ -2262,7 +2263,7 @@ async function addAllGamesIfNeeded(games) {
   for (var i = 0; i < games.length; i++) {
     var game = games[i];
     var gameIndex = i;
-    var search = new RegExp(game);
+    var search = new RegExp("^"+game+"$");
     var curGame = await Game.findOne({ name: search });
     if (curGame == null || typeof curGame == "undefined") {
       var conditionalPromise = getNewGameFromBGA(game.name);
@@ -2350,7 +2351,7 @@ router.post("/rename_game", function (req, res) {
   if (req.user) {
     if (req.body.newName) {
       User.findOne({ profile_id: req.user.id }).exec(function (err, curUser) {
-        var search = new RegExp(req.body.newName);
+        var search = new RegExp("^"+req.body.newName+"$");
         Game.findOne({ name: search }).exec(function (err, curGame) {
           if (curGame == null) {
             console.log("CurGame is null: ", curGame);
@@ -2726,7 +2727,7 @@ async function getGamesAsync(gamesArray) {
 
 async function getAllGamesAsync(gamesArray) {
   gamesArray = gamesArray.map((game) => {
-    return new RegExp(game.replace(/[^%0-9a-zA-Z' ]/g, ""));
+    return new RegExp("^"+game.replace(/[^%0-9a-zA-Z' ]/g, "")+"$");
   });
   Game.find({
     $and: [
@@ -2771,7 +2772,7 @@ async function populateAllGamesAsync(curGames) {
 function findAGame(currentGame) {
   return new Promise(function (resolve, reject) {
     currentGame = currentGame.replace(/[^%0-9a-zA-Z' ]/g, "");
-    var search = new RegExp(currentGame);
+    var search = new RegExp("^"+currentGame+"$");
     console.log(search);
     Game.find({
       $and: [

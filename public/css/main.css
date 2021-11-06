@@ -1371,7 +1371,6 @@ img.ad {
 }
 
 #postVoteAd {
-  border: 1px solid var(--main-black);
   background: var(--main-background);
   grid-area: 12/2/15/7;
   height: 100%;

@@ -535,8 +535,9 @@ router.get("/l/:listCode", (req, res) => {
 
 router.get("/t/:templateCode", (req, res) => {
   console.log("Template Code: ", req.params.templateCode);
+  var templateCode = req.params.templateCode.toUpperCase;
   res.render("index", {
-    templateCode: req.params.templateCode,
+    templateCode: templateCode,
   });
 });
 

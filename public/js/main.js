@@ -2559,10 +2559,12 @@ function openTemplateBrowser() {
             var index = res.gameKey.findIndex((obj) => {
               return obj.id == game;
             });
+            if (index != -1) {
             htmlString +=
               `<div class="listBrowserGame">` +
               res.gameKey[index].name +
               `</div>`;
+            }
           });
           htmlString +=
             `</div></div><div class="listBrowserCode" onclick="copyText('https://selectagame.net` +

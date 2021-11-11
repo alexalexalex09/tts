@@ -1413,9 +1413,9 @@ function gulp(showAllGames = false) {
             res.lists.allGames[i]._id +
             `', name:\`` +
             res.lists.allGames[i].name +
-            `\`}], '&quot;` +
+            `\`}], \`&quot;` +
             res.lists.allGames[i].name +
-            `&quot;')">Delete</li>` +
+            `&quot;\`)">Delete</li>` +
             `</div>`
         );
       }
@@ -2723,7 +2723,7 @@ function getTopListIndex(game, topList /*, fuse*/) {
       return ret;
     });
     if (index == -1) {
-      console.log("Couldn't find " + game + " in " + topList.length + " games");
+      console.log("Couldn't find " + game.replace(/[^%0-9a-zA-Z' ]/g, "") + " in " + topList.length + " games");
       var fuse = new Fuse(topList, { keys: ["name"], includeScore: true });
       var searchres = fuse.search(game);
       console.log(searchres);
@@ -4783,7 +4783,7 @@ function editList(list) {
 }
 
 function setAutoComplete(topList) {
-  var auto = topList.map((e) => e.name);
+  var auto = topList.map((e) => e.name.replace("\\", ""));
   if (document.getElementById("menuAddGamesInput") != null) {
     autocomplete(document.getElementById("menuAddGamesInput"), auto);
   }
@@ -5701,7 +5701,7 @@ function autocomplete(inp, arr) {
         b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
         b.innerHTML += arr[i].substr(val.length);
         /*insert a input field that will hold the current array item's value:*/
-        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+        b.innerHTML += `<input type="hidden" value="` + arr[i] + `">`;
         /*execute a function when someone clicks on the item value (DIV element):*/
         b.addEventListener("click", function (e) {
           /*insert the value for the autocomplete text field:*/

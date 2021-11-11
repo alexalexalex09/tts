@@ -499,7 +499,7 @@ router.get("/*", function (req, res, next) {
     req.session.userNonce = makeid(20);
   }
   console.log("UserNonce: ", req.session.userNonce);
-  if (typeof req.session.currentURL != "undefined") {
+  if (typeof req.session.currentURL != "undefined" && !req.session.currentURL.includes("sw.js")) {
     req.session.previousURL = req.session.currentURL;
   } else {
     req.session.previousURL = req.url;

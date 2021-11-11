@@ -534,8 +534,8 @@ router.get("/l/:listCode", (req, res) => {
 });
 
 router.get("/t/:templateCode", (req, res) => {
-  console.log("Template Code: ", req.params.templateCode);
   var templateCode = req.params.templateCode.toUpperCase;
+  console.log("Template Code: ", templateCode);
   res.render("index", {
     templateCode: templateCode,
   });
@@ -2948,7 +2948,7 @@ router.post("/connect_bgg", function (req, res) {
       }
     });
   } else {
-    res.send({ err: "log in" });
+    res.send(ERR_LOGIN);
   }
 });
 
@@ -3577,8 +3577,10 @@ router.post("/create_session_from_template", function (req, res) {
   if (req.user) {
     console.log("user found");
     var templateCode = req.body.templateCode;
+    templateCode = templateCode.toUpperCase();
     templateCode = templateCode.replace("I", "1");
     templateCode = templateCode.replace("O", "0");
+    console.log({templateCode})
     Template.findOne({ templateCode: templateCode }).then(
       (curTemplate, err) => {
         console.log("Template: " + curTemplate.name);

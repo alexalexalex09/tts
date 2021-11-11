@@ -837,7 +837,7 @@ window.addEventListener("load", function () {
     runListImport(window.location.pathname.substr(1));
   }
 
-  if (/^t\/([A-Z0-9]{6})$/.test(window.location.pathname.substr(1))) {
+  if (/^t\/([A-Za-z0-9]{6})$/.test(window.location.pathname.substr(1))) {
     history.pushState(
       {},
       "SelectAGame: " + window.location.pathname.substr(1),
@@ -2529,6 +2529,27 @@ function runTemplateGenerator(templateCode) {
           </div>`;
         $("body").append(htmlString);
       });
+    }, (res) => {
+      if (res.err = "Log in first") {
+        var htmlString = `
+        <div class="firstSessionCatch" onclick="$(this).next().remove(); $(this).remove();"></div>
+        <div class="firstSessionError">
+          <div class="closeButton" onclick="$(this).parent().prev().remove(); $(this).parent().remove();">
+            <ion-icon name="close-outline"></ion-icon>
+          </div>
+          <div class="firstSessionErrorMsg">
+            <div class="firstSessionErrorMsgTitle">Welcome to SelectAGame!</div>
+            <br/><br/>Please log in or sign up.
+            <br/><img src="/img/logo.png"/>
+            <br/><br/>After logging in, you will receive a code to share with your friends!
+            <br/><br/> `+
+    `     </div>
+          <div class="firstSessionLogin"><button class="button blueBtn" onclick="window.location.href='/login';">Login/Sign Up</div>
+        </div>`
+        $("body").append(htmlString);
+      } else {
+        createAndShowAlert(res.err);
+      }
     }
   );
 }

@@ -902,6 +902,16 @@ input#listImportSubmit.green {
   display: table-cell;
   width: 100%;
   font-size: var(--font-h3);
+  text-align: center;
+}
+
+.firstSessionErrorMsg img {
+  max-width: 30%;
+  max-height: 11vh;
+  background: var(--main-blue);
+  padding: 15px;
+  border-radius: 100%;
+  margin-top: 10px;
 }
 
 .firstSessionErrorMsgTitle {

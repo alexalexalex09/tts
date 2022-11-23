@@ -38,7 +38,7 @@
     "qr-image": "^3.2.0",
     "readable-url": "^1.1.0",
     "redis": "^3.1.1",
-    "socket.io": "^2.4.1",
+    "socket.io": "^2.5.0",
     "stream-chain": "^2.2.4",
     "stream-json": "^1.7.1",
     "xml2js": "^0.4.23"
